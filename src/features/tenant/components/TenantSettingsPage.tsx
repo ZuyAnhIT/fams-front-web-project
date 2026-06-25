@@ -3,9 +3,8 @@
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Tabs, message, Spin } from "antd";
+import { message, Spin } from "antd";
 import { Save, Palette } from "lucide-react";
-import GlassCard from "@/components/ui/GlassCard";
 import FormInput from "@/components/forms/FormInput";
 import BaseButton from "@/components/ui/BaseButton";
 import { useTenantSettings, useUpdateTenantSettings } from "../hooks/use-tenant";
@@ -59,10 +58,15 @@ export default function TenantSettingsPage({ tenantId }: { tenantId?: string }) 
   }
 
   return (
-    <div className="pt-4 max-w-3xl mx-auto">
+    <div className="pt-4 max-w-4xl mx-auto">
       <form onSubmit={handleSubmit(onSubmitUiSettings)} className="space-y-6">
-        <GlassCard className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/60 shadow-sm space-y-6">
+          <div className="flex items-center gap-2 mb-2 border-b border-slate-100 pb-4">
+            <Palette className="h-5 w-5 text-indigo-500" />
+            <h3 className="text-lg font-bold text-slate-800">Tùy biến hiển thị</h3>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
             <FormInput
               control={control}
               name="dateFormat"
@@ -70,7 +74,7 @@ export default function TenantSettingsPage({ tenantId }: { tenantId?: string }) 
               placeholder="Ví dụ: DD/MM/YYYY"
               error={errors.dateFormat}
               required
-              labelClassName="!text-slate-900"
+              labelClassName="!text-slate-700 !font-semibold !text-sm"
             />
             
             <FormInput
@@ -80,7 +84,7 @@ export default function TenantSettingsPage({ tenantId }: { tenantId?: string }) 
               placeholder="Ví dụ: 24h hoặc 12h"
               error={errors.timeFormat}
               required
-              labelClassName="!text-slate-900"
+              labelClassName="!text-slate-700 !font-semibold !text-sm"
             />
             
             <FormInput
@@ -91,23 +95,23 @@ export default function TenantSettingsPage({ tenantId }: { tenantId?: string }) 
               error={errors.primaryColor}
               type="color"
               className="h-12 cursor-pointer p-1"
-              labelClassName="!text-slate-900"
+              labelClassName="!text-slate-700 !font-semibold !text-sm"
             />
           </div>
 
-          <div className="flex justify-end mt-6 pt-6 border-t border-brand-100">
+          <div className="flex justify-end pt-4 pb-2">
             <BaseButton 
               type="primary" 
               htmlType="submit" 
               loading={isPending}
               disabled={!isDirty}
               icon={<Save className="h-4 w-4" />}
-              className="!bg-blue-600 !text-white hover:!bg-blue-700 !border-0 shadow-md"
+              className="!bg-indigo-600 !text-white hover:!bg-indigo-700 !border-0 shadow-lg shadow-indigo-500/25 h-11 px-8 rounded-xl font-bold hover:-translate-y-0.5 transition-all disabled:!bg-slate-300 disabled:!shadow-none disabled:!translate-y-0"
             >
               Lưu thiết lập
             </BaseButton>
           </div>
-        </GlassCard>
+        </div>
       </form>
     </div>
   );

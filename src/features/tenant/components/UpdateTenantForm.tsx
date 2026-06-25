@@ -4,10 +4,9 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { message } from "antd";
-import { Save } from "lucide-react";
+import { Save, Building2, Globe, Settings2, Image as ImageIcon } from "lucide-react";
 import FormInput from "@/components/forms/FormInput";
 import BaseButton from "@/components/ui/BaseButton";
-import GlassCard from "@/components/ui/GlassCard";
 import { useUpdateTenant } from "../hooks/use-tenant";
 import { updateTenantSchema, type UpdateTenantFormData } from "../schemas/tenant.schema";
 import type { Tenant } from "../types/tenant.type";
@@ -69,11 +68,15 @@ export default function UpdateTenantForm({ tenant, tenantId }: { tenant?: Tenant
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 max-w-3xl mx-auto">
-      <GlassCard className="p-6">
-        <h3 className="text-lg font-semibold text-brand-900 mb-6">Thông tin cơ bản</h3>
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 max-w-4xl mx-auto">
+      {/* Basic Info Section */}
+      <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/60 shadow-sm space-y-6">
+        <div className="flex items-center gap-2 mb-2 border-b border-slate-100 pb-4">
+          <Building2 className="h-5 w-5 text-indigo-500" />
+          <h3 className="text-lg font-bold text-slate-800">Thông tin cơ bản</h3>
+        </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
           <FormInput
             control={control}
             name="name"
@@ -81,8 +84,8 @@ export default function UpdateTenantForm({ tenant, tenantId }: { tenant?: Tenant
             placeholder="Ví dụ: Công ty TNHH ABC"
             error={errors.name}
             required
-            className="md:col-span-2"
-            labelClassName="!text-slate-900"
+            labelClassName="!text-slate-700 !font-semibold !text-sm"
+            className="col-span-1 md:col-span-2"
           />
 
           <FormInput
@@ -91,35 +94,53 @@ export default function UpdateTenantForm({ tenant, tenantId }: { tenant?: Tenant
             label="Đường dẫn ảnh Logo (URL)"
             placeholder="Ví dụ: https://example.com/logo.png"
             error={errors.logoUrl}
-            className="md:col-span-2"
-            labelClassName="!text-slate-900"
-          />
-
-          <FormInput
-            control={control}
-            name="domain"
-            label="Tên miền riêng"
-            placeholder="Ví dụ: acme.com"
-            error={errors.domain}
-            labelClassName="!text-slate-900"
+            labelClassName="!text-slate-700 !font-semibold !text-sm"
+            className="col-span-1 md:col-span-2"
           />
 
           <FormInput
             control={control}
             name="industry"
             label="Lĩnh vực hoạt động"
-            placeholder="Ví dụ: Bán lẻ, IT..."
+            placeholder="Ví dụ: Bán lẻ, IT, Y tế..."
             error={errors.industry}
-            labelClassName="!text-slate-900"
+            labelClassName="!text-slate-700 !font-semibold !text-sm"
           />
+        </div>
+      </div>
 
+      {/* Domain Section */}
+      <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/60 shadow-sm space-y-6">
+        <div className="flex items-center gap-2 mb-2 border-b border-slate-100 pb-4">
+          <Globe className="h-5 w-5 text-indigo-500" />
+          <h3 className="text-lg font-bold text-slate-800">Định danh mạng</h3>
+        </div>
+        
+        <FormInput
+          control={control}
+          name="domain"
+          label="Tên miền riêng"
+          placeholder="Ví dụ: workspace.abc.com"
+          error={errors.domain}
+          labelClassName="!text-slate-700 !font-semibold !text-sm"
+        />
+      </div>
+
+      {/* Advanced Config Section */}
+      <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/60 shadow-sm space-y-6">
+        <div className="flex items-center gap-2 mb-2 border-b border-slate-100 pb-4">
+          <Settings2 className="h-5 w-5 text-indigo-500" />
+          <h3 className="text-lg font-bold text-slate-800">Cấu hình khu vực</h3>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
           <FormInput
             control={control}
             name="countryCode"
             label="Mã quốc gia (2 chữ cái)"
-            placeholder="Ví dụ: VN"
+            placeholder="Ví dụ: VN, US, JP"
             error={errors.countryCode}
-            labelClassName="!text-slate-900"
+            labelClassName="!text-slate-700 !font-semibold !text-sm"
           />
 
           <FormInput
@@ -128,41 +149,41 @@ export default function UpdateTenantForm({ tenant, tenantId }: { tenant?: Tenant
             label="Múi giờ"
             placeholder="Ví dụ: Asia/Ho_Chi_Minh"
             error={errors.timezone}
-            labelClassName="!text-slate-900"
+            labelClassName="!text-slate-700 !font-semibold !text-sm"
           />
 
           <FormInput
             control={control}
             name="locale"
             label="Ngôn ngữ mặc định"
-            placeholder="Ví dụ: vi-VN"
+            placeholder="Ví dụ: vi-VN, en-US"
             error={errors.locale}
-            labelClassName="!text-slate-900"
+            labelClassName="!text-slate-700 !font-semibold !text-sm"
           />
 
           <FormInput
             control={control}
             name="currencyCode"
             label="Mã tiền tệ (3 chữ cái)"
-            placeholder="Ví dụ: VND"
+            placeholder="Ví dụ: VND, USD"
             error={errors.currencyCode}
-            labelClassName="!text-slate-900"
+            labelClassName="!text-slate-700 !font-semibold !text-sm"
           />
         </div>
+      </div>
 
-        <div className="flex justify-end mt-8 border-t border-brand-100 pt-6">
-          <BaseButton
-            type="primary"
-            htmlType="submit"
-            icon={<Save className="w-4 h-4" />}
-            loading={isPending}
-            disabled={!isDirty}
-            className="!bg-blue-600 !text-white hover:!bg-blue-700 !border-0 shadow-md"
-          >
-            Lưu thay đổi
-          </BaseButton>
-        </div>
-      </GlassCard>
+      <div className="flex justify-end pt-4 pb-10">
+        <BaseButton
+          type="primary"
+          htmlType="submit"
+          icon={<Save className="w-4 h-4" />}
+          loading={isPending}
+          disabled={!isDirty}
+          className="!bg-indigo-600 !text-white hover:!bg-indigo-700 !border-0 shadow-lg shadow-indigo-500/25 h-12 px-8 rounded-xl font-bold hover:-translate-y-0.5 transition-all disabled:!bg-slate-300 disabled:!shadow-none disabled:!translate-y-0"
+        >
+          Lưu thay đổi
+        </BaseButton>
+      </div>
     </form>
   );
 }
