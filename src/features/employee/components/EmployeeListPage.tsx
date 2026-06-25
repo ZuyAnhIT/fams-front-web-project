@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Mail, Search, FileDown } from "lucide-react";
 import { Input, Tag, Dropdown, MenuProps, message } from "antd";
@@ -22,8 +22,9 @@ export default function EmployeeListPage() {
   const [isInviteOpen, setIsInviteOpen] = useState(false);
 
   // Sync debounce search to URL
-  useMemo(() => {
-    if (debouncedSearch !== state.search) {
+  useEffect(() => {
+    const currentSearch = state.search || "";
+    if (debouncedSearch !== currentSearch) {
       setPagination({ search: debouncedSearch });
     }
   }, [debouncedSearch, state.search, setPagination]);

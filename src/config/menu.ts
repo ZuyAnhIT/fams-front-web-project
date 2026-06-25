@@ -36,49 +36,49 @@ export const SIDEBAR_MENU: MenuItem[] = [
     title: "Nhân viên", 
     path: ROUTES.EMPLOYEES, 
     icon: "Users",
-    allowedRoles: [SystemRole.TENANT_ADMIN, SystemRole.HR_MANAGER]
+    allowedRoles: [SystemRole.TENANT_ADMIN, SystemRole.HR_MANAGER, SystemRole.SITE_SUPERVISOR, SystemRole.PLATFORM_ADMIN]
   },
   { 
     title: "Chấm công", 
     path: ROUTES.ATTENDANCE, 
     icon: "CalendarCheck",
-    allowedRoles: [SystemRole.TENANT_ADMIN, SystemRole.HR_MANAGER, SystemRole.SITE_SUPERVISOR]
+    allowedRoles: [SystemRole.TENANT_ADMIN, SystemRole.HR_MANAGER, SystemRole.SITE_SUPERVISOR, SystemRole.PLATFORM_ADMIN]
   },
   { 
     title: "Ca làm việc", 
     path: ROUTES.SHIFTS, 
     icon: "Clock",
-    allowedRoles: [SystemRole.TENANT_ADMIN, SystemRole.HR_MANAGER]
+    allowedRoles: [SystemRole.TENANT_ADMIN, SystemRole.HR_MANAGER, SystemRole.PLATFORM_ADMIN]
   },
   { 
     title: "Địa bàn", 
     path: ROUTES.SITES, 
     icon: "MapPin",
-    allowedRoles: [SystemRole.TENANT_ADMIN, SystemRole.SITE_SUPERVISOR]
+    allowedRoles: [SystemRole.TENANT_ADMIN, SystemRole.SITE_SUPERVISOR, SystemRole.PLATFORM_ADMIN]
   },
   { 
     title: "Phân công", 
     path: ROUTES.ASSIGNMENTS, 
     icon: "ClipboardList",
-    allowedRoles: [SystemRole.TENANT_ADMIN, SystemRole.HR_MANAGER]
+    allowedRoles: [SystemRole.TENANT_ADMIN, SystemRole.HR_MANAGER, SystemRole.PLATFORM_ADMIN]
   },
   { 
     title: "Vi phạm", 
     path: ROUTES.VIOLATIONS, 
     icon: "AlertTriangle",
-    allowedRoles: [SystemRole.TENANT_ADMIN, SystemRole.HR_MANAGER, SystemRole.SITE_SUPERVISOR]
+    allowedRoles: [SystemRole.TENANT_ADMIN, SystemRole.HR_MANAGER, SystemRole.SITE_SUPERVISOR, SystemRole.PLATFORM_ADMIN]
   },
   { 
     title: "Kiểm tra đột xuất", 
     path: ROUTES.RANDOM_CHECKS, 
     icon: "ShieldAlert",
-    allowedRoles: [SystemRole.TENANT_ADMIN, SystemRole.SITE_SUPERVISOR]
+    allowedRoles: [SystemRole.TENANT_ADMIN, SystemRole.SITE_SUPERVISOR, SystemRole.PLATFORM_ADMIN]
   },
   { 
     title: "Báo cáo", 
     path: ROUTES.REPORTS, 
     icon: "BarChart3",
-    allowedRoles: [SystemRole.TENANT_ADMIN, SystemRole.HR_MANAGER]
+    allowedRoles: [SystemRole.TENANT_ADMIN, SystemRole.HR_MANAGER, SystemRole.PLATFORM_ADMIN]
   },
 
   // -- CẤU HÌNH HỆ THỐNG --
@@ -86,7 +86,7 @@ export const SIDEBAR_MENU: MenuItem[] = [
     title: "Cấu hình Công ty", 
     path: "/settings/tenant", 
     icon: "Building",
-    allowedRoles: [SystemRole.TENANT_ADMIN]
+    allowedRoles: [SystemRole.TENANT_ADMIN, SystemRole.PLATFORM_ADMIN]
   },
   { 
     title: "Vai trò & Quyền", 

@@ -1,7 +1,10 @@
 "use client";
 
 import { use } from "react";
+import { Tabs } from "antd";
+import { User, ShieldCheck } from "lucide-react";
 import EmployeeForm from "@/features/employee/components/EmployeeForm";
+import EmployeeRolesTab from "@/features/employee/components/EmployeeRolesTab";
 import { useEmployeeDetail } from "@/features/employee/hooks/use-employee";
 
 export default function EditEmployeePage({ params }: { params: Promise<{ id: string }> }) {
@@ -24,9 +27,36 @@ export default function EditEmployeePage({ params }: { params: Promise<{ id: str
     );
   }
 
+  const items = [
+    {
+      key: "info",
+      label: (
+        <span className="flex items-center gap-2">
+          <User className="h-4 w-4" />
+          Thông tin cá nhân
+        </span>
+      ),
+      children: <EmployeeForm isEditMode={true} initialData={data} />,
+    },
+    {
+      key: "roles",
+      label: (
+        <span className="flex items-center gap-2">
+          <ShieldCheck className="h-4 w-4" />
+          Vai trò & Phân quyền
+        </span>
+      ),
+      children: <EmployeeRolesTab employee={data} />,
+    },
+  ];
+
   return (
     <div className="py-2">
-      <EmployeeForm isEditMode={true} initialData={data} />
+      <Tabs
+        defaultActiveKey="info"
+        items={items}
+        className="[&_.ant-tabs-nav]:mb-6 [&_.ant-tabs-tab]:px-4 [&_.ant-tabs-tab]:py-3 [&_.ant-tabs-tab-active_.ant-tabs-tab-btn]:text-brand-600 [&_.ant-tabs-ink-bar]:bg-brand-600"
+      />
     </div>
   );
 }

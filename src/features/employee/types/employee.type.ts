@@ -16,8 +16,10 @@ export interface Employee {
   updatedAt: string;
 }
 
+import { UserRoleResponse } from "../../role-permission/types";
+
 export interface EmployeeDetailResponse extends Employee {
-  roles: any[]; // Chi tiết role (nếu có)
+  roles: UserRoleResponse[];
 }
 
 export interface CreateEmployeePayload {
@@ -31,7 +33,7 @@ export interface CreateEmployeePayload {
   hiredDate?: string;
 }
 
-export interface UpdateEmployeePayload extends Partial<CreateEmployeePayload> {}
+export interface UpdateEmployeePayload extends Partial<CreateEmployeePayload> { }
 
 export interface ChangeEmployeeStatusPayload {
   status: "active" | "inactive" | "terminated";
