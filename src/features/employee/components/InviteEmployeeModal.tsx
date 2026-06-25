@@ -52,7 +52,7 @@ export default function InviteEmployeeModal({ open, onClose }: InviteEmployeeMod
       open={open}
       onCancel={onClose}
       footer={null}
-      destroyOnClose
+      destroyOnHidden
       centered
       classNames={{
         header: "border-b pb-3",

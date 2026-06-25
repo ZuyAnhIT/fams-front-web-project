@@ -8,7 +8,7 @@ import type {
   PermissionGroupResponse,
 } from "../types/role.type";
 
-const FALLBACK_TENANT_ID = "00000000-0000-0000-0000-000000000001";
+const FALLBACK_TENANT_ID = "dd3eedd8-f30b-4b08-9f92-2dfc90202929";
 
 const getTenantId = () => {
   return FALLBACK_TENANT_ID;

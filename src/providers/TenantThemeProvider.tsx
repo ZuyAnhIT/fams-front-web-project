@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { ConfigProvider } from "antd";
+import { ConfigProvider, App } from "antd";
 import { useTenantSettings } from "@/features/tenant/hooks/use-tenant";
 import { COLORS } from "@/constants/colors";
 
@@ -32,7 +32,9 @@ export function TenantThemeProvider({ children }: { children: React.ReactNode })
         },
       }}
     >
-      {children}
+      <App>
+        {children}
+      </App>
     </ConfigProvider>
   );
 }

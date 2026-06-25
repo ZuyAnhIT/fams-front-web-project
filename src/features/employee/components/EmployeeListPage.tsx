@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Mail, Search, FileDown } from "lucide-react";
+import { Plus, Mail, Search, FileDown, ChevronRight } from "lucide-react";
 import { Input, Tag, Dropdown, MenuProps, message } from "antd";
 import DataTable from "@/components/tables/DataTable";
 import BaseButton from "@/components/ui/BaseButton";
@@ -58,49 +58,63 @@ export default function EmployeeListPage() {
 
   const columns = [
     {
+      title: "Nhân viên",
+      key: "name",
+      render: (_: any, record: Employee) => (
+        <div className="flex items-center gap-3 py-1">
+          {record.avatarUrl ? (
+            <img 
+              src={record.avatarUrl} 
+              alt={record.firstName} 
+              className="h-9 w-9 rounded-lg ring-1 ring-slate-200 object-cover bg-white shadow-sm" 
+            />
+          ) : (
+            <div className="h-9 w-9 bg-brand-100 text-brand-700 rounded-lg flex items-center justify-center font-bold text-base shrink-0 shadow-inner uppercase">
+              {record.firstName.charAt(0)}
+            </div>
+          )}
+          <div className="flex flex-col">
+            <span className="font-bold text-slate-900 text-sm">{record.firstName} {record.lastName}</span>
+            <span className="text-xs text-slate-500 font-medium">{record.email}</span>
+          </div>
+        </div>
+      ),
+    },
+    {
       title: "Mã NV",
       dataIndex: "employeeCode",
       key: "employeeCode",
-      render: (text: string) => <span className="font-mono text-brand-700">{text || "---"}</span>,
-    },
-    {
-      title: "Họ và tên",
-      key: "name",
-      render: (_: any, record: Employee) => (
-        <div className="flex flex-col">
-          <span className="font-semibold text-brand-900">{record.firstName} {record.lastName}</span>
-          <span className="text-xs text-brand-500">{record.email}</span>
-        </div>
-      ),
+      render: (text: string) => <span className="font-mono font-medium text-slate-600 text-sm">{text || "---"}</span>,
     },
     {
       title: "Phòng ban",
       dataIndex: "department",
       key: "department",
-      render: (text: string) => text || "---",
+      render: (text: string) => <span className="font-medium text-slate-600 text-sm">{text || "---"}</span>,
     },
     {
       title: "Vị trí",
       dataIndex: "position",
       key: "position",
-      render: (text: string) => text || "---",
+      render: (text: string) => <span className="font-medium text-slate-600 text-sm">{text || "---"}</span>,
     },
     {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
       render: (status: string, record: Employee) => {
-        let color = "default";
-        let label = status;
-        if (status === "active") { color = "success"; label = "Hoạt động"; }
-        else if (status === "inactive") { color = "warning"; label = "Tạm nghỉ"; }
-        else if (status === "terminated") { color = "error"; label = "Đã nghỉ"; }
+        const statusConfig: Record<string, { bg: string, text: string, label: string }> = {
+          active: { bg: "bg-emerald-100", text: "text-emerald-700", label: "Hoạt động" },
+          inactive: { bg: "bg-amber-100", text: "text-amber-700", label: "Tạm nghỉ" },
+          terminated: { bg: "bg-rose-100", text: "text-rose-700", label: "Đã nghỉ" },
+        };
+        const config = statusConfig[status] || { bg: "bg-slate-100", text: "text-slate-700", label: status };
         
         return (
           <Dropdown menu={{ items: getStatusActionMenu(record) }} trigger={["click"]}>
-            <Tag color={color} className="cursor-pointer hover:opacity-80 transition-opacity">
-              {label}
-            </Tag>
+            <span className={`px-2 py-1 cursor-pointer rounded-md text-[11px] font-bold uppercase tracking-wider hover:opacity-80 transition-opacity ${config.bg} ${config.text}`}>
+              {config.label}
+            </span>
           </Dropdown>
         );
       },
@@ -109,74 +123,89 @@ export default function EmployeeListPage() {
       title: "Ngày tham gia",
       dataIndex: "createdAt",
       key: "createdAt",
-      render: (dateStr: string) => format(new Date(dateStr), "dd/MM/yyyy"),
+      render: (dateStr: string) => (
+        <span className="font-medium text-slate-600 text-sm">
+          {format(new Date(dateStr), "dd/MM/yyyy")}
+        </span>
+      ),
     },
     {
       title: "Thao tác",
       key: "actions",
+      width: 120,
       render: (_: any, record: Employee) => (
-        <div className="flex gap-2">
-          <BaseButton 
-            size="small" 
-            onClick={() => router.push(`/employees/${record.id}`)}
-          >
-            Chi tiết
-          </BaseButton>
-        </div>
+        <BaseButton 
+          type="default"
+          icon={<ChevronRight className="h-4 w-4" />}
+          className="!text-brand-600 !border-brand-200 hover:!bg-brand-50 hover:!border-brand-300 shadow-sm h-8 px-3 rounded-lg text-xs font-semibold flex flex-row-reverse"
+          onClick={(e) => {
+            e.stopPropagation();
+            router.push(`/employees/${record.id}`);
+          }}
+        >
+          Chi tiết
+        </BaseButton>
       ),
     },
   ];
 
   return (
     <div className="space-y-6">
-      {/* Header Actions */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div className="flex-1 w-full max-w-md relative">
+      {/* Header Actions - Vibrant Block Style */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-2xl border border-slate-200/60 shadow-sm">
+        <div className="flex-1 w-full max-w-md relative group">
           <Input
             placeholder="Tìm kiếm theo tên, mã NV, email..."
-            prefix={<Search className="h-4 w-4 text-brand-400" />}
+            prefix={<Search className="h-4 w-4 text-slate-400 group-focus-within:text-brand-500 transition-colors" />}
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            className="h-10 rounded-lg border-brand-300 focus:border-brand-500 focus:ring-brand-500/20"
+            className="h-11 rounded-xl border-slate-200 hover:border-brand-300 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 shadow-sm transition-all text-sm font-medium"
             allowClear
           />
         </div>
         
         <div className="flex gap-3 w-full sm:w-auto">
           <BaseButton 
-            icon={<FileDown className="h-4 w-4" />} 
-            onClick={() => { /* TODO: Gọi Export API nếu cần */ message.info("Chức năng xuất Excel sẽ sớm ra mắt"); }}
+            icon={<FileDown className="h-4.5 w-4.5" />} 
+            onClick={() => message.info("Chức năng xuất Excel sẽ sớm ra mắt")}
+            className="h-11 px-4 rounded-xl font-semibold shadow-sm text-slate-700 hover:text-brand-600 hover:border-brand-300 transition-all"
           >
             Xuất Excel
           </BaseButton>
           <BaseButton 
-            icon={<Mail className="h-4 w-4" />} 
+            icon={<Mail className="h-4.5 w-4.5" />} 
             onClick={() => setIsInviteOpen(true)}
-            className="bg-emerald-600 text-white hover:bg-emerald-700 border-transparent"
+            className="!bg-emerald-600 !text-white hover:!bg-emerald-700 !border-0 shadow-lg shadow-emerald-500/25 h-11 px-5 rounded-xl font-bold hover:-translate-y-0.5 transition-all flex items-center gap-2"
           >
             Mời nhân viên
           </BaseButton>
           <BaseButton 
             type="primary" 
-            icon={<Plus className="h-4 w-4" />}
+            icon={<Plus className="h-4.5 w-4.5" />}
             onClick={() => router.push("/employees/create")}
-            className="bg-brand-600 border-transparent"
+            className="!bg-brand-600 !text-white hover:!bg-brand-700 !border-0 shadow-lg shadow-brand-500/25 h-11 px-5 rounded-xl font-bold hover:-translate-y-0.5 transition-all flex items-center gap-2"
           >
-            Thêm thủ công
+            Thêm mới
           </BaseButton>
         </div>
       </div>
 
-      {/* Data Table */}
-      <DataTable
-        columns={columns}
-        data={pageData?.content || []}
-        loading={isLoading}
-        totalElements={pageData?.page.totalElements || 0}
-        currentPage={state.page}
-        pageSize={state.size}
-        onPageChange={(page, size) => setPagination({ page, size })}
-      />
+      {/* Data Table Wrapper */}
+      <div className="bg-white rounded-3xl border border-slate-200/60 shadow-sm overflow-hidden">
+        <DataTable
+          columns={columns}
+          data={pageData?.content || []}
+          loading={isLoading}
+          totalElements={pageData?.page.totalElements || 0}
+          currentPage={state.page}
+          pageSize={state.size}
+          onPageChange={(page, size) => setPagination({ page, size })}
+          onRow={(record) => ({
+            onClick: () => router.push(`/employees/${record.id}`),
+            className: "cursor-pointer hover:bg-brand-50/50 transition-colors duration-200 group",
+          })}
+        />
+      </div>
 
       {/* Modal Mời Nhân Viên */}
       <InviteEmployeeModal open={isInviteOpen} onClose={() => setIsInviteOpen(false)} />
