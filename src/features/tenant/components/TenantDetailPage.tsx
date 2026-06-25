@@ -4,8 +4,14 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Tabs, Tag } from "antd";
 import { ArrowLeft, Building2, Settings, ShieldCheck, CreditCard } from "lucide-react";
-import BaseButton from "@/components/ui/BaseButton";
 import { useTenantStore } from "@/stores/tenant.store";
+import { ROUTES } from "@/constants/routes";
+import UpdateTenantForm from "./UpdateTenantForm";
+import TenantSettingsPage from "./TenantSettingsPage";
+import IpWhitelistTable from "./IpWhitelistTable";
+import SubscriptionManager from "@/features/subscription/components/SubscriptionManager";
+import DetailHeader from "@/components/shared/layout/DetailHeader";
+import ContentCard from "@/components/shared/layout/ContentCard";
 import { ROUTES } from "@/constants/routes";
 import UpdateTenantForm from "./UpdateTenantForm";
 import TenantSettingsPage from "./TenantSettingsPage";
@@ -74,43 +80,27 @@ export default function TenantDetailPage({ id }: { id: string }) {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <BaseButton
-            icon={<ArrowLeft className="w-4 h-4" />}
-            onClick={() => router.push(ROUTES.TENANTS)}
-            className="border-none shadow-none text-brand-500 hover:text-brand-700 bg-transparent hover:bg-brand-50"
-          />
-          <div>
-            <div className="flex items-center gap-4">
-              {activeTenant.logoUrl ? (
-                <img 
-                  src={activeTenant.logoUrl} 
-                  alt={activeTenant.name} 
-                  className="w-12 h-12 rounded-lg border border-brand-200 object-contain bg-white p-1 shadow-sm"
-                />
-              ) : (
-                <div className="w-12 h-12 rounded-lg border border-brand-200 bg-brand-50 flex items-center justify-center text-brand-600 shadow-sm">
-                  <Building2 className="w-6 h-6" />
-                </div>
-              )}
-              <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-bold text-brand-950">{activeTenant.name}</h1>
-                <Tag color={activeTenant.status === "active" ? "success" : activeTenant.status === "inactive" ? "warning" : activeTenant.status === "trial" ? "processing" : "error"}>
-                  {activeTenant.status === "active" ? "Hoạt động" : activeTenant.status === "inactive" ? "Tạm dừng" : activeTenant.status === "trial" ? "Dùng thử" : "Đình chỉ"}
-                </Tag>
-              </div>
-            </div>
-            <p className="text-sm text-brand-500 mt-1">Quản lý toàn diện cấu hình và gói dịch vụ của công ty</p>
-          </div>
-        </div>
-      </div>
+      <DetailHeader
+        onBack={() => router.push(ROUTES.TENANTS)}
+        title={activeTenant.name}
+        subtitle={`${activeTenant.domain || activeTenant.slug} • ${activeTenant.industry || "Chưa cập nhật lĩnh vực"} • ${activeTenant.countryCode || "Global"}`}
+        avatarUrl={activeTenant.logoUrl}
+        avatarFallback={<Building2 className="w-6 h-6" />}
+        tags={
+          <Tag color={activeTenant.status === "active" ? "success" : activeTenant.status === "inactive" ? "warning" : activeTenant.status === "trial" ? "processing" : "error"}>
+            {activeTenant.status === "active" ? "Hoạt động" : activeTenant.status === "inactive" ? "Tạm dừng" : activeTenant.status === "trial" ? "Dùng thử" : "Đình chỉ"}
+          </Tag>
+        }
+      />
 
-      {/* Tabs */}
-      <div className="bg-white rounded-xl shadow-sm border border-brand-100 p-6 min-h-[500px]">
-        <Tabs defaultActiveKey="info" items={items} />
-      </div>
+      {/* Tabs Wrapper */}
+      <ContentCard className="p-6">
+        <Tabs
+          defaultActiveKey="info"
+          items={items}
+          className="[&_.ant-tabs-nav]:mb-6 [&_.ant-tabs-tab]:px-4 [&_.ant-tabs-tab]:py-3 [&_.ant-tabs-tab-active_.ant-tabs-tab-btn]:text-brand-600 [&_.ant-tabs-ink-bar]:bg-brand-600"
+        />
+      </ContentCard>
     </div>
   );
 }

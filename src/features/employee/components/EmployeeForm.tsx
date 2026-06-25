@@ -6,9 +6,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { App } from "antd";
 import { ArrowLeft, Save } from "lucide-react";
-import GlassCard from "@/components/ui/GlassCard";
 import FormInput from "@/components/forms/FormInput";
 import BaseButton from "@/components/ui/BaseButton";
+import ContentCard from "@/components/shared/layout/ContentCard";
 import { useCreateEmployee, useUpdateEmployee } from "../hooks/use-employee";
 import { employeeSchema, type EmployeeFormData } from "../schemas/employee.schema";
 import type { EmployeeDetailResponse } from "../types/employee.type";
@@ -87,7 +87,7 @@ export default function EmployeeForm({ initialData, isEditMode = false }: Employ
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Form Content */}
-      <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/60 shadow-sm space-y-6">
+      <ContentCard>
         <form id="employee-form" onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* Thông tin cơ bản */}
           <div className="flex items-center gap-2 mb-6 border-b border-slate-100 pb-4 relative z-10">
@@ -184,7 +184,7 @@ export default function EmployeeForm({ initialData, isEditMode = false }: Employ
             </BaseButton>
           </div>
         </form>
-      </div>
+      </ContentCard>
     </div>
   );
 }

@@ -13,6 +13,8 @@ import type { Tenant } from "../types/tenant.type";
 import { format } from "date-fns";
 import RoleGuard from "@/components/guards/RoleGuard";
 import { SystemRole } from "@/features/auth/types/auth.type";
+import ListHeader from "@/components/shared/layout/ListHeader";
+import ContentCard from "@/components/shared/layout/ContentCard";
 
 import { useRouter } from "next/navigation";
 
@@ -140,33 +142,24 @@ export default function TenantListPage() {
   return (
     <RoleGuard allowedRoles={[SystemRole.PLATFORM_ADMIN]}>
       <div className="space-y-6">
-        {/* Header Actions - Vibrant Block Style */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-2xl border border-slate-200/60 shadow-sm">
-          <div className="flex-1 w-full max-w-md relative group">
-            <Input
-              placeholder="Tìm kiếm theo tên công ty, đường dẫn, tên miền,..."
-              prefix={<Search className="h-4 w-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />}
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              className="h-11 rounded-xl border-slate-200 hover:border-indigo-300 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 shadow-sm transition-all text-sm font-medium"
-              allowClear
-            />
-          </div>
-
-          <div className="flex gap-3 w-full sm:w-auto">
-            <BaseButton
-              type="primary"
+        <ListHeader
+          searchValue={searchInput}
+          onSearchChange={setSearchInput}
+          searchPlaceholder="Tìm kiếm theo tên công ty, đường dẫn, tên miền,..."
+          actions={
+            <BaseButton 
+              type="primary" 
               icon={<Plus className="h-4.5 w-4.5" />}
               onClick={() => setIsCreateModalOpen(true)}
-              className="!bg-indigo-600 !text-white hover:!bg-indigo-700 !border-0 shadow-lg shadow-indigo-500/25 h-11 px-6 rounded-xl font-bold hover:-translate-y-0.5 transition-all flex items-center gap-2"
+              className="!bg-brand-primary !text-white hover:!bg-brand-primary/90 !border-0 shadow-lg shadow-brand-primary/25 h-11 px-5 rounded-xl font-bold hover:-translate-y-0.5 transition-all flex items-center gap-2"
             >
-              Thêm công ty mới
+              Thêm mới
             </BaseButton>
-          </div>
-        </div>
+          }
+        />
 
         {/* Data Table Wrapper */}
-        <div className="bg-white rounded-3xl border border-slate-200/60 shadow-sm overflow-hidden">
+        <ContentCard noPadding>
           <DataTable
             columns={columns}
             data={pageData?.content || []}
@@ -194,7 +187,7 @@ export default function TenantListPage() {
               className: "cursor-pointer hover:bg-indigo-50/50 transition-colors duration-200 group",
             })}
           />
-        </div>
+        </ContentCard>
 
         <CreateTenantModal
           open={isCreateModalOpen}

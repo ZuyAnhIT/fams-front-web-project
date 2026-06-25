@@ -11,6 +11,7 @@ import { useUpdateTenant } from "../hooks/use-tenant";
 import { updateTenantSchema, type UpdateTenantFormData } from "../schemas/tenant.schema";
 import type { Tenant } from "../types/tenant.type";
 import { useTenantStore } from "@/stores/tenant.store";
+import ContentCard from "@/components/shared/layout/ContentCard";
 
 export default function UpdateTenantForm({ tenant, tenantId }: { tenant?: Tenant | null, tenantId?: string }) {
   const { mutateAsync: updateTenant, isPending } = useUpdateTenant();
@@ -68,9 +69,8 @@ export default function UpdateTenantForm({ tenant, tenantId }: { tenant?: Tenant
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 max-w-4xl mx-auto">
-      {/* Basic Info Section */}
-      <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/60 shadow-sm space-y-6">
+    <form onSubmit={handleSubmit(onSubmit)} className="max-w-4xl space-y-6">
+      <ContentCard>
         <div className="flex items-center gap-2 mb-6 border-b border-slate-100 pb-4 relative z-10">
           <Building2 className="h-5 w-5 text-brand-primary" />
           <h3 className="text-lg font-bold text-slate-800">Thông tin cơ bản</h3>
@@ -170,7 +170,7 @@ export default function UpdateTenantForm({ tenant, tenantId }: { tenant?: Tenant
             labelClassName="!text-slate-700 !font-semibold !text-sm"
           />
         </div>
-      </div>
+      </ContentCard>
 
       <div className="flex justify-end pt-4 pb-10">
         <BaseButton
