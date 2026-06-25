@@ -11,11 +11,16 @@ import type {
   AcceptInvitationPayload,
 } from "../types/employee.type";
 
+import { useAuthStore } from "@/stores/auth.store";
+
 // Fallback tenant ID cho quá trình dev (từ seed data)
-const FALLBACK_TENANT_ID = "00000000-0000-0000-0000-000000000001";
+const FALLBACK_TENANT_ID = "dd3eedd8-f30b-4b08-9f92-2dfc90202929";
 
 const getTenantId = () => {
-  // TODO: Lấy tenantId thực tế từ AuthStore khi hoàn thiện Multi-tenant
+  const state = useAuthStore.getState();
+  if (state.user && state.user.tenantId) {
+    return state.user.tenantId;
+  }
   return FALLBACK_TENANT_ID;
 };
 
@@ -38,6 +43,25 @@ export const employeeService = {
       { params }
     );
     return response.data.data;
+  },
+
+  /**
+   * Xuất danh sách nhân viên ra file Excel
+   */
+  async exportEmployees(params: {
+    search?: string;
+    status?: string;
+    department?: string;
+  }): Promise<Blob> {
+    const tenantId = getTenantId();
+    const response = await apiClient.get(
+      `/tenants/${tenantId}/employees/export`,
+      { 
+        params,
+        responseType: 'blob' 
+      }
+    );
+    return response.data;
   },
 
   /**

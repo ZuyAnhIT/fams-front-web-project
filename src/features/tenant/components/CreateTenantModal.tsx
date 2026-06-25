@@ -76,7 +76,7 @@ export default function CreateTenantModal({ open, onClose }: CreateTenantModalPr
       open={open}
       onCancel={onClose}
       footer={null}
-      destroyOnClose
+      destroyOnHidden
       centered
       width={760}
       classNames={{

@@ -25,16 +25,13 @@ export default function GlassCard({
 }: GlassCardProps) {
   return (
     <div
-      className={cn("px-8 py-10", className)}
-      style={{
-        background: "rgba(22, 22, 26, 0.45)",
-        backdropFilter: "blur(20px)",
-        WebkitBackdropFilter: "blur(20px)",
-        borderRadius: 16,
-        border: "1px solid rgba(255, 255, 255, 0.12)",
-        boxShadow:
-          "0 0 50px rgba(124, 92, 252, 0.15), 0 20px 50px rgba(0, 0, 0, 0.5)",
-      }}
+      className={cn(
+        "px-8 py-10",
+        "rounded-[16px] border border-white/12",
+        "bg-[#16161a]/45 backdrop-blur-[20px]",
+        "shadow-[0_0_50px_rgba(124,92,252,0.15),0_20px_50px_rgba(0,0,0,0.5)]",
+        className
+      )}
       {...props}
     >
       {children}
