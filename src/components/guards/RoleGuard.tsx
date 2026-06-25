@@ -59,7 +59,7 @@ export default function RoleGuard({ children, allowedRoles }: RoleGuardProps) {
           subTitle="Xin lỗi, bạn không có quyền truy cập vào trang này."
           extra={
             <BaseButton
-              customVariant="primary"
+              customVariant="default"
               onClick={() => router.push(ROUTES.DASHBOARD)}
             >
               Về Trang chủ

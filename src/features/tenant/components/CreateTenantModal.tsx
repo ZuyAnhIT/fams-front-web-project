@@ -44,7 +44,12 @@ export default function CreateTenantModal({ open, onClose }: CreateTenantModalPr
 
   const onSubmit = async (data: CreateTenantFormData) => {
     try {
-      await createTenant(data);
+      // Remove empty string fields so they don't fail backend validation (like @Size for countryCode)
+      const payload = Object.fromEntries(
+        Object.entries(data).filter(([_, v]) => v !== "")
+      ) as CreateTenantFormData;
+      
+      await createTenant(payload);
       message.success(`Đã tạo công ty ${data.name} thành công!`);
       onClose();
     } catch (error: unknown) {
@@ -56,7 +61,7 @@ export default function CreateTenantModal({ open, onClose }: CreateTenantModalPr
 
   return (
     <Modal
-      title="Thêm công ty/chi nhánh mới"
+      title={<h2 className="text-xl font-extrabold text-brand-900">Thêm công ty/chi nhánh mới</h2>}
       open={open}
       onCancel={onClose}
       footer={null}
@@ -70,9 +75,6 @@ export default function CreateTenantModal({ open, onClose }: CreateTenantModalPr
     >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="md:col-span-2">
-            <h4 className="font-semibold text-brand-800">Thông tin công ty</h4>
-          </div>
 
           <FormInput
             control={control}
@@ -81,6 +83,7 @@ export default function CreateTenantModal({ open, onClose }: CreateTenantModalPr
             placeholder="Ví dụ: Công ty TNHH ABC"
             error={errors.name}
             required
+            labelClassName="!text-slate-900"
           />
 
           <FormInput
@@ -91,6 +94,7 @@ export default function CreateTenantModal({ open, onClose }: CreateTenantModalPr
             error={errors.slug}
             required
             helpText="Được dùng để định danh công ty trên URL"
+            labelClassName="!text-slate-900"
           />
 
           {/* Optional Fields Toggle (Bọc trong một section) */}
@@ -105,6 +109,7 @@ export default function CreateTenantModal({ open, onClose }: CreateTenantModalPr
             label="Tên miền riêng"
             placeholder="Ví dụ: acme.com"
             error={errors.domain}
+            labelClassName="!text-slate-900"
           />
 
           <FormInput
@@ -113,6 +118,7 @@ export default function CreateTenantModal({ open, onClose }: CreateTenantModalPr
             label="Lĩnh vực hoạt động"
             placeholder="Ví dụ: Bán lẻ, IT..."
             error={errors.industry}
+            labelClassName="!text-slate-900"
           />
 
           <FormInput
@@ -121,6 +127,7 @@ export default function CreateTenantModal({ open, onClose }: CreateTenantModalPr
             label="Mã quốc gia (2 chữ cái)"
             placeholder="Ví dụ: VN"
             error={errors.countryCode}
+            labelClassName="!text-slate-900"
           />
 
           <FormInput
@@ -129,6 +136,7 @@ export default function CreateTenantModal({ open, onClose }: CreateTenantModalPr
             label="Múi giờ"
             placeholder="Ví dụ: Asia/Ho_Chi_Minh"
             error={errors.timezone}
+            labelClassName="!text-slate-900"
           />
 
           <FormInput
@@ -137,6 +145,7 @@ export default function CreateTenantModal({ open, onClose }: CreateTenantModalPr
             label="Ngôn ngữ mặc định"
             placeholder="Ví dụ: vi-VN"
             error={errors.locale}
+            labelClassName="!text-slate-900"
           />
 
           <FormInput
@@ -145,14 +154,15 @@ export default function CreateTenantModal({ open, onClose }: CreateTenantModalPr
             label="Mã tiền tệ (3 chữ cái)"
             placeholder="Ví dụ: VND"
             error={errors.currencyCode}
+            labelClassName="!text-slate-900"
           />
         </div>
 
         <div className="flex justify-end gap-3 pt-4 border-t border-brand-100 mt-6">
-          <BaseButton onClick={onClose} disabled={isPending}>
+          <BaseButton onClick={onClose} disabled={isPending} className="!bg-red-500 !text-white hover:!bg-red-600 !border-0">
             Hủy
           </BaseButton>
-          <BaseButton type="primary" htmlType="submit" loading={isPending} className="bg-brand-600">
+          <BaseButton type="primary" htmlType="submit" loading={isPending} className="!bg-blue-600 !text-white hover:!bg-blue-700 !border-0 shadow-md">
             Tạo công ty
           </BaseButton>
         </div>

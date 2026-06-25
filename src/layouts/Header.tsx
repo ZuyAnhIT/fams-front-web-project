@@ -5,12 +5,20 @@ import { LogOut, User as UserIcon, Bell, Settings, ShieldCheck } from "lucide-re
 import { message, Dropdown, type MenuProps } from "antd";
 import { useRouter } from "next/navigation";
 import { ROUTES } from "@/constants/routes";
+import { useLogout } from "@/features/auth/hooks/use-auth";
+import { authTokenService } from "@/services/auth-token.service";
 
 export default function Header() {
   const { user, logout } = useAuthStore();
   const router = useRouter();
 
+  const logoutMutation = useLogout();
+
   const handleLogout = () => {
+    const refreshToken = authTokenService.getRefreshToken();
+    if (refreshToken) {
+      logoutMutation.mutate({ refreshToken, deviceId: "unknown" });
+    }
     logout();
     message.success("Đăng xuất thành công!");
     router.push(ROUTES.LOGIN);
@@ -91,3 +99,5 @@ export default function Header() {
     </header>
   );
 }
+
+

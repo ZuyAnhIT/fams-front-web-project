@@ -156,7 +156,7 @@ export default function PhoneLoginForm() {
   };
 
   const isOtpExpired = step === "otp" && countdown === 0;
-  const canResend = sendCount < MAX_OTP_SENDS && countdown === 0;
+  const canResend = countdown === 0;
 
   return (
     <div className="w-full max-w-[450px]">
@@ -355,3 +355,4 @@ export default function PhoneLoginForm() {
     </div>
   );
 }
+

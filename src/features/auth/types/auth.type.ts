@@ -31,6 +31,11 @@ export interface VerifyOtpPayload {
   deviceId?: string;
 }
 
+export interface LogoutPayload {
+  refreshToken: string;
+  deviceId: string;
+}
+
 export interface LoginResponse {
   accessToken: string;
   refreshToken: string;

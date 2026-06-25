@@ -56,8 +56,7 @@ export default function LoginForm() {
     defaultValues: {
       email: "",
       password: "",
-      rememberMe: false,
-    },
+          },
   });
 
   // Tự động điền email vừa đăng ký thành công
@@ -85,8 +84,7 @@ export default function LoginForm() {
       const response = await loginMutation({
         email: data.email,
         password: data.password,
-        rememberMe: data.rememberMe,
-      });
+              });
 
       if (response.totpRequired && response.pendingToken) {
         setTotpPending(response.pendingToken);
@@ -254,20 +252,6 @@ export default function LoginForm() {
 
             {/* Ghi nhớ & Quên mật khẩu */}
             <div className="flex items-center justify-between">
-              <Controller
-                name="rememberMe"
-                control={control}
-                render={({ field: { value, onChange, ...field } }) => (
-                  <BaseCheckbox
-                    {...field}
-                    checked={value}
-                    onChange={(e) => onChange(e.target.checked)}
-                    className="[&_.ant-checkbox-inner]:!bg-transparent [&_.ant-checkbox-inner]:!border-gray-500 [&_span]:!text-gray-300 !text-sm"
-                  >
-                    <span className="text-sm text-gray-300">Ghi nhớ đăng nhập</span>
-                  </BaseCheckbox>
-                )}
-              />
               <Link
                 href={ROUTES.FORGOT_PASSWORD}
                 className="text-sm font-semibold text-white hover:text-gray-300 transition-colors"
@@ -327,7 +311,6 @@ export default function LoginForm() {
               theme="outline"
               size="large"
               text="signin_with"
-              width="100%"
               logo_alignment="center"
             />
           </div>
@@ -336,3 +319,5 @@ export default function LoginForm() {
     </div>
   );
 }
+
+

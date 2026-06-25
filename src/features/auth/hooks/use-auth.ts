@@ -15,7 +15,8 @@ import {
   type TotpSetupResponse,
   type TotpVerifyPayload,
   type LoginTotpPayload,
-  type ResetPasswordPayload
+  type ResetPasswordPayload,
+  type LogoutPayload
 } from "../types/auth.type";
 
 export const useLogin = () => {
@@ -102,6 +103,19 @@ export const useVerifyTotp = () => {
 export const useDisableTotp = () => {
   return useMutation<void, Error, void>({
     mutationFn: () => authService.disableTotp(),
+  });
+};
+
+
+export const useLogoutAll = () => {
+  return useMutation<void, Error, void>({
+    mutationFn: () => authService.logoutAll(),
+  });
+};
+
+export const useLogout = () => {
+  return useMutation<void, Error, LogoutPayload>({
+    mutationFn: (payload) => authService.logout(payload),
   });
 };
 

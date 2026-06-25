@@ -14,7 +14,8 @@ import {
   type ChangePasswordPayload,
   type TotpSetupResponse,
   type TotpVerifyPayload,
-  type LoginTotpPayload
+  type LoginTotpPayload,
+  type LogoutPayload
 } from "../types/auth.type";
 import { type ApiResponse } from "@/types/api";
 
@@ -86,6 +87,17 @@ export const authService = {
   async getProfile(): Promise<UserProfile> {
     const response = await apiClient.get<ApiResponse<UserProfile>>("/auth/me");
     return response.data.data;
+  },
+
+  async logout(payload: LogoutPayload): Promise<void> {
+    await apiClient.post("/auth/logout", payload);
+  },
+
+  /**
+   * Đăng xuất khỏi mọi thiết bị
+   */
+  async logoutAll(): Promise<void> {
+    await apiClient.post("/auth/logout/all");
   },
 
   /**

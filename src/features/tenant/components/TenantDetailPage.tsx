@@ -83,11 +83,24 @@ export default function TenantDetailPage({ id }: { id: string }) {
             className="border-none shadow-none text-brand-500 hover:text-brand-700 bg-transparent hover:bg-brand-50"
           />
           <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold text-brand-950">{activeTenant.name}</h1>
-              <Tag color={activeTenant.status === "active" ? "success" : activeTenant.status === "inactive" ? "warning" : "error"}>
-                {activeTenant.status === "active" ? "Hoạt động" : activeTenant.status === "inactive" ? "Tạm dừng" : "Đình chỉ"}
-              </Tag>
+            <div className="flex items-center gap-4">
+              {activeTenant.logoUrl ? (
+                <img 
+                  src={activeTenant.logoUrl} 
+                  alt={activeTenant.name} 
+                  className="w-12 h-12 rounded-lg border border-brand-200 object-contain bg-white p-1 shadow-sm"
+                />
+              ) : (
+                <div className="w-12 h-12 rounded-lg border border-brand-200 bg-brand-50 flex items-center justify-center text-brand-600 shadow-sm">
+                  <Building2 className="w-6 h-6" />
+                </div>
+              )}
+              <div className="flex items-center gap-3">
+                <h1 className="text-2xl font-bold text-brand-950">{activeTenant.name}</h1>
+                <Tag color={activeTenant.status === "active" ? "success" : activeTenant.status === "inactive" ? "warning" : activeTenant.status === "trial" ? "processing" : "error"}>
+                  {activeTenant.status === "active" ? "Hoạt động" : activeTenant.status === "inactive" ? "Tạm dừng" : activeTenant.status === "trial" ? "Dùng thử" : "Đình chỉ"}
+                </Tag>
+              </div>
             </div>
             <p className="text-sm text-brand-500 mt-1">Quản lý toàn diện cấu hình và gói dịch vụ của công ty</p>
           </div>
