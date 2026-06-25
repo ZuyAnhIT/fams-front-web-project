@@ -177,7 +177,7 @@ export default function SubscriptionManager({ tenantId }: { tenantId: string }) 
         destroyOnClose
         centered
         classNames={{
-          content: "!bg-white !rounded-3xl !p-0 overflow-hidden shadow-2xl shadow-indigo-900/10",
+          wrapper: "!bg-white !rounded-3xl !p-0 overflow-hidden shadow-2xl shadow-indigo-900/10",
           header: "!bg-white border-b border-slate-100 px-8 py-6 m-0",
           body: "!bg-slate-50/50 p-8",
           close: "mt-4 mr-4 hover:!bg-slate-100 !rounded-full transition-colors",

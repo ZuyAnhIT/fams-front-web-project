@@ -92,13 +92,7 @@ export const SIDEBAR_MENU: MenuItem[] = [
     title: "Vai trò & Quyền", 
     path: "/settings/roles", 
     icon: "ShieldCheck",
-    allowedRoles: [SystemRole.TENANT_ADMIN]
+    allowedRoles: [SystemRole.TENANT_ADMIN, SystemRole.PLATFORM_ADMIN]
   },
   
-  // -- CÁ NHÂN --
-  { 
-    title: "Cài đặt cá nhân", 
-    path: ROUTES.SETTINGS, 
-    icon: "Settings" 
-  },
 ];

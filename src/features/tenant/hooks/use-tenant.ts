@@ -42,6 +42,7 @@ export const useTenantSettings = (id?: string) => {
   return useQuery({
     queryKey: ["tenantSettings", id],
     queryFn: () => tenantService.getSettings(id),
+    enabled: !!id,
   });
 };
 

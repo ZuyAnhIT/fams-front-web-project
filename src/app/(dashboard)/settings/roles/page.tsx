@@ -1,4 +1,4 @@
-import RoleListPage from "@/features/role/components/RoleListPage";
+import { RoleManagementPage } from "@/features/role-permission/components/RoleManagementPage";
 
 export const metadata = {
   title: "Vai trò & Phân quyền | FAMS",
@@ -13,7 +13,7 @@ export default function RolesPage() {
           Quản lý các vai trò và thiết lập quyền hạn truy cập hệ thống
         </p>
       </div>
-      <RoleListPage />
+      <RoleManagementPage />
     </div>
   );
 }

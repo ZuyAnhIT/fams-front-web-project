@@ -5,8 +5,11 @@ import { ConfigProvider } from "antd";
 import { useTenantSettings } from "@/features/tenant/hooks/use-tenant";
 import { COLORS } from "@/constants/colors";
 
+import { useAuthStore } from "@/stores/auth.store";
+
 export function TenantThemeProvider({ children }: { children: React.ReactNode }) {
-  const { data: settings } = useTenantSettings();
+  const tenantId = useAuthStore((state) => state.user?.tenantId);
+  const { data: settings } = useTenantSettings(tenantId || undefined);
   
   // Lấy màu từ settings, nếu không có thì dùng màu mặc định của hệ thống
   const primaryColor = settings?.brandPrimaryColor || COLORS.brand[500]; // "#4f46e5"
