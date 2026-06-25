@@ -62,10 +62,10 @@ export default function Sidebar() {
         ) : (
           <>
             <div className="flex items-center gap-3 overflow-hidden">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-50 font-black text-brand-950 text-lg shadow-sm">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-500 font-black text-white text-lg shadow-sm">
                 Q
               </div>
-              <span className="text-xl font-bold tracking-wider bg-gradient-to-r from-brand-50 to-brand-300 bg-clip-text text-transparent truncate select-none">
+              <span className="text-xl font-bold tracking-wider bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent truncate select-none">
                 {APP_NAME}
               </span>
             </div>
@@ -95,25 +95,25 @@ export default function Sidebar() {
           const isActive = pathname === item.path;
 
           const linkContent = (
-            <Link
-              key={item.path}
-              href={item.path}
-              className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group border border-transparent",
-                isCollapsed ? "justify-center px-0 w-10 h-10 mx-auto" : "",
-                isActive
-                  ? "bg-brand-800 text-brand-50 border-brand-700/80 shadow-[0_1px_3px_rgba(0,0,0,0.4)]"
-                  : "text-brand-400 hover:text-brand-50 hover:bg-brand-800/50"
-              )}
-            >
-              <IconComponent
+              <Link
+                key={item.path}
+                href={item.path}
                 className={cn(
-                  "h-5 w-5 transition-transform group-hover:scale-110 shrink-0",
-                  isActive ? "text-brand-50" : "text-brand-400 group-hover:text-brand-50"
+                  "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 group border border-transparent",
+                  isCollapsed ? "justify-center px-0 w-10 h-10 mx-auto" : "",
+                  isActive
+                    ? "bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-lg shadow-indigo-500/25"
+                    : "text-slate-400 hover:text-white hover:bg-white/5"
                 )}
-              />
-              {!isCollapsed && <span className="truncate">{item.title}</span>}
-            </Link>
+              >
+                <IconComponent
+                  className={cn(
+                    "h-5 w-5 transition-transform group-hover:scale-110 shrink-0",
+                    isActive ? "text-white" : "text-slate-400 group-hover:text-white"
+                  )}
+                />
+                {!isCollapsed && <span className={cn("truncate", isActive ? "text-white font-bold" : "")}>{item.title}</span>}
+              </Link>
           );
 
           return isCollapsed ? (

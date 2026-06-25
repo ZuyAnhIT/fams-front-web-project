@@ -12,6 +12,8 @@ import { useEmployees, useChangeEmployeeStatus, useExportEmployees } from "../ho
 import InviteEmployeeModal from "./InviteEmployeeModal";
 import type { Employee } from "../types/employee.type";
 import { format } from "date-fns";
+import ListHeader from "@/components/shared/layout/ListHeader";
+import ContentCard from "@/components/shared/layout/ContentCard";
 
 export default function EmployeeListPage() {
   const router = useRouter();
@@ -169,48 +171,41 @@ export default function EmployeeListPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header Actions - Vibrant Block Style */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-2xl border border-slate-200/60 shadow-sm">
-        <div className="flex-1 w-full max-w-md relative group">
-          <Input
-            placeholder="Tìm kiếm theo tên, mã NV, email..."
-            prefix={<Search className="h-4 w-4 text-slate-400 group-focus-within:text-brand-500 transition-colors" />}
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            className="h-11 rounded-xl border-slate-200 hover:border-brand-300 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 shadow-sm transition-all text-sm font-medium"
-            allowClear
-          />
-        </div>
-        
-        <div className="flex gap-3 w-full sm:w-auto">
-          <BaseButton 
-            icon={<FileDown className="h-4.5 w-4.5" />} 
-            onClick={handleExport}
-            loading={isExporting}
-            className="h-11 px-4 rounded-xl font-semibold shadow-sm text-slate-700 hover:text-brand-600 hover:border-brand-300 transition-all"
-          >
-            Xuất Excel
-          </BaseButton>
-          <BaseButton 
-            icon={<Mail className="h-4.5 w-4.5" />} 
-            onClick={() => setIsInviteOpen(true)}
-            className="!bg-emerald-600 !text-white hover:!bg-emerald-700 !border-0 shadow-lg shadow-emerald-500/25 h-11 px-5 rounded-xl font-bold hover:-translate-y-0.5 transition-all flex items-center gap-2"
-          >
-            Mời nhân viên
-          </BaseButton>
-          <BaseButton 
-            type="primary" 
-            icon={<Plus className="h-4.5 w-4.5" />}
-            onClick={() => router.push("/employees/create")}
-            className="!bg-brand-600 !text-white hover:!bg-brand-700 !border-0 shadow-lg shadow-brand-500/25 h-11 px-5 rounded-xl font-bold hover:-translate-y-0.5 transition-all flex items-center gap-2"
-          >
-            Thêm mới
-          </BaseButton>
-        </div>
-      </div>
+      <ListHeader
+        searchValue={searchInput}
+        onSearchChange={setSearchInput}
+        searchPlaceholder="Tìm kiếm theo tên, mã NV, email..."
+        actions={
+          <>
+            <BaseButton 
+              icon={<FileDown className="h-4.5 w-4.5" />} 
+              onClick={handleExport}
+              loading={isExporting}
+              className="h-11 px-4 rounded-xl font-semibold shadow-sm text-slate-700 hover:text-brand-600 hover:border-brand-300 transition-all"
+            >
+              Xuất Excel
+            </BaseButton>
+            <BaseButton 
+              icon={<Mail className="h-4.5 w-4.5" />} 
+              onClick={() => setIsInviteOpen(true)}
+              className="!bg-emerald-600 !text-white hover:!bg-emerald-700 !border-0 shadow-lg shadow-emerald-500/25 h-11 px-5 rounded-xl font-bold hover:-translate-y-0.5 transition-all flex items-center gap-2"
+            >
+              Mời nhân viên
+            </BaseButton>
+            <BaseButton 
+              type="primary" 
+              icon={<Plus className="h-4.5 w-4.5" />}
+              onClick={() => router.push("/employees/create")}
+              className="!bg-brand-600 !text-white hover:!bg-brand-700 !border-0 shadow-lg shadow-brand-500/25 h-11 px-5 rounded-xl font-bold hover:-translate-y-0.5 transition-all flex items-center gap-2"
+            >
+              Thêm mới
+            </BaseButton>
+          </>
+        }
+      />
 
       {/* Data Table Wrapper */}
-      <div className="bg-white rounded-3xl border border-slate-200/60 shadow-sm overflow-hidden">
+      <ContentCard noPadding>
         <DataTable
           columns={columns}
           data={pageData?.content || []}
@@ -224,7 +219,7 @@ export default function EmployeeListPage() {
             className: "cursor-pointer hover:bg-brand-50/50 transition-colors duration-200 group",
           })}
         />
-      </div>
+      </ContentCard>
 
       {/* Modal Mời Nhân Viên */}
       <InviteEmployeeModal open={isInviteOpen} onClose={() => setIsInviteOpen(false)} />
