@@ -79,6 +79,7 @@ export enum SystemRole {
 export interface AuthUser extends UserProfile {
   role?: SystemRole;
   tenantId?: string | null;
+  permissions?: string[];
 }
 
 /** Dữ liệu gửi lên khi yêu cầu khôi phục mật khẩu */

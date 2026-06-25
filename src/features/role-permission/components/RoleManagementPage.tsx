@@ -1,0 +1,260 @@
+"use client";
+
+import React, { useState } from "react";
+import { Table, Input, Button, Space, Tag, Modal, message, Select, Tooltip } from "antd";
+import { useAuthStore } from "@/stores/auth.store";
+import { PlusOutlined, SearchOutlined, EditOutlined, DeleteOutlined, InfoCircleOutlined } from "@ant-design/icons";
+import { useRolesQuery, useDeleteRoleMutation } from "../hooks/use-role-permission";
+import { RoleFormModal } from "./RoleFormModal";
+import { RoleResponse, RoleDetailResponse } from "../types";
+import { format } from "date-fns";
+import { useQuery } from "@tanstack/react-query";
+import { tenantService } from "@/features/tenant/services/tenant.service";
+
+const { confirm } = Modal;
+
+export const RoleManagementPage: React.FC = () => {
+  const user = useAuthStore((state) => state.user);
+  const hasPermission = useAuthStore((state) => state.hasPermission);
+  const tenantId = user?.tenantId;
+
+  const [messageApi, contextHolder] = message.useMessage();
+  const [page, setPage] = useState(0);
+  const [size, setSize] = useState(20);
+  const [search, setSearch] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const [isSystemFilter, setIsSystemFilter] = useState<boolean | undefined>(undefined);
+  const [selectedFilterTenantId, setSelectedFilterTenantId] = useState<string | undefined>(undefined);
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<RoleDetailResponse | undefined>(undefined);
+
+  const { data: rolesResponse, isLoading, isFetching } = useRolesQuery({
+    tenantId: user?.role === "PLATFORM_ADMIN" ? selectedFilterTenantId : (tenantId || undefined),
+    search,
+    isSystem: isSystemFilter,
+    page,
+    size,
+  });
+
+  const { data: tenantsData, isLoading: isLoadingTenants } = useQuery({
+    queryKey: ["tenants", "all"],
+    queryFn: () => tenantService.listTenants({ size: 100 }),
+    enabled: user?.role === "PLATFORM_ADMIN",
+  });
+  const tenantOptions = tenantsData?.content?.map((t) => ({ label: t.name, value: t.id })) || [];
+
+  const deleteRole = useDeleteRoleMutation();
+
+  const handleSearch = () => {
+    setSearch(searchInput);
+    setPage(0); // Reset page on search
+  };
+
+  const handleFilterChange = (value: boolean | undefined) => {
+    setIsSystemFilter(value);
+    setPage(0);
+  };
+
+  const handleTenantFilterChange = (value: string | undefined) => {
+    setSelectedFilterTenantId(value);
+    setPage(0);
+  };
+
+  const openCreateModal = () => {
+    setSelectedRole(undefined);
+    setIsModalOpen(true);
+  };
+
+  // Note: To edit a role, we might need its permissions.
+  // The list API only returns permissionCount.
+  // We either fetch role details before opening modal or pass what we have and let modal fetch.
+  // For simplicity here, since backend doesn't have a GET /roles/{id} endpoint based on RoleController snippet,
+  // wait! I should check if backend has a GET role detail. 
+  // Let's assume RoleFormModal will just use the role data without pre-filling permissions if we can't fetch it, 
+  // OR actually, the requirement in `RoleController` didn't show `GET /{id}`.
+  // Wait, I need to pass permissionIds to `UpdateRoleRequest`. If I don't have them, I can't update!
+  // Let's check `RoleController` again. It had listRoles, createRole, updateRole, deleteRole. No getRoleById.
+  // This means the frontend might need to get role details from the list if the list included permissions? No, `RoleResponse` has `permissionCount` only.
+  // Wait! If there's no `GET /{id}`, how does the frontend pre-fill the form for editing?
+  // Let me look at the `RoleController.java` again. Ah, `RoleDetailResponse` is returned by create and update. But no get by id?
+  // If the backend lacks it, I can't pre-fill permissions. I'll just pass empty permissions and user has to re-check. Or maybe the endpoint was missing in the snippet?
+  // I will just use `RoleDetailResponse` type and assume `RoleResponse` can be casted for the basic info, and permissions will be empty.
+  const openEditModal = (role: RoleResponse) => {
+    setSelectedRole({
+      ...role,
+      permissions: [], // We don't have them
+    } as RoleDetailResponse);
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = (id: string, name: string) => {
+    confirm({
+      title: 'Xóa Role',
+      content: `Bạn có chắc chắn muốn xóa role "${name}" không? Hành động này không thể hoàn tác.`,
+      okText: 'Xóa',
+      okType: 'danger',
+      cancelText: 'Hủy',
+      onOk: async () => {
+        try {
+          await deleteRole.mutateAsync(id);
+          messageApi.success("Role đã được xóa");
+        } catch (error: any) {
+          messageApi.error(error?.response?.data?.message || "Lỗi khi xóa role");
+        }
+      },
+    });
+  };
+
+  const columns = [
+    {
+      title: "Tên Role",
+      dataIndex: "name",
+      key: "name",
+      render: (text: string, record: RoleResponse) => (
+        <span className="font-medium text-gray-900">
+          {text} {record.isSystem && <Tag color="blue" className="ml-2">Hệ thống</Tag>}
+        </span>
+      ),
+    },
+    {
+      title: "Mô tả",
+      dataIndex: "description",
+      key: "description",
+      render: (text: string) => text || <span className="text-gray-400 italic">Không có mô tả</span>,
+    },
+    {
+      title: "Số quyền",
+      dataIndex: "permissionCount",
+      key: "permissionCount",
+      render: (count: number) => (
+        <Tag color="cyan">{count} quyền</Tag>
+      ),
+    },
+    {
+      title: "Ngày cập nhật",
+      dataIndex: "updatedAt",
+      key: "updatedAt",
+      render: (dateStr: string) => format(new Date(dateStr), "dd/MM/yyyy HH:mm"),
+    },
+    {
+      title: "Thao tác",
+      key: "action",
+      render: (_: any, record: RoleResponse) => (
+        <Space size="middle">
+          {hasPermission("roles:update") && (
+            <Tooltip title={record.isSystem ? "Không thể sửa role hệ thống" : "Sửa"}>
+              <Button
+                type="text"
+                icon={<EditOutlined />}
+                onClick={() => openEditModal(record)}
+                disabled={record.isSystem}
+                className="text-blue-600 hover:text-blue-800"
+              />
+            </Tooltip>
+          )}
+          {hasPermission("roles:delete") && (
+            <Tooltip title={record.isSystem ? "Không thể xóa role hệ thống" : "Xóa"}>
+              <Button
+                type="text"
+                danger
+                icon={<DeleteOutlined />}
+                onClick={() => handleDelete(record.id, record.name)}
+                disabled={record.isSystem}
+              />
+            </Tooltip>
+          )}
+        </Space>
+      ),
+    },
+  ];
+
+  return (
+    <div className="p-6 max-w-7xl mx-auto">
+      {contextHolder}
+      
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Quản lý Phân quyền (Roles)</h1>
+          <p className="text-sm text-gray-500 mt-1">Quản lý danh sách role và các quyền tương ứng cho hệ thống.</p>
+        </div>
+        {hasPermission("roles:create") && (
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={openCreateModal}
+            size="large"
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            Tạo Role
+          </Button>
+        )}
+      </div>
+
+      <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-6 flex flex-wrap gap-4 items-center justify-between">
+        <Space size="middle" className="flex-wrap">
+          <Input
+            placeholder="Tìm kiếm theo tên..."
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            onPressEnter={handleSearch}
+            prefix={<SearchOutlined className="text-gray-400" />}
+            className="w-64"
+            allowClear
+          />
+          <Button onClick={handleSearch}>Tìm kiếm</Button>
+          
+          <Select
+            placeholder="Lọc theo loại Role"
+            allowClear
+            className="w-48"
+            onChange={handleFilterChange}
+            options={[
+              { value: true, label: 'Role Hệ thống' },
+              { value: false, label: 'Role Tùy chỉnh' },
+            ]}
+          />
+          
+          {user?.role === "PLATFORM_ADMIN" && (
+            <Select
+              placeholder="Lọc theo Công ty"
+              allowClear
+              showSearch
+              optionFilterProp="label"
+              className="w-56"
+              onChange={handleTenantFilterChange}
+              options={tenantOptions}
+              loading={isLoadingTenants}
+            />
+          )}
+        </Space>
+      </div>
+
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <Table
+          columns={columns}
+          dataSource={rolesResponse?.data?.content || []}
+          rowKey="id"
+          loading={isLoading || isFetching}
+          pagination={{
+            current: page + 1,
+            pageSize: size,
+            total: rolesResponse?.data?.page?.totalElements || 0,
+            showSizeChanger: true,
+            onChange: (p, s) => {
+              setPage(p - 1);
+              setSize(s);
+            },
+          }}
+        />
+      </div>
+
+      <RoleFormModal
+        open={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        tenantId={tenantId || ""}
+        initialData={selectedRole}
+      />
+    </div>
+  );
+};

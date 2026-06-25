@@ -19,9 +19,10 @@ interface AuthState {
   setVerifying: (isVerifying: boolean) => void;
   logout: () => void;
   initialize: () => void;
+  hasPermission: (permission: string) => boolean;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   accessToken: null,
   isAuthenticated: false,
@@ -102,6 +103,14 @@ export const useAuthStore = create<AuthState>((set) => ({
     } else {
       set({ isInitialized: true });
     }
+  },
+
+  hasPermission: (permission: string) => {
+    const state = get();
+    if (!state.user) return false;
+    // Platform Admin has all permissions implicitly
+    if (state.user.role === "PLATFORM_ADMIN") return true;
+    return state.user.permissions?.includes(permission) ?? false;
   },
 }));
 

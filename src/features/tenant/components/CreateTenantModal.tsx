@@ -8,6 +8,7 @@ import BaseButton from "@/components/ui/BaseButton";
 import { useCreateTenant } from "../hooks/use-tenant";
 import { createTenantSchema, type CreateTenantFormData } from "../schemas/tenant.schema";
 import { useEffect } from "react";
+import { Building2, Globe, Settings2, Link } from "lucide-react";
 
 interface CreateTenantModalProps {
   open: boolean;
@@ -61,109 +62,150 @@ export default function CreateTenantModal({ open, onClose }: CreateTenantModalPr
 
   return (
     <Modal
-      title={<h2 className="text-xl font-extrabold text-brand-900">Thêm công ty/chi nhánh mới</h2>}
+      title={
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 bg-brand-primary/10 rounded-xl flex items-center justify-center">
+            <Building2 className="h-5 w-5 text-brand-primary" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-slate-900 tracking-tight leading-tight">Thêm công ty mới</h2>
+            <p className="text-sm text-slate-500 font-normal mt-0.5">Tạo không gian làm việc cho một khách hàng mới</p>
+          </div>
+        </div>
+      }
       open={open}
       onCancel={onClose}
       footer={null}
       destroyOnClose
       centered
-      width={700}
+      width={760}
       classNames={{
-        header: "border-b pb-3",
-        body: "pt-4",
+        wrapper: "!bg-white !rounded-3xl !p-0 overflow-hidden shadow-2xl shadow-brand-primary/10",
+        header: "!bg-white border-b border-slate-100 px-8 py-6 m-0",
+        body: "!bg-slate-50/50 p-8",
+        close: "mt-4 mr-4 hover:!bg-slate-100 !rounded-full transition-colors",
       }}
     >
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-          <FormInput
-            control={control}
-            name="name"
-            label="Tên công ty"
-            placeholder="Ví dụ: Công ty TNHH ABC"
-            error={errors.name}
-            required
-            labelClassName="!text-slate-900"
-          />
-
-          <FormInput
-            control={control}
-            name="slug"
-            label="Đường dẫn (Slug)"
-            placeholder="Ví dụ: abc-company"
-            error={errors.slug}
-            required
-            helpText="Được dùng để định danh công ty trên URL"
-            labelClassName="!text-slate-900"
-          />
-
-          {/* Optional Fields Toggle (Bọc trong một section) */}
-          <div className="md:col-span-2">
-            <Divider className="my-2" />
-            <h4 className="font-semibold text-brand-800">Cấu hình nâng cao (Tùy chọn)</h4>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+        {/* Basic Info Section */}
+        <div className="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm space-y-5">
+          <div className="flex items-center gap-2 mb-2">
+            <Building2 className="h-4 w-4 text-brand-primary" />
+            <h4 className="font-bold text-slate-800 text-[15px]">Thông tin cơ bản</h4>
           </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-4">
+            <FormInput
+              control={control}
+              name="name"
+              label="Tên công ty"
+              placeholder="Ví dụ: Công ty TNHH ABC"
+              error={errors.name}
+              required
+              labelClassName="!text-slate-700 !font-semibold !text-sm"
+              className="col-span-1 md:col-span-2"
+            />
 
+            <FormInput
+              control={control}
+              name="slug"
+              label="Đường dẫn (Slug)"
+              placeholder="Ví dụ: abc-company"
+              error={errors.slug}
+              required
+              helpText="Dùng làm mã định danh trên URL (chữ thường, không dấu)"
+              labelClassName="!text-slate-700 !font-semibold !text-sm"
+            />
+
+            <FormInput
+              control={control}
+              name="industry"
+              label="Lĩnh vực hoạt động"
+              placeholder="Ví dụ: Bán lẻ, IT, Y tế..."
+              error={errors.industry}
+              labelClassName="!text-slate-700 !font-semibold !text-sm"
+            />
+          </div>
+        </div>
+
+        {/* Domain Section */}
+        <div className="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm space-y-5">
+          <div className="flex items-center gap-2 mb-2">
+            <Globe className="h-4 w-4 text-brand-primary" />
+            <h4 className="font-bold text-slate-800 text-[15px]">Định danh mạng (Tùy chọn)</h4>
+          </div>
+          
           <FormInput
             control={control}
             name="domain"
             label="Tên miền riêng"
-            placeholder="Ví dụ: acme.com"
+            placeholder="Ví dụ: workspace.abc.com"
             error={errors.domain}
-            labelClassName="!text-slate-900"
-          />
-
-          <FormInput
-            control={control}
-            name="industry"
-            label="Lĩnh vực hoạt động"
-            placeholder="Ví dụ: Bán lẻ, IT..."
-            error={errors.industry}
-            labelClassName="!text-slate-900"
-          />
-
-          <FormInput
-            control={control}
-            name="countryCode"
-            label="Mã quốc gia (2 chữ cái)"
-            placeholder="Ví dụ: VN"
-            error={errors.countryCode}
-            labelClassName="!text-slate-900"
-          />
-
-          <FormInput
-            control={control}
-            name="timezone"
-            label="Múi giờ"
-            placeholder="Ví dụ: Asia/Ho_Chi_Minh"
-            error={errors.timezone}
-            labelClassName="!text-slate-900"
-          />
-
-          <FormInput
-            control={control}
-            name="locale"
-            label="Ngôn ngữ mặc định"
-            placeholder="Ví dụ: vi-VN"
-            error={errors.locale}
-            labelClassName="!text-slate-900"
-          />
-
-          <FormInput
-            control={control}
-            name="currencyCode"
-            label="Mã tiền tệ (3 chữ cái)"
-            placeholder="Ví dụ: VND"
-            error={errors.currencyCode}
-            labelClassName="!text-slate-900"
+            labelClassName="!text-slate-700 !font-semibold !text-sm"
           />
         </div>
 
-        <div className="flex justify-end gap-3 pt-4 border-t border-brand-100 mt-6">
-          <BaseButton onClick={onClose} disabled={isPending} className="!bg-red-500 !text-white hover:!bg-red-600 !border-0">
-            Hủy
+        {/* Advanced Config Section */}
+        <div className="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm space-y-5">
+          <div className="flex items-center gap-2 mb-2">
+            <Settings2 className="h-4 w-4 text-brand-primary" />
+            <h4 className="font-bold text-slate-800 text-[15px]">Cấu hình khu vực (Tùy chọn)</h4>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-4">
+            <FormInput
+              control={control}
+              name="countryCode"
+              label="Mã quốc gia"
+              placeholder="Ví dụ: VN, US, JP"
+              error={errors.countryCode}
+              labelClassName="!text-slate-700 !font-semibold !text-sm"
+            />
+
+            <FormInput
+              control={control}
+              name="timezone"
+              label="Múi giờ"
+              placeholder="Ví dụ: Asia/Ho_Chi_Minh"
+              error={errors.timezone}
+              labelClassName="!text-slate-700 !font-semibold !text-sm"
+            />
+
+            <FormInput
+              control={control}
+              name="locale"
+              label="Ngôn ngữ"
+              placeholder="Ví dụ: vi-VN, en-US"
+              error={errors.locale}
+              labelClassName="!text-slate-700 !font-semibold !text-sm"
+            />
+
+            <FormInput
+              control={control}
+              name="currencyCode"
+              label="Mã tiền tệ"
+              placeholder="Ví dụ: VND, USD"
+              error={errors.currencyCode}
+              labelClassName="!text-slate-700 !font-semibold !text-sm"
+            />
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-3 pt-6 border-t border-slate-200/60 mt-8">
+          <BaseButton 
+            onClick={onClose} 
+            disabled={isPending} 
+            className="!bg-white !text-slate-700 !border-slate-300 hover:!bg-slate-50 hover:!text-slate-900 h-11 px-6 rounded-xl font-semibold transition-all"
+          >
+            Hủy bỏ
           </BaseButton>
-          <BaseButton type="primary" htmlType="submit" loading={isPending} className="!bg-blue-600 !text-white hover:!bg-blue-700 !border-0 shadow-md">
-            Tạo công ty
+          <BaseButton 
+            type="primary" 
+            htmlType="submit" 
+            loading={isPending} 
+            className="!bg-brand-primary !text-white hover:opacity-90 !border-0 shadow-lg shadow-brand-primary/25 h-11 px-8 rounded-xl font-bold hover:-translate-y-0.5 transition-all"
+          >
+            Tạo mới
           </BaseButton>
         </div>
       </form>

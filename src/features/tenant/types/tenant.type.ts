@@ -17,8 +17,8 @@ export interface Tenant {
 export interface TenantSettingsResponse {
   dateFormat: string;
   timeFormat: string;
-  primaryColor?: string | null;
-  secondaryColor?: string | null;
+  brandPrimaryColor?: string | null;
+  brandSecondaryColor?: string | null;
   customCss?: string | null;
 }
 
@@ -56,8 +56,8 @@ export interface UpdateTenantPayload {
 export interface UpdateTenantSettingsPayload {
   dateFormat?: string;
   timeFormat?: string;
-  primaryColor?: string;
-  secondaryColor?: string;
+  brandPrimaryColor?: string;
+  brandSecondaryColor?: string;
   customCss?: string;
 }
 
