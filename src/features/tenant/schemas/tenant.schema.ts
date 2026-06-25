@@ -44,7 +44,7 @@ export type UpdateTenantFormData = z.infer<typeof updateTenantSchema>;
 export const updateTenantSettingsSchema = z.object({
   dateFormat: z.string().min(1, "Vui lòng chọn định dạng ngày"),
   timeFormat: z.string().min(1, "Vui lòng chọn định dạng giờ"),
-  primaryColor: z.string().optional().or(z.literal("")),
+  brandPrimaryColor: z.string().optional().or(z.literal("")),
 });
 
 export type UpdateTenantSettingsFormData = z.infer<typeof updateTenantSettingsSchema>;

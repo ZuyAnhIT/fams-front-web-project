@@ -24,7 +24,7 @@ export default function TenantSettingsPage({ tenantId }: { tenantId?: string }) 
     defaultValues: {
       dateFormat: "DD/MM/YYYY",
       timeFormat: "24h",
-      primaryColor: "#0F172A",
+      brandPrimaryColor: "#0F172A",
     },
   });
 
@@ -33,7 +33,7 @@ export default function TenantSettingsPage({ tenantId }: { tenantId?: string }) 
       reset({
         dateFormat: settings.dateFormat || "DD/MM/YYYY",
         timeFormat: settings.timeFormat || "24h",
-        primaryColor: settings.primaryColor || "#0F172A",
+        brandPrimaryColor: settings.brandPrimaryColor || "#0F172A",
       });
     }
   }, [settings, reset]);
@@ -89,10 +89,10 @@ export default function TenantSettingsPage({ tenantId }: { tenantId?: string }) 
             
             <FormInput
               control={control}
-              name="primaryColor"
+              name="brandPrimaryColor"
               label="Màu chủ đạo (Hex Code)"
               placeholder="Ví dụ: #0F172A"
-              error={errors.primaryColor}
+              error={errors.brandPrimaryColor}
               type="color"
               className="h-12 cursor-pointer p-1"
               labelClassName="!text-slate-700 !font-semibold !text-sm"
