@@ -16,7 +16,7 @@ export default function ListHeader({
   actions,
 }: ListHeaderProps) {
   return (
-    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-2xl border border-slate-200/60 shadow-sm">
+    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-2xl border border-slate-200/60 shadow-[0_2px_20px_rgb(0,0,0,0.04)]">
       <div className="flex-1 w-full max-w-md relative group">
         <Input
           placeholder={searchPlaceholder}
