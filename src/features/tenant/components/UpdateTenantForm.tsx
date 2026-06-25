@@ -13,7 +13,7 @@ import { updateTenantSchema, type UpdateTenantFormData } from "../schemas/tenant
 import type { Tenant } from "../types/tenant.type";
 import { useTenantStore } from "@/stores/tenant.store";
 
-export default function UpdateTenantForm({ tenant }: { tenant: Tenant }) {
+export default function UpdateTenantForm({ tenant, tenantId }: { tenant?: Tenant | null, tenantId?: string }) {
   const { mutateAsync: updateTenant, isPending } = useUpdateTenant();
   const setActiveTenant = useTenantStore((state) => state.setActiveTenant);
 
@@ -25,31 +25,39 @@ export default function UpdateTenantForm({ tenant }: { tenant: Tenant }) {
   } = useForm<UpdateTenantFormData>({
     resolver: zodResolver(updateTenantSchema),
     defaultValues: {
-      name: tenant.name,
-      domain: tenant.domain || "",
-      industry: tenant.industry || "",
-      countryCode: tenant.countryCode || "",
-      timezone: tenant.timezone || "UTC",
-      locale: tenant.locale || "en",
-      currencyCode: tenant.currency || "USD",
+      name: tenant?.name || "",
+      logoUrl: tenant?.logoUrl || "",
+      domain: tenant?.domain || "",
+      industry: tenant?.industry || "",
+      countryCode: tenant?.countryCode || "",
+      timezone: tenant?.timezone || "UTC",
+      locale: tenant?.locale || "en",
+      currencyCode: tenant?.currency || "USD",
     },
   });
 
   useEffect(() => {
     reset({
-      name: tenant.name,
-      domain: tenant.domain || "",
-      industry: tenant.industry || "",
-      countryCode: tenant.countryCode || "",
-      timezone: tenant.timezone || "UTC",
-      locale: tenant.locale || "en",
-      currencyCode: tenant.currency || "USD",
+      name: tenant?.name || "",
+      logoUrl: tenant?.logoUrl || "",
+      domain: tenant?.domain || "",
+      industry: tenant?.industry || "",
+      countryCode: tenant?.countryCode || "",
+      timezone: tenant?.timezone || "UTC",
+      locale: tenant?.locale || "en",
+      currencyCode: tenant?.currency || "USD",
     });
   }, [tenant, reset]);
 
   const onSubmit = async (data: UpdateTenantFormData) => {
     try {
-      const updatedTenant = await updateTenant({ payload: data, id: tenant.id });
+      // Remove empty string fields so they don't fail backend validation (like @Size for countryCode)
+      const payload = Object.fromEntries(
+        Object.entries(data).filter(([_, v]) => v !== "")
+      ) as UpdateTenantFormData;
+
+      const targetId = tenant?.id || tenantId;
+      const updatedTenant = await updateTenant({ payload, id: targetId });
       message.success("Cập nhật thông tin công ty thành công");
       // Cập nhật lại store để UI ở Header tự động ăn theo
       setActiveTenant(updatedTenant);
@@ -61,7 +69,7 @@ export default function UpdateTenantForm({ tenant }: { tenant: Tenant }) {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 max-w-3xl">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 max-w-3xl mx-auto">
       <GlassCard className="p-6">
         <h3 className="text-lg font-semibold text-brand-900 mb-6">Thông tin cơ bản</h3>
         
@@ -74,6 +82,17 @@ export default function UpdateTenantForm({ tenant }: { tenant: Tenant }) {
             error={errors.name}
             required
             className="md:col-span-2"
+            labelClassName="!text-slate-900"
+          />
+
+          <FormInput
+            control={control}
+            name="logoUrl"
+            label="Đường dẫn ảnh Logo (URL)"
+            placeholder="Ví dụ: https://example.com/logo.png"
+            error={errors.logoUrl}
+            className="md:col-span-2"
+            labelClassName="!text-slate-900"
           />
 
           <FormInput
@@ -82,6 +101,7 @@ export default function UpdateTenantForm({ tenant }: { tenant: Tenant }) {
             label="Tên miền riêng"
             placeholder="Ví dụ: acme.com"
             error={errors.domain}
+            labelClassName="!text-slate-900"
           />
 
           <FormInput
@@ -90,6 +110,7 @@ export default function UpdateTenantForm({ tenant }: { tenant: Tenant }) {
             label="Lĩnh vực hoạt động"
             placeholder="Ví dụ: Bán lẻ, IT..."
             error={errors.industry}
+            labelClassName="!text-slate-900"
           />
 
           <FormInput
@@ -98,6 +119,7 @@ export default function UpdateTenantForm({ tenant }: { tenant: Tenant }) {
             label="Mã quốc gia (2 chữ cái)"
             placeholder="Ví dụ: VN"
             error={errors.countryCode}
+            labelClassName="!text-slate-900"
           />
 
           <FormInput
@@ -106,6 +128,7 @@ export default function UpdateTenantForm({ tenant }: { tenant: Tenant }) {
             label="Múi giờ"
             placeholder="Ví dụ: Asia/Ho_Chi_Minh"
             error={errors.timezone}
+            labelClassName="!text-slate-900"
           />
 
           <FormInput
@@ -114,6 +137,7 @@ export default function UpdateTenantForm({ tenant }: { tenant: Tenant }) {
             label="Ngôn ngữ mặc định"
             placeholder="Ví dụ: vi-VN"
             error={errors.locale}
+            labelClassName="!text-slate-900"
           />
 
           <FormInput
@@ -122,6 +146,7 @@ export default function UpdateTenantForm({ tenant }: { tenant: Tenant }) {
             label="Mã tiền tệ (3 chữ cái)"
             placeholder="Ví dụ: VND"
             error={errors.currencyCode}
+            labelClassName="!text-slate-900"
           />
         </div>
 
@@ -132,7 +157,7 @@ export default function UpdateTenantForm({ tenant }: { tenant: Tenant }) {
             icon={<Save className="w-4 h-4" />}
             loading={isPending}
             disabled={!isDirty}
-            className="bg-brand-600"
+            className="!bg-blue-600 !text-white hover:!bg-blue-700 !border-0 shadow-md"
           >
             Lưu thay đổi
           </BaseButton>

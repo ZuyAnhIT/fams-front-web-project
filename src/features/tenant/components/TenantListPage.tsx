@@ -52,11 +52,21 @@ export default function TenantListPage() {
     {
       title: "Công ty",
       key: "name",
+      dataIndex: "name",
+      sorter: true,
       render: (_: unknown, record: Tenant) => (
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 bg-brand-100 text-brand-600 rounded-lg flex items-center justify-center font-bold">
-            {record.name.charAt(0).toUpperCase()}
-          </div>
+          {record.logoUrl ? (
+            <img 
+              src={record.logoUrl} 
+              alt={record.name} 
+              className="h-10 w-10 rounded-lg border border-brand-200 object-contain bg-white p-0.5 shadow-sm" 
+            />
+          ) : (
+            <div className="h-10 w-10 bg-brand-100 text-brand-600 rounded-lg flex items-center justify-center font-bold shrink-0">
+              {record.name.charAt(0).toUpperCase()}
+            </div>
+          )}
           <div className="flex flex-col">
             <span className="font-semibold text-brand-900">{record.name}</span>
             <span className="text-xs text-brand-500">{record.domain || record.slug}</span>
@@ -74,6 +84,7 @@ export default function TenantListPage() {
         if (status === "active") { color = "success"; label = "Hoạt động"; }
         else if (status === "inactive") { color = "warning"; label = "Tạm dừng"; }
         else if (status === "suspended") { color = "error"; label = "Đình chỉ"; }
+        else if (status === "trial") { color = "processing"; label = "Dùng thử"; }
 
         return <Tag color={color}>{label}</Tag>;
       },
@@ -88,14 +99,8 @@ export default function TenantListPage() {
       title: "Ngày đăng ký",
       dataIndex: "createdAt",
       key: "createdAt",
+      sorter: true,
       render: (dateStr: string) => format(new Date(dateStr), "dd/MM/yyyy"),
-    },
-    {
-      title: "Nhân viên",
-      key: "limits",
-      render: (_: unknown, record: Tenant) => (
-        <span className="text-sm text-brand-600 font-medium">Tối đa {record.maxEmployees}</span>
-      ),
     },
   ];
 
@@ -120,14 +125,13 @@ export default function TenantListPage() {
             type="primary"
             icon={<Plus className="h-4 w-4" />}
             onClick={() => setIsCreateModalOpen(true)}
-            className="bg-brand-600 border-transparent"
+            className="!bg-blue-600 !text-white hover:!bg-blue-700 !border-0 shadow-md"
           >
             Thêm công ty mới
           </BaseButton>
         </div>
       </div>
 
-      {/* Data Table */}
       <DataTable
         columns={columns}
         data={pageData?.content || []}
@@ -136,6 +140,16 @@ export default function TenantListPage() {
         currentPage={state.page}
         pageSize={state.size}
         onPageChange={(page, size) => setPagination({ page, size })}
+        onChange={(_, __, sorter) => {
+          if (!Array.isArray(sorter) && sorter.field) {
+            setPagination({
+              sortBy: sorter.field as string,
+              sortDir: sorter.order === "ascend" ? "asc" : sorter.order === "descend" ? "desc" : undefined,
+            });
+          } else {
+            setPagination({ sortBy: undefined, sortDir: undefined });
+          }
+        }}
         onRow={(record) => ({
           onClick: () => {
             const { setActiveTenant } = require("@/stores/tenant.store").useTenantStore.getState();

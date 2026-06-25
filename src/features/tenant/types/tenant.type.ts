@@ -3,14 +3,12 @@ export interface Tenant {
   name: string;
   slug: string;
   domain?: string | null;
-  status: "active" | "inactive" | "suspended";
+  status: "active" | "inactive" | "suspended" | "trial";
   industry?: string | null;
   countryCode?: string | null;
   timezone: string;
   locale: string;
   currency: string;
-  maxEmployees: number;
-  maxSites: number;
   logoUrl?: string | null;
   createdAt: string;
   updatedAt: string;

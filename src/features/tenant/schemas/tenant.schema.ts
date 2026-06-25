@@ -24,6 +24,7 @@ export type CreateTenantFormData = z.infer<typeof createTenantSchema>;
 
 export const updateTenantSchema = z.object({
   name: z.string().min(2, "Tên công ty phải từ 2-255 ký tự").max(255, "Tên công ty tối đa 255 ký tự").optional(),
+  logoUrl: z.string().url("URL không hợp lệ").max(2048, "URL tối đa 2048 ký tự").optional().or(z.literal("")),
   domain: z.string().max(255, "Tên miền tối đa 255 ký tự").optional().or(z.literal("")),
   industry: z.string().max(100, "Lĩnh vực tối đa 100 ký tự").optional().or(z.literal("")),
   countryCode: z.string()

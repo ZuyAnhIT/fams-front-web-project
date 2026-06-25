@@ -21,4 +21,6 @@ export const ROUTES = {
   RANDOM_CHECKS: "/random-checks",
   REPORTS: "/reports",
   SETTINGS: "/settings",
+  TENANTS: "/tenants",
+  SUBSCRIPTIONS: "/subscriptions",
 } as const;

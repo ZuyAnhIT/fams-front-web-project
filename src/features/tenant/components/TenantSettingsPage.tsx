@@ -59,7 +59,7 @@ export default function TenantSettingsPage({ tenantId }: { tenantId?: string }) 
   }
 
   return (
-    <div className="pt-4 max-w-3xl">
+    <div className="pt-4 max-w-3xl mx-auto">
       <form onSubmit={handleSubmit(onSubmitUiSettings)} className="space-y-6">
         <GlassCard className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -70,6 +70,7 @@ export default function TenantSettingsPage({ tenantId }: { tenantId?: string }) 
               placeholder="Ví dụ: DD/MM/YYYY"
               error={errors.dateFormat}
               required
+              labelClassName="!text-slate-900"
             />
             
             <FormInput
@@ -79,6 +80,7 @@ export default function TenantSettingsPage({ tenantId }: { tenantId?: string }) 
               placeholder="Ví dụ: 24h hoặc 12h"
               error={errors.timeFormat}
               required
+              labelClassName="!text-slate-900"
             />
             
             <FormInput
@@ -89,6 +91,7 @@ export default function TenantSettingsPage({ tenantId }: { tenantId?: string }) 
               error={errors.primaryColor}
               type="color"
               className="h-12 cursor-pointer p-1"
+              labelClassName="!text-slate-900"
             />
           </div>
 
@@ -99,7 +102,7 @@ export default function TenantSettingsPage({ tenantId }: { tenantId?: string }) 
               loading={isPending}
               disabled={!isDirty}
               icon={<Save className="h-4 w-4" />}
-              className="bg-brand-600"
+              className="!bg-blue-600 !text-white hover:!bg-blue-700 !border-0 shadow-md"
             >
               Lưu thiết lập
             </BaseButton>

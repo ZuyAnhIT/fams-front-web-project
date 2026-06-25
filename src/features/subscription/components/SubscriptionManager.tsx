@@ -85,7 +85,7 @@ export default function SubscriptionManager({ tenantId }: { tenantId: string }) 
   };
 
   return (
-    <div className="space-y-6 max-w-3xl">
+    <div className="space-y-6 max-w-3xl mx-auto">
       <GlassCard className="p-6 relative overflow-hidden">
         {/* Background Decoration */}
         <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-purple-100 to-transparent rounded-bl-[100px] opacity-70 -z-10"></div>
