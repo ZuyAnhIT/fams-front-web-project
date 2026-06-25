@@ -64,8 +64,8 @@ export default function CreateTenantModal({ open, onClose }: CreateTenantModalPr
     <Modal
       title={
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 bg-indigo-100 rounded-xl flex items-center justify-center">
-            <Building2 className="h-5 w-5 text-indigo-600" />
+          <div className="h-10 w-10 bg-brand-primary/10 rounded-xl flex items-center justify-center">
+            <Building2 className="h-5 w-5 text-brand-primary" />
           </div>
           <div>
             <h2 className="text-xl font-bold text-slate-900 tracking-tight leading-tight">Thêm công ty mới</h2>
@@ -80,7 +80,7 @@ export default function CreateTenantModal({ open, onClose }: CreateTenantModalPr
       centered
       width={760}
       classNames={{
-        content: "!bg-white !rounded-3xl !p-0 overflow-hidden shadow-2xl shadow-indigo-900/10",
+        content: "!bg-white !rounded-3xl !p-0 overflow-hidden shadow-2xl shadow-brand-primary/10",
         header: "!bg-white border-b border-slate-100 px-8 py-6 m-0",
         body: "!bg-slate-50/50 p-8",
         close: "mt-4 mr-4 hover:!bg-slate-100 !rounded-full transition-colors",
@@ -90,7 +90,7 @@ export default function CreateTenantModal({ open, onClose }: CreateTenantModalPr
         {/* Basic Info Section */}
         <div className="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm space-y-5">
           <div className="flex items-center gap-2 mb-2">
-            <Building2 className="h-4 w-4 text-indigo-500" />
+            <Building2 className="h-4 w-4 text-brand-primary" />
             <h4 className="font-bold text-slate-800 text-[15px]">Thông tin cơ bản</h4>
           </div>
           
@@ -131,7 +131,7 @@ export default function CreateTenantModal({ open, onClose }: CreateTenantModalPr
         {/* Domain Section */}
         <div className="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm space-y-5">
           <div className="flex items-center gap-2 mb-2">
-            <Globe className="h-4 w-4 text-indigo-500" />
+            <Globe className="h-4 w-4 text-brand-primary" />
             <h4 className="font-bold text-slate-800 text-[15px]">Định danh mạng (Tùy chọn)</h4>
           </div>
           
@@ -148,7 +148,7 @@ export default function CreateTenantModal({ open, onClose }: CreateTenantModalPr
         {/* Advanced Config Section */}
         <div className="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm space-y-5">
           <div className="flex items-center gap-2 mb-2">
-            <Settings2 className="h-4 w-4 text-indigo-500" />
+            <Settings2 className="h-4 w-4 text-brand-primary" />
             <h4 className="font-bold text-slate-800 text-[15px]">Cấu hình khu vực (Tùy chọn)</h4>
           </div>
           
@@ -203,7 +203,7 @@ export default function CreateTenantModal({ open, onClose }: CreateTenantModalPr
             type="primary" 
             htmlType="submit" 
             loading={isPending} 
-            className="!bg-indigo-600 !text-white hover:!bg-indigo-700 !border-0 shadow-lg shadow-indigo-500/25 h-11 px-8 rounded-xl font-bold hover:-translate-y-0.5 transition-all"
+            className="!bg-brand-primary !text-white hover:opacity-90 !border-0 shadow-lg shadow-brand-primary/25 h-11 px-8 rounded-xl font-bold hover:-translate-y-0.5 transition-all"
           >
             Tạo mới
           </BaseButton>

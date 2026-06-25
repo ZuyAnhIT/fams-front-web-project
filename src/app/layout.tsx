@@ -1,4 +1,4 @@
-import { ConfigProvider } from "antd";
+import { TenantThemeProvider } from "@/providers/TenantThemeProvider";
 import { COLORS } from "@/constants/colors";
 import { QueryProvider } from "@/lib/QueryProvider";
 import { Inter } from "next/font/google";
@@ -20,18 +20,9 @@ export default function RootLayout({
     <html lang="vi" className={inter.className}>
       <body>
         <QueryProvider>
-          <ConfigProvider
-            theme={{
-              token: {
-                colorPrimary: COLORS.brand[500],
-                borderRadius: 6,
-                colorLink: COLORS.brand[500],
-                colorLinkHover: COLORS.brand[400],
-              },
-            }}
-          >
+          <TenantThemeProvider>
             {children}
-          </ConfigProvider>
+          </TenantThemeProvider>
         </QueryProvider>
       </body>
     </html>

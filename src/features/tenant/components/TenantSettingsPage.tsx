@@ -106,7 +106,7 @@ export default function TenantSettingsPage({ tenantId }: { tenantId?: string }) 
               loading={isPending}
               disabled={!isDirty}
               icon={<Save className="h-4 w-4" />}
-              className="!bg-indigo-600 !text-white hover:!bg-indigo-700 !border-0 shadow-lg shadow-indigo-500/25 h-11 px-8 rounded-xl font-bold hover:-translate-y-0.5 transition-all disabled:!bg-slate-300 disabled:!shadow-none disabled:!translate-y-0"
+              className="!bg-brand-primary !text-white hover:opacity-90 !border-0 shadow-lg shadow-brand-primary/25 h-11 px-8 rounded-xl font-bold transition-all w-full sm:w-auto disabled:!bg-slate-300 disabled:!shadow-none disabled:!translate-y-0"
             >
               Lưu thiết lập
             </BaseButton>

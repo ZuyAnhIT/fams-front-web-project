@@ -71,8 +71,8 @@ export default function UpdateTenantForm({ tenant, tenantId }: { tenant?: Tenant
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 max-w-4xl mx-auto">
       {/* Basic Info Section */}
       <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/60 shadow-sm space-y-6">
-        <div className="flex items-center gap-2 mb-2 border-b border-slate-100 pb-4">
-          <Building2 className="h-5 w-5 text-indigo-500" />
+        <div className="flex items-center gap-2 mb-6 border-b border-slate-100 pb-4 relative z-10">
+          <Building2 className="h-5 w-5 text-brand-primary" />
           <h3 className="text-lg font-bold text-slate-800">Thông tin cơ bản</h3>
         </div>
         
@@ -111,8 +111,8 @@ export default function UpdateTenantForm({ tenant, tenantId }: { tenant?: Tenant
 
       {/* Domain Section */}
       <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/60 shadow-sm space-y-6">
-        <div className="flex items-center gap-2 mb-2 border-b border-slate-100 pb-4">
-          <Globe className="h-5 w-5 text-indigo-500" />
+        <div className="flex items-center gap-2 mb-6 border-b border-slate-100 pb-4 relative z-10">
+          <Globe className="h-5 w-5 text-brand-primary" />
           <h3 className="text-lg font-bold text-slate-800">Định danh mạng</h3>
         </div>
         
@@ -128,8 +128,8 @@ export default function UpdateTenantForm({ tenant, tenantId }: { tenant?: Tenant
 
       {/* Advanced Config Section */}
       <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/60 shadow-sm space-y-6">
-        <div className="flex items-center gap-2 mb-2 border-b border-slate-100 pb-4">
-          <Settings2 className="h-5 w-5 text-indigo-500" />
+        <div className="flex items-center gap-2 mb-6 border-b border-slate-100 pb-4 relative z-10">
+          <Settings2 className="h-5 w-5 text-brand-primary" />
           <h3 className="text-lg font-bold text-slate-800">Cấu hình khu vực</h3>
         </div>
         
@@ -179,7 +179,7 @@ export default function UpdateTenantForm({ tenant, tenantId }: { tenant?: Tenant
           icon={<Save className="w-4 h-4" />}
           loading={isPending}
           disabled={!isDirty}
-          className="!bg-indigo-600 !text-white hover:!bg-indigo-700 !border-0 shadow-lg shadow-indigo-500/25 h-12 px-8 rounded-xl font-bold hover:-translate-y-0.5 transition-all disabled:!bg-slate-300 disabled:!shadow-none disabled:!translate-y-0"
+          className="!bg-brand-primary !text-white hover:opacity-90 !border-0 shadow-lg shadow-brand-primary/25 h-11 px-8 rounded-xl font-bold hover:-translate-y-0.5 transition-all disabled:!bg-slate-300 disabled:!shadow-none disabled:!translate-y-0"
         >
           Lưu thay đổi
         </BaseButton>

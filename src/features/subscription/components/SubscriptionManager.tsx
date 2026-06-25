@@ -107,7 +107,7 @@ export default function SubscriptionManager({ tenantId }: { tenantId: string }) 
                 type="primary"
                 icon={<Plus className="w-4 h-4" />}
                 onClick={openAssignModal}
-                className="!bg-indigo-600 !text-white hover:!bg-indigo-700 !border-0 shadow-lg shadow-indigo-500/25 h-11 px-6 rounded-xl font-bold hover:-translate-y-0.5 transition-all"
+                className="!bg-brand-primary !text-white hover:opacity-90 !border-0 shadow-lg shadow-brand-primary/25 h-11 px-6 rounded-xl font-bold hover:-translate-y-0.5 transition-all"
               >
                 Gán gói dịch vụ
               </BaseButton>
@@ -118,7 +118,7 @@ export default function SubscriptionManager({ tenantId }: { tenantId: string }) 
                 <div>
                   <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Tên gói</p>
                   <div className="flex items-center gap-2">
-                    <Package className="w-5 h-5 text-indigo-600" />
+                    <Package className="w-5 h-5 text-brand-primary" />
                     <p className="font-bold text-slate-900 text-xl">
                       {currentSub.planName || "Đang tải..."}
                     </p>
@@ -148,7 +148,7 @@ export default function SubscriptionManager({ tenantId }: { tenantId: string }) 
                 <BaseButton
                   icon={<Edit className="w-4 h-4" />}
                   onClick={openUpdateModal}
-                  className="!bg-white !text-indigo-600 !border-indigo-200 hover:!bg-indigo-50 hover:!border-indigo-300 h-11 px-6 rounded-xl font-semibold transition-all"
+                  className="!bg-white !text-brand-primary border-brand-primary/30 hover:!bg-brand-primary/5 hover:border-brand-primary/50 h-11 px-6 rounded-xl font-semibold transition-all"
                 >
                   Thay đổi gói / Trạng thái
                 </BaseButton>
@@ -161,8 +161,8 @@ export default function SubscriptionManager({ tenantId }: { tenantId: string }) 
       <Modal
         title={
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 bg-indigo-100 rounded-xl flex items-center justify-center">
-              <CreditCard className="h-5 w-5 text-indigo-600" />
+            <div className="h-10 w-10 bg-brand-primary/10 rounded-xl flex items-center justify-center">
+              <CreditCard className="h-5 w-5 text-brand-primary" />
             </div>
             <div>
               <h2 className="text-xl font-bold text-slate-900 tracking-tight leading-tight">
@@ -254,7 +254,7 @@ export default function SubscriptionManager({ tenantId }: { tenantId: string }) 
               type="primary" 
               htmlType="submit" 
               loading={isAssigning || isUpdating}
-              className="!bg-indigo-600 !text-white hover:!bg-indigo-700 !border-0 shadow-lg shadow-indigo-500/25 h-11 px-8 rounded-xl font-bold hover:-translate-y-0.5 transition-all"
+              className="!bg-brand-primary !text-white hover:opacity-90 !border-0 shadow-lg shadow-brand-primary/25 h-11 px-8 rounded-xl font-bold hover:-translate-y-0.5 transition-all"
             >
               {mode === "assign" ? "Gán gói" : "Lưu thay đổi"}
             </BaseButton>
