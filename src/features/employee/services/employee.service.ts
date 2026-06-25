@@ -46,6 +46,25 @@ export const employeeService = {
   },
 
   /**
+   * Xuất danh sách nhân viên ra file Excel
+   */
+  async exportEmployees(params: {
+    search?: string;
+    status?: string;
+    department?: string;
+  }): Promise<Blob> {
+    const tenantId = getTenantId();
+    const response = await apiClient.get(
+      `/tenants/${tenantId}/employees/export`,
+      { 
+        params,
+        responseType: 'blob' 
+      }
+    );
+    return response.data;
+  },
+
+  /**
    * Lấy chi tiết nhân viên
    */
   async getEmployee(id: string): Promise<EmployeeDetailResponse> {

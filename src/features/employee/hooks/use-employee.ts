@@ -15,6 +15,13 @@ export const useEmployees = (params: any) => {
   });
 };
 
+export const useExportEmployees = () => {
+  return useMutation({
+    mutationFn: (params: { search?: string; status?: string; department?: string }) => 
+      employeeService.exportEmployees(params),
+  });
+};
+
 export const useEmployeeDetail = (id: string, enabled: boolean = true) => {
   return useQuery({
     queryKey: ["employees", id],

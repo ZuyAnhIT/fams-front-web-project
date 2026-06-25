@@ -8,7 +8,7 @@ import DataTable from "@/components/tables/DataTable";
 import BaseButton from "@/components/ui/BaseButton";
 import { usePagination } from "@/hooks/usePagination";
 import { useDebounce } from "@/hooks/useDebounce";
-import { useEmployees, useChangeEmployeeStatus } from "../hooks/use-employee";
+import { useEmployees, useChangeEmployeeStatus, useExportEmployees } from "../hooks/use-employee";
 import InviteEmployeeModal from "./InviteEmployeeModal";
 import type { Employee } from "../types/employee.type";
 import { format } from "date-fns";
@@ -31,6 +31,7 @@ export default function EmployeeListPage() {
 
   const { data: pageData, isLoading } = useEmployees(state);
   const { mutate: changeStatus } = useChangeEmployeeStatus();
+  const { mutateAsync: exportEmployees, isPending: isExporting } = useExportEmployees();
 
   const handleStatusChange = (id: string, newStatus: "active" | "inactive" | "terminated") => {
     changeStatus(
@@ -40,6 +41,23 @@ export default function EmployeeListPage() {
         onError: () => message.error("Lỗi khi cập nhật trạng thái"),
       }
     );
+  };
+
+  const handleExport = async () => {
+    try {
+      const blob = await exportEmployees({ search: state.search });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `employees_${format(new Date(), "yyyyMMdd_HHmmss")}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      message.success("Xuất dữ liệu thành công!");
+    } catch (error) {
+      message.error("Lỗi khi xuất dữ liệu, vui lòng thử lại.");
+    }
   };
 
   const getStatusActionMenu = (record: Employee): MenuProps["items"] => {
@@ -167,7 +185,8 @@ export default function EmployeeListPage() {
         <div className="flex gap-3 w-full sm:w-auto">
           <BaseButton 
             icon={<FileDown className="h-4.5 w-4.5" />} 
-            onClick={() => message.info("Chức năng xuất Excel sẽ sớm ra mắt")}
+            onClick={handleExport}
+            loading={isExporting}
             className="h-11 px-4 rounded-xl font-semibold shadow-sm text-slate-700 hover:text-brand-600 hover:border-brand-300 transition-all"
           >
             Xuất Excel
