@@ -75,18 +75,38 @@ export default function CreateTenantModal({ open, onClose }: CreateTenantModalPr
       }
       open={open}
       onCancel={onClose}
-      footer={null}
       destroyOnHidden
       centered
       width={760}
+      footer={
+        <div className="flex justify-end gap-3 mt-4">
+          <BaseButton 
+            onClick={onClose} 
+            disabled={isPending} 
+            className="!bg-white !text-slate-700 !border-slate-300 hover:!bg-slate-50 hover:!text-slate-900 h-11 px-6 rounded-xl font-semibold transition-all"
+          >
+            Hủy bỏ
+          </BaseButton>
+          <BaseButton 
+            type="primary" 
+            htmlType="submit"
+            form="create-tenant-form"
+            loading={isPending} 
+            className="!bg-brand-primary !text-white hover:opacity-90 !border-0 shadow-lg shadow-brand-primary/25 h-11 px-8 rounded-xl font-bold hover:-translate-y-0.5 transition-all"
+          >
+            Tạo mới
+          </BaseButton>
+        </div>
+      }
       classNames={{
-        wrapper: "!bg-white !rounded-3xl !p-0 overflow-hidden shadow-2xl shadow-brand-primary/10",
-        header: "!bg-white border-b border-slate-100 px-8 py-6 m-0",
-        body: "!bg-slate-50/50 p-8",
+        content: "!bg-white !rounded-3xl !p-0 overflow-hidden shadow-2xl shadow-brand-primary/10",
+        header: "!bg-white border-b border-slate-100 px-8 py-5 m-0",
+        body: "!bg-slate-50/50 p-6 md:p-8 overflow-y-auto max-h-[60vh] scrollbar-thin scrollbar-thumb-slate-200",
+        footer: "!bg-white border-t border-slate-100 px-8 py-4 m-0",
         close: "mt-4 mr-4 hover:!bg-slate-100 !rounded-full transition-colors",
       }}
     >
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+      <form id="create-tenant-form" onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Basic Info Section */}
         <div className="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm space-y-5">
           <div className="flex items-center gap-2 mb-2">
@@ -191,23 +211,6 @@ export default function CreateTenantModal({ open, onClose }: CreateTenantModalPr
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 pt-6 border-t border-slate-200/60 mt-8">
-          <BaseButton 
-            onClick={onClose} 
-            disabled={isPending} 
-            className="!bg-white !text-slate-700 !border-slate-300 hover:!bg-slate-50 hover:!text-slate-900 h-11 px-6 rounded-xl font-semibold transition-all"
-          >
-            Hủy bỏ
-          </BaseButton>
-          <BaseButton 
-            type="primary" 
-            htmlType="submit" 
-            loading={isPending} 
-            className="!bg-brand-primary !text-white hover:opacity-90 !border-0 shadow-lg shadow-brand-primary/25 h-11 px-8 rounded-xl font-bold hover:-translate-y-0.5 transition-all"
-          >
-            Tạo mới
-          </BaseButton>
-        </div>
       </form>
     </Modal>
   );

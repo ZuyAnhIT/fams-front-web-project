@@ -10,7 +10,8 @@ import { usePagination } from "@/hooks/usePagination";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useEmployees, useChangeEmployeeStatus, useExportEmployees } from "../hooks/use-employee";
 import InviteEmployeeModal from "./InviteEmployeeModal";
-import type { Employee } from "../types/employee.type";
+import EmployeeFormModal from "./EmployeeFormModal";
+import type { Employee, EmployeeDetailResponse } from "../types/employee.type";
 import { format } from "date-fns";
 import ListHeader from "@/components/shared/layout/ListHeader";
 import ContentCard from "@/components/shared/layout/ContentCard";
@@ -22,6 +23,8 @@ export default function EmployeeListPage() {
   const debouncedSearch = useDebounce(searchInput, 600);
 
   const [isInviteOpen, setIsInviteOpen] = useState(false);
+  const [isEmployeeFormOpen, setIsEmployeeFormOpen] = useState(false);
+  const [editingEmployee, setEditingEmployee] = useState<EmployeeDetailResponse | null>(null);
 
   // Sync debounce search to URL
   useEffect(() => {
@@ -160,7 +163,10 @@ export default function EmployeeListPage() {
           className="!text-brand-600 !border-brand-200 hover:!bg-brand-50 hover:!border-brand-300 shadow-sm h-8 px-3 rounded-lg text-xs font-semibold flex flex-row-reverse"
           onClick={(e) => {
             e.stopPropagation();
-            router.push(`/employees/${record.id}`);
+            // Since we don't have full details in the list, we pass partial data 
+            // and the form will be updated or we can just pass the whole record as any
+            setEditingEmployee(record as any);
+            setIsEmployeeFormOpen(true);
           }}
         >
           Chi tiết
@@ -195,7 +201,10 @@ export default function EmployeeListPage() {
             <BaseButton 
               type="primary" 
               icon={<Plus className="h-4.5 w-4.5" />}
-              onClick={() => router.push("/employees/create")}
+              onClick={() => {
+                setEditingEmployee(null);
+                setIsEmployeeFormOpen(true);
+              }}
               className="!bg-brand-600 !text-white hover:!bg-brand-700 !border-0 shadow-lg shadow-brand-500/25 h-11 px-5 rounded-xl font-bold hover:-translate-y-0.5 transition-all flex items-center gap-2"
             >
               Thêm mới
@@ -215,7 +224,10 @@ export default function EmployeeListPage() {
           pageSize={state.size}
           onPageChange={(page, size) => setPagination({ page, size })}
           onRow={(record) => ({
-            onClick: () => router.push(`/employees/${record.id}`),
+            onClick: () => {
+              setEditingEmployee(record as any);
+              setIsEmployeeFormOpen(true);
+            },
             className: "cursor-pointer hover:bg-brand-50/50 transition-colors duration-200 group",
           })}
         />
@@ -223,6 +235,13 @@ export default function EmployeeListPage() {
 
       {/* Modal Mời Nhân Viên */}
       <InviteEmployeeModal open={isInviteOpen} onClose={() => setIsInviteOpen(false)} />
+
+      {/* Modal Thêm/Sửa Nhân Viên */}
+      <EmployeeFormModal 
+        open={isEmployeeFormOpen} 
+        onClose={() => setIsEmployeeFormOpen(false)} 
+        initialData={editingEmployee}
+      />
     </div>
   );
 }
