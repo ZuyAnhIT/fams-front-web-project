@@ -143,7 +143,7 @@ export default function IpWhitelistTable({ tenantId }: { tenantId?: string }) {
         open={isModalOpen}
         onCancel={() => setIsModalOpen(false)}
         footer={null}
-        destroyOnClose
+        destroyOnHidden
       >
         <form onSubmit={handleSubmit(handleAdd)} className="space-y-4 pt-4">
           <FormInput

@@ -12,11 +12,6 @@ import IpWhitelistTable from "./IpWhitelistTable";
 import SubscriptionManager from "@/features/subscription/components/SubscriptionManager";
 import DetailHeader from "@/components/shared/layout/DetailHeader";
 import ContentCard from "@/components/shared/layout/ContentCard";
-import { ROUTES } from "@/constants/routes";
-import UpdateTenantForm from "./UpdateTenantForm";
-import TenantSettingsPage from "./TenantSettingsPage";
-import IpWhitelistTable from "./IpWhitelistTable";
-import SubscriptionManager from "@/features/subscription/components/SubscriptionManager";
 
 export default function TenantDetailPage({ id }: { id: string }) {
   const router = useRouter();
