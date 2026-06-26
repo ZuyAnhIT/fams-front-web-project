@@ -2,7 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { message } from "antd";
+import { App } from "antd";
 import GlassCard from "@/components/ui/GlassCard";
 import FormInput from "@/components/forms/FormInput";
 import BaseButton from "@/components/ui/BaseButton";
@@ -10,6 +10,7 @@ import { useChangePassword } from "@/features/auth/hooks/use-auth";
 import { changePasswordSchema, type ChangePasswordFormData } from "../schemas/setting.schema";
 
 export default function ChangePasswordForm() {
+  const { message } = App.useApp();
   const { mutateAsync: changePassword, isPending } = useChangePassword();
 
   const {

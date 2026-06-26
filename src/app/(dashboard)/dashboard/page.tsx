@@ -108,7 +108,7 @@ export default function DashboardPage() {
               {user?.avatarUrl ? (
                 <img
                   src={user.avatarUrl}
-                  alt={user.displayName || "User Avatar"}
+                  alt={user.displayName || "Ảnh đại diện"}
                   className="h-16 w-16 rounded-full bg-brand-100 border border-brand-200 p-1 shadow-inner object-cover"
                 />
               ) : (
@@ -177,7 +177,7 @@ export default function DashboardPage() {
 
                   <div className="text-right">
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-[10px] font-semibold bg-brand-200 text-brand-800">
-                      {u.role || "Employee"}
+                      {u.role || "Nhân viên"}
                     </span>
                     <p className="text-[10px] text-brand-400 font-mono mt-1">Mật khẩu: {u.password}</p>
                   </div>
