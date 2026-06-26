@@ -174,10 +174,10 @@ export default function SubscriptionManager({ tenantId }: { tenantId: string }) 
         open={isModalOpen}
         onCancel={() => setIsModalOpen(false)}
         footer={null}
-        destroyOnClose
+        destroyOnHidden
         centered
         classNames={{
-          wrapper: "!bg-white !rounded-3xl !p-0 overflow-hidden shadow-2xl shadow-indigo-900/10",
+          content: "!bg-white !rounded-3xl !p-0 overflow-hidden shadow-2xl shadow-indigo-900/10",
           header: "!bg-white border-b border-slate-100 px-8 py-6 m-0",
           body: "!bg-slate-50/50 p-8",
           close: "mt-4 mr-4 hover:!bg-slate-100 !rounded-full transition-colors",
@@ -197,6 +197,8 @@ export default function SubscriptionManager({ tenantId }: { tenantId: string }) 
                     className="w-full h-11"
                     options={plans.map(p => ({ label: p.displayName || p.name, value: p.id }))}
                     loading={isLoadingPlans}
+                    placeholder="-- Chọn gói dịch vụ --"
+                    notFoundContent="Chưa có gói dịch vụ nào"
                   />
                 )}
               />

@@ -16,6 +16,9 @@ export default function SessionManagement() {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   const handleConfirmLogoutAll = () => {
+    if (typeof window !== "undefined") {
+      (window as any).__isLoggingOut = true;
+    }
     logoutAllMutation.mutate(undefined, {
       onSuccess: () => {
         message.success("Đã đăng xuất khỏi tất cả các thiết bị.");

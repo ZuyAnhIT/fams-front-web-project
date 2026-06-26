@@ -107,10 +107,10 @@ export default function UpdateTenantForm({ tenant, tenantId }: { tenant?: Tenant
             labelClassName="!text-slate-700 !font-semibold !text-sm"
           />
         </div>
-      </div>
+      </ContentCard>
 
-      {/* Domain Section */}
-      <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/60 shadow-sm space-y-6">
+      {/* Custom Domain Section (Optional/Future) */}
+      <ContentCard>
         <div className="flex items-center gap-2 mb-6 border-b border-slate-100 pb-4 relative z-10">
           <Globe className="h-5 w-5 text-brand-primary" />
           <h3 className="text-lg font-bold text-slate-800">Định danh mạng</h3>
@@ -124,10 +124,10 @@ export default function UpdateTenantForm({ tenant, tenantId }: { tenant?: Tenant
           error={errors.domain}
           labelClassName="!text-slate-700 !font-semibold !text-sm"
         />
-      </div>
+      </ContentCard>
 
       {/* Advanced Config Section */}
-      <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/60 shadow-sm space-y-6">
+      <ContentCard>
         <div className="flex items-center gap-2 mb-6 border-b border-slate-100 pb-4 relative z-10">
           <Settings2 className="h-5 w-5 text-brand-primary" />
           <h3 className="text-lg font-bold text-slate-800">Cấu hình khu vực</h3>

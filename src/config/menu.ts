@@ -86,7 +86,7 @@ export const SIDEBAR_MENU: MenuItem[] = [
     title: "Cấu hình Công ty", 
     path: "/settings/tenant", 
     icon: "Building",
-    allowedRoles: [SystemRole.TENANT_ADMIN, SystemRole.PLATFORM_ADMIN]
+    allowedRoles: [SystemRole.TENANT_ADMIN]
   },
   { 
     title: "Vai trò & Quyền", 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { Modal, message } from "antd";
+import { Modal, App } from "antd";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import FormInput from "@/components/forms/FormInput";
@@ -17,6 +17,7 @@ interface PlanFormModalProps {
 }
 
 export default function PlanFormModal({ open, onClose, initialData }: PlanFormModalProps) {
+  const { message } = App.useApp();
   const { mutateAsync: createPlan, isPending: isCreating } = useCreatePlan();
   const { mutateAsync: updatePlan, isPending: isUpdating } = useUpdatePlan();
 
@@ -91,7 +92,7 @@ export default function PlanFormModal({ open, onClose, initialData }: PlanFormMo
       open={open}
       onCancel={onClose}
       footer={null}
-      destroyOnClose
+      destroyOnHidden
       centered
       classNames={{
         header: "border-b pb-3",

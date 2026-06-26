@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Table, Input, Button, Space, Tag, Modal, message, Select, Tooltip } from "antd";
+import { Table, Input, Button, Space, Tag, Modal, message, Select, Tooltip, App } from "antd";
 import { useAuthStore } from "@/stores/auth.store";
 import { PlusOutlined, SearchOutlined, EditOutlined, DeleteOutlined, InfoCircleOutlined } from "@ant-design/icons";
 import { useRolesQuery, useDeleteRoleMutation } from "../hooks/use-role-permission";
@@ -11,13 +11,14 @@ import { format } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
 import { tenantService } from "@/features/tenant/services/tenant.service";
 
-const { confirm } = Modal;
+
 
 export const RoleManagementPage: React.FC = () => {
   const user = useAuthStore((state) => state.user);
   const hasPermission = useAuthStore((state) => state.hasPermission);
   const tenantId = user?.tenantId;
 
+  const { modal } = App.useApp();
   const [messageApi, contextHolder] = message.useMessage();
   const [page, setPage] = useState(0);
   const [size, setSize] = useState(20);
@@ -66,20 +67,6 @@ export const RoleManagementPage: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  // Note: To edit a role, we might need its permissions.
-  // The list API only returns permissionCount.
-  // We either fetch role details before opening modal or pass what we have and let modal fetch.
-  // For simplicity here, since backend doesn't have a GET /roles/{id} endpoint based on RoleController snippet,
-  // wait! I should check if backend has a GET role detail. 
-  // Let's assume RoleFormModal will just use the role data without pre-filling permissions if we can't fetch it, 
-  // OR actually, the requirement in `RoleController` didn't show `GET /{id}`.
-  // Wait, I need to pass permissionIds to `UpdateRoleRequest`. If I don't have them, I can't update!
-  // Let's check `RoleController` again. It had listRoles, createRole, updateRole, deleteRole. No getRoleById.
-  // This means the frontend might need to get role details from the list if the list included permissions? No, `RoleResponse` has `permissionCount` only.
-  // Wait! If there's no `GET /{id}`, how does the frontend pre-fill the form for editing?
-  // Let me look at the `RoleController.java` again. Ah, `RoleDetailResponse` is returned by create and update. But no get by id?
-  // If the backend lacks it, I can't pre-fill permissions. I'll just pass empty permissions and user has to re-check. Or maybe the endpoint was missing in the snippet?
-  // I will just use `RoleDetailResponse` type and assume `RoleResponse` can be casted for the basic info, and permissions will be empty.
   const openEditModal = (role: RoleResponse) => {
     setSelectedRole({
       ...role,
@@ -89,7 +76,7 @@ export const RoleManagementPage: React.FC = () => {
   };
 
   const handleDelete = (id: string, name: string) => {
-    confirm({
+    modal.confirm({
       title: 'Xóa Role',
       content: `Bạn có chắc chắn muốn xóa role "${name}" không? Hành động này không thể hoàn tác.`,
       okText: 'Xóa',
@@ -172,7 +159,7 @@ export const RoleManagementPage: React.FC = () => {
   return (
     <div className="p-6 max-w-7xl mx-auto">
       {contextHolder}
-      
+
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Quản lý Phân quyền (Roles)</h1>
@@ -203,7 +190,7 @@ export const RoleManagementPage: React.FC = () => {
             allowClear
           />
           <Button onClick={handleSearch}>Tìm kiếm</Button>
-          
+
           <Select
             placeholder="Lọc theo loại Role"
             allowClear
@@ -214,7 +201,7 @@ export const RoleManagementPage: React.FC = () => {
               { value: false, label: 'Role Tùy chỉnh' },
             ]}
           />
-          
+
           {user?.role === "PLATFORM_ADMIN" && (
             <Select
               placeholder="Lọc theo Công ty"

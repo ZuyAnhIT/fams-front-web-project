@@ -102,7 +102,7 @@ export const RoleFormModal: React.FC<RoleFormModalProps> = ({ open, onClose, ten
       }
       onClose();
     } catch (error: any) {
-      messageApi.error(error?.response?.data?.message || "An error occurred");
+      messageApi.error(error?.response?.data?.message || "Đã có lỗi xảy ra");
     }
   };
 

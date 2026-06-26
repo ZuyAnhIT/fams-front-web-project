@@ -25,6 +25,7 @@ export default function BaseInput({ className, ...props }: BaseInputProps) {
         "!rounded-md !px-3 !py-2 !shadow-none !bg-white !text-gray-900 !border-gray-300 hover:!border-gray-400 focus:!ring-2 focus:!ring-violet-600 focus:!ring-offset-0 focus:!border-violet-600",
         className
       )}
+      suppressHydrationWarning={true}
       {...props}
     />
   );

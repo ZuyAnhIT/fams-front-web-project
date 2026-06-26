@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { message, Input } from "antd";
+import { App, Input } from "antd";
 import { GoogleIcon, MicrosoftIcon } from "@/components/icons";
 import { PhoneOutlined } from "@ant-design/icons";
 import GlassCard from "@/components/ui/GlassCard";
@@ -40,6 +40,7 @@ const totpSchema = z.object({
  * - Hỗ trợ đăng nhập bằng email/password và social login (Facebook, Google, Microsoft)
  */
 export default function LoginForm() {
+  const { message } = App.useApp();
   const router = useRouter();
   const searchParams = useSearchParams();
   const emailQuery = searchParams.get("email");

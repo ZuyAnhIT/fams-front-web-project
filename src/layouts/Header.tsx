@@ -2,22 +2,30 @@
 
 import { useAuthStore } from "@/stores/auth.store";
 import { LogOut, User as UserIcon, Bell, Settings, ShieldCheck } from "lucide-react";
-import { message, Dropdown, type MenuProps } from "antd";
+import { App, Dropdown, type MenuProps } from "antd";
 import { useRouter } from "next/navigation";
 import { ROUTES } from "@/constants/routes";
 import { useLogout } from "@/features/auth/hooks/use-auth";
 import { authTokenService } from "@/services/auth-token.service";
 
 export default function Header() {
+  const { message } = App.useApp();
   const { user, logout } = useAuthStore();
   const router = useRouter();
 
   const logoutMutation = useLogout();
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    if (typeof window !== "undefined") {
+      (window as any).__isLoggingOut = true;
+    }
     const refreshToken = authTokenService.getRefreshToken();
     if (refreshToken) {
-      logoutMutation.mutate({ refreshToken, deviceId: "unknown" });
+      try {
+        await logoutMutation.mutateAsync({ refreshToken, deviceId: "unknown" });
+      } catch (error) {
+        // Ignored
+      }
     }
     logout();
     message.success("Đăng xuất thành công!");
