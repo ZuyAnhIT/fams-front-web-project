@@ -35,7 +35,8 @@ apiClient.interceptors.response.use(
       authTokenService.clearTokens();
 
       // Kiểm tra nếu đang ở browser và không ở trang login
-      if (typeof window !== "undefined" && !window.location.pathname.includes("/login")) {
+      const isLogoutEndpoint = error.config?.url?.includes("/auth/logout");
+      if (typeof window !== "undefined" && !window.location.pathname.includes("/login") && !isLogoutEndpoint && !(window as any).__isLoggingOut) {
         message.error("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại!");
         // Chuyển hướng về login sau 1 giây để người dùng kịp đọc thông báo
         setTimeout(() => {

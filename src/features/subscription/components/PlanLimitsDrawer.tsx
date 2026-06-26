@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { Drawer, message, Checkbox, Spin } from "antd";
+import { Drawer, App, Checkbox, Spin } from "antd";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import FormInput from "@/components/forms/FormInput";
@@ -17,6 +17,7 @@ interface PlanLimitsDrawerProps {
 }
 
 export default function PlanLimitsDrawer({ open, onClose, plan }: PlanLimitsDrawerProps) {
+  const { message } = App.useApp();
   const { data: limits, isLoading } = usePlanLimits(plan?.id as string, open && !!plan?.id);
   const { mutateAsync: updateLimits, isPending } = useUpdatePlanLimits();
 
@@ -96,7 +97,7 @@ export default function PlanLimitsDrawer({ open, onClose, plan }: PlanLimitsDraw
       placement="right"
       onClose={onClose}
       open={open}
-      width={500}
+      size="large"
       footer={
         <div className="flex justify-end gap-3">
           <BaseButton onClick={onClose} disabled={isPending} className="!bg-red-500 !text-white hover:!bg-red-600 !border-0">

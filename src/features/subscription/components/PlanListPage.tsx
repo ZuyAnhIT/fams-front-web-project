@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Plus, Edit2, Settings2, ShieldAlert, Star } from "lucide-react";
-import { Switch, message, Tag } from "antd";
+import { Switch, App, Tag } from "antd";
 import BaseButton from "@/components/ui/BaseButton";
 import { usePlans, useUpdatePlan } from "../hooks/use-subscription";
 import type { PlanResponse } from "../types/subscription.type";
@@ -10,6 +10,7 @@ import PlanFormModal from "./PlanFormModal";
 import PlanLimitsDrawer from "./PlanLimitsDrawer";
 
 export default function PlanListPage() {
+  const { message } = App.useApp();
   const { data: plans, isLoading, error } = usePlans(false);
   const { mutate: updatePlan } = useUpdatePlan();
 
@@ -84,7 +85,7 @@ export default function PlanListPage() {
         </div>
       ) : plans && plans.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 relative z-0 pt-4">
-          {plans.sort((a, b) => a.sortOrder - b.sortOrder).map(plan => {
+          {[...plans].sort((a, b) => a.sortOrder - b.sortOrder).map(plan => {
             const isPro = plan.displayName.toLowerCase().includes("pro");
 
             return (
