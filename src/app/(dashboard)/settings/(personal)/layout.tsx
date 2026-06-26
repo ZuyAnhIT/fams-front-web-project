@@ -29,11 +29,11 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
                   key={tab.href}
                   href={tab.href}
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all duration-200 ${isActive
-                    ? "bg-brand-600 text-white shadow-md shadow-brand-500/20"
-                    : "text-brand-700 hover:bg-brand-100 hover:text-brand-900"
+                    ? "bg-brand-50 text-brand-900 shadow-sm border border-brand-100"
+                    : "text-brand-700 hover:bg-brand-50 hover:text-brand-900"
                     }`}
                 >
-                  <tab.icon className={`w-5 h-5 ${isActive ? "text-white" : "text-brand-500"}`} />
+                  <tab.icon className={`w-5 h-5 ${isActive ? "text-brand-700" : "text-brand-500"}`} />
                   {tab.name}
                 </Link>
               );

@@ -19,6 +19,7 @@ export default function ChangePasswordForm() {
     formState: { errors },
   } = useForm<ChangePasswordFormData>({
     resolver: zodResolver(changePasswordSchema),
+    mode: "onChange",
     defaultValues: {
       currentPassword: "",
       newPassword: "",
