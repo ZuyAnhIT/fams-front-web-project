@@ -1,27 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useAuthStore } from "@/stores/auth.store";
-import { Users, MapPin, Clock, CalendarDays } from "lucide-react";
-import type { StoredUser } from "@/features/auth/types/auth.type";
+import { Users, MapPin, Clock, CalendarDays, Loader2 } from "lucide-react";
+import { useEmployees } from "@/features/employee/hooks/use-employee";
 
 export default function DashboardPage() {
   const { user } = useAuthStore();
-  const [registeredUsers, setRegisteredUsers] = useState<StoredUser[]>([]);
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("fams_users");
-      if (stored) {
-        try {
-          // eslint-disable-next-line react-hooks/set-state-in-effect
-          setRegisteredUsers(JSON.parse(stored));
-        } catch (error) {
-          console.error("Lỗi đọc danh sách tài khoản:", error);
-        }
-      }
-    }
-  }, []);
+  const { data: employeesData, isLoading: isLoadingEmployees } = useEmployees({
+    page: 0,
+    size: 10,
+    sortBy: "createdAt",
+    sortDir: "desc",
+  });
+  
+  const employees = employeesData?.content || [];
 
   const stats = [
     {
@@ -145,41 +137,49 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Card danh sách tài khoản mẫu */}
+        {/* Card danh sách nhân viên */}
         <div className="p-6 rounded-2xl border border-brand-200/60 bg-white shadow-[0_4px_20px_rgba(0,0,0,0.02)] lg:col-span-2 space-y-4 flex flex-col h-[380px]">
           <div>
-            <h2 className="text-lg font-semibold text-brand-950">Danh sách tài khoản (LocalStorage)</h2>
+            <h2 className="text-lg font-semibold text-brand-950">Danh sách nhân viên mới nhất</h2>
             <p className="text-xs text-brand-500 mt-0.5">
-              Bạn có thể sử dụng bất kỳ tài khoản nào bên dưới để đăng nhập và thử nghiệm phân quyền.
+              Những nhân viên vừa được thêm vào hệ thống trong thời gian gần đây.
             </p>
           </div>
 
           <div className="flex-1 overflow-y-auto pr-1 space-y-2.5 scrollbar-thin scrollbar-thumb-brand-200">
-            {registeredUsers.length === 0 ? (
+            {isLoadingEmployees ? (
+              <div className="h-full flex items-center justify-center text-brand-400">
+                <Loader2 className="h-6 w-6 animate-spin" />
+              </div>
+            ) : employees.length === 0 ? (
               <div className="h-full flex items-center justify-center text-brand-400 text-sm">
-                Không tìm thấy dữ liệu tài khoản nào
+                Chưa có nhân viên nào trong hệ thống
               </div>
             ) : (
-              registeredUsers.map((u: StoredUser, idx: number) => (
+              employees.map((emp) => (
                 <div
-                  key={u.id || idx}
+                  key={emp.id}
                   className="flex items-center justify-between p-3.5 rounded-xl bg-brand-50/50 border border-brand-100 hover:border-brand-300 hover:bg-brand-50 transition-all duration-200"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-full bg-violet-600/10 border border-violet-500/20 flex items-center justify-center font-bold text-violet-600 text-sm uppercase">
-                      {u.fullName ? u.fullName.charAt(0) : "U"}
-                    </div>
+                    {emp.avatarUrl ? (
+                      <img src={emp.avatarUrl} alt="Avatar" className="h-9 w-9 rounded-full object-cover border border-brand-200" />
+                    ) : (
+                      <div className="h-9 w-9 rounded-full bg-violet-600/10 border border-violet-500/20 flex items-center justify-center font-bold text-violet-600 text-sm uppercase">
+                        {emp.firstName ? emp.firstName.charAt(0) : "E"}
+                      </div>
+                    )}
                     <div>
-                      <h4 className="font-semibold text-brand-950 text-sm leading-tight">{u.fullName}</h4>
-                      <p className="text-xs text-brand-500 mt-0.5">{u.emailOrPhone}</p>
+                      <h4 className="font-semibold text-brand-950 text-sm leading-tight">{emp.firstName} {emp.lastName}</h4>
+                      <p className="text-xs text-brand-500 mt-0.5">{emp.email || emp.phone || emp.employeeCode || "Chưa cập nhật liên hệ"}</p>
                     </div>
                   </div>
 
                   <div className="text-right">
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-[10px] font-semibold bg-brand-200 text-brand-800">
-                      {u.role || "Nhân viên"}
+                      {emp.position || "Nhân viên"}
                     </span>
-                    <p className="text-[10px] text-brand-400 font-mono mt-1">Mật khẩu: {u.password}</p>
+                    <p className="text-[10px] text-brand-400 font-medium mt-1">Phòng ban: {emp.department || "Chưa xếp"}</p>
                   </div>
                 </div>
               ))
