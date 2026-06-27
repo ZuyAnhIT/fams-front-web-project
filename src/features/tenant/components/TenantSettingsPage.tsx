@@ -62,7 +62,7 @@ export default function TenantSettingsPage({ tenantId }: { tenantId?: string }) 
       <form onSubmit={handleSubmit(onSubmitUiSettings)} className="space-y-6">
         <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/60 shadow-sm space-y-6">
           <div className="flex items-center gap-2 mb-2 border-b border-slate-100 pb-4">
-            <Palette className="h-5 w-5 text-indigo-500" />
+            <Palette className="h-5 w-5 text-blue-500" />
             <h3 className="text-lg font-bold text-slate-800">Tùy biến hiển thị</h3>
           </div>
           

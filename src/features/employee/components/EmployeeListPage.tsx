@@ -126,18 +126,19 @@ export default function EmployeeListPage() {
       dataIndex: "status",
       key: "status",
       render: (status: string, record: Employee) => {
-        const statusConfig: Record<string, { bg: string, text: string, label: string }> = {
-          active: { bg: "bg-emerald-100", text: "text-emerald-700", label: "Hoạt động" },
-          inactive: { bg: "bg-amber-100", text: "text-amber-700", label: "Tạm nghỉ" },
-          terminated: { bg: "bg-rose-100", text: "text-rose-700", label: "Đã nghỉ" },
+        const statusConfig: Record<string, { dot: string, text: string, label: string }> = {
+          active: { dot: "bg-emerald-500", text: "text-slate-700", label: "Hoạt động" },
+          inactive: { dot: "bg-amber-500", text: "text-slate-700", label: "Tạm nghỉ" },
+          terminated: { dot: "bg-rose-500", text: "text-slate-500 line-through", label: "Đã nghỉ" },
         };
-        const config = statusConfig[status] || { bg: "bg-slate-100", text: "text-slate-700", label: status };
+        const config = statusConfig[status] || { dot: "bg-slate-300", text: "text-slate-500", label: status };
         
         return (
           <Dropdown menu={{ items: getStatusActionMenu(record) }} trigger={["click"]}>
-            <span className={`px-2 py-1 cursor-pointer rounded-md text-[11px] font-bold uppercase tracking-wider hover:opacity-80 transition-opacity ${config.bg} ${config.text}`}>
-              {config.label}
-            </span>
+            <div className={`inline-flex items-center gap-2 cursor-pointer hover:opacity-70 transition-opacity ${config.text}`}>
+              <div className={`w-2 h-2 rounded-full ${config.dot} shadow-sm`}></div>
+              <span className="font-semibold text-sm">{config.label}</span>
+            </div>
           </Dropdown>
         );
       },
@@ -160,7 +161,7 @@ export default function EmployeeListPage() {
         <BaseButton 
           type="default"
           icon={<ChevronRight className="h-4 w-4" />}
-          className="!text-brand-600 !border-brand-200 hover:!bg-brand-50 hover:!border-brand-300 shadow-sm h-8 px-3 rounded-lg text-xs font-semibold flex flex-row-reverse"
+          className="!text-blue-600 !border-blue-200 hover:!bg-blue-50 hover:!border-blue-300 shadow-[0_2px_10px_rgb(0,0,0,0.04)] h-8 px-3 rounded-lg text-xs font-bold flex flex-row-reverse hover:-translate-y-0.5 transition-all duration-200"
           onClick={(e) => {
             e.stopPropagation();
             // Since we don't have full details in the list, we pass partial data 

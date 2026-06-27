@@ -62,10 +62,10 @@ export default function Sidebar() {
         ) : (
           <>
             <div className="flex items-center gap-3 overflow-hidden">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-500 font-black text-white text-lg shadow-sm">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-600 font-black text-white text-lg shadow-sm">
                 Q
               </div>
-              <span className="text-xl font-bold tracking-wider bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent truncate select-none">
+              <span className="text-xl font-bold tracking-wider bg-gradient-to-r from-blue-500 to-cyan-400 bg-clip-text text-transparent truncate select-none">
                 {APP_NAME}
               </span>
             </div>
@@ -99,10 +99,10 @@ export default function Sidebar() {
                 key={item.path}
                 href={item.path}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 group border border-transparent",
+                  "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 group border border-transparent hover:scale-[1.02]",
                   isCollapsed ? "justify-center px-0 w-10 h-10 mx-auto" : "",
                   isActive
-                    ? "bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-lg shadow-indigo-500/25"
+                    ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-lg shadow-blue-500/25"
                     : "text-slate-400 hover:text-white hover:bg-white/5"
                 )}
               >

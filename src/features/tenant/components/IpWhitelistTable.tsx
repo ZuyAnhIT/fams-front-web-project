@@ -8,6 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import DataTable from "@/components/tables/DataTable";
 import BaseButton from "@/components/ui/BaseButton";
 import FormInput from "@/components/forms/FormInput";
+import ContentCard from "@/components/shared/layout/ContentCard";
 import { useIpWhitelists, useAddIpWhitelist, useUpdateIpWhitelist, useDeleteIpWhitelist } from "../hooks/use-tenant";
 import { createIpWhitelistSchema, type CreateIpWhitelistFormData } from "../schemas/tenant.schema";
 import type { IpWhitelistResponse } from "../types/tenant.type";
@@ -128,15 +129,17 @@ export default function IpWhitelistTable({ tenantId }: { tenantId?: string }) {
         Nếu danh sách trống, hệ thống sẽ không giới hạn IP.
       </p>
 
-      <DataTable
-        columns={columns}
-        data={list || []}
-        loading={isLoading}
-        totalElements={list?.length || 0}
-        currentPage={0}
-        pageSize={100}
-        onPageChange={() => {}}
-      />
+      <ContentCard noPadding>
+        <DataTable
+          columns={columns}
+          data={list || []}
+          loading={isLoading}
+          totalElements={list?.length || 0}
+          currentPage={0}
+          pageSize={100}
+          onPageChange={() => {}}
+        />
+      </ContentCard>
 
       <Modal
         title="Thêm địa chỉ IP vào Whitelist"

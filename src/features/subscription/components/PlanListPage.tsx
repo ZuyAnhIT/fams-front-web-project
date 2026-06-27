@@ -93,11 +93,11 @@ export default function PlanListPage() {
                 key={plan.id}
                 className={`flex flex-col relative rounded-3xl bg-white/80 backdrop-blur-xl transition-all duration-300
                 ${!plan.isActive ? 'opacity-60 grayscale-[40%]' : ''}
-                ${isPro ? 'ring-2 ring-purple-500 shadow-2xl shadow-purple-500/15 scale-[1.03] z-10' : 'ring-1 ring-slate-200/80 hover:ring-slate-300 hover:shadow-xl hover:shadow-slate-200/50 hover:-translate-y-1'}
+                ${isPro ? 'ring-2 ring-blue-500 shadow-2xl shadow-blue-500/15 scale-[1.03] z-10' : 'ring-1 ring-slate-200/80 hover:ring-slate-300 hover:shadow-xl hover:shadow-slate-200/50 hover:-translate-y-1'}
               `}
               >
                 {isPro && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-5 py-1.5 bg-gradient-to-r from-purple-500 to-fuchsia-600 text-white text-[11px] font-black rounded-full shadow-lg shadow-purple-500/30 z-20 whitespace-nowrap tracking-widest uppercase flex items-center gap-1.5">
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-5 py-1.5 bg-gradient-to-r from-blue-500 to-cyan-600 text-white text-[11px] font-black rounded-full shadow-lg shadow-blue-500/30 z-20 whitespace-nowrap tracking-widest uppercase flex items-center gap-1.5">
                     <Star className="w-3.5 h-3.5 fill-white" /> PHỔ BIẾN NHẤT
                   </div>
                 )}
@@ -108,8 +108,8 @@ export default function PlanListPage() {
                   </div>
                 )}
 
-                <div className={`p-8 border-b border-slate-100/80 flex-1 rounded-t-3xl ${isPro ? 'bg-gradient-to-b from-purple-50/40 to-transparent' : ''}`}>
-                  <h3 className={`text-2xl font-bold tracking-tight mb-2 ${isPro ? 'text-purple-900' : 'text-slate-900'}`}>
+                <div className={`p-8 border-b border-slate-100/80 flex-1 rounded-t-3xl ${isPro ? 'bg-gradient-to-b from-blue-50/40 to-transparent' : ''}`}>
+                  <h3 className={`text-2xl font-bold tracking-tight mb-2 ${isPro ? 'text-blue-900' : 'text-slate-900'}`}>
                     {plan.displayName}
                   </h3>
                   <p className="text-sm text-slate-500 mb-8 min-h-[44px] leading-relaxed font-medium">
@@ -139,7 +139,7 @@ export default function PlanListPage() {
                     <BaseButton
                       icon={<Edit2 className="h-4 w-4" />}
                       onClick={() => handleEditPlan(plan)}
-                      className="w-full text-sm font-bold h-11 !bg-white !border-slate-200 !text-slate-700 hover:!border-purple-400 hover:!text-purple-600 transition-all shadow-sm rounded-xl cursor-pointer"
+                      className="w-full text-sm font-bold h-11 !bg-white !border-slate-200 !text-slate-700 hover:!border-blue-400 hover:!text-blue-600 transition-all shadow-sm rounded-xl cursor-pointer"
                     >
                       Sửa
                     </BaseButton>
@@ -147,7 +147,7 @@ export default function PlanListPage() {
                       icon={<Settings2 className="h-4 w-4" />}
                       onClick={() => handleConfigLimits(plan)}
                       className={`w-full text-sm font-bold h-11 !border-0 !text-white transition-all shadow-md rounded-xl cursor-pointer
-                        ${isPro ? '!bg-purple-600 hover:!bg-purple-700 shadow-purple-600/20' : '!bg-slate-900 hover:!bg-slate-800 shadow-slate-900/20'}
+                        ${isPro ? '!bg-blue-600 hover:!bg-blue-700 shadow-blue-600/20' : '!bg-slate-900 hover:!bg-slate-800 shadow-slate-900/20'}
                       `}
                     >
                       Giới hạn

@@ -32,7 +32,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-950 text-white">
         <div className="flex flex-col items-center gap-4">
-          <div className="h-10 w-10 animate-spin rounded-full border-4 border-violet-500/80 border-t-transparent shadow-[0_0_15px_rgba(124,92,252,0.3)]" />
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-500/80 border-t-transparent shadow-[0_0_15px_rgba(37,99,235,0.3)]" />
           <p className="text-slate-400 text-sm animate-pulse">Đang xác thực thông tin...</p>
         </div>
       </div>

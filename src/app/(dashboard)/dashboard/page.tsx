@@ -21,7 +21,7 @@ export default function DashboardPage() {
       value: "128",
       change: "+4 trong tháng này",
       icon: Users,
-      color: "from-blue-500 to-indigo-500"
+      color: "from-blue-500 to-cyan-500"
     },
     {
       title: "Địa bàn thực địa",
@@ -65,7 +65,7 @@ export default function DashboardPage() {
           return (
             <div
               key={idx}
-              className="p-6 rounded-2xl border border-brand-200/60 bg-white relative overflow-hidden group hover:border-brand-400 transition-all duration-300 shadow-[0_4px_20px_rgba(0,0,0,0.02)]"
+              className="p-6 rounded-2xl border border-brand-200/60 bg-white relative overflow-hidden group hover:border-brand-400 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 shadow-[0_4px_20px_rgba(0,0,0,0.02)]"
             >
               {/* Bóng sáng nền trang trí */}
               <div className={`absolute -right-8 -bottom-8 h-24 w-24 rounded-full bg-gradient-to-br ${stat.color} opacity-5 group-hover:scale-125 transition-transform duration-500 blur-xl`} />
@@ -110,7 +110,7 @@ export default function DashboardPage() {
               )}
               <div>
                 <h3 className="font-bold text-brand-950 text-lg leading-snug">{user?.displayName}</h3>
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-violet-600/10 text-violet-600 border border-violet-500/20 mt-1">
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-600/10 text-blue-600 border border-blue-500/20 mt-1">
                   {user?.role}
                 </span>
               </div>
@@ -165,7 +165,7 @@ export default function DashboardPage() {
                     {emp.avatarUrl ? (
                       <img src={emp.avatarUrl} alt="Avatar" className="h-9 w-9 rounded-full object-cover border border-brand-200" />
                     ) : (
-                      <div className="h-9 w-9 rounded-full bg-violet-600/10 border border-violet-500/20 flex items-center justify-center font-bold text-violet-600 text-sm uppercase">
+                      <div className="h-9 w-9 rounded-full bg-blue-600/10 border border-blue-500/20 flex items-center justify-center font-bold text-blue-600 text-sm uppercase">
                         {emp.firstName ? emp.firstName.charAt(0) : "E"}
                       </div>
                     )}

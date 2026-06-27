@@ -35,7 +35,7 @@ export default function DataTable<T extends object>({
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-brand-200/60 overflow-hidden">
+    <div className="bg-white rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 overflow-hidden">
       <Table
         columns={columns}
         dataSource={data}
@@ -43,7 +43,7 @@ export default function DataTable<T extends object>({
         pagination={paginationConfig}
         rowKey="id"
         scroll={{ x: "max-content" }}
-        className="[&_.ant-table-thead_th]:!bg-brand-50 [&_.ant-table-thead_th]:!text-brand-900 [&_.ant-table-thead_th]:!font-semibold"
+        className="[&_.ant-table-wrapper]:!border-0 [&_.ant-table-thead_th]:!bg-transparent [&_.ant-table-thead_th]:!text-slate-400 [&_.ant-table-thead_th]:!font-bold [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!text-[11px] [&_.ant-table-thead_th]:!tracking-[0.1em] [&_.ant-table-thead_th]:!py-5 [&_.ant-table-thead_th]:!border-b-[1.5px] [&_.ant-table-thead_th]:!border-slate-100 [&_.ant-table-cell]:!py-5 [&_.ant-table-cell]:!border-b [&_.ant-table-cell]:!border-slate-50 [&_.ant-table-tbody_tr:hover_td]:!bg-blue-50/40 [&_.ant-table-tbody_tr:last-child_td]:!border-b-0"
         {...rest}
       />
     </div>
