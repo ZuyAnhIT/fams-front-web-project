@@ -22,7 +22,7 @@ export interface BaseButtonProps extends ButtonProps {
 
 const variantClasses = {
   default: "",
-  auth: "!bg-violet-600 hover:!bg-violet-500 !text-white !border-violet-600 hover:!border-violet-500 !font-semibold !text-base hover:shadow-[0_4px_20px_rgba(124,92,252,0.4)] transition-all duration-300 !h-11 shadow-[0_4px_12px_rgba(124,92,252,0.3)]",
+  auth: "!bg-blue-600 hover:!bg-blue-500 !text-white !border-blue-600 hover:!border-blue-500 !font-semibold !text-base hover:shadow-[0_4px_20px_rgba(37,99,235,0.4)] transition-all duration-300 !h-11 shadow-[0_4px_12px_rgba(37,99,235,0.3)]",
 };
 
 export default function BaseButton({
@@ -40,7 +40,7 @@ export default function BaseButton({
     <Button
       type={effectiveType}
       className={cn(
-        "!rounded-md !font-medium transition-all duration-200 active:scale-95",
+        "!rounded-xl !font-medium transition-all duration-200 active:scale-95",
         variantClasses[customVariant],
         className
       )}

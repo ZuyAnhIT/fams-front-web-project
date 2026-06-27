@@ -109,7 +109,7 @@ export default function RegisterForm() {
       <GlassCard>
         {/* Logo */}
         <div className="mb-6 flex justify-center">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-dashed border-violet-500/60 bg-violet-500/10 shadow-[0_0_20px_rgba(124,92,252,0.2)]">
+          <div className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-dashed border-blue-500/60 bg-blue-500/10 shadow-[0_0_20px_rgba(37,99,235,0.2)]">
             <span className="text-4xl font-extrabold text-white">Q</span>
           </div>
         </div>
@@ -122,7 +122,7 @@ export default function RegisterForm() {
         {step === "waiting_email" ? (
           <div className="flex flex-col items-center justify-center text-center animate-in fade-in zoom-in duration-300">
             {/* Email Icon */}
-            <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full border-2 border-violet-400/40 bg-violet-500/20 text-violet-200 shadow-[0_0_30px_rgba(124,92,252,0.4)]">
+            <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full border-2 border-blue-400/40 bg-blue-500/20 text-blue-200 shadow-[0_0_30px_rgba(37,99,235,0.4)]">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
               </svg>

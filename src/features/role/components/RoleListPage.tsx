@@ -6,6 +6,8 @@ import { Plus, Search, Shield, Trash2, Edit } from "lucide-react";
 import { Input, Tag, message, Popconfirm } from "antd";
 import DataTable from "@/components/tables/DataTable";
 import BaseButton from "@/components/ui/BaseButton";
+import ListHeader from "@/components/shared/layout/ListHeader";
+import ContentCard from "@/components/shared/layout/ContentCard";
 import { usePagination } from "@/hooks/usePagination";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useRoles, useDeleteRole } from "../hooks/use-role";
@@ -43,7 +45,7 @@ export default function RoleListPage() {
       key: "name",
       render: (_: any, record: Role) => (
         <div className="flex items-center gap-3">
-          <div className={`p-2 rounded-lg ${record.isSystem ? 'bg-rose-100 text-rose-600' : 'bg-brand-100 text-brand-600'}`}>
+          <div className={`p-2 rounded-lg ${record.isSystem ? 'bg-rose-50 text-rose-600 ring-1 ring-rose-500/20' : 'bg-blue-50 text-blue-600 ring-1 ring-blue-500/20'}`}>
             <Shield className="h-4 w-4" />
           </div>
           <div className="flex flex-col">
@@ -100,41 +102,34 @@ export default function RoleListPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header Actions */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div className="flex-1 w-full max-w-md relative">
-          <Input
-            placeholder="Tìm kiếm vai trò..."
-            prefix={<Search className="h-4 w-4 text-brand-400" />}
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            className="h-10 rounded-lg border-brand-300 focus:border-brand-500 focus:ring-brand-500/20"
-            allowClear
-          />
-        </div>
-        
-        <div className="flex gap-3 w-full sm:w-auto">
+      <ListHeader
+        searchValue={searchInput}
+        onSearchChange={setSearchInput}
+        searchPlaceholder="Tìm kiếm vai trò..."
+        actions={
           <BaseButton 
             type="primary" 
-            icon={<Plus className="h-4 w-4" />}
+            icon={<Plus className="h-4.5 w-4.5" />}
             onClick={() => router.push("/settings/roles/create")}
-            className="bg-brand-600 border-transparent"
+            className="!bg-blue-600 !text-white hover:!bg-blue-700 !border-0 shadow-lg shadow-blue-500/25 h-11 px-5 rounded-xl font-bold hover:-translate-y-0.5 transition-all flex items-center gap-2"
           >
             Thêm vai trò mới
           </BaseButton>
-        </div>
-      </div>
+        }
+      />
 
       {/* Data Table */}
-      <DataTable
-        columns={columns}
-        data={pageData?.content || []}
-        loading={isLoading}
-        totalElements={pageData?.page.totalElements || 0}
-        currentPage={state.page}
-        pageSize={state.size}
-        onPageChange={(page, size) => setPagination({ page, size })}
-      />
+      <ContentCard noPadding>
+        <DataTable
+          columns={columns}
+          data={pageData?.content || []}
+          loading={isLoading}
+          totalElements={pageData?.page.totalElements || 0}
+          currentPage={state.page}
+          pageSize={state.size}
+          onPageChange={(page, size) => setPagination({ page, size })}
+        />
+      </ContentCard>
     </div>
   );
 }

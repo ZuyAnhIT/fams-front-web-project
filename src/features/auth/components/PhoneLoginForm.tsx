@@ -163,7 +163,7 @@ export default function PhoneLoginForm() {
       <GlassCard>
         {/* Logo */}
         <div className="mb-6 flex justify-center">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-dashed border-violet-500/60 bg-violet-500/10 shadow-[0_0_20px_rgba(124,92,252,0.2)]">
+          <div className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-dashed border-blue-500/60 bg-blue-500/10 shadow-[0_0_20px_rgba(37,99,235,0.2)]">
             <span className="text-4xl font-extrabold text-white">Q</span>
           </div>
         </div>
@@ -212,7 +212,7 @@ export default function PhoneLoginForm() {
           <div className="animate-fade-in">
 
             {/* Thông báo */}
-            <div className="mb-6 rounded-xl bg-violet-500/10 border border-violet-500/20 p-4">
+            <div className="mb-6 rounded-xl bg-blue-500/10 border border-blue-500/20 p-4">
               <p className="text-sm text-gray-300 text-center">
                 Mã OTP đã được gửi đến{" "}
                 <span className="font-semibold text-white">
@@ -245,7 +245,7 @@ export default function PhoneLoginForm() {
                         />
                       </svg>
                     </div>
-                    <span className="text-sm font-mono text-violet-300 font-semibold">
+                    <span className="text-sm font-mono text-blue-300 font-semibold">
                       {formatTime(countdown)}
                     </span>
                     <span className="text-xs text-gray-500">còn lại</span>
@@ -301,7 +301,7 @@ export default function PhoneLoginForm() {
                 <button
                   type="button"
                   onClick={handleResendOtp}
-                  className="text-sm font-semibold text-violet-400 hover:text-violet-300 transition-colors cursor-pointer"
+                  className="text-sm font-semibold text-blue-400 hover:text-blue-300 transition-colors cursor-pointer"
                 >
                   Gửi lại mã ({MAX_OTP_SENDS - sendCount} lần còn)
                 </button>

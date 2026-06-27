@@ -39,9 +39,9 @@ export default function TenantListPage() {
 
   if (error && (error as { response?: { status?: number } }).response?.status === 403) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] text-center p-10 bg-indigo-50/50 rounded-3xl border border-indigo-100 backdrop-blur-sm">
-        <div className="h-20 w-20 bg-white rounded-full flex items-center justify-center shadow-sm mb-6">
-          <Building2 className="h-10 w-10 text-indigo-400" />
+      <div className="flex flex-col items-center justify-center min-h-[400px] text-center p-10 bg-blue-50/50 rounded-3xl border border-blue-100 backdrop-blur-sm">
+        <div className="p-4 bg-white rounded-full shadow-sm mb-4">
+          <Building2 className="h-10 w-10 text-blue-400" />
         </div>
         <h2 className="text-2xl font-bold text-slate-900 mb-3 tracking-tight">Không có quyền truy cập</h2>
         <p className="text-slate-500 max-w-md leading-relaxed font-medium">
@@ -67,7 +67,7 @@ export default function TenantListPage() {
               className="h-9 w-9 rounded-lg ring-1 ring-slate-200 object-contain bg-white p-1 shadow-sm" 
             />
           ) : (
-            <div className="h-9 w-9 bg-indigo-100 text-indigo-700 rounded-lg flex items-center justify-center font-bold text-base shrink-0 shadow-inner">
+            <div className="h-9 w-9 bg-blue-100 text-blue-700 rounded-lg flex items-center justify-center font-bold text-base shrink-0 shadow-inner">
               {record.name.charAt(0).toUpperCase()}
             </div>
           )}
@@ -83,18 +83,19 @@ export default function TenantListPage() {
       dataIndex: "status",
       key: "status",
       render: (status: string) => {
-        const statusConfig: Record<string, { bg: string, text: string, label: string }> = {
-          active: { bg: "bg-emerald-100", text: "text-emerald-700", label: "Hoạt động" },
-          inactive: { bg: "bg-amber-100", text: "text-amber-700", label: "Tạm dừng" },
-          suspended: { bg: "bg-rose-100", text: "text-rose-700", label: "Đình chỉ" },
-          trial: { bg: "bg-indigo-100", text: "text-indigo-700", label: "Dùng thử" },
+        const statusConfig: Record<string, { dot: string, text: string, label: string }> = {
+          active: { dot: "bg-emerald-500", text: "text-slate-700", label: "Hoạt động" },
+          inactive: { dot: "bg-amber-500", text: "text-slate-700", label: "Tạm dừng" },
+          suspended: { dot: "bg-rose-500", text: "text-slate-500 line-through", label: "Đình chỉ" },
+          trial: { dot: "bg-blue-500", text: "text-blue-700", label: "Dùng thử" },
         };
-        const config = statusConfig[status] || { bg: "bg-slate-100", text: "text-slate-700", label: status };
+        const config = statusConfig[status] || { dot: "bg-slate-300", text: "text-slate-500", label: status };
 
         return (
-          <span className={`px-2 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider ${config.bg} ${config.text}`}>
-            {config.label}
-          </span>
+          <div className={`inline-flex items-center gap-2 ${config.text}`}>
+            <div className={`w-2 h-2 rounded-full ${config.dot} shadow-sm`}></div>
+            <span className="font-semibold text-sm">{config.label}</span>
+          </div>
         );
       },
     },
@@ -125,7 +126,7 @@ export default function TenantListPage() {
         <BaseButton
           type="default"
           icon={<ChevronRight className="h-4 w-4" />}
-          className="!text-indigo-600 !border-indigo-200 hover:!bg-indigo-50 hover:!border-indigo-300 shadow-sm h-8 px-3 rounded-lg text-xs font-semibold flex flex-row-reverse"
+          className="!text-blue-600 !border-blue-200 hover:!bg-blue-50 hover:!border-blue-300 shadow-[0_2px_10px_rgb(0,0,0,0.04)] h-8 px-3 rounded-lg text-xs font-bold flex flex-row-reverse hover:-translate-y-0.5 transition-all duration-200"
           onClick={(e) => {
             e.stopPropagation();
             const { setActiveTenant } = require("@/stores/tenant.store").useTenantStore.getState();
@@ -184,7 +185,7 @@ export default function TenantListPage() {
                 setActiveTenant(record as Tenant);
                 router.push(`/tenants/${record.id}`);
               },
-              className: "cursor-pointer hover:bg-indigo-50/50 transition-colors duration-200 group",
+              className: "cursor-pointer hover:bg-blue-50/50 transition-colors duration-200 group",
             })}
           />
         </ContentCard>

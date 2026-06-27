@@ -129,7 +129,7 @@ export default function ResetPasswordForm() {
       <GlassCard>
         {/* Logo */}
         <div className="mb-6 flex justify-center">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-dashed border-violet-500/60 bg-violet-500/10 shadow-[0_0_20px_rgba(124,92,252,0.2)]">
+          <div className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-dashed border-blue-500/60 bg-blue-500/10 shadow-[0_0_20px_rgba(37,99,235,0.2)]">
             <span className="text-4xl font-extrabold text-white">Q</span>
           </div>
         </div>

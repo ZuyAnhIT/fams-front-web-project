@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand-primary: var(--brand-primary, #4f46e5);
+  --color-brand-primary: var(--brand-primary, #2563eb);
   
   --color-brand-50: #F4F4F4;
   --color-brand-100: #DEDEDE;
@@ -123,20 +123,20 @@ body {
   background: rgba(255, 255, 255, 0.06) !important;
   border: 1.5px solid rgba(255, 255, 255, 0.15) !important;
   color: #ffffff !important;
-  caret-color: rgb(139, 92, 246);
+  caret-color: rgb(37, 99, 235);
   transition: all 0.25s ease !important;
 }
 
 .otp-container .ant-otp .ant-input:hover {
-  border-color: rgba(139, 92, 246, 0.5) !important;
+  border-color: rgba(37, 99, 235, 0.5) !important;
   background: rgba(255, 255, 255, 0.08) !important;
 }
 
 .otp-container .ant-otp .ant-input:focus,
 .otp-container .ant-otp .ant-input-focused {
-  border-color: rgb(139, 92, 246) !important;
-  background: rgba(139, 92, 246, 0.08) !important;
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2), 0 0 20px rgba(139, 92, 246, 0.15) !important;
+  border-color: rgb(37, 99, 235) !important;
+  background: rgba(37, 99, 235, 0.08) !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2), 0 0 20px rgba(37, 99, 235, 0.15) !important;
 }
 
 .otp-container .ant-otp .ant-input:disabled {
