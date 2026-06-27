@@ -6,10 +6,12 @@ import type {
   UpdatePlanLimitsPayload,
 } from "../types/subscription.type";
 
-export const usePlans = (activeOnly: boolean = false) => {
+import type { PaginationState } from "@/hooks/usePagination";
+
+export const usePlans = (activeOnly: boolean = false, state?: PaginationState) => {
   return useQuery({
-    queryKey: ["plans", activeOnly],
-    queryFn: () => subscriptionService.listPlans(activeOnly),
+    queryKey: ["plans", activeOnly, state],
+    queryFn: () => subscriptionService.listPlans(activeOnly, state),
   });
 };
 

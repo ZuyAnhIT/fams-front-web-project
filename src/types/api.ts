@@ -20,10 +20,10 @@ export interface PaginationMeta {
 
 export interface PageResponse<T> {
   content: T[];
-  page: {
-    size: number;
-    number: number;
-    totalElements: number;
-    totalPages: number;
-  }
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  first: boolean;
+  last: boolean;
 }

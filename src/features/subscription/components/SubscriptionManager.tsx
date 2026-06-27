@@ -12,7 +12,8 @@ import type { AssignSubscriptionPayload, UpdateSubscriptionPayload } from "../ty
 
 export default function SubscriptionManager({ tenantId }: { tenantId: string }) {
   const { data: currentSub, isLoading: isLoadingSub } = useTenantSubscription(tenantId);
-  const { data: plans = [], isLoading: isLoadingPlans } = usePlans(true);
+  const { data: plansData, isLoading: isLoadingPlans } = usePlans(true, { page: 0, size: 100 });
+  const plans = Array.isArray(plansData) ? plansData : (plansData?.content || []);
   
   const { mutateAsync: assignSub, isPending: isAssigning } = useAssignSubscription();
   const { mutateAsync: updateSub, isPending: isUpdating } = useUpdateSubscription();

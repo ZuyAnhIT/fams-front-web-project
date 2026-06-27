@@ -226,7 +226,7 @@ export const RoleManagementPage: React.FC = () => {
           pagination={{
             current: page + 1,
             pageSize: size,
-            total: rolesResponse?.data?.page?.totalElements || 0,
+            total: rolesResponse?.data?.totalElements || 0,
             showSizeChanger: true,
             onChange: (p, s) => {
               setPage(p - 1);

@@ -220,7 +220,7 @@ export default function EmployeeListPage() {
           columns={columns}
           data={pageData?.content || []}
           loading={isLoading}
-          totalElements={pageData?.page.totalElements || 0}
+          totalElements={pageData?.totalElements || 0}
           currentPage={state.page}
           pageSize={state.size}
           onPageChange={(page, size) => setPagination({ page, size })}

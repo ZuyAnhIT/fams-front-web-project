@@ -2,16 +2,20 @@
 
 import { useState } from "react";
 import { Plus, Edit2, Settings2, ShieldAlert, Star } from "lucide-react";
-import { Switch, App, Tag } from "antd";
+import { Switch, App, Tag, Pagination } from "antd";
 import BaseButton from "@/components/ui/BaseButton";
+import { usePagination } from "@/hooks/usePagination";
 import { usePlans, useUpdatePlan } from "../hooks/use-subscription";
 import type { PlanResponse } from "../types/subscription.type";
 import PlanFormModal from "./PlanFormModal";
 import PlanLimitsDrawer from "./PlanLimitsDrawer";
 
 export default function PlanListPage() {
+  const { state, setPagination } = usePagination(8);
   const { message } = App.useApp();
-  const { data: plans, isLoading, error } = usePlans(false);
+  const { data: plansData, isLoading, error } = usePlans(false, state);
+  const plans = Array.isArray(plansData) ? plansData : (plansData?.content || []);
+  const totalElements = Array.isArray(plansData) ? plans.length : (plansData?.totalElements || 0);
   const { mutate: updatePlan } = useUpdatePlan();
 
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
@@ -168,6 +172,19 @@ export default function PlanListPage() {
           >
             Tạo gói dịch vụ đầu tiên
           </BaseButton>
+        </div>
+      )}
+
+      {plansData && totalElements > 0 && (
+        <div className="flex justify-end mt-4">
+          <Pagination
+            current={state.page + 1}
+            pageSize={state.size}
+            total={totalElements}
+            onChange={(page, pageSize) => setPagination({ page: page - 1, size: pageSize })}
+            showSizeChanger
+            showTotal={(total) => `Tổng số ${total} gói`}
+          />
         </div>
       )}
 
