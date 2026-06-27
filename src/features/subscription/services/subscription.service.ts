@@ -1,5 +1,6 @@
 import { apiClient } from "@/services/api-client";
-import { type ApiResponse } from "@/types/api";
+import { type ApiResponse, type PageResponse } from "@/types/api";
+import type { PaginationState } from "@/hooks/usePagination";
 import type {
   PlanResponse,
   PlanLimitsResponse,
@@ -12,9 +13,15 @@ export const subscriptionService = {
   /**
    * Lấy danh sách các Gói (Plans)
    */
-  async listPlans(activeOnly: boolean = false): Promise<PlanResponse[]> {
-    const response = await apiClient.get<ApiResponse<PlanResponse[]>>("/plans", {
-      params: { activeOnly },
+  async listPlans(activeOnly: boolean = false, state?: PaginationState): Promise<PageResponse<PlanResponse>> {
+    const response = await apiClient.get<ApiResponse<PageResponse<PlanResponse>>>("/plans", {
+      params: { 
+        activeOnly,
+        page: state?.page,
+        size: state?.size,
+        sortBy: state?.sortBy,
+        sortDir: state?.sortDir
+      },
     });
     return response.data.data;
   },
