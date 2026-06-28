@@ -28,7 +28,7 @@ export default function PlanFormModal({ open, onClose, initialData }: PlanFormMo
     control,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<PlanFormData>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(planSchema) as any,
@@ -169,7 +169,7 @@ export default function PlanFormModal({ open, onClose, initialData }: PlanFormMo
           <BaseButton onClick={onClose} disabled={isPending} className="!bg-red-500 !text-white hover:!bg-red-600 !border-0">
             Hủy
           </BaseButton>
-          <BaseButton type="primary" htmlType="submit" loading={isPending} className="!bg-blue-600 !text-white hover:!bg-blue-700 !border-0">
+          <BaseButton type="primary" htmlType="submit" loading={isPending} disabled={!isDirty} className="!bg-blue-600 !text-white hover:!bg-blue-700 !border-0 disabled:!bg-slate-300 disabled:!text-slate-500">
             {isEditMode ? "Lưu thay đổi" : "Tạo gói mới"}
           </BaseButton>
         </div>

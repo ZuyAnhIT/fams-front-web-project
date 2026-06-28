@@ -4,9 +4,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { message } from "antd";
+import { App } from "antd";
 import { cn } from "@/utils/cn";
-import GlassCard from "@/components/ui/GlassCard";
 import FormInput from "@/components/forms/FormInput";
 
 import { useState } from "react";
@@ -28,6 +27,7 @@ import { authMapper } from "@/features/auth/utils/auth.mapper";
  */
 export default function RegisterForm() {
   const router = useRouter();
+  const { message } = App.useApp();
 
   // State quản lý luồng UI
   const [step, setStep] = useState<"register" | "waiting_email">("register");
@@ -39,7 +39,7 @@ export default function RegisterForm() {
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
-    mode: "onBlur",
+    mode: "onChange",
     defaultValues: {
       fullName: "",
       emailOrPhone: "",
@@ -103,58 +103,55 @@ export default function RegisterForm() {
       const errorMessage = error.response?.data?.message || "Đăng ký không thành công. Vui lòng thử lại.";
       message.error(errorMessage);
     }
-  }; return (
-    <div className="w-full max-w-md">
-      {/* Card chính phong cách Dark Glassmorphism */}
-      <GlassCard>
-        {/* Logo */}
-        <div className="mb-6 flex justify-center">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-dashed border-blue-500/60 bg-blue-500/10 shadow-[0_0_20px_rgba(37,99,235,0.2)]">
-            <span className="text-4xl font-extrabold text-white">Q</span>
-          </div>
-        </div>
+  };
 
+  return (
+    <div className="w-full">
+      <div className="bg-white">
         {/* Tiêu đề */}
-        <h1 className="mb-8 text-center text-2xl font-semibold text-white">
+        <h1 className="mb-2 text-3xl font-bold text-slate-900 tracking-tight">
           Tạo tài khoản {APP_NAME}
         </h1>
+        <p className="mb-8 text-slate-500 text-[15px]">
+          Điền thông tin bên dưới để bắt đầu
+        </p>
 
         {step === "waiting_email" ? (
           <div className="flex flex-col items-center justify-center text-center animate-in fade-in zoom-in duration-300">
             {/* Email Icon */}
-            <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full border-2 border-blue-400/40 bg-blue-500/20 text-blue-200 shadow-[0_0_30px_rgba(37,99,235,0.4)]">
+            <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-brand-50 text-brand-600">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
               </svg>
             </div>
 
-            <h2 className="mb-4 text-2xl font-bold text-white">Xác thực Email</h2>
+            <h2 className="mb-4 text-2xl font-bold text-slate-900">Xác thực Email</h2>
 
-            <p className="mb-4 text-base text-gray-100">
+            <p className="mb-4 text-base text-slate-600">
               Chúng tôi đã gửi link kích hoạt đến email<br />
-              <strong className="mt-2 block text-lg tracking-wide text-white">{registeredEmail}</strong>
+              <strong className="mt-2 block text-lg tracking-wide text-slate-900">{registeredEmail}</strong>
             </p>
 
-            <p className="mb-8 text-base leading-relaxed text-gray-200">
+            <p className="mb-8 text-base leading-relaxed text-slate-500">
               Vui lòng kiểm tra hòm thư (bao gồm cả mục Spam) và nhấn vào link bên trong để xác thực. Sau khi xác thực xong, hãy nhấn nút bên dưới.
             </p>
 
             <BaseButton
-              customVariant="auth"
+              type="primary"
               size="large"
               block
               onClick={() => {
                 router.push(`${ROUTES.LOGIN}?email=${encodeURIComponent(registeredEmail)}`);
               }}
-              className="w-full text-base font-semibold h-12 shadow-[0_0_15px_rgba(124,92,252,0.3)]"
+              className="mt-2 font-bold !bg-brand-600 !text-white hover:opacity-90 !border-0 shadow-lg shadow-brand-600/25 h-12 rounded-xl transition-all"
             >
               Đi tới Đăng nhập
             </BaseButton>
 
-            <p className="mt-8 text-sm text-gray-300">
+            <p className="mt-8 text-sm text-slate-500">
               Chưa nhận được email?{" "}
               <span
-                className="cursor-pointer font-semibold text-white underline hover:text-brand-300 transition-colors"
+                className="cursor-pointer font-bold text-brand-600 hover:text-brand-700 transition-colors"
                 onClick={() => message.info("Chức năng gửi lại email sẽ được cập nhật sau.")}
               >
                 Gửi lại email
@@ -207,26 +204,27 @@ export default function RegisterForm() {
 
             {/* Nút đăng ký */}
             <BaseButton
-              customVariant="auth"
+              type="primary"
               htmlType="submit"
               loading={isSubmitting}
               block
               size="large"
+              className="mt-2 font-bold !bg-brand-600 !text-white hover:opacity-90 !border-0 shadow-lg shadow-brand-600/25 h-12 rounded-xl transition-all"
             >
               Đăng ký
             </BaseButton>
-            <div className="text-center text-sm text-slate-400">
+            <div className="text-center text-sm font-medium text-slate-500">
               Đã có tài khoản?{" "}
               <Link
                 href={ROUTES.LOGIN}
-                className="font-semibold text-white hover:text-brand-400 transition-colors"
+                className="font-bold text-brand-600 hover:text-brand-700 transition-colors"
               >
                 Đăng nhập
               </Link>
             </div>
           </form>
         )}
-      </GlassCard>
+      </div>
     </div>
   );
 }

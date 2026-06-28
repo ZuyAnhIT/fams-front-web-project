@@ -5,9 +5,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { message } from "antd";
+import { App } from "antd";
 import { CheckCircleOutlined, WarningOutlined } from "@ant-design/icons";
-import GlassCard from "@/components/ui/GlassCard";
 import FormInput from "@/components/forms/FormInput";
 import BaseButton from "@/components/ui/BaseButton";
 import { resetPasswordSchema, type ResetPasswordFormData } from "@/features/auth/schemas/auth.schema";
@@ -16,6 +15,7 @@ import { ROUTES } from "@/constants/routes";
 
 export default function ResetPasswordForm() {
   const router = useRouter();
+  const { message } = App.useApp();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
 
@@ -39,40 +39,41 @@ export default function ResetPasswordForm() {
   // Xử lý khi không có token trên URL
   if (!token) {
     return (
-      <div className="w-full max-w-[450px]">
-        <GlassCard>
+      <div className="w-full">
+        <div className="bg-white">
           <div className="mb-6 flex justify-center">
-            <div className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-dashed border-red-500/60 bg-red-500/10 shadow-[0_0_20px_rgba(239,68,68,0.2)]">
-              <WarningOutlined className="text-4xl text-red-400" />
+            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-red-50 shadow-sm shadow-red-100">
+              <WarningOutlined className="text-4xl text-red-500" />
             </div>
           </div>
           
-          <h1 className="mb-4 text-center text-2xl font-semibold text-white">
+          <h1 className="mb-4 text-center text-3xl font-bold text-slate-900 tracking-tight">
             Liên kết không hợp lệ
           </h1>
           
-          <p className="mb-8 text-center text-sm text-gray-300">
+          <p className="mb-8 text-center text-[15px] text-slate-600">
             Không tìm thấy mã xác thực. Vui lòng kiểm tra lại đường dẫn trong email hoặc yêu cầu cấp lại mã mới.
           </p>
 
           <Link href={ROUTES.FORGOT_PASSWORD} className="block w-full">
             <BaseButton
-              customVariant="auth"
+              type="primary"
               block
               size="large"
+              className="font-bold !bg-brand-600 !text-white hover:opacity-90 !border-0 shadow-lg shadow-brand-600/25 h-12 rounded-xl transition-all"
             >
               Yêu cầu cấp lại
             </BaseButton>
           </Link>
-          <div className="mt-4 text-center">
+          <div className="mt-6 text-center">
             <Link
               href={ROUTES.LOGIN}
-              className="text-sm font-semibold text-gray-400 hover:text-white transition-colors"
+              className="text-sm font-semibold text-slate-500 hover:text-brand-600 transition-colors"
             >
               Quay lại Đăng nhập
             </Link>
           </div>
-        </GlassCard>
+        </div>
       </div>
     );
   }
@@ -94,52 +95,46 @@ export default function ResetPasswordForm() {
   // Màn hình thành công
   if (isSuccess) {
     return (
-      <div className="w-full max-w-[450px]">
-        <GlassCard>
+      <div className="w-full">
+        <div className="bg-white">
           <div className="mb-6 flex justify-center">
-            <div className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-dashed border-green-500/60 bg-green-500/10 shadow-[0_0_20px_rgba(34,197,94,0.2)]">
-              <CheckCircleOutlined className="text-4xl text-green-400" />
+            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-green-50 shadow-sm shadow-green-100">
+              <CheckCircleOutlined className="text-4xl text-green-500" />
             </div>
           </div>
           
-          <h1 className="mb-4 text-center text-2xl font-semibold text-white">
+          <h1 className="mb-4 text-center text-3xl font-bold text-slate-900 tracking-tight">
             Đổi mật khẩu thành công!
           </h1>
           
-          <p className="mb-8 text-center text-sm text-gray-300">
+          <p className="mb-8 text-center text-[15px] text-slate-600">
             Mật khẩu của bạn đã được cập nhật. Toàn bộ phiên đăng nhập cũ đã được đăng xuất. Vui lòng đăng nhập lại bằng mật khẩu mới.
           </p>
 
           <Link href={ROUTES.LOGIN} className="block w-full">
             <BaseButton
-              customVariant="auth"
+              type="primary"
               block
               size="large"
+              className="font-bold !bg-brand-600 !text-white hover:opacity-90 !border-0 shadow-lg shadow-brand-600/25 h-12 rounded-xl transition-all"
             >
               Đăng nhập ngay
             </BaseButton>
           </Link>
-        </GlassCard>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="w-full max-w-[450px]">
-      <GlassCard>
-        {/* Logo */}
-        <div className="mb-6 flex justify-center">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-dashed border-blue-500/60 bg-blue-500/10 shadow-[0_0_20px_rgba(37,99,235,0.2)]">
-            <span className="text-4xl font-extrabold text-white">Q</span>
-          </div>
-        </div>
-
+    <div className="w-full">
+      <div className="bg-white">
         {/* Tiêu đề */}
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-semibold text-white mb-2">
+        <div className="text-left mb-8">
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight mb-2">
             Tạo mật khẩu mới
           </h1>
-          <p className="text-sm text-gray-400">
+          <p className="text-[15px] text-slate-500">
             Vui lòng nhập mật khẩu mới mạnh và dễ nhớ.
           </p>
         </div>
@@ -167,16 +162,17 @@ export default function ResetPasswordForm() {
           />
 
           <BaseButton
-            customVariant="auth"
+            type="primary"
             htmlType="submit"
             loading={isSubmitting}
             block
             size="large"
+            className="mt-2 font-bold !bg-brand-600 !text-white hover:opacity-90 !border-0 shadow-lg shadow-brand-600/25 h-12 rounded-xl transition-all"
           >
             Lưu mật khẩu mới
           </BaseButton>
         </form>
-      </GlassCard>
+      </div>
     </div>
   );
 }

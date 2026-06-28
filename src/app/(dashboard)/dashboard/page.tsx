@@ -1,17 +1,25 @@
 "use client";
 
 import { useAuthStore } from "@/stores/auth.store";
-import { Users, MapPin, Clock, CalendarDays, Loader2 } from "lucide-react";
+import { Users, MapPin, Clock, CalendarDays, Loader2, FileText } from "lucide-react";
 import { useEmployees } from "@/features/employee/hooks/use-employee";
+import { SystemRole } from "@/features/auth/types/auth.type";
 
 export default function DashboardPage() {
   const { user } = useAuthStore();
+  const canViewEmployees = user?.role && [
+    SystemRole.TENANT_ADMIN,
+    SystemRole.HR_MANAGER,
+    SystemRole.SITE_SUPERVISOR,
+    SystemRole.PLATFORM_ADMIN,
+  ].includes(user.role as SystemRole);
+
   const { data: employeesData, isLoading: isLoadingEmployees } = useEmployees({
     page: 0,
     size: 10,
     sortBy: "createdAt",
     sortDir: "desc",
-  });
+  }, { enabled: !!canViewEmployees });
   
   const employees = employeesData?.content || [];
 
@@ -21,30 +29,37 @@ export default function DashboardPage() {
       value: "128",
       change: "+4 trong tháng này",
       icon: Users,
-      color: "from-blue-500 to-cyan-500"
+      color: "from-blue-500 to-cyan-500",
+      show: canViewEmployees
     },
     {
       title: "Địa bàn thực địa",
       value: "14",
       change: "Hoạt động ổn định",
       icon: MapPin,
-      color: "from-emerald-500 to-teal-500"
+      color: "from-emerald-500 to-teal-500",
+      show: true
     },
     {
       title: "Ca làm việc đang chạy",
       value: "6",
       change: "Bình thường",
       icon: Clock,
-      color: "from-amber-500 to-orange-500"
+      color: "from-amber-500 to-orange-500",
+      show: true
     },
     {
       title: "Tỷ lệ chấm công đúng giờ",
       value: "97.6%",
       change: "+1.2% so với hôm qua",
       icon: CalendarDays,
-      color: "from-rose-500 to-pink-500"
+      color: "from-rose-500 to-pink-500",
+      show: true
     },
   ];
+
+  // Chỉ lấy các stat được show
+  const visibleStats = stats.filter(s => s.show);
 
   return (
     <div className="space-y-8 animate-fadeIn">
@@ -60,7 +75,7 @@ export default function DashboardPage() {
 
       {/* Grid thẻ thống kê */}
       <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat, idx) => {
+        {visibleStats.map((stat, idx) => {
           const IconComponent = stat.icon;
           return (
             <div
@@ -137,7 +152,8 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Card danh sách nhân viên */}
+        {/* Card danh sách nhân viên hoặc card mặc định cho USER */}
+        {canViewEmployees ? (
         <div className="p-6 rounded-2xl border border-brand-200/60 bg-white shadow-[0_4px_20px_rgba(0,0,0,0.02)] lg:col-span-2 space-y-4 flex flex-col h-[380px]">
           <div>
             <h2 className="text-lg font-semibold text-brand-950">Danh sách nhân viên mới nhất</h2>
@@ -186,6 +202,17 @@ export default function DashboardPage() {
             )}
           </div>
         </div>
+        ) : (
+          <div className="p-6 rounded-2xl border border-brand-200/60 bg-white shadow-[0_4px_20px_rgba(0,0,0,0.02)] lg:col-span-2 flex flex-col items-center justify-center text-center h-[380px]">
+            <div className="h-20 w-20 rounded-full bg-brand-50 flex items-center justify-center mb-4">
+              <FileText className="h-10 w-10 text-brand-300" />
+            </div>
+            <h2 className="text-xl font-semibold text-brand-950 mb-2">Chưa có thông báo mới</h2>
+            <p className="text-sm text-brand-500 max-w-[300px]">
+              Chào mừng bạn đến với FAMS. Hiện tại bạn chưa có lịch làm việc hoặc công việc cần xử lý.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

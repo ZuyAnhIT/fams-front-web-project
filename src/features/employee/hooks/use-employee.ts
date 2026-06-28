@@ -8,10 +8,11 @@ import type {
   AcceptInvitationPayload,
 } from "../types/employee.type";
 
-export const useEmployees = (params: any) => {
+export const useEmployees = (params: any, options?: Omit<import("@tanstack/react-query").UseQueryOptions<any, any, any, any>, "queryKey" | "queryFn">) => {
   return useQuery({
     queryKey: ["employees", params],
     queryFn: () => employeeService.listEmployees(params),
+    ...options,
   });
 };
 
