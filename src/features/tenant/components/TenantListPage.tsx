@@ -180,12 +180,7 @@ export default function TenantListPage() {
               }
             }}
             onRow={(record) => ({
-              onClick: () => {
-                const { setActiveTenant } = require("@/stores/tenant.store").useTenantStore.getState();
-                setActiveTenant(record as Tenant);
-                router.push(`/tenants/${record.id}`);
-              },
-              className: "cursor-pointer hover:bg-blue-50/50 transition-colors duration-200 group",
+              className: "hover:bg-blue-50/50 transition-colors duration-200 group",
             })}
           />
         </ContentCard>

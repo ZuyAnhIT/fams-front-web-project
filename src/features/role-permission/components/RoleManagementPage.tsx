@@ -11,6 +11,10 @@ import { format } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
 import { tenantService } from "@/features/tenant/services/tenant.service";
 import { rolePermissionService } from "../services/role-permission.service";
+import ListHeader from "@/components/shared/layout/ListHeader";
+import ContentCard from "@/components/shared/layout/ContentCard";
+import BaseButton from "@/components/ui/BaseButton";
+import { Plus } from "lucide-react";
 
 
 
@@ -184,67 +188,54 @@ export const RoleManagementPage: React.FC = () => {
   ];
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="space-y-6 max-w-7xl mx-auto">
       {contextHolder}
 
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Quản lý Phân quyền (Roles)</h1>
-          <p className="text-sm text-gray-500 mt-1">Quản lý danh sách role và các quyền tương ứng cho hệ thống.</p>
-        </div>
-        {hasPermission("roles:create") && (
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={openCreateModal}
-            size="large"
-            className="bg-blue-600 hover:bg-blue-700"
-          >
-            Tạo Role
-          </Button>
-        )}
-      </div>
-
-      <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-6 flex flex-wrap gap-4 items-center justify-between">
-        <Space size="middle" className="flex-wrap">
-          <Input
-            placeholder="Tìm kiếm theo tên..."
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            onPressEnter={handleSearch}
-            prefix={<SearchOutlined className="text-gray-400" />}
-            className="w-64"
-            allowClear
-          />
-          <Button onClick={handleSearch}>Tìm kiếm</Button>
-
-          <Select
-            placeholder="Lọc theo loại Role"
-            allowClear
-            className="w-48"
-            onChange={handleFilterChange}
-            options={[
-              { value: true, label: 'Role Hệ thống' },
-              { value: false, label: 'Role Tùy chỉnh' },
-            ]}
-          />
-
-          {user?.role === "PLATFORM_ADMIN" && (
+      <ListHeader
+        searchValue={searchInput}
+        onSearchChange={setSearchInput}
+        searchPlaceholder="Tìm kiếm theo tên..."
+        filters={
+          <div className="flex gap-3">
             <Select
-              placeholder="Lọc theo Công ty"
+              placeholder="Lọc theo loại Role"
               allowClear
-              showSearch
-              optionFilterProp="label"
-              className="w-56"
-              onChange={handleTenantFilterChange}
-              options={tenantOptions}
-              loading={isLoadingTenants}
+              className="w-48 h-11"
+              onChange={handleFilterChange}
+              options={[
+                { value: true, label: 'Role Hệ thống' },
+                { value: false, label: 'Role Tùy chỉnh' },
+              ]}
             />
-          )}
-        </Space>
-      </div>
+            {user?.role === "PLATFORM_ADMIN" && (
+              <Select
+                placeholder="Lọc theo Công ty"
+                allowClear
+                showSearch
+                optionFilterProp="label"
+                className="w-56 h-11"
+                onChange={handleTenantFilterChange}
+                options={tenantOptions}
+                loading={isLoadingTenants}
+              />
+            )}
+          </div>
+        }
+        actions={
+          hasPermission("roles:create") && (
+            <BaseButton
+              type="primary"
+              icon={<Plus className="h-4.5 w-4.5" />}
+              onClick={openCreateModal}
+              className="!bg-brand-600 !text-white hover:!bg-brand-700 !border-0 shadow-lg shadow-brand-500/25 h-11 px-5 rounded-xl font-bold hover:-translate-y-0.5 transition-all flex items-center gap-2"
+            >
+              Tạo Role
+            </BaseButton>
+          )
+        }
+      />
 
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      <ContentCard noPadding>
         <Table
           columns={columns}
           dataSource={rolesResponse?.data?.content || []}
@@ -261,7 +252,7 @@ export const RoleManagementPage: React.FC = () => {
             },
           }}
         />
-      </div>
+      </ContentCard>
 
       <RoleFormModal
         open={isModalOpen}

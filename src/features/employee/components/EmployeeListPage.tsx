@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Mail, Search, FileDown, ChevronRight } from "lucide-react";
-import { Input, Tag, Dropdown, MenuProps, message } from "antd";
+import { Plus, Mail, Search, FileDown, FileUp, ChevronRight } from "lucide-react";
+import { Input, Tag, Dropdown, MenuProps, Select, App } from "antd";
 import DataTable from "@/components/tables/DataTable";
 import BaseButton from "@/components/ui/BaseButton";
 import { usePagination } from "@/hooks/usePagination";
@@ -18,6 +18,7 @@ import ListHeader from "@/components/shared/layout/ListHeader";
 import ContentCard from "@/components/shared/layout/ContentCard";
 
 export default function EmployeeListPage() {
+  const { message } = App.useApp();
   const router = useRouter();
   const { state, setPagination } = usePagination(20);
   const [searchInput, setSearchInput] = useState(state.search || "");
@@ -184,13 +185,28 @@ export default function EmployeeListPage() {
         searchValue={searchInput}
         onSearchChange={setSearchInput}
         searchPlaceholder="Tìm kiếm theo tên, mã NV, email..."
+        filters={
+          <Select
+            placeholder="Tất cả trạng thái"
+            className="w-40 h-11"
+            allowClear
+            value={state.status}
+            onChange={(val) => setPagination({ status: val, page: 0 })}
+            options={[
+              { label: "Hoạt động", value: "active" },
+              { label: "Tạm nghỉ", value: "inactive" },
+              { label: "Đã nghỉ việc", value: "terminated" },
+            ]}
+          />
+        }
         actions={
           <>
             <BaseButton 
+              icon={<FileUp className="h-4.5 w-4.5" />}
               onClick={() => setIsImportOpen(true)}
               className="h-11 px-4 rounded-xl font-semibold shadow-sm text-slate-700 hover:text-brand-600 hover:border-brand-300 transition-all"
             >
-              Import Excel
+              Nhập Excel
             </BaseButton>
             <BaseButton 
               icon={<FileDown className="h-4.5 w-4.5" />} 
@@ -233,11 +249,7 @@ export default function EmployeeListPage() {
           pageSize={state.size}
           onPageChange={(page, size) => setPagination({ page, size })}
           onRow={(record) => ({
-            onClick: () => {
-              setEditingEmployee(record as any);
-              setIsEmployeeFormOpen(true);
-            },
-            className: "cursor-pointer hover:bg-brand-50/50 transition-colors duration-200 group",
+            className: "hover:bg-brand-50/50 transition-colors duration-200 group",
           })}
         />
       </ContentCard>
