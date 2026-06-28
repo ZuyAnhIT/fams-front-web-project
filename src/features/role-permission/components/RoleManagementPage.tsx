@@ -3,13 +3,15 @@
 import React, { useState } from "react";
 import { Table, Input, Button, Space, Tag, Modal, message, Select, Tooltip, App } from "antd";
 import { useAuthStore } from "@/stores/auth.store";
-import { PlusOutlined, SearchOutlined, EditOutlined, DeleteOutlined, InfoCircleOutlined } from "@ant-design/icons";
+import { PlusOutlined, SearchOutlined, EditOutlined, DeleteOutlined, InfoCircleOutlined, EyeOutlined } from "@ant-design/icons";
 import { useRolesQuery, useDeleteRoleMutation } from "../hooks/use-role-permission";
 import { RoleFormModal } from "./RoleFormModal";
 import { RoleResponse, RoleDetailResponse } from "../types";
 import { format } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
 import { tenantService } from "@/features/tenant/services/tenant.service";
+import { rolePermissionService } from "../services/role-permission.service";
+
 
 
 
@@ -29,6 +31,7 @@ export const RoleManagementPage: React.FC = () => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState<RoleDetailResponse | undefined>(undefined);
+  const [isFetchingRole, setIsFetchingRole] = useState(false);
 
   const { data: rolesResponse, isLoading, isFetching } = useRolesQuery({
     tenantId: user?.role === "PLATFORM_ADMIN" ? selectedFilterTenantId : (tenantId || undefined),
@@ -67,12 +70,19 @@ export const RoleManagementPage: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const openEditModal = (role: RoleResponse) => {
-    setSelectedRole({
-      ...role,
-      permissions: [], // We don't have them
-    } as RoleDetailResponse);
-    setIsModalOpen(true);
+  const openEditModal = async (role: RoleResponse) => {
+    try {
+      setIsFetchingRole(true);
+      const res = await rolePermissionService.getRoleById(role.id);
+      if (res.data) {
+        setSelectedRole(res.data);
+        setIsModalOpen(true);
+      }
+    } catch (error: any) {
+      messageApi.error(error?.response?.data?.message || "Lỗi khi tải chi tiết role");
+    } finally {
+      setIsFetchingRole(false);
+    }
   };
 
   const handleDelete = (id: string, name: string) => {
@@ -99,8 +109,8 @@ export const RoleManagementPage: React.FC = () => {
       dataIndex: "name",
       key: "name",
       render: (text: string, record: RoleResponse) => (
-        <span className="font-medium text-gray-900">
-          {text} {record.isSystem && <Tag color="blue" className="ml-2">Hệ thống</Tag>}
+        <span className="font-semibold text-gray-800">
+          {text} {(record.isSystem || (record as any).system) && <Tag color="blue" className="ml-2">Hệ thống</Tag>}
         </span>
       ),
     },
@@ -127,32 +137,49 @@ export const RoleManagementPage: React.FC = () => {
     {
       title: "Thao tác",
       key: "action",
-      render: (_: any, record: RoleResponse) => (
+      render: (_: any, record: RoleResponse) => {
+        const isSystemRole = record.isSystem || (record as any).system;
+        return (
         <Space size="middle">
-          {hasPermission("roles:update") && (
-            <Tooltip title={record.isSystem ? "Không thể sửa role hệ thống" : "Sửa"}>
+          {isSystemRole ? (
+            <Tooltip title="Xem chi tiết">
               <Button
                 type="text"
-                icon={<EditOutlined />}
+                icon={<EyeOutlined />}
                 onClick={() => openEditModal(record)}
-                disabled={record.isSystem}
+                loading={isFetchingRole}
                 className="text-blue-600 hover:text-blue-800"
               />
             </Tooltip>
-          )}
-          {hasPermission("roles:delete") && (
-            <Tooltip title={record.isSystem ? "Không thể xóa role hệ thống" : "Xóa"}>
-              <Button
-                type="text"
-                danger
-                icon={<DeleteOutlined />}
-                onClick={() => handleDelete(record.id, record.name)}
-                disabled={record.isSystem}
-              />
-            </Tooltip>
+          ) : (
+            <>
+              {hasPermission("roles:update") && (
+                <Tooltip title="Sửa">
+                  <Button
+                    type="text"
+                    icon={<EditOutlined />}
+                    onClick={() => openEditModal(record)}
+                    disabled={isFetchingRole}
+                    loading={isFetchingRole}
+                    className="text-blue-600 hover:text-blue-800"
+                  />
+                </Tooltip>
+              )}
+              {hasPermission("roles:delete") && (
+                <Tooltip title="Xóa">
+                  <Button
+                    type="text"
+                    danger
+                    icon={<DeleteOutlined />}
+                    onClick={() => handleDelete(record.id, record.name)}
+                  />
+                </Tooltip>
+              )}
+            </>
           )}
         </Space>
-      ),
+        );
+      },
     },
   ];
 
