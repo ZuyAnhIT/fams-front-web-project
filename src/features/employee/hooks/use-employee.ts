@@ -79,3 +79,19 @@ export const useAcceptInvitation = () => {
     mutationFn: (payload: AcceptInvitationPayload) => employeeService.acceptInvitation(payload),
   });
 };
+
+export const useImportEmployees = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (file: File) => employeeService.importEmployees(file),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["employees"] });
+    },
+  });
+};
+
+export const useCancelInvitation = () => {
+  return useMutation({
+    mutationFn: (invitationId: string) => employeeService.cancelInvitation(invitationId),
+  });
+};

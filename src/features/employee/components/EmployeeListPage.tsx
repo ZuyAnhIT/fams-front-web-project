@@ -11,6 +11,7 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { useEmployees, useChangeEmployeeStatus, useExportEmployees } from "../hooks/use-employee";
 import InviteEmployeeModal from "./InviteEmployeeModal";
 import EmployeeFormModal from "./EmployeeFormModal";
+import ImportEmployeeModal from "./ImportEmployeeModal";
 import type { Employee, EmployeeDetailResponse } from "../types/employee.type";
 import { format } from "date-fns";
 import ListHeader from "@/components/shared/layout/ListHeader";
@@ -24,6 +25,7 @@ export default function EmployeeListPage() {
 
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [isEmployeeFormOpen, setIsEmployeeFormOpen] = useState(false);
+  const [isImportOpen, setIsImportOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<EmployeeDetailResponse | null>(null);
 
   // Sync debounce search to URL
@@ -185,6 +187,12 @@ export default function EmployeeListPage() {
         actions={
           <>
             <BaseButton 
+              onClick={() => setIsImportOpen(true)}
+              className="h-11 px-4 rounded-xl font-semibold shadow-sm text-slate-700 hover:text-brand-600 hover:border-brand-300 transition-all"
+            >
+              Import Excel
+            </BaseButton>
+            <BaseButton 
               icon={<FileDown className="h-4.5 w-4.5" />} 
               onClick={handleExport}
               loading={isExporting}
@@ -236,6 +244,9 @@ export default function EmployeeListPage() {
 
       {/* Modal Mời Nhân Viên */}
       <InviteEmployeeModal open={isInviteOpen} onClose={() => setIsInviteOpen(false)} />
+
+      {/* Modal Import Nhân Viên */}
+      <ImportEmployeeModal open={isImportOpen} onClose={() => setIsImportOpen(false)} />
 
       {/* Modal Thêm/Sửa Nhân Viên */}
       <EmployeeFormModal 
