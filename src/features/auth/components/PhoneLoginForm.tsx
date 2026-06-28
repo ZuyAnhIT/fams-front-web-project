@@ -5,8 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Input, message } from "antd";
-import GlassCard from "@/components/ui/GlassCard";
+import { Input, App } from "antd";
 import FormInput from "@/components/forms/FormInput";
 import BaseButton from "@/components/ui/BaseButton";
 import {
@@ -39,6 +38,7 @@ const RATE_LIMIT_WINDOW_MINUTES = 10;
 
 export default function PhoneLoginForm() {
   const router = useRouter();
+  const { message } = App.useApp();
 
   // ── State ──────────────────────────────────────────────
   const [step, setStep] = useState<"phone" | "otp">("phone");
@@ -159,20 +159,13 @@ export default function PhoneLoginForm() {
   const canResend = countdown === 0;
 
   return (
-    <div className="w-full max-w-[450px]">
-      <GlassCard>
-        {/* Logo */}
-        <div className="mb-6 flex justify-center">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-dashed border-blue-500/60 bg-blue-500/10 shadow-[0_0_20px_rgba(37,99,235,0.2)]">
-            <span className="text-4xl font-extrabold text-white">Q</span>
-          </div>
-        </div>
-
+    <div className="w-full">
+      <div className="bg-white">
         {/* Tiêu đề */}
-        <h1 className="mb-2 text-center text-2xl font-semibold text-white">
+        <h1 className="mb-2 text-3xl font-bold text-slate-900 tracking-tight">
           Đăng nhập {APP_NAME}
         </h1>
-        <p className="mb-8 text-center text-sm text-gray-400">
+        <p className="mb-8 text-[15px] text-slate-500">
           Đăng nhập nhanh bằng số điện thoại
         </p>
 
@@ -195,11 +188,12 @@ export default function PhoneLoginForm() {
 
               {/* Nút gửi OTP */}
               <BaseButton
-                customVariant="auth"
+                type="primary"
                 htmlType="submit"
                 loading={isSendingOtp}
                 block
                 size="large"
+                className="mt-2 font-bold !bg-brand-600 !text-white hover:opacity-90 !border-0 shadow-lg shadow-brand-600/25 h-12 rounded-xl transition-all"
               >
                 {isSendingOtp ? "Đang gửi..." : "Gửi mã OTP"}
               </BaseButton>
@@ -212,10 +206,10 @@ export default function PhoneLoginForm() {
           <div className="animate-fade-in">
 
             {/* Thông báo */}
-            <div className="mb-6 rounded-xl bg-blue-500/10 border border-blue-500/20 p-4">
-              <p className="text-sm text-gray-300 text-center">
+            <div className="mb-6 rounded-xl bg-brand-50 border border-brand-100 p-4">
+              <p className="text-sm text-slate-600 text-center">
                 Mã OTP đã được gửi đến{" "}
-                <span className="font-semibold text-white">
+                <span className="font-bold text-slate-900">
                   {getValues("phone")}
                 </span>
               </p>
@@ -245,13 +239,13 @@ export default function PhoneLoginForm() {
                         />
                       </svg>
                     </div>
-                    <span className="text-sm font-mono text-blue-300 font-semibold">
+                    <span className="text-sm font-mono text-brand-600 font-bold">
                       {formatTime(countdown)}
                     </span>
-                    <span className="text-xs text-gray-500">còn lại</span>
+                    <span className="text-xs font-medium text-slate-500">còn lại</span>
                   </>
                 ) : (
-                  <span className="text-sm text-red-400 font-medium">
+                  <span className="text-sm text-red-500 font-semibold">
                     ⏰ Mã OTP đã hết hạn
                   </span>
                 )}
@@ -260,7 +254,7 @@ export default function PhoneLoginForm() {
 
             {/* 6 ô OTP */}
             <div className="mb-6">
-              <label className="mb-3 block text-[15px] font-medium tracking-wide text-gray-200 text-center">
+              <label className="mb-3 block text-[15px] font-semibold tracking-wide text-slate-700 text-center">
                 Nhập mã xác thực
               </label>
               <div className="flex justify-center otp-container">
@@ -271,18 +265,20 @@ export default function PhoneLoginForm() {
                   disabled={isOtpExpired}
                   size="large"
                   variant="outlined"
+                  className="[&_input]:!bg-white [&_input]:!text-slate-900 [&_input]:!border-slate-300 [&_input:focus]:!border-brand-500 [&_input:hover]:!border-brand-400"
                 />
               </div>
             </div>
 
             {/* Nút xác nhận */}
             <BaseButton
-              customVariant="auth"
+              type="primary"
               onClick={handleVerifyOtp}
               loading={isVerifyingOtp}
               block
               size="large"
               disabled={otpValue.length !== 6 || isOtpExpired}
+              className="mt-2 font-bold !bg-brand-600 !text-white hover:opacity-90 !border-0 shadow-lg shadow-brand-600/25 h-12 rounded-xl transition-all"
             >
               {isVerifyingOtp ? "Đang xác thực..." : "Xác nhận đăng nhập"}
             </BaseButton>
@@ -292,7 +288,7 @@ export default function PhoneLoginForm() {
               <button
                 type="button"
                 onClick={handleBackToPhone}
-                className="text-sm text-gray-400 hover:text-white transition-colors cursor-pointer"
+                className="text-sm font-medium text-slate-500 hover:text-brand-600 transition-colors cursor-pointer"
               >
                 ← Đổi số
               </button>
@@ -301,12 +297,12 @@ export default function PhoneLoginForm() {
                 <button
                   type="button"
                   onClick={handleResendOtp}
-                  className="text-sm font-semibold text-blue-400 hover:text-blue-300 transition-colors cursor-pointer"
+                  className="text-sm font-bold text-brand-600 hover:text-brand-700 transition-colors cursor-pointer"
                 >
                   Gửi lại mã ({MAX_OTP_SENDS - sendCount} lần còn)
                 </button>
               ) : (
-                <span className="text-sm text-gray-500">
+                <span className="text-sm font-medium text-slate-500">
                   {sendCount >= MAX_OTP_SENDS
                     ? "Đã hết lượt gửi"
                     : `Gửi lại sau ${formatTime(countdown)}`}
@@ -315,26 +311,26 @@ export default function PhoneLoginForm() {
             </div>
 
             {/* Rate limit info */}
-            <p className="mt-3 text-center text-xs text-gray-600">
+            <p className="mt-3 text-center text-xs text-slate-400">
               Tối đa {MAX_OTP_SENDS} lần gửi mã trong {RATE_LIMIT_WINDOW_MINUTES} phút
             </p>
           </div>
         )}
 
         {/* Divider chuyển hướng */}
-        <div className="mt-7 mb-6 flex items-center gap-3">
-          <div className="h-px flex-1 bg-gray-600" />
-          <span className="text-xs text-gray-500 uppercase tracking-wider">
-            hoặc
+        <div className="my-8 flex items-center gap-4">
+          <div className="h-px flex-1 bg-slate-200" />
+          <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+            hoặc tiếp tục với
           </span>
-          <div className="h-px flex-1 bg-gray-600" />
+          <div className="h-px flex-1 bg-slate-200" />
         </div>
 
         {/* Chuyển về đăng nhập bằng email */}
         <BaseButton
           type="default"
           size="large"
-          className="!bg-white/5 !text-white !border-white/15 hover:!bg-white/10 hover:!border-white/25 !font-medium"
+          className="!bg-white !text-slate-700 !border-slate-200 hover:!bg-slate-50 hover:!border-slate-300 !font-semibold h-11 rounded-xl shadow-sm transition-all"
           block
           onClick={() => router.push(ROUTES.LOGIN)}
         >
@@ -342,16 +338,16 @@ export default function PhoneLoginForm() {
         </BaseButton>
 
         {/* Đăng ký */}
-        <p className="mt-7 text-center text-sm text-gray-300">
+        <p className="mt-8 text-center text-sm font-medium text-slate-500">
           Chưa có tài khoản?{" "}
           <Link
             href={ROUTES.REGISTER}
-            className="font-bold text-white hover:text-gray-300 transition-colors"
+            className="font-bold text-brand-600 hover:text-brand-700 transition-colors"
           >
-            Đăng ký
+            Đăng ký ngay
           </Link>
         </p>
-      </GlassCard>
+      </div>
     </div>
   );
 }

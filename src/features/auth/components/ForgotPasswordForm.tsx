@@ -5,7 +5,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { ArrowLeftOutlined, MailOutlined } from "@ant-design/icons";
-import GlassCard from "@/components/ui/GlassCard";
 import FormInput from "@/components/forms/FormInput";
 import BaseButton from "@/components/ui/BaseButton";
 import { forgotPasswordSchema, type ForgotPasswordFormData } from "@/features/auth/schemas/auth.schema";
@@ -45,54 +44,48 @@ export default function ForgotPasswordForm() {
 
   if (isSuccess) {
     return (
-      <div className="w-full max-w-[450px]">
-        <GlassCard>
+      <div className="w-full">
+        <div className="bg-white">
           <div className="mb-6 flex justify-center">
-            <div className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-dashed border-green-500/60 bg-green-500/10 shadow-[0_0_20px_rgba(34,197,94,0.2)]">
-              <MailOutlined className="text-3xl text-green-400" />
+            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-brand-50 shadow-sm shadow-brand-100">
+              <MailOutlined className="text-3xl text-brand-600" />
             </div>
           </div>
           
-          <h1 className="mb-4 text-center text-2xl font-semibold text-white">
+          <h1 className="mb-4 text-center text-3xl font-bold text-slate-900 tracking-tight">
             Kiểm tra hộp thư của bạn
           </h1>
           
-          <p className="mb-8 text-center text-sm text-gray-300">
+          <p className="mb-8 text-center text-[15px] text-slate-600">
             Chúng tôi đã gửi một liên kết khôi phục mật khẩu đến email{" "}
-            <span className="font-bold text-white">{submittedEmail}</span>. 
+            <span className="font-bold text-slate-900">{submittedEmail}</span>. 
             Vui lòng kiểm tra hộp thư đến (hoặc thư rác) và làm theo hướng dẫn.
           </p>
 
           <Link href={ROUTES.LOGIN} className="block w-full">
             <BaseButton
-              customVariant="auth"
+              type="primary"
               block
               size="large"
+              className="font-bold !bg-brand-600 !text-white hover:opacity-90 !border-0 shadow-lg shadow-brand-600/25 h-12 rounded-xl transition-all"
             >
               Quay lại trang Đăng nhập
             </BaseButton>
           </Link>
-        </GlassCard>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="w-full max-w-[450px]">
-      <GlassCard>
-        {/* Logo */}
-        <div className="mb-6 flex justify-center">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-dashed border-blue-500/60 bg-blue-500/10 shadow-[0_0_20px_rgba(37,99,235,0.2)]">
-            <span className="text-4xl font-extrabold text-white">Q</span>
-          </div>
-        </div>
-
+    <div className="w-full">
+      <div className="bg-white">
         {/* Tiêu đề */}
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-semibold text-white mb-2">
+        <div className="text-left mb-8">
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight mb-2">
             Quên mật khẩu?
           </h1>
-          <p className="text-sm text-gray-400">
+          <p className="text-[15px] text-slate-500">
             Đừng lo lắng, hãy nhập email bạn đã đăng ký với {APP_NAME} và chúng tôi sẽ gửi liên kết khôi phục.
           </p>
         </div>
@@ -109,11 +102,12 @@ export default function ForgotPasswordForm() {
           />
 
           <BaseButton
-            customVariant="auth"
+            type="primary"
             htmlType="submit"
             loading={isSubmitting}
             block
             size="large"
+            className="mt-2 font-bold !bg-brand-600 !text-white hover:opacity-90 !border-0 shadow-lg shadow-brand-600/25 h-12 rounded-xl transition-all"
           >
             Gửi liên kết khôi phục
           </BaseButton>
@@ -123,12 +117,12 @@ export default function ForgotPasswordForm() {
         <div className="mt-8 text-center">
           <Link
             href={ROUTES.LOGIN}
-            className="inline-flex items-center gap-2 text-sm font-semibold text-gray-300 hover:text-white transition-colors"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-brand-600 transition-colors"
           >
             <ArrowLeftOutlined /> Quay lại trang Đăng nhập
           </Link>
         </div>
-      </GlassCard>
+      </div>
     </div>
   );
 }

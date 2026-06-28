@@ -167,10 +167,7 @@ export default function EmployeeListPage() {
           className="!text-blue-600 !border-blue-200 hover:!bg-blue-50 hover:!border-blue-300 shadow-[0_2px_10px_rgb(0,0,0,0.04)] h-8 px-3 rounded-lg text-xs font-bold flex flex-row-reverse hover:-translate-y-0.5 transition-all duration-200"
           onClick={(e) => {
             e.stopPropagation();
-            // Since we don't have full details in the list, we pass partial data 
-            // and the form will be updated or we can just pass the whole record as any
-            setEditingEmployee(record as any);
-            setIsEmployeeFormOpen(true);
+            router.push(`/employees/${record.id}`);
           }}
         >
           Chi tiết
@@ -249,7 +246,8 @@ export default function EmployeeListPage() {
           pageSize={state.size}
           onPageChange={(page, size) => setPagination({ page, size })}
           onRow={(record) => ({
-            className: "hover:bg-brand-50/50 transition-colors duration-200 group",
+            className: "hover:bg-brand-50/50 transition-colors duration-200 group cursor-pointer",
+            onClick: () => router.push(`/employees/${record.id}`),
           })}
         />
       </ContentCard>
