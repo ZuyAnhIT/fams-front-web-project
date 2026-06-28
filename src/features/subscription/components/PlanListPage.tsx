@@ -53,8 +53,7 @@ export default function PlanListPage() {
         <ShieldAlert className="h-14 w-14 text-rose-400 mb-5 drop-shadow-sm" />
         <h2 className="text-2xl font-bold text-rose-900 mb-2 tracking-tight">Không có quyền truy cập</h2>
         <p className="text-rose-600/90 max-w-md leading-relaxed">
-          Chức năng Quản lý Gói dịch vụ (Subscription Plans) chỉ dành cho Platform Admin.
-          Vui lòng liên hệ quản trị viên hệ thống nếu bạn cần truy cập.
+          Xin lỗi, bạn không có quyền truy cập vào trang này.
         </p>
       </div>
     );
