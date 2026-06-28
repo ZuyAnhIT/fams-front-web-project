@@ -15,7 +15,8 @@ import type { IpWhitelistResponse } from "../types/tenant.type";
 import { format } from "date-fns";
 
 export default function IpWhitelistTable({ tenantId }: { tenantId?: string }) {
-  const { data: list, isLoading } = useIpWhitelists(tenantId);
+  const { data: pageData, isLoading } = useIpWhitelists(tenantId);
+  const list = pageData?.content || [];
   const { mutateAsync: addIp } = useAddIpWhitelist();
   const { mutate: updateIp } = useUpdateIpWhitelist();
   const { mutateAsync: deleteIp } = useDeleteIpWhitelist();
@@ -132,11 +133,11 @@ export default function IpWhitelistTable({ tenantId }: { tenantId?: string }) {
       <ContentCard noPadding>
         <DataTable
           columns={columns}
-          data={list || []}
+          data={list}
           loading={isLoading}
-          totalElements={list?.length || 0}
-          currentPage={0}
-          pageSize={100}
+          totalElements={pageData?.totalElements || 0}
+          currentPage={pageData?.page || 0}
+          pageSize={pageData?.size || 100}
           onPageChange={() => {}}
         />
       </ContentCard>

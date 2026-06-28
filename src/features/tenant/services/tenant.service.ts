@@ -10,11 +10,14 @@ import type {
   CreateIpWhitelistPayload,
   UpdateIpWhitelistPayload,
 } from "../types/tenant.type";
-
-const FALLBACK_TENANT_ID = "dd3eedd8-f30b-4b08-9f92-2dfc90202929";
+import { useAuthStore } from "@/stores/auth.store";
 
 const getTenantId = () => {
-  return FALLBACK_TENANT_ID;
+  const state = useAuthStore.getState();
+  if (state.user && state.user.tenantId) {
+    return state.user.tenantId;
+  }
+  return "89239420-a819-4dc5-9ac4-10cefadd6e06"; // Fallback dev
 };
 
 export const tenantService = {
@@ -80,9 +83,9 @@ export const tenantService = {
   /**
    * Lấy danh sách IP Whitelist
    */
-  async listIpWhitelists(id?: string): Promise<IpWhitelistResponse[]> {
+  async listIpWhitelists(id?: string): Promise<PageResponse<IpWhitelistResponse>> {
     const tenantId = id || getTenantId();
-    const response = await apiClient.get<ApiResponse<IpWhitelistResponse[]>>(`/tenants/${tenantId}/ip-whitelists`);
+    const response = await apiClient.get<ApiResponse<PageResponse<IpWhitelistResponse>>>(`/tenants/${tenantId}/ip-whitelists`);
     return response.data.data;
   },
 

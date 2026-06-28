@@ -13,8 +13,8 @@ import type {
 
 import { useAuthStore } from "@/stores/auth.store";
 
-// Fallback tenant ID cho quá trình dev (từ seed data)
-const FALLBACK_TENANT_ID = "dd3eedd8-f30b-4b08-9f92-2dfc90202929";
+// Fallback tenant ID cho quá trình dev 
+const FALLBACK_TENANT_ID = "89239420-a819-4dc5-9ac4-10cefadd6e06";
 
 const getTenantId = () => {
   const state = useAuthStore.getState();
@@ -56,9 +56,9 @@ export const employeeService = {
     const tenantId = getTenantId();
     const response = await apiClient.get(
       `/tenants/${tenantId}/employees/export`,
-      { 
+      {
         params,
-        responseType: 'blob' 
+        responseType: 'blob'
       }
     );
     return response.data;
@@ -128,6 +128,37 @@ export const employeeService = {
    */
   async acceptInvitation(payload: AcceptInvitationPayload) {
     const response = await apiClient.post<ApiResponse<any>>(`/invitations/accept`, payload);
+    return response.data.data;
+  },
+
+  /**
+   * Import danh sách nhân viên từ file Excel
+   */
+  async importEmployees(file: File) {
+    const tenantId = getTenantId();
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await apiClient.post<ApiResponse<any>>(
+      `/tenants/${tenantId}/employees/import`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+    return response.data.data;
+  },
+
+  /**
+   * Hủy lời mời
+   */
+  async cancelInvitation(invitationId: string): Promise<InvitationResponse> {
+    const tenantId = getTenantId();
+    const response = await apiClient.delete<ApiResponse<InvitationResponse>>(
+      `/tenants/${tenantId}/invitations/${invitationId}`
+    );
     return response.data.data;
   },
 };
