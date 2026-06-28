@@ -33,7 +33,7 @@ export default function CancelInvitationModal({ open, onClose }: CancelInvitatio
       open={open}
       onCancel={onClose}
       footer={null}
-      destroyOnClose
+      destroyOnHidden
     >
       <div className="mt-4">
         <p className="mb-2 text-slate-600">

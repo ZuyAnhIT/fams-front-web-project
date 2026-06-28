@@ -79,7 +79,7 @@ export const AssignRoleModal: React.FC<AssignRoleModalProps> = ({
         onCancel={onClose}
         onOk={handleSubmit(onSubmit)}
         confirmLoading={assignRole.isPending}
-        destroyOnClose
+        destroyOnHidden
         okText="Lưu"
         cancelText="Hủy"
       >

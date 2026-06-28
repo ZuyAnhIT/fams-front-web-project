@@ -7,11 +7,14 @@ import type {
   UpdateRolePayload,
   PermissionGroupResponse,
 } from "../types/role.type";
-
-const FALLBACK_TENANT_ID = "dd3eedd8-f30b-4b08-9f92-2dfc90202929";
+import { useAuthStore } from "@/stores/auth.store";
 
 const getTenantId = () => {
-  return FALLBACK_TENANT_ID;
+  const state = useAuthStore.getState();
+  if (state.user && state.user.tenantId) {
+    return state.user.tenantId;
+  }
+  return "89239420-a819-4dc5-9ac4-10cefadd6e06"; // Fallback dev
 };
 
 export const roleService = {

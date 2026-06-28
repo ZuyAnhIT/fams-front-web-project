@@ -50,7 +50,7 @@ export default function ImportEmployeeModal({ open, onClose }: ImportEmployeeMod
       open={open}
       onCancel={onClose}
       footer={null}
-      destroyOnClose
+      destroyOnHidden
     >
       <div className="mt-4">
         <Dragger {...uploadProps}>
