@@ -11,6 +11,9 @@ import { usePermissionsGroupedQuery, useCreateRoleMutation, useUpdateRoleMutatio
 import { RoleDetailResponse } from "../types";
 import { useQuery } from "@tanstack/react-query";
 import { tenantService } from "@/features/tenant/services/tenant.service";
+import { formatResource, formatAction, formatDescription } from "../utils/permission.mapper";
+
+
 
 const roleSchema = z.object({
   name: z.string().min(1, "Role name is required").max(100, "Role name must be between 1 and 100 characters"),
@@ -35,7 +38,10 @@ export const RoleFormModal: React.FC<RoleFormModalProps> = ({ open, onClose, ten
   const updateRole = useUpdateRoleMutation();
 
   const isEdit = !!initialData;
+  const isSystemRole = isEdit && (initialData?.isSystem || (initialData as any)?.system);
   const showTenantSelector = !tenantId && !isEdit;
+
+  const [filterResources, setFilterResources] = useState<string[]>([]);
 
   const { data: tenantsData, isLoading: isLoadingTenants } = useQuery({
     queryKey: ["tenants", "all"],
@@ -140,6 +146,10 @@ export const RoleFormModal: React.FC<RoleFormModalProps> = ({ open, onClose, ten
     ? permissionsResponse 
     : (permissionsResponse?.data || []);
 
+  const filteredPermissionGroups = filterResources.length > 0 
+    ? permissionGroups.filter((g: any) => filterResources.includes(g.resource))
+    : permissionGroups;
+
   const tenantOptions = tenantsData?.content?.map((t) => ({ label: t.name, value: t.id })) || [];
 
   return (
@@ -228,7 +238,7 @@ export const RoleFormModal: React.FC<RoleFormModalProps> = ({ open, onClose, ten
                 help={fieldState.error?.message}
                 required
               >
-                <Input {...field} placeholder="Nhập tên role" disabled={isEdit && initialData?.isSystem} />
+                <Input {...field} placeholder="Nhập tên role" disabled={isSystemRole} />
               </Form.Item>
             )}
           />
@@ -242,13 +252,33 @@ export const RoleFormModal: React.FC<RoleFormModalProps> = ({ open, onClose, ten
                 validateStatus={fieldState.error ? "error" : ""}
                 help={fieldState.error?.message}
               >
-                <Input.TextArea {...field} placeholder="Nhập mô tả cho role này" rows={3} disabled={isEdit && initialData?.isSystem} />
+                <Input.TextArea {...field} placeholder="Nhập mô tả cho role này" rows={3} disabled={isSystemRole} />
               </Form.Item>
             )}
           />
 
           <div className="mt-6 mb-2">
-            <h3 className="text-base font-medium mb-4">Phân quyền (Permissions)</h3>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
+              <div className="flex items-center gap-4 flex-wrap">
+                <h3 className="text-base font-medium">Phân quyền</h3>
+                <Select
+                  mode="multiple"
+                  placeholder="Lọc theo nhóm quyền..."
+                  value={filterResources}
+                  onChange={setFilterResources}
+                  style={{ minWidth: 250, maxWidth: 400 }}
+                  options={permissionGroups.map((g: any) => ({
+                    label: formatResource(g.resource),
+                    value: g.resource,
+                  }))}
+                  allowClear
+                  maxTagCount="responsive"
+                />
+              </div>
+              <div className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm font-medium border border-blue-200 whitespace-nowrap">
+                Tổng quyền đã chọn: {selectedPermissionIds.length} / {permissionGroups.reduce((acc: number, group: any) => acc + group.permissions.length, 0)}
+              </div>
+            </div>
             {isLoadingPermissions ? (
               <div className="flex justify-center p-4"><Spin /></div>
             ) : isErrorPermissions ? (
@@ -265,21 +295,25 @@ export const RoleFormModal: React.FC<RoleFormModalProps> = ({ open, onClose, ten
                   {JSON.stringify(permissionsResponse, null, 2)}
                 </pre>
               </div>
+            ) : filteredPermissionGroups.length === 0 ? (
+              <div className="text-gray-500 p-4 border border-gray-200 rounded-md bg-gray-50 text-center">
+                <p>Không tìm thấy quyền nào phù hợp với bộ lọc.</p>
+              </div>
             ) : (
               <div className="max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                {permissionGroups.map((group) => (
+                {filteredPermissionGroups.map((group: any) => (
                   <Card 
                     key={group.resource} 
                     size="small" 
                     className="mb-4 shadow-sm border-gray-200" 
-                    title={<span className="font-semibold text-gray-700 capitalize">{group.resource}</span>}
+                    title={<span className="font-semibold text-gray-700">{formatResource(group.resource)}</span>}
                     extra={
                       <Checkbox
-                        disabled={isEdit && initialData?.isSystem}
+                        disabled={isSystemRole}
                         checked={group.permissions.length > 0 && group.permissions.every((p: any) => selectedPermissionIds.includes(p.id))}
                         onChange={(e) => handleSelectAllGroup(group.permissions, e.target.checked)}
                       >
-                        Chọn tất cả
+                        <span className="font-medium !text-gray-700">Chọn tất cả</span>
                       </Checkbox>
                     }
                   >
@@ -289,11 +323,11 @@ export const RoleFormModal: React.FC<RoleFormModalProps> = ({ open, onClose, ten
                           <Checkbox
                             checked={selectedPermissionIds.includes(permission.id)}
                             onChange={(e) => handlePermissionChange(permission.id, e.target.checked)}
-                            disabled={isEdit && initialData?.isSystem}
+                            disabled={isSystemRole}
                           >
                             <div className="flex flex-col">
-                              <span className="font-medium text-sm">{permission.action}</span>
-                              <span className="text-xs text-gray-500">{permission.description}</span>
+                              <span className="font-semibold text-sm !text-gray-800">{formatAction(permission.action)}</span>
+                              <span className="text-xs !text-gray-500">{formatDescription(permission)}</span>
                             </div>
                           </Checkbox>
                         </Col>

@@ -28,6 +28,14 @@ export const rolePermissionService = {
     return response.data;
   },
 
+  getRoleById: async (id: string): Promise<ApiResponse<RoleDetailResponse>> => {
+    const response = await apiClient.get<ApiResponse<RoleDetailResponse>>(
+      `/roles/${id}`
+    );
+    return response.data;
+  },
+
+
   createRole: async (
     data: CreateRoleRequest
   ): Promise<ApiResponse<RoleDetailResponse>> => {
