@@ -1,13 +1,14 @@
 "use client";
 
-import { Modal, message } from "antd";
-import { useForm } from "react-hook-form";
+import { Modal, message, Select } from "antd";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import FormInput from "@/components/forms/FormInput";
 import BaseButton from "@/components/ui/BaseButton";
 import { useSendInvitation } from "../hooks/use-employee";
 import { inviteEmployeeSchema, type InviteEmployeeFormData } from "../schemas/employee.schema";
 import { useEffect } from "react";
+import { useRolesQuery } from "../../role-permission/hooks/use-role-permission";
 
 interface InviteEmployeeModalProps {
   open: boolean;
@@ -16,6 +17,7 @@ interface InviteEmployeeModalProps {
 
 export default function InviteEmployeeModal({ open, onClose }: InviteEmployeeModalProps) {
   const { mutateAsync: sendInvitation, isPending } = useSendInvitation();
+  const { data: rolesData, isLoading: isLoadingRoles } = useRolesQuery({ size: 100 });
 
   const {
     control,
@@ -26,6 +28,9 @@ export default function InviteEmployeeModal({ open, onClose }: InviteEmployeeMod
     resolver: zodResolver(inviteEmployeeSchema),
     defaultValues: {
       email: "",
+      firstName: "",
+      lastName: "",
+      roleId: "",
     },
   });
 
@@ -37,7 +42,12 @@ export default function InviteEmployeeModal({ open, onClose }: InviteEmployeeMod
 
   const onSubmit = async (data: InviteEmployeeFormData) => {
     try {
-      await sendInvitation(data);
+      // Remove empty strings to not send empty values
+      const payload = Object.fromEntries(
+        Object.entries(data).filter(([_, v]) => v !== "")
+      ) as InviteEmployeeFormData;
+
+      await sendInvitation({ payload });
       message.success(`Đã gửi lời mời tới ${data.email} thành công!`);
       onClose();
     } catch (error: any) {
@@ -45,6 +55,13 @@ export default function InviteEmployeeModal({ open, onClose }: InviteEmployeeMod
       message.error(errorMessage);
     }
   };
+
+  const roleOptions = rolesData?.data?.content
+    ?.filter((role) => role.name !== "PLATFORM_ADMIN")
+    ?.map((role) => ({
+      label: role.name,
+      value: role.id,
+    })) || [];
 
   return (
     <Modal
@@ -74,7 +91,45 @@ export default function InviteEmployeeModal({ open, onClose }: InviteEmployeeMod
           className="text-brand-900 border-brand-300 focus:border-brand-500"
         />
 
-        {/* Có thể thêm Select Role ở đây nếu Backend yêu cầu, hiện tại schema để optional */}
+        <div className="grid grid-cols-2 gap-4">
+          <FormInput
+            control={control}
+            name="lastName"
+            label="Họ (Tùy chọn)"
+            placeholder="Ví dụ: Nguyễn"
+            error={errors.lastName}
+            className="text-brand-900 border-brand-300 focus:border-brand-500"
+          />
+          <FormInput
+            control={control}
+            name="firstName"
+            label="Tên (Tùy chọn)"
+            placeholder="Ví dụ: Văn A"
+            error={errors.firstName}
+            className="text-brand-900 border-brand-300 focus:border-brand-500"
+          />
+        </div>
+
+        <div className="flex flex-col space-y-1">
+          <label className="text-sm font-medium text-slate-700">
+            Vai trò (Role)
+          </label>
+          <Controller
+            name="roleId"
+            control={control}
+            render={({ field }) => (
+              <Select
+                {...field}
+                className="w-full h-11"
+                placeholder="Chọn vai trò cho nhân viên"
+                options={roleOptions}
+                loading={isLoadingRoles}
+                allowClear
+                size="large"
+              />
+            )}
+          />
+        </div>
 
         <div className="flex justify-end gap-3 pt-4 border-t border-brand-100 mt-6">
           <BaseButton onClick={onClose} disabled={isPending}>

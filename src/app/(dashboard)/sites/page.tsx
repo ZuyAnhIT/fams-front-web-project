@@ -1,8 +1,5 @@
+import SitePage from "@/features/site/components/SitePage";
+
 export default function SitesPage() {
-  return (
-    <div className="p-6 bg-slate-900/40 rounded-2xl border border-white/10">
-      <h1 className="text-xl font-bold text-white mb-2">Quản lý địa bàn</h1>
-      <p className="text-slate-400 text-sm">Danh sách địa bàn chấm công thực địa đang được phát triển.</p>
-    </div>
-  );
+  return <SitePage />;
 }

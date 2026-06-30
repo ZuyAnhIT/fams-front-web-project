@@ -59,5 +59,6 @@ export interface UserRoleResponse {
   userId: string;
   roleId: string;
   tenantId: string;
-  assignedAt: string;
+  assignedAt?: string;
+  roleName?: string;
 }

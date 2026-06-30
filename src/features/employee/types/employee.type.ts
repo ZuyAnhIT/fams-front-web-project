@@ -1,31 +1,43 @@
-export interface Employee {
+export interface EmployeeResponse {
   id: string;
+  userId?: string;
   tenantId: string;
-  userId?: string | null;
-  employeeCode?: string | null;
+  email?: string;
   firstName: string;
   lastName: string;
-  email?: string | null;
-  phone?: string | null;
-  position?: string | null;
-  department?: string | null;
-  status: "active" | "inactive" | "terminated";
-  hiredDate?: string | null;
-  avatarUrl?: string | null;
+  fullName: string;
+  phone?: string;
+  employeeCode?: string;
+  position?: string;
+  department?: string;
+  hiredDate?: string;
+  avatarUrl?: string;
+  status: string; // 'active' | 'inactive' | 'terminated'
   createdAt: string;
   updatedAt: string;
 }
 
-import { UserRoleResponse } from "../../role-permission/types";
+export interface EmployeeListParams {
+  tenantId?: string;
+  search?: string;
+  status?: string; // 'active' | 'inactive' | 'terminated'
+  department?: string;
+  sortBy?: string;
+  sortDir?: "asc" | "desc";
+  page?: number;
+  size?: number;
+}
 
-export interface EmployeeDetailResponse extends Employee {
-  roles: UserRoleResponse[];
+export type Employee = EmployeeResponse;
+
+export interface EmployeeDetailResponse extends EmployeeResponse {
+  // Add more detailed fields if necessary
 }
 
 export interface CreateEmployeePayload {
+  email: string;
   firstName: string;
   lastName: string;
-  email?: string;
   phone?: string;
   employeeCode?: string;
   position?: string;
@@ -33,7 +45,7 @@ export interface CreateEmployeePayload {
   hiredDate?: string;
 }
 
-export interface UpdateEmployeePayload extends Partial<CreateEmployeePayload> { }
+export interface UpdateEmployeePayload extends Partial<CreateEmployeePayload> {}
 
 export interface ChangeEmployeeStatusPayload {
   status: "active" | "inactive" | "terminated";
@@ -41,17 +53,17 @@ export interface ChangeEmployeeStatusPayload {
 
 export interface InviteEmployeePayload {
   email: string;
+  firstName?: string;
+  lastName?: string;
   roleId?: string;
 }
 
 export interface InvitationResponse {
   id: string;
-  tenantId: string;
   email: string;
+  tenantId: string;
+  status: string;
   token: string;
-  status: "pending" | "accepted" | "cancelled" | "expired";
-  expiresAt: string;
-  createdAt: string;
 }
 
 export interface AcceptInvitationPayload {

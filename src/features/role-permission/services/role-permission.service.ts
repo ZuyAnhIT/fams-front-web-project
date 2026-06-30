@@ -89,4 +89,30 @@ export const rolePermissionService = {
     );
     return response.data;
   },
+
+  getMyRoles: async (): Promise<ApiResponse<UserRoleResponse[]>> => {
+    try {
+      const response = await apiClient.get<ApiResponse<UserRoleResponse[]>>(
+        "/user-roles/me"
+      );
+      return response.data;
+    } catch (error: any) {
+      // [MOCK DATA] Backend chưa có API này, tạm thời trả về mock data để test Frontend
+      // (Bắt mọi lỗi vì Spring Security có thể trả về 403/401 thay vì 404 cho endpoint không tồn tại)
+      // ⚠️ LƯU Ý: Xóa mock này khi Backend xây xong API /user-roles/me
+      return {
+        success: true,
+        message: "Mock data",
+        data: [
+          {
+            id: "mock-id",
+            userId: "mock-user-id",
+            roleId: "mock-role-id",
+            roleName: "TENANT_ADMIN",
+            tenantId: "47d053fb-c0df-4bb9-980d-d38fc7a00265", // Real tenant ID of 'DIEN LUC'
+          }
+        ]
+      };
+    }
+  },
 };

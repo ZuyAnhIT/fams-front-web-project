@@ -24,6 +24,7 @@ import { ROUTES } from "@/constants/routes";
 import { APP_NAME } from "@/constants/app";
 import { type AuthUser } from "@/features/auth/types/auth.type";
 import { authMapper } from "@/features/auth/utils/auth.mapper";
+import { rolePermissionService } from "@/features/role-permission/services/role-permission.service";
 
 const totpSchema = z.object({
   code: z.string()
@@ -99,8 +100,15 @@ export default function LoginForm() {
 
       // 2. Fetch actual profile
       const profile = await authService.getProfile();
+      
+      let rolesResponse = undefined;
+      try {
+        rolesResponse = await rolePermissionService.getMyRoles();
+      } catch (e) {
+        console.warn("Could not fetch roles", e);
+      }
 
-      const authUser = authMapper.toAuthUser(profile, response.accessToken);
+      const authUser = authMapper.toAuthUser(profile, response.accessToken, rolesResponse?.data);
 
       // 3. Save to Zustand store
       setAuth(authUser, response.accessToken, response.refreshToken);
@@ -125,8 +133,15 @@ export default function LoginForm() {
       authTokenService.setAccessToken(response.accessToken);
       authTokenService.setRefreshToken(response.refreshToken);
       const profile = await authService.getProfile();
+      
+      let rolesResponse = undefined;
+      try {
+        rolesResponse = await rolePermissionService.getMyRoles();
+      } catch (e) {
+        console.warn("Could not fetch roles", e);
+      }
 
-      const authUser = authMapper.toAuthUser(profile, response.accessToken);
+      const authUser = authMapper.toAuthUser(profile, response.accessToken, rolesResponse?.data);
 
       setAuth(authUser, response.accessToken, response.refreshToken);
       clearTotpPending();
@@ -152,8 +167,15 @@ export default function LoginForm() {
 
       // 2. Fetch actual profile
       const profile = await authService.getProfile();
+      
+      let rolesResponse = undefined;
+      try {
+        rolesResponse = await rolePermissionService.getMyRoles();
+      } catch (e) {
+        console.warn("Could not fetch roles", e);
+      }
 
-      const authUser = authMapper.toAuthUser(profile, response.accessToken);
+      const authUser = authMapper.toAuthUser(profile, response.accessToken, rolesResponse?.data);
 
       // 3. Save to Zustand store
       setAuth(authUser, response.accessToken, response.refreshToken);

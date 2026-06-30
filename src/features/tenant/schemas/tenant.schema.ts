@@ -18,6 +18,10 @@ export const createTenantSchema = z.object({
     .regex(/^[A-Z]{3}$/, "Mã tiền tệ phải là 3 chữ cái in hoa (VD: VND)")
     .optional()
     .or(z.literal("")),
+  adminEmail: z.string()
+    .email("Vui lòng nhập Email hợp lệ")
+    .optional()
+    .or(z.literal("")),
 });
 
 export type CreateTenantFormData = z.infer<typeof createTenantSchema>;

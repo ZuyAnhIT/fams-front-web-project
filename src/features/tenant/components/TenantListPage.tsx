@@ -61,10 +61,10 @@ export default function TenantListPage() {
       render: (_: unknown, record: Tenant) => (
         <div className="flex items-center gap-3 py-1">
           {record.logoUrl ? (
-            <img 
-              src={record.logoUrl} 
-              alt={record.name} 
-              className="h-9 w-9 rounded-lg ring-1 ring-slate-200 object-contain bg-white p-1 shadow-sm" 
+            <img
+              src={record.logoUrl}
+              alt={record.name}
+              className="h-9 w-9 rounded-lg ring-1 ring-slate-200 object-contain bg-white p-1 shadow-sm"
             />
           ) : (
             <div className="h-9 w-9 bg-blue-100 text-blue-700 rounded-lg flex items-center justify-center font-bold text-base shrink-0 shadow-inner">
@@ -148,8 +148,8 @@ export default function TenantListPage() {
           onSearchChange={setSearchInput}
           searchPlaceholder="Tìm kiếm theo tên công ty, đường dẫn, tên miền,..."
           actions={
-            <BaseButton 
-              type="primary" 
+            <BaseButton
+              type="primary"
               icon={<Plus className="h-4.5 w-4.5" />}
               onClick={() => setIsCreateModalOpen(true)}
               className="!bg-brand-primary !text-white hover:!bg-brand-primary/90 !border-0 shadow-lg shadow-brand-primary/25 h-11 px-5 rounded-xl font-bold hover:-translate-y-0.5 transition-all flex items-center gap-2"
