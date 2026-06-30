@@ -12,7 +12,8 @@ import { RoleDetailResponse } from "../types";
 import { useQuery } from "@tanstack/react-query";
 import { tenantService } from "@/features/tenant/services/tenant.service";
 import { formatResource, formatAction, formatDescription } from "../utils/permission.mapper";
-
+import { useAuthStore } from "@/stores/auth.store";
+import { SystemRole } from "@/features/auth/types/auth.type";
 
 
 const roleSchema = z.object({
@@ -33,6 +34,7 @@ interface RoleFormModalProps {
 
 export const RoleFormModal: React.FC<RoleFormModalProps> = ({ open, onClose, tenantId, initialData }) => {
   const [messageApi, contextHolder] = message.useMessage();
+  const user = useAuthStore((state) => state.user);
   const { data: permissionsResponse, isLoading: isLoadingPermissions, isError: isErrorPermissions, error: permissionsError } = usePermissionsGroupedQuery();
   const createRole = useCreateRoleMutation();
   const updateRole = useUpdateRoleMutation();
@@ -141,10 +143,14 @@ export const RoleFormModal: React.FC<RoleFormModalProps> = ({ open, onClose, ten
 
   // If response is just an array, permissionsResponse will be the array. 
   // If it's wrapped in ApiResponse, it will be permissionsResponse.data.
-  // Let's handle both cases to be safe!
-  const permissionGroups = Array.isArray(permissionsResponse) 
+  let permissionGroups = Array.isArray(permissionsResponse) 
     ? permissionsResponse 
     : (permissionsResponse?.data || []);
+
+  // Filter out platform-only permissions (tenants, plans) if caller is not PLATFORM_ADMIN
+  if (user?.role !== SystemRole.PLATFORM_ADMIN) {
+    permissionGroups = permissionGroups.filter((g: any) => g.resource !== "tenants" && g.resource !== "plans");
+  }
 
   const filteredPermissionGroups = filterResources.length > 0 
     ? permissionGroups.filter((g: any) => filterResources.includes(g.resource))
@@ -163,7 +169,7 @@ export const RoleFormModal: React.FC<RoleFormModalProps> = ({ open, onClose, ten
             </div>
             <div>
               <h2 className="text-xl font-bold text-slate-900 tracking-tight leading-tight">
-                {isEdit ? "Sửa Role" : "Tạo Role Tùy Chỉnh"}
+                {isSystemRole ? "Chi tiết Role Hệ thống" : (isEdit ? "Sửa Role" : "Tạo Role Tùy Chỉnh")}
               </h2>
               <p className="text-sm text-slate-500 font-normal mt-0.5">
                 Thiết lập quyền hạn cho nhóm người dùng
@@ -176,24 +182,35 @@ export const RoleFormModal: React.FC<RoleFormModalProps> = ({ open, onClose, ten
         width={800}
         destroyOnHidden={true}
         footer={
-          <div className="flex justify-end gap-3 mt-4">
-            <BaseButton
-              onClick={onClose}
-              disabled={createRole.isPending || updateRole.isPending}
-              className="!bg-white !text-slate-700 !border-slate-300 hover:!bg-slate-50 hover:!text-slate-900 h-11 px-6 rounded-xl font-semibold transition-all"
-            >
-              Hủy bỏ
-            </BaseButton>
-            <BaseButton
-              type="primary"
-              htmlType="submit"
-              form="role-form"
-              loading={createRole.isPending || updateRole.isPending}
-              className="!bg-brand-primary !text-white hover:opacity-90 !border-0 shadow-lg shadow-brand-primary/25 h-11 px-8 rounded-xl font-bold hover:-translate-y-0.5 transition-all"
-            >
-              {isEdit ? "Cập nhật" : "Tạo mới"}
-            </BaseButton>
-          </div>
+          isSystemRole ? (
+            <div className="flex justify-end mt-4">
+              <BaseButton
+                onClick={onClose}
+                className="!bg-white !text-slate-700 !border-slate-300 hover:!bg-slate-50 hover:!text-slate-900 h-11 px-6 rounded-xl font-semibold transition-all"
+              >
+                Đóng
+              </BaseButton>
+            </div>
+          ) : (
+            <div className="flex justify-end gap-3 mt-4">
+              <BaseButton
+                onClick={onClose}
+                disabled={createRole.isPending || updateRole.isPending}
+                className="!bg-white !text-slate-700 !border-slate-300 hover:!bg-slate-50 hover:!text-slate-900 h-11 px-6 rounded-xl font-semibold transition-all"
+              >
+                Hủy bỏ
+              </BaseButton>
+              <BaseButton
+                type="primary"
+                htmlType="submit"
+                form="role-form"
+                loading={createRole.isPending || updateRole.isPending}
+                className="!bg-brand-primary !text-white hover:opacity-90 !border-0 shadow-lg shadow-brand-primary/25 h-11 px-8 rounded-xl font-bold hover:-translate-y-0.5 transition-all"
+              >
+                {isEdit ? "Cập nhật" : "Tạo mới"}
+              </BaseButton>
+            </div>
+          )
         }
         classNames={{
           content: "!bg-white !rounded-3xl !p-0 overflow-hidden shadow-2xl shadow-brand-primary/10",

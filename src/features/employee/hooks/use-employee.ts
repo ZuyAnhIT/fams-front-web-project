@@ -18,7 +18,7 @@ export const useEmployees = (params: any, options?: Omit<import("@tanstack/react
 
 export const useExportEmployees = () => {
   return useMutation({
-    mutationFn: (params: { search?: string; status?: string; department?: string }) => 
+    mutationFn: (params: { search?: string; status?: string; department?: string }) =>
       employeeService.exportEmployees(params),
   });
 };
@@ -68,7 +68,8 @@ export const useChangeEmployeeStatus = () => {
 export const useSendInvitation = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (payload: InviteEmployeePayload) => employeeService.sendInvitation(payload),
+    mutationFn: ({ payload, tenantId }: { payload: InviteEmployeePayload; tenantId?: string }) => 
+      employeeService.sendInvitation(payload, tenantId),
     onSuccess: () => {
       // Có thể invalidate list lời mời nếu sau này có API list invitations
     },

@@ -108,8 +108,50 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   hasPermission: (permission: string) => {
     const state = get();
     if (!state.user) return false;
+    
+    const role = state.user.role;
+    
     // Platform Admin has all permissions implicitly
-    if (state.user.role === "PLATFORM_ADMIN") return true;
+    if (role === "PLATFORM_ADMIN") return true;
+
+    // [TEMPORARY FIX] The backend does not yet return the permissions array in /api/v1/auth/me or /api/v1/user-roles/me.
+    // We mock the System Role permissions here based on V13__seed_roles_and_permissions.sql so the UI works.
+    if (role === "TENANT_ADMIN") {
+      // TENANT_ADMIN has everything except platform-level (tenants, plans)
+      if (permission.startsWith("tenants:") || permission.startsWith("plans:")) return false;
+      return true;
+    }
+    
+    if (role === "HR_MANAGER") {
+      const allowed = ["employees:create", "employees:read", "employees:update", "employees:list",
+                       "attendance:read", "attendance:list", "attendance:export",
+                       "violations:create", "violations:read", "violations:update", "violations:list",
+                       "reports:read", "reports:list", "reports:export",
+                       "shifts:read", "shifts:list", "assignments:create", "assignments:read", 
+                       "assignments:update", "assignments:list", "notifications:read", "notifications:list",
+                       "audit:read", "audit:list", "workspaces:read", "workspaces:list",
+                       "workspace_members:create", "workspace_members:read", "workspace_members:update", 
+                       "workspace_members:delete", "workspace_members:list"];
+      return allowed.includes(permission);
+    }
+
+    if (role === "SITE_SUPERVISOR") {
+      const allowed = ["employees:read", "employees:list", "attendance:read", "attendance:list",
+                       "randomchecks:create", "randomchecks:read", "randomchecks:list",
+                       "violations:create", "violations:read", "violations:update", "violations:list",
+                       "shifts:read", "shifts:list", "assignments:read", "assignments:list",
+                       "notifications:read", "notifications:list", "sites:read", "sites:list", "checkins:list"];
+      return allowed.includes(permission);
+    }
+
+    if (role === "EMPLOYEE") {
+      const allowed = ["checkins:create", "checkins:read", "checkins:list", "attendance:read", "attendance:list",
+                       "shifts:read", "shifts:list", "assignments:read", "assignments:list",
+                       "notifications:read", "notifications:list", "employees:read"];
+      return allowed.includes(permission);
+    }
+
+    // Fallback to actual permissions array if it's a custom role (once Backend supports it)
     return state.user.permissions?.includes(permission) ?? false;
   },
 }));

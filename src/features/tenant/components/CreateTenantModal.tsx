@@ -8,7 +8,9 @@ import BaseButton from "@/components/ui/BaseButton";
 import { useCreateTenant } from "../hooks/use-tenant";
 import { createTenantSchema, type CreateTenantFormData } from "../schemas/tenant.schema";
 import { useEffect } from "react";
-import { Building2, Globe, Settings2, Link } from "lucide-react";
+import { Building2, Globe, Settings2, UserCog } from "lucide-react";
+import { useRolesQuery } from "@/features/role-permission/hooks/use-role-permission";
+import { useSendInvitation } from "@/features/employee/hooks/use-employee";
 
 interface CreateTenantModalProps {
   open: boolean;
@@ -16,7 +18,10 @@ interface CreateTenantModalProps {
 }
 
 export default function CreateTenantModal({ open, onClose }: CreateTenantModalProps) {
-  const { mutateAsync: createTenant, isPending } = useCreateTenant();
+  const { mutateAsync: createTenant, isPending: isCreating } = useCreateTenant();
+  const { mutateAsync: sendInvitation, isPending: isSending } = useSendInvitation();
+  const { data: rolesData } = useRolesQuery({ isSystem: true, size: 50 });
+  const isPending = isCreating || isSending;
 
   const {
     control,
@@ -34,6 +39,7 @@ export default function CreateTenantModal({ open, onClose }: CreateTenantModalPr
       timezone: "UTC",
       locale: "en",
       currencyCode: "USD",
+      adminEmail: "",
     },
   });
 
@@ -46,11 +52,28 @@ export default function CreateTenantModal({ open, onClose }: CreateTenantModalPr
   const onSubmit = async (data: CreateTenantFormData) => {
     try {
       // Remove empty string fields so they don't fail backend validation (like @Size for countryCode)
+      const { adminEmail, ...restData } = data;
       const payload = Object.fromEntries(
-        Object.entries(data).filter(([_, v]) => v !== "")
+        Object.entries(restData).filter(([_, v]) => v !== "")
       ) as CreateTenantFormData;
-      
-      await createTenant(payload);
+
+      const createdTenant = await createTenant(payload);
+
+      if (adminEmail) {
+        const tenantAdminRole = rolesData?.data?.content?.find((r) => r.name === "TENANT_ADMIN");
+        if (tenantAdminRole) {
+          await sendInvitation({
+            payload: {
+              email: adminEmail,
+              roleId: tenantAdminRole.id,
+            },
+            tenantId: createdTenant.id,
+          });
+        } else {
+          message.warning("Không tìm thấy role TENANT_ADMIN trong hệ thống. Lời mời chưa được gửi.");
+        }
+      }
+
       message.success(`Đã tạo công ty ${data.name} thành công!`);
       onClose();
     } catch (error: unknown) {
@@ -80,18 +103,18 @@ export default function CreateTenantModal({ open, onClose }: CreateTenantModalPr
       width={760}
       footer={
         <div className="flex justify-end gap-3 mt-4">
-          <BaseButton 
-            onClick={onClose} 
-            disabled={isPending} 
+          <BaseButton
+            onClick={onClose}
+            disabled={isPending}
             className="!bg-white !text-slate-700 !border-slate-300 hover:!bg-slate-50 hover:!text-slate-900 h-11 px-6 rounded-xl font-semibold transition-all"
           >
             Hủy bỏ
           </BaseButton>
-          <BaseButton 
-            type="primary" 
+          <BaseButton
+            type="primary"
             htmlType="submit"
             form="create-tenant-form"
-            loading={isPending} 
+            loading={isPending}
             className="!bg-brand-primary !text-white hover:opacity-90 !border-0 shadow-lg shadow-brand-primary/25 h-11 px-8 rounded-xl font-bold hover:-translate-y-0.5 transition-all"
           >
             Tạo mới
@@ -99,7 +122,7 @@ export default function CreateTenantModal({ open, onClose }: CreateTenantModalPr
         </div>
       }
       classNames={{
-        content: "!bg-white !rounded-3xl !p-0 overflow-hidden shadow-2xl shadow-brand-primary/10",
+        wrapper: "!bg-white !rounded-3xl !p-0 overflow-hidden shadow-2xl shadow-brand-primary/10",
         header: "!bg-white border-b border-slate-100 px-8 py-5 m-0",
         body: "!bg-slate-50/50 p-6 md:p-8 overflow-y-auto max-h-[60vh] scrollbar-thin scrollbar-thumb-slate-200",
         footer: "!bg-white border-t border-slate-100 px-8 py-4 m-0",
@@ -113,7 +136,7 @@ export default function CreateTenantModal({ open, onClose }: CreateTenantModalPr
             <Building2 className="h-4 w-4 text-brand-primary" />
             <h4 className="font-bold text-slate-800 text-[15px]">Thông tin cơ bản</h4>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-4">
             <FormInput
               control={control}
@@ -154,7 +177,7 @@ export default function CreateTenantModal({ open, onClose }: CreateTenantModalPr
             <Globe className="h-4 w-4 text-brand-primary" />
             <h4 className="font-bold text-slate-800 text-[15px]">Định danh mạng (Tùy chọn)</h4>
           </div>
-          
+
           <FormInput
             control={control}
             name="domain"
@@ -171,7 +194,7 @@ export default function CreateTenantModal({ open, onClose }: CreateTenantModalPr
             <Settings2 className="h-4 w-4 text-brand-primary" />
             <h4 className="font-bold text-slate-800 text-[15px]">Cấu hình khu vực (Tùy chọn)</h4>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-4">
             <FormInput
               control={control}
@@ -209,6 +232,24 @@ export default function CreateTenantModal({ open, onClose }: CreateTenantModalPr
               labelClassName="!text-slate-700 !font-semibold !text-sm"
             />
           </div>
+        </div>
+
+        {/* Admin Setup Section */}
+        <div className="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm space-y-5">
+          <div className="flex items-center gap-2 mb-2">
+            <UserCog className="h-4 w-4 text-brand-primary" />
+            <h4 className="font-bold text-slate-800 text-[15px]">Quản trị viên (Tùy chọn)</h4>
+          </div>
+
+          <FormInput
+            control={control}
+            name="adminEmail"
+            label="Email Quản trị viên"
+            placeholder="Ví dụ: ceo@abc.com"
+            error={errors.adminEmail}
+            helpText="Nhập Email để hệ thống gửi lời mời thiết lập tài khoản Chủ công ty."
+            labelClassName="!text-slate-700 !font-semibold !text-sm"
+          />
         </div>
 
       </form>

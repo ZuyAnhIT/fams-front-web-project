@@ -19,6 +19,7 @@ import { authService } from "@/features/auth/services/auth.service";
 import { authMapper } from "@/features/auth/utils/auth.mapper";
 import { authTokenService } from "@/services/auth-token.service";
 import { useAuthStore } from "@/stores/auth.store";
+import { rolePermissionService } from "@/features/role-permission/services/role-permission.service";
 
 /**
  * PhoneLoginForm - Form đăng nhập bằng số điện thoại + OTP.
@@ -130,7 +131,15 @@ export default function PhoneLoginForm() {
 
       // 2. Fetch actual profile
       const profile = await authService.getProfile();
-      const authUser = authMapper.toAuthUser(profile, response.accessToken);
+      
+      let rolesResponse = undefined;
+      try {
+        rolesResponse = await rolePermissionService.getMyRoles();
+      } catch (e) {
+        console.warn("Could not fetch roles", e);
+      }
+
+      const authUser = authMapper.toAuthUser(profile, response.accessToken, rolesResponse?.data);
 
       // 3. Save to Zustand store
       setAuth(authUser, response.accessToken, response.refreshToken);

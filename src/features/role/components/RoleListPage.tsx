@@ -60,7 +60,7 @@ export default function RoleListPage() {
       dataIndex: "isSystem",
       key: "isSystem",
       render: (isSystem: boolean) => (
-        isSystem 
+        isSystem
           ? <Tag color="error" className="border-rose-200">Hệ thống</Tag>
           : <Tag color="blue" className="border-blue-200">Tùy chỉnh</Tag>
       ),
@@ -76,8 +76,8 @@ export default function RoleListPage() {
       key: "actions",
       render: (_: any, record: Role) => (
         <div className="flex gap-2">
-          <BaseButton 
-            size="small" 
+          <BaseButton
+            size="small"
             onClick={() => router.push(`/settings/roles/${record.id}`)}
             icon={<Edit className="h-4 w-4" />}
           >
@@ -107,8 +107,8 @@ export default function RoleListPage() {
         onSearchChange={setSearchInput}
         searchPlaceholder="Tìm kiếm vai trò..."
         actions={
-          <BaseButton 
-            type="primary" 
+          <BaseButton
+            type="primary"
             icon={<Plus className="h-4.5 w-4.5" />}
             onClick={() => router.push("/settings/roles/create")}
             className="!bg-blue-600 !text-white hover:!bg-blue-700 !border-0 shadow-lg shadow-blue-500/25 h-11 px-5 rounded-xl font-bold hover:-translate-y-0.5 transition-all flex items-center gap-2"

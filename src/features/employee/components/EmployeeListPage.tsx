@@ -11,6 +11,7 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { useEmployees, useChangeEmployeeStatus, useExportEmployees } from "../hooks/use-employee";
 import InviteEmployeeModal from "./InviteEmployeeModal";
 import EmployeeFormModal from "./EmployeeFormModal";
+import { useAuthStore } from "@/stores/auth.store";
 import ImportEmployeeModal from "./ImportEmployeeModal";
 import type { Employee, EmployeeDetailResponse } from "../types/employee.type";
 import { format } from "date-fns";
@@ -18,6 +19,7 @@ import ListHeader from "@/components/shared/layout/ListHeader";
 import ContentCard from "@/components/shared/layout/ContentCard";
 
 export default function EmployeeListPage() {
+  const hasPermission = useAuthStore((state) => state.hasPermission);
   const { message } = App.useApp();
   const router = useRouter();
   const { state, setPagination } = usePagination(20);
@@ -69,6 +71,7 @@ export default function EmployeeListPage() {
   };
 
   const getStatusActionMenu = (record: Employee): MenuProps["items"] => {
+    if (!hasPermission("employees:update")) return [];
     const items: MenuProps["items"] = [];
     if (record.status !== "active") {
       items.push({ key: "active", label: "Đánh dấu Hoạt động", onClick: () => handleStatusChange(record.id, "active") });
@@ -89,10 +92,10 @@ export default function EmployeeListPage() {
       render: (_: any, record: Employee) => (
         <div className="flex items-center gap-3 py-1">
           {record.avatarUrl ? (
-            <img 
-              src={record.avatarUrl} 
-              alt={record.firstName} 
-              className="h-9 w-9 rounded-lg ring-1 ring-slate-200 object-cover bg-white shadow-sm" 
+            <img
+              src={record.avatarUrl}
+              alt={record.firstName}
+              className="h-9 w-9 rounded-lg ring-1 ring-slate-200 object-cover bg-white shadow-sm"
             />
           ) : (
             <div className="h-9 w-9 bg-brand-100 text-brand-700 rounded-lg flex items-center justify-center font-bold text-base shrink-0 shadow-inner uppercase">
@@ -135,10 +138,10 @@ export default function EmployeeListPage() {
           terminated: { dot: "bg-rose-500", text: "text-slate-500 line-through", label: "Đã nghỉ" },
         };
         const config = statusConfig[status] || { dot: "bg-slate-300", text: "text-slate-500", label: status };
-        
+
         return (
-          <Dropdown menu={{ items: getStatusActionMenu(record) }} trigger={["click"]}>
-            <div className={`inline-flex items-center gap-2 cursor-pointer hover:opacity-70 transition-opacity ${config.text}`}>
+          <Dropdown menu={{ items: getStatusActionMenu(record) }} trigger={["click"]} disabled={!hasPermission("employees:update")}>
+            <div className={`inline-flex items-center gap-2 ${hasPermission("employees:update") ? "cursor-pointer hover:opacity-70" : ""} transition-opacity ${config.text}`}>
               <div className={`w-2 h-2 rounded-full ${config.dot} shadow-sm`}></div>
               <span className="font-semibold text-sm">{config.label}</span>
             </div>
@@ -161,7 +164,7 @@ export default function EmployeeListPage() {
       key: "actions",
       width: 120,
       render: (_: any, record: Employee) => (
-        <BaseButton 
+        <BaseButton
           type="default"
           icon={<ChevronRight className="h-4 w-4" />}
           className="!text-blue-600 !border-blue-200 hover:!bg-blue-50 hover:!border-blue-300 shadow-[0_2px_10px_rgb(0,0,0,0.04)] h-8 px-3 rounded-lg text-xs font-bold flex flex-row-reverse hover:-translate-y-0.5 transition-all duration-200"
@@ -198,39 +201,47 @@ export default function EmployeeListPage() {
         }
         actions={
           <>
-            <BaseButton 
-              icon={<FileUp className="h-4.5 w-4.5" />}
-              onClick={() => setIsImportOpen(true)}
-              className="h-11 px-4 rounded-xl font-semibold shadow-sm text-slate-700 hover:text-brand-600 hover:border-brand-300 transition-all"
-            >
-              Nhập Excel
-            </BaseButton>
-            <BaseButton 
-              icon={<FileDown className="h-4.5 w-4.5" />} 
-              onClick={handleExport}
-              loading={isExporting}
-              className="h-11 px-4 rounded-xl font-semibold shadow-sm text-slate-700 hover:text-brand-600 hover:border-brand-300 transition-all"
-            >
-              Xuất Excel
-            </BaseButton>
-            <BaseButton 
-              icon={<Mail className="h-4.5 w-4.5" />} 
-              onClick={() => setIsInviteOpen(true)}
-              className="!bg-emerald-600 !text-white hover:!bg-emerald-700 !border-0 shadow-lg shadow-emerald-500/25 h-11 px-5 rounded-xl font-bold hover:-translate-y-0.5 transition-all flex items-center gap-2"
-            >
-              Mời nhân viên
-            </BaseButton>
-            <BaseButton 
-              type="primary" 
-              icon={<Plus className="h-4.5 w-4.5" />}
-              onClick={() => {
-                setEditingEmployee(null);
-                setIsEmployeeFormOpen(true);
-              }}
-              className="!bg-brand-600 !text-white hover:!bg-brand-700 !border-0 shadow-lg shadow-brand-500/25 h-11 px-5 rounded-xl font-bold hover:-translate-y-0.5 transition-all flex items-center gap-2"
-            >
-              Thêm mới
-            </BaseButton>
+            {hasPermission("employees:create") && (
+              <BaseButton
+                icon={<FileUp className="h-4.5 w-4.5" />}
+                onClick={() => setIsImportOpen(true)}
+                className="h-11 px-4 rounded-xl font-semibold shadow-sm text-slate-700 hover:text-brand-600 hover:border-brand-300 transition-all"
+              >
+                Nhập Excel
+              </BaseButton>
+            )}
+            {hasPermission("employees:list") && (
+              <BaseButton
+                icon={<FileDown className="h-4.5 w-4.5" />}
+                onClick={handleExport}
+                loading={isExporting}
+                className="h-11 px-4 rounded-xl font-semibold shadow-sm text-slate-700 hover:text-brand-600 hover:border-brand-300 transition-all"
+              >
+                Xuất Excel
+              </BaseButton>
+            )}
+            {hasPermission("employees:create") && (
+              <BaseButton
+                icon={<Mail className="h-4.5 w-4.5" />}
+                onClick={() => setIsInviteOpen(true)}
+                className="!bg-emerald-600 !text-white hover:!bg-emerald-700 !border-0 shadow-lg shadow-emerald-500/25 h-11 px-5 rounded-xl font-bold hover:-translate-y-0.5 transition-all flex items-center gap-2"
+              >
+                Mời nhân viên
+              </BaseButton>
+            )}
+            {hasPermission("employees:create") && (
+              <BaseButton
+                type="primary"
+                icon={<Plus className="h-4.5 w-4.5" />}
+                onClick={() => {
+                  setEditingEmployee(null);
+                  setIsEmployeeFormOpen(true);
+                }}
+                className="!bg-brand-600 !text-white hover:!bg-brand-700 !border-0 shadow-lg shadow-brand-500/25 h-11 px-5 rounded-xl font-bold hover:-translate-y-0.5 transition-all flex items-center gap-2"
+              >
+                Thêm mới
+              </BaseButton>
+            )}
           </>
         }
       />
@@ -259,9 +270,9 @@ export default function EmployeeListPage() {
       <ImportEmployeeModal open={isImportOpen} onClose={() => setIsImportOpen(false)} />
 
       {/* Modal Thêm/Sửa Nhân Viên */}
-      <EmployeeFormModal 
-        open={isEmployeeFormOpen} 
-        onClose={() => setIsEmployeeFormOpen(false)} 
+      <EmployeeFormModal
+        open={isEmployeeFormOpen}
+        onClose={() => setIsEmployeeFormOpen(false)}
         initialData={editingEmployee}
       />
     </div>

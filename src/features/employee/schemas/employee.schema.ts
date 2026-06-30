@@ -15,7 +15,9 @@ export type EmployeeFormData = z.infer<typeof employeeSchema>;
 
 export const inviteEmployeeSchema = z.object({
   email: z.string().email("Vui lòng nhập email hợp lệ"),
-  roleId: z.string().optional(),
+  firstName: z.string().optional().or(z.literal("")),
+  lastName: z.string().optional().or(z.literal("")),
+  roleId: z.string().optional().or(z.literal("")),
 });
 
 export type InviteEmployeeFormData = z.infer<typeof inviteEmployeeSchema>;

@@ -78,9 +78,9 @@ export default function IpWhitelistTable({ tenantId }: { tenantId?: string }) {
       title: "Trạng thái",
       key: "isActive",
       render: (_: unknown, record: IpWhitelistResponse) => (
-        <Switch 
-          checked={record.isActive} 
-          onChange={(checked) => handleToggleActive(record, checked)} 
+        <Switch
+          checked={record.isActive}
+          onChange={(checked) => handleToggleActive(record, checked)}
         />
       ),
     },
@@ -115,8 +115,8 @@ export default function IpWhitelistTable({ tenantId }: { tenantId?: string }) {
           <Globe className="h-5 w-5 text-brand-500" />
           <h3 className="text-lg font-semibold">Danh sách IP được phép truy cập (Whitelist)</h3>
         </div>
-        <BaseButton 
-          type="primary" 
+        <BaseButton
+          type="primary"
           icon={<Plus className="h-4 w-4" />}
           onClick={() => setIsModalOpen(true)}
           className="bg-brand-600"
@@ -124,7 +124,7 @@ export default function IpWhitelistTable({ tenantId }: { tenantId?: string }) {
           Thêm IP
         </BaseButton>
       </div>
-      
+
       <p className="text-sm text-brand-600">
         Chỉ những người dùng truy cập từ các địa chỉ IP có trong danh sách này mới có thể đăng nhập vào hệ thống.
         Nếu danh sách trống, hệ thống sẽ không giới hạn IP.
@@ -138,7 +138,7 @@ export default function IpWhitelistTable({ tenantId }: { tenantId?: string }) {
           totalElements={pageData?.totalElements || 0}
           currentPage={pageData?.page || 0}
           pageSize={pageData?.size || 100}
-          onPageChange={() => {}}
+          onPageChange={() => { }}
         />
       </ContentCard>
 
@@ -165,7 +165,7 @@ export default function IpWhitelistTable({ tenantId }: { tenantId?: string }) {
             placeholder="Ví dụ: Văn phòng chính"
             error={errors.label}
           />
-          
+
           <div className="flex justify-end gap-3 pt-4 border-t border-brand-100">
             <BaseButton onClick={() => setIsModalOpen(false)} disabled={isSubmitting}>Hủy</BaseButton>
             <BaseButton type="primary" htmlType="submit" loading={isSubmitting} className="bg-brand-600">

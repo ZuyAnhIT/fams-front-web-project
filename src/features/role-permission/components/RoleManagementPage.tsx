@@ -144,44 +144,44 @@ export const RoleManagementPage: React.FC = () => {
       render: (_: any, record: RoleResponse) => {
         const isSystemRole = record.isSystem || (record as any).system;
         return (
-        <Space size="middle">
-          {isSystemRole ? (
-            <Tooltip title="Xem chi tiết">
-              <Button
-                type="text"
-                icon={<EyeOutlined />}
-                onClick={() => openEditModal(record)}
-                loading={isFetchingRole}
-                className="text-blue-600 hover:text-blue-800"
-              />
-            </Tooltip>
-          ) : (
-            <>
-              {hasPermission("roles:update") && (
-                <Tooltip title="Sửa">
-                  <Button
-                    type="text"
-                    icon={<EditOutlined />}
-                    onClick={() => openEditModal(record)}
-                    disabled={isFetchingRole}
-                    loading={isFetchingRole}
-                    className="text-blue-600 hover:text-blue-800"
-                  />
-                </Tooltip>
-              )}
-              {hasPermission("roles:delete") && (
-                <Tooltip title="Xóa">
-                  <Button
-                    type="text"
-                    danger
-                    icon={<DeleteOutlined />}
-                    onClick={() => handleDelete(record.id, record.name)}
-                  />
-                </Tooltip>
-              )}
-            </>
-          )}
-        </Space>
+          <Space size="middle">
+            {isSystemRole ? (
+              <Tooltip title="Xem chi tiết">
+                <Button
+                  type="text"
+                  icon={<EyeOutlined />}
+                  onClick={() => openEditModal(record)}
+                  loading={isFetchingRole}
+                  className="text-blue-600 hover:text-blue-800"
+                />
+              </Tooltip>
+            ) : (
+              <>
+                {hasPermission("roles:update") && (
+                  <Tooltip title="Sửa">
+                    <Button
+                      type="text"
+                      icon={<EditOutlined />}
+                      onClick={() => openEditModal(record)}
+                      disabled={isFetchingRole}
+                      loading={isFetchingRole}
+                      className="text-blue-600 hover:text-blue-800"
+                    />
+                  </Tooltip>
+                )}
+                {hasPermission("roles:delete") && (
+                  <Tooltip title="Xóa">
+                    <Button
+                      type="text"
+                      danger
+                      icon={<DeleteOutlined />}
+                      onClick={() => handleDelete(record.id, record.name)}
+                    />
+                  </Tooltip>
+                )}
+              </>
+            )}
+          </Space>
         );
       },
     },
