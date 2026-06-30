@@ -44,7 +44,7 @@ export default function FormInput<T extends FieldValues>({
     <div className={className}>
       <label
         htmlFor={id || name}
-        className={cn("mb-2 block text-[15px] font-medium tracking-wide text-gray-200", labelClassName)}
+        className={cn("mb-2 block text-[15px] font-medium tracking-wide text-slate-700", labelClassName)}
       >
         {label} {required && <span className="text-red-500">*</span>}
       </label>

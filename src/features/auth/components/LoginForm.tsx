@@ -9,7 +9,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { App, Input } from "antd";
 import { GoogleIcon, MicrosoftIcon } from "@/components/icons";
 import { PhoneOutlined } from "@ant-design/icons";
-import GlassCard from "@/components/ui/GlassCard";
 import FormInput from "@/components/forms/FormInput";
 
 import BaseButton from "@/components/ui/BaseButton";
@@ -190,29 +189,25 @@ export default function LoginForm() {
 
 
   return (
-    <div className="w-full max-w-[450px]">
+    <div className="w-full">
       {/* Card chính */}
-      <GlassCard>
-        {/* Logo */}
-        <div className="mb-6 flex justify-center">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-dashed border-blue-500/60 bg-blue-500/10 shadow-[0_0_20px_rgba(37,99,235,0.2)]">
-            <span className="text-4xl font-extrabold text-white">Q</span>
-          </div>
-        </div>
-
+      <div className="bg-white">
         {/* Tiêu đề */}
-        <h1 className="mb-8 text-center text-2xl font-semibold text-white">
-          {isTotpPending ? "Xác thực 2 Lớp" : `Chào mừng tới ${APP_NAME}!`}
+        <h1 className="mb-2 text-3xl font-bold text-slate-900 tracking-tight">
+          {isTotpPending ? "Xác thực 2 Lớp" : `Chào mừng trở lại!`}
         </h1>
+        <p className="mb-8 text-slate-500 text-[15px]">
+          {isTotpPending ? "Bảo vệ tài khoản của bạn bằng mã bảo mật" : "Vui lòng đăng nhập để tiếp tục truy cập hệ thống"}
+        </p>
 
         {/* Luồng đăng nhập hoặc nhập OTP */}
         {isTotpPending ? (
           <form onSubmit={handleTotpSubmit(onTotpSubmit)} className="space-y-6 animate-fade-in">
-            <p className="text-center text-sm text-gray-300">
+            <p className="text-sm text-slate-500">
               Vui lòng mở ứng dụng Authenticator và nhập mã 6 số.
             </p>
-            <div className="flex flex-col items-center justify-center space-y-2">
-              <label className="text-[15px] font-medium tracking-wide text-gray-200">Mã xác thực</label>
+            <div className="flex flex-col space-y-2">
+              <label className="text-[15px] font-semibold tracking-wide text-slate-700">Mã xác thực</label>
               <Controller
                 name="code"
                 control={totpControl}
@@ -222,7 +217,7 @@ export default function LoginForm() {
                     length={6}
                     size="large"
                     status={totpErrors.code ? "error" : undefined}
-                    className="mt-2 flex justify-center w-full [&_input]:!bg-white/10 [&_input]:!text-white [&_input]:!border-gray-500 [&_input:focus]:!border-blue-500"
+                    className="mt-2 flex w-full [&_input]:!bg-white [&_input]:!text-slate-900 [&_input]:!border-slate-300 [&_input:focus]:!border-brand-500 [&_input:hover]:!border-brand-400"
                   />
                 )}
               />
@@ -236,7 +231,7 @@ export default function LoginForm() {
               loading={isTotpSubmitting}
               block
               size="large"
-              className="mt-6 font-semibold"
+              className="mt-6 font-bold !bg-brand-600 !text-white hover:opacity-90 !border-0 shadow-lg shadow-brand-600/25 h-12 rounded-xl transition-all"
             >
               Xác nhận
             </BaseButton>
@@ -244,7 +239,7 @@ export default function LoginForm() {
               <button
                 type="button"
                 onClick={clearTotpPending}
-                className="text-sm text-gray-400 hover:text-white transition-colors"
+                className="text-sm font-medium text-slate-500 hover:text-brand-600 transition-colors"
               >
                 Quay lại đăng nhập
               </button>
@@ -273,11 +268,11 @@ export default function LoginForm() {
               error={errors.password}
             />
 
-            {/* Ghi nhớ & Quên mật khẩu */}
-            <div className="flex items-center justify-between">
+            {/* Quên mật khẩu */}
+            <div className="flex justify-end mt-2">
               <Link
                 href={ROUTES.FORGOT_PASSWORD}
-                className="text-sm font-semibold text-white hover:text-gray-300 transition-colors"
+                className="text-sm font-semibold text-brand-600 hover:text-brand-700 transition-colors"
               >
                 Quên mật khẩu?
               </Link>
@@ -285,11 +280,12 @@ export default function LoginForm() {
 
             {/* Nút đăng nhập */}
             <BaseButton
-              customVariant="auth"
+              type="primary"
               htmlType="submit"
               loading={isSubmitting}
               block
               size="large"
+              className="mt-2 font-bold !bg-brand-600 !text-white hover:opacity-90 !border-0 shadow-lg shadow-brand-600/25 h-12 rounded-xl transition-all"
             >
               Đăng nhập
             </BaseButton>
@@ -297,48 +293,49 @@ export default function LoginForm() {
         )}
 
         {/* Đăng ký */}
-        <p className="mt-7 text-center text-sm text-gray-300">
+        <p className="mt-8 text-center text-sm font-medium text-slate-500">
           Chưa có tài khoản?{" "}
           <Link
             href={ROUTES.REGISTER}
-            className="font-bold text-white hover:text-gray-300 transition-colors"
+            className="font-bold text-brand-600 hover:text-brand-700 transition-colors"
           >
-            Đăng ký
+            Đăng ký ngay
           </Link>
         </p>
 
         {/* Divider */}
-        <div className="mt-7 mb-6 flex items-center gap-3">
-          <div className="h-px flex-1 bg-gray-600" />
-          <span className="text-xs text-gray-500 uppercase tracking-wider">hoặc</span>
-          <div className="h-px flex-1 bg-gray-600" />
+        <div className="my-8 flex items-center gap-4">
+          <div className="h-px flex-1 bg-slate-200" />
+          <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Hoặc tiếp tục với</span>
+          <div className="h-px flex-1 bg-slate-200" />
         </div>
 
         {/* Social Login Buttons */}
         <div className="space-y-4">
           <BaseButton
             type="default"
-            icon={<PhoneOutlined />}
+            icon={<PhoneOutlined className="text-slate-600" />}
             size="large"
-            className="!bg-white/15 !text-white !border-white/20 hover:!bg-white/25 hover:!border-white/30 !font-medium"
+            className="!bg-white !text-slate-700 !border-slate-200 hover:!bg-slate-50 hover:!border-slate-300 !font-semibold h-11 rounded-xl shadow-sm transition-all"
             block
             onClick={() => router.push(ROUTES.LOGIN_PHONE)}
           >
             Đăng nhập bằng Số điện thoại
           </BaseButton>
 
-          <div className="flex justify-center w-full [&>div]:w-full [&>div>div]:!w-full">
+          <div className="flex justify-center w-full [&>div]:w-full [&>div>div]:!w-full [&_iframe]:!w-full">
             <GoogleLogin
               onSuccess={handleGoogleSuccess}
               onError={() => message.error("Đăng nhập Google thất bại.")}
               theme="outline"
               size="large"
-              text="signin_with"
+              text="continue_with"
               logo_alignment="center"
+              shape="rectangular"
             />
           </div>
         </div>
-      </GlassCard>
+      </div>
     </div>
   );
 }
