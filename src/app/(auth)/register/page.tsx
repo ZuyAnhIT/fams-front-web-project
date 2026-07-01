@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { RegisterForm } from "@/features/auth/components";
+import { RegisterForm } from "@/features/customer/auth/components";
 
 export const metadata: Metadata = {
   title: "Đăng ký | FAMS",

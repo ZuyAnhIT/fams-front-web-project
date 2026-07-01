@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { PhoneLoginForm } from "@/features/auth/components";
+import { PhoneLoginForm } from "@/features/customer/auth/components";
 
 export const metadata: Metadata = {
   title: "Đăng nhập bằng SĐT | FAMS",

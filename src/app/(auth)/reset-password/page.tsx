@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { Metadata } from "next";
-import ResetPasswordForm from "@/features/auth/components/ResetPasswordForm";
+import ResetPasswordForm from "@/features/customer/auth/components/ResetPasswordForm";
 
 export const metadata: Metadata = {
   title: "Đặt lại mật khẩu | FAMS",

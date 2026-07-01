@@ -1,8 +1,8 @@
 import { create } from "zustand";
-import { type AuthUser } from "@/features/auth/types/auth.type";
+import { type AuthUser } from "@/features/customer/auth/types/auth.type";
 import { authTokenService } from "@/services/auth-token.service";
-import { authService } from "@/features/auth/services/auth.service";
-import { authMapper } from "@/features/auth/utils/auth.mapper";
+import { authService } from "@/features/customer/auth/services/auth.service";
+import { authMapper } from "@/features/customer/auth/utils/auth.mapper";
 
 interface AuthState {
   user: AuthUser | null;

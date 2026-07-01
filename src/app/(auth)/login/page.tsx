@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { LoginForm } from "@/features/auth/components";
+import { LoginForm } from "@/features/customer/auth/components";
 
 export const metadata: Metadata = {
   title: "Đăng nhập | FAMS",

@@ -1,11 +1,12 @@
 "use client";
+import { getDashboardRoute } from "@/utils/route.util";
 
 import { useSearchParams, useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { message, Radio } from "antd";
-import { useAcceptInvitation } from "@/features/employee/hooks/use-employee";
+import { useAcceptInvitation } from "@/features/customer/employee/hooks/use-employee";
 import FormInput from "@/components/forms/FormInput";
 import BaseButton from "@/components/ui/BaseButton";
 import { Suspense } from "react";
@@ -13,10 +14,10 @@ import Image from "next/image";
 import { APP_NAME } from "@/constants/app";
 import { useAuthStore } from "@/stores/auth.store";
 import { ROUTES } from "@/constants/routes";
-import { authService } from "@/features/auth/services/auth.service";
+import { authService } from "@/features/customer/auth/services/auth.service";
 import { authTokenService } from "@/services/auth-token.service";
-import { authMapper } from "@/features/auth/utils/auth.mapper";
-import { rolePermissionService } from "@/features/role-permission/services/role-permission.service";
+import { authMapper } from "@/features/customer/auth/utils/auth.mapper";
+import { rolePermissionService } from "@/features/admin/role-permission/services/role-permission.service";
 
 const acceptSchema = z.object({
   isExistingUser: z.boolean().default(false),
@@ -56,7 +57,7 @@ function AcceptInviteForm() {
     setValue,
     formState: { errors },
   } = useForm<AcceptFormData>({
-    resolver: zodResolver(acceptSchema),
+    resolver: zodResolver(acceptSchema) as any,
     defaultValues: {
       isExistingUser: false,
       password: "",
@@ -75,7 +76,7 @@ function AcceptInviteForm() {
     );
   }
 
-  const onSubmit = async (data: AcceptFormData) => {
+  const onSubmit: any = async (data: AcceptFormData) => {
     try {
       const payloadPassword = data.isExistingUser ? "" : (data.password || "");
       const result = await acceptInvitation({ token, password: payloadPassword });
@@ -97,7 +98,7 @@ function AcceptInviteForm() {
 
         setAuth(authUser, result.accessToken, result.refreshToken || "");
         message.success("Chấp nhận lời mời thành công! Đang chuyển hướng...");
-        router.push(ROUTES.DASHBOARD);
+        router.push(getDashboardRoute(authUser?.role));
       } else {
         message.success("Chấp nhận lời mời thành công! Vui lòng đăng nhập.");
         router.push(ROUTES.LOGIN);

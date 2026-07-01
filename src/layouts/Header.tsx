@@ -5,7 +5,7 @@ import { LogOut, User as UserIcon, Bell, Settings, ShieldCheck } from "lucide-re
 import { App, Dropdown, type MenuProps } from "antd";
 import { useRouter } from "next/navigation";
 import { ROUTES } from "@/constants/routes";
-import { useLogout } from "@/features/auth/hooks/use-auth";
+import { useLogout } from "@/features/customer/auth/hooks/use-auth";
 import { authTokenService } from "@/services/auth-token.service";
 
 export default function Header() {
