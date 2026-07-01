@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import ForgotPasswordForm from "@/features/auth/components/ForgotPasswordForm";
+import ForgotPasswordForm from "@/features/customer/auth/components/ForgotPasswordForm";
 
 export const metadata: Metadata = {
   title: "Quên mật khẩu | FAMS",

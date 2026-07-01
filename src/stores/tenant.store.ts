@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { Tenant } from "@/features/tenant/types/tenant.type";
+import type { Tenant } from "@/features/admin/tenant/types/tenant.type";
 
 interface TenantState {
   activeTenant: Tenant | null;

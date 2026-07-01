@@ -9,18 +9,26 @@ export const ROUTES = {
   REGISTER: "/register",
   FORGOT_PASSWORD: "/forgot-password",
   RESET_PASSWORD: "/reset-password",
+};
 
-  // Dashboard
-  DASHBOARD: "/dashboard",
-  EMPLOYEES: "/employees",
-  ATTENDANCE: "/attendance",
-  SHIFTS: "/shifts",
-  SITES: "/sites",
-  ASSIGNMENTS: "/assignments",
-  VIOLATIONS: "/violations",
-  RANDOM_CHECKS: "/random-checks",
-  REPORTS: "/reports",
-  SETTINGS: "/settings",
-  TENANTS: "/tenants",
-  SUBSCRIPTIONS: "/subscriptions",
-} as const;
+export const ADMIN_ROUTES = {
+  DASHBOARD: "/admin/dashboard",
+  PLANS: "/admin/plans",
+  TENANTS: "/admin/tenants",
+  REPORTS: "/admin/reports",
+  ROLES: "/admin/settings/roles",
+};
+
+export const CUSTOMER_ROUTES = {
+  DASHBOARD: "/customer/dashboard",
+  EMPLOYEES: "/customer/employees",
+  ATTENDANCE: "/customer/attendance",
+  SHIFTS: "/customer/shifts",
+  SITES: "/customer/sites",
+  ASSIGNMENTS: "/customer/assignments",
+  VIOLATIONS: "/customer/violations",
+  RANDOM_CHECKS: "/customer/random-checks",
+  SETTINGS: "/customer/settings",
+  TENANT_SETTINGS: "/customer/settings/tenant",
+  WORKSPACES: "/customer/workspaces",
+};

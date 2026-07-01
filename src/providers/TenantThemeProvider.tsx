@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { ConfigProvider, App } from "antd";
-import { useTenantSettings } from "@/features/tenant/hooks/use-tenant";
+import { useTenantSettings } from "@/features/admin/tenant/hooks/use-tenant";
 import { COLORS } from "@/constants/colors";
 
 import { useAuthStore } from "@/stores/auth.store";

@@ -1,9 +1,10 @@
 "use client";
+import { getDashboardRoute } from "@/utils/route.util";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth.store";
-import { SystemRole } from "@/features/auth/types/auth.type";
+import { SystemRole } from "@/features/customer/auth/types/auth.type";
 import { Result } from "antd";
 import BaseButton from "@/components/ui/BaseButton";
 import { ROUTES } from "@/constants/routes";
@@ -60,7 +61,7 @@ export default function RoleGuard({ children, allowedRoles }: RoleGuardProps) {
           extra={
             <BaseButton
               customVariant="default"
-              onClick={() => router.push(ROUTES.DASHBOARD)}
+              onClick={() => router.push(getDashboardRoute(user?.role))}
             >
               Về Trang chủ
             </BaseButton>
