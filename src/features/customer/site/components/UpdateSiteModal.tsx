@@ -101,7 +101,7 @@ export default function UpdateSiteModal({ isOpen, onClose, site }: UpdateSiteMod
       open={isOpen}
       onCancel={handleClose}
       footer={null}
-      destroyOnClose
+      destroyOnHidden
       width={1000} // Increased width for 2-column layout
     >
       <div className="text-slate-500 mb-6 flex items-center gap-2">

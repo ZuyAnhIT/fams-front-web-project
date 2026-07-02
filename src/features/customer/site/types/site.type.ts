@@ -1,3 +1,5 @@
+import { ShiftResponse } from "../../shift/types/shift.type";
+
 export interface SiteResponse {
   id: string;
   tenantId: string;
@@ -13,8 +15,24 @@ export interface SiteResponse {
   updatedAt: string;
 }
 
+export interface GeofenceResponse {
+  id: string;
+  siteId: string;
+  tenantId: string;
+  coordinates: number[][]; // [longitude, latitude] pairs
+  bufferMeters: number;
+  status: "active" | "superseded";
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+
+
 export interface SiteDetailResponse extends SiteResponse {
-  // Can include geofence, shifts, activeAssignmentCount later
+  geofence: GeofenceResponse | null;
+  shifts: ShiftResponse[];
+  activeAssignmentCount: number;
 }
 
 export interface CreateSiteRequest {
