@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import * as Icons from "lucide-react";
 import { Tooltip } from "antd";
@@ -9,9 +9,11 @@ import { cn } from "@/utils/cn";
 import { APP_NAME } from "@/constants/app";
 import { SIDEBAR_MENU } from "@/config/menu";
 import { useAuthStore } from "@/stores/auth.store";
+import { CUSTOMER_ROUTES } from "@/constants/routes";
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const user = useAuthStore((state) => state.user);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
@@ -35,10 +37,10 @@ export default function Sidebar() {
   };
 
   // Avoid layout shift during server-side rendering hydration
-  const sidebarWidthClass = !isMounted 
-    ? "w-64" 
-    : isCollapsed 
-      ? "w-16" 
+  const sidebarWidthClass = !isMounted
+    ? "w-64"
+    : isCollapsed
+      ? "w-16"
       : "w-64";
 
   return (
@@ -48,7 +50,7 @@ export default function Sidebar() {
     )}>
       {/* Brand Logo & Toggle */}
       <div className={cn(
-        "h-16 flex items-center px-6 border-b border-brand-800/40 justify-between transition-all duration-300", 
+        "h-16 flex items-center px-6 border-b border-brand-800/40 justify-between transition-all duration-300",
         isCollapsed ? "px-0 justify-center" : ""
       )}>
         {isCollapsed ? (
@@ -95,32 +97,32 @@ export default function Sidebar() {
           const isActive = pathname === item.path;
 
           const linkContent = (
-              <Link
-                key={item.path}
-                href={item.path}
+            <Link
+              key={item.path}
+              href={item.path}
+              className={cn(
+                "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 group border border-transparent hover:scale-[1.02]",
+                isCollapsed ? "justify-center px-0 w-10 h-10 mx-auto" : "",
+                isActive
+                  ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-lg shadow-blue-500/25"
+                  : "text-slate-400 hover:text-white hover:bg-white/5"
+              )}
+            >
+              <IconComponent
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 group border border-transparent hover:scale-[1.02]",
-                  isCollapsed ? "justify-center px-0 w-10 h-10 mx-auto" : "",
-                  isActive
-                    ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-lg shadow-blue-500/25"
-                    : "text-slate-400 hover:text-white hover:bg-white/5"
+                  "h-5 w-5 transition-transform group-hover:scale-110 shrink-0",
+                  isActive ? "text-white" : "text-slate-400 group-hover:text-white"
                 )}
-              >
-                <IconComponent
-                  className={cn(
-                    "h-5 w-5 transition-transform group-hover:scale-110 shrink-0",
-                    isActive ? "text-white" : "text-slate-400 group-hover:text-white"
-                  )}
-                />
-                {!isCollapsed && <span className={cn("truncate", isActive ? "text-white font-bold" : "")}>{item.title}</span>}
-              </Link>
+              />
+              {!isCollapsed && <span className={cn("truncate", isActive ? "text-white font-bold" : "")}>{item.title}</span>}
+            </Link>
           );
 
           return isCollapsed ? (
-            <Tooltip 
-              key={item.path} 
-              title={item.title} 
-              placement="right" 
+            <Tooltip
+              key={item.path}
+              title={item.title}
+              placement="right"
               arrow={false}
               mouseEnterDelay={0.1}
             >
@@ -132,12 +134,66 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* Footer */}
-      {!isCollapsed && (
-        <div className="p-4 border-t border-brand-800/40 text-xs text-brand-500 text-center whitespace-nowrap overflow-hidden">
-          &copy; 2026 {APP_NAME}. All rights reserved.
-        </div>
-      )}
+      {/* Footer & User Profile */}
+      <div className="border-t border-brand-800/40 bg-brand-950/20 flex flex-col mt-auto">
+        {!isCollapsed ? (
+          <div className="p-4 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-3 overflow-hidden cursor-pointer" onClick={() => router.push(CUSTOMER_ROUTES.SETTINGS)}>
+              {user?.avatarUrl ? (
+                <img
+                  src={user.avatarUrl}
+                  alt={user?.displayName || "Avatar"}
+                  className="h-10 w-10 shrink-0 rounded-full bg-slate-100 border border-brand-700 object-cover shadow-sm"
+                />
+              ) : (
+                <div className="h-10 w-10 shrink-0 rounded-full bg-brand-800 border border-brand-700 flex items-center justify-center shadow-sm">
+                  <Icons.User className="h-5 w-5 text-brand-400" />
+                </div>
+              )}
+              <div className="flex flex-col truncate">
+                <span className="text-sm font-bold text-white truncate">{user?.displayName || user?.email}</span>
+                <span className="text-[10px] text-brand-400 font-semibold tracking-wide truncate">{user?.role || "USER"}</span>
+              </div>
+            </div>
+            
+            <Tooltip title="Cài đặt tài khoản" placement="top">
+              <button
+                onClick={() => router.push(CUSTOMER_ROUTES.SETTINGS)}
+                className="p-2 shrink-0 rounded-lg text-brand-400 hover:text-brand-300 hover:bg-brand-800 transition-colors cursor-pointer"
+              >
+                <Icons.Settings className="h-4.5 w-4.5" />
+              </button>
+            </Tooltip>
+          </div>
+        ) : (
+          <div className="p-3 flex flex-col gap-3 items-center">
+            <Tooltip title={user?.displayName || user?.email} placement="right">
+              {user?.avatarUrl ? (
+                <img src={user.avatarUrl} alt="Avatar" className="h-8 w-8 rounded-full border border-brand-700 object-cover" />
+              ) : (
+                <div className="h-8 w-8 rounded-full bg-brand-800 border border-brand-700 flex items-center justify-center">
+                  <Icons.User className="h-4 w-4 text-brand-400" />
+                </div>
+              )}
+            </Tooltip>
+            <div className="h-[1px] w-8 bg-brand-800/60" />
+            <Tooltip title="Cài đặt tài khoản" placement="right">
+              <button
+                onClick={() => router.push(CUSTOMER_ROUTES.SETTINGS)}
+                className="p-2 rounded-lg text-brand-400 hover:text-brand-300 hover:bg-brand-800 transition-colors cursor-pointer"
+              >
+                <Icons.Settings className="h-5 w-5" />
+              </button>
+            </Tooltip>
+          </div>
+        )}
+        
+        {!isCollapsed && (
+          <div className="pb-3 text-[10px] text-brand-500/60 text-center whitespace-nowrap overflow-hidden">
+            &copy; 2026 {APP_NAME}. All rights reserved.
+          </div>
+        )}
+      </div>
     </aside>
   );
 }

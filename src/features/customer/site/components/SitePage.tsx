@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import { Input, Button, Table, Tag, Select, Tooltip } from "antd";
-import { Search, Plus, MapPin, Edit3 } from "lucide-react";
+import { Search, Plus, MapPin, Edit3, Eye } from "lucide-react";
+import Link from "next/link";
 import { useAuthStore } from "@/stores/auth.store";
 import { useSitesQuery } from "../hooks/use-site";
 import CreateSiteModal from "./CreateSiteModal";
@@ -56,12 +57,12 @@ export default function SitePage() {
       dataIndex: "name",
       key: "name",
       render: (text: string, record: SiteResponse) => (
-        <div className="flex items-center gap-2">
+        <Link href={`/customer/sites/${record.id}`} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
             <MapPin size={16} />
           </div>
-          <div className="font-medium text-slate-700">{text}</div>
-        </div>
+          <div className="font-medium text-brand-600 hover:text-brand-700 underline underline-offset-2">{text}</div>
+        </Link>
       ),
     },
     {
@@ -103,21 +104,34 @@ export default function SitePage() {
     },
   ];
 
-  if (hasPermission("sites:update")) {
+  if (hasPermission("sites:update") || hasPermission("sites:read") || true) {
     columns.push({
       title: "Thao tác",
       dataIndex: "actions" as any,
       key: "actions",
       /* align: "right" as any */
       render: (_, record: SiteResponse) => (
-        <Button
-          type="text"
-          icon={<Edit3 className="h-4 w-4 text-slate-500" />}
-          onClick={() => setEditingSite(record)}
-          className="hover:bg-slate-100 rounded-lg"
-        >
-          Sửa
-        </Button>
+        <div className="flex items-center gap-2">
+          <Link href={`/customer/sites/${record.id}`}>
+            <Button
+              type="text"
+              icon={<Eye className="h-4 w-4 text-brand-600" />}
+              className="hover:bg-brand-50 text-brand-600 rounded-lg"
+            >
+              Chi tiết
+            </Button>
+          </Link>
+          {hasPermission("sites:update") && (
+            <Button
+              type="text"
+              icon={<Edit3 className="h-4 w-4 text-slate-500" />}
+              onClick={() => setEditingSite(record)}
+              className="hover:bg-slate-100 rounded-lg"
+            >
+              Sửa
+            </Button>
+          )}
+        </div>
       ),
     });
   }

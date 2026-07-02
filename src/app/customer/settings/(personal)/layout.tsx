@@ -8,10 +8,10 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
   const pathname = usePathname();
 
   const tabs = [
-    { name: "Thông tin cá nhân", href: "/settings", icon: User },
-    { name: "Đổi mật khẩu", href: "/settings/password", icon: Lock },
-    { name: "Bảo mật 2 Lớp", href: "/settings/totp", icon: Shield },
-    { name: "Thiết bị & Phiên", href: "/settings/sessions", icon: MonitorSmartphone },
+    { name: "Thông tin cá nhân", href: "/customer/settings", icon: User },
+    { name: "Đổi mật khẩu", href: "/customer/settings/password", icon: Lock },
+    { name: "Bảo mật 2 Lớp", href: "/customer/settings/totp", icon: Shield },
+    { name: "Thiết bị & Phiên", href: "/customer/settings/sessions", icon: MonitorSmartphone },
   ];
 
   return (
