@@ -82,6 +82,31 @@ body {
   font-family: "Inter", Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-size: 16px; /* Kích thước chuẩn body text */
+}
+
+/* ═══ Typography Scale (Responsive) ═══ */
+h1, .h1 {
+  font-size: clamp(32px, 4vw, 48px);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+h2, .h2 {
+  font-size: clamp(24px, 3vw, 32px);
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+h3, .h3 {
+  font-size: clamp(20px, 2.5vw, 24px);
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+small, .text-small, .caption {
+  font-size: clamp(12px, 1.5vw, 14px);
+  line-height: 1.5;
 }
 
 /* Reset Ant Design focus outlines cho Input để Tailwind kiểm soát */
