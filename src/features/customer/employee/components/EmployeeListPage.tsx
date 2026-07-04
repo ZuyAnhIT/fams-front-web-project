@@ -170,7 +170,7 @@ export default function EmployeeListPage() {
           className="!text-blue-600 !border-blue-200 hover:!bg-blue-50 hover:!border-blue-300 shadow-[0_2px_10px_rgb(0,0,0,0.04)] h-8 px-3 rounded-lg text-xs font-bold flex flex-row-reverse hover:-translate-y-0.5 transition-all duration-200"
           onClick={(e) => {
             e.stopPropagation();
-            router.push(`/employees/${record.id}`);
+            router.push(`/customer/employees/${record.id}`);
           }}
         >
           Chi tiết
@@ -258,7 +258,7 @@ export default function EmployeeListPage() {
           onPageChange={(page, size) => setPagination({ page, size })}
           onRow={(record) => ({
             className: "hover:bg-brand-50/50 transition-colors duration-200 group cursor-pointer",
-            onClick: () => router.push(`/employees/${record.id}`),
+            onClick: () => router.push(`/customer/employees/${record.id}`),
           })}
         />
       </ContentCard>

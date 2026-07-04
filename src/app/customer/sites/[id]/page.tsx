@@ -5,6 +5,9 @@ import { useParams, useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth.store";
 import { useSiteDetailQuery } from "@/features/customer/site/hooks/use-site";
 import { useAssignments } from "@/features/customer/assignment/hooks/use-assignments";
+import { useCancelAssignmentMutation } from "@/features/customer/assignment/hooks/use-assignment";
+import { AssignmentResponse } from "@/features/customer/assignment/types/assignment.type";
+import AssignmentFormModal from "@/features/customer/assignment/components/AssignmentFormModal";
 import { useEmployees } from "@/features/customer/employee/hooks/use-employee";
 import { GeofenceMap } from "@/features/customer/site/components/GeofenceMap";
 import { useGeofenceHistoryQuery } from "@/features/customer/geofence/hooks/use-geofence";
@@ -13,8 +16,8 @@ import { useShiftsQuery } from "@/features/customer/shift/hooks/use-shift";
 import ShiftFormModal from "@/features/customer/shift/components/ShiftFormModal";
 import ShiftOtConfigModal from "@/features/customer/shift/components/ShiftOtConfigModal";
 import { ShiftResponse } from "@/features/customer/shift/types/shift.type";
-import { Tabs, Table, Badge, Card, Tag, Button, Spin, Modal } from "antd";
-import { ArrowLeftOutlined, ClockCircleOutlined, EnvironmentOutlined, GlobalOutlined, EditOutlined, EyeOutlined, PlusOutlined, SettingOutlined } from "@ant-design/icons";
+import { Tabs, Table, Badge, Card, Tag, Button, Spin, Modal, Popconfirm, message, Select, Input } from "antd";
+import { ArrowLeftOutlined, ClockCircleOutlined, EnvironmentOutlined, GlobalOutlined, EditOutlined, EyeOutlined, PlusOutlined, SettingOutlined, DeleteOutlined, SearchOutlined } from "@ant-design/icons";
 import { GeofenceResponse } from "@/features/customer/site/types/site.type";
 
 export default function SiteDetailsPage() {
@@ -29,6 +32,18 @@ export default function SiteDetailsPage() {
   const [historyPage, setHistoryPage] = useState(0);
   const [shiftPage, setShiftPage] = useState(0);
 
+  // Assignment Filters & Sorting
+  const [assignmentFilters, setAssignmentFilters] = useState({
+    status: undefined as string | undefined,
+    role: undefined as string | undefined,
+    shiftId: undefined as string | undefined,
+    employeeId: undefined as string | undefined,
+  });
+  const [assignmentSort, setAssignmentSort] = useState({
+    sortBy: "startDate",
+    sortDir: "desc" as "asc" | "desc" | undefined,
+  });
+
   // Modals state
   const [isGeofenceModalOpen, setIsGeofenceModalOpen] = useState(false);
   const [selectedHistoryGeofence, setSelectedHistoryGeofence] = useState<GeofenceResponse | null>(null);
@@ -37,14 +52,19 @@ export default function SiteDetailsPage() {
   const [isOtModalOpen, setIsOtModalOpen] = useState(false);
   const [activeShift, setActiveShift] = useState<ShiftResponse | null>(null);
 
+  // Assignment modal state
+  const [isAssignmentModalOpen, setIsAssignmentModalOpen] = useState(false);
+  const [activeAssignment, setActiveAssignment] = useState<AssignmentResponse | null>(null);
+  const cancelAssignmentMutation = useCancelAssignmentMutation();
+
   // Queries
   const { data: siteDetailRes, isLoading: isSiteLoading } = useSiteDetailQuery(tenantId, siteId);
   const site = siteDetailRes?.data;
 
   const { data: assignmentsRes, isLoading: isAssignmentsLoading } = useAssignments(
     tenantId || "",
-    siteId,
-    { page: assignmentPage, size: 10 }
+    siteId as string,
+    { page: assignmentPage, size: 10, ...assignmentFilters, sortBy: assignmentSort.sortBy, sortDir: assignmentSort.sortDir }
   );
   const assignments = assignmentsRes?.data?.content || [];
   const totalAssignments = assignmentsRes?.data?.totalElements || 0;
@@ -66,11 +86,11 @@ export default function SiteDetailsPage() {
   const totalHistory = historyRes?.totalElements || 0;
 
   // Fetch all employees to map names (simplified for now)
-  const { data: employeesRes } = useEmployees({ size: 1000 });
+  const { data: employeesRes } = useEmployees({ size: 100 });
   const employees = employeesRes?.content || [];
   const getEmployeeName = (id: string) => {
     const emp = employees.find((e: any) => e.id === id);
-    return emp ? emp.fullName : id;
+    return emp ? `${emp.firstName} ${emp.lastName}` : id;
   };
 
   const getShiftName = (id: string | null) => {
@@ -163,6 +183,18 @@ export default function SiteDetailsPage() {
     },
   ];
 
+  // Xử lý hủy phân công
+  const handleCancelAssignment = (record: AssignmentResponse) => {
+    if (!tenantId) return;
+    cancelAssignmentMutation.mutate(
+      { tenantId, siteId, assignmentId: record.id },
+      {
+        onSuccess: () => message.success("Hủy phân công thành công!"),
+        onError: (err: any) => message.error(err.response?.data?.message || "Có lỗi xảy ra khi hủy phân công."),
+      }
+    );
+  };
+
   // Columns for Assignments Table
   const assignmentColumns = [
     {
@@ -175,6 +207,7 @@ export default function SiteDetailsPage() {
       title: "Vai trò",
       dataIndex: "role",
       key: "role",
+      sorter: true,
       render: (val: string) => (
         <Tag color={val === "supervisor" ? "purple" : "cyan"}>
           {val === "supervisor" ? "Giám sát" : "Nhân viên"}
@@ -191,13 +224,64 @@ export default function SiteDetailsPage() {
       title: "Ngày bắt đầu",
       dataIndex: "startDate",
       key: "startDate",
+      sorter: true,
       className: "text-slate-600",
     },
     {
       title: "Ngày kết thúc",
       dataIndex: "endDate",
       key: "endDate",
+      sorter: true,
       render: (val: string | null) => <span className="text-slate-600">{val || "Vô thời hạn"}</span>,
+    },
+    {
+      title: "Trạng thái",
+      dataIndex: "status",
+      key: "status",
+      sorter: true,
+      render: (val: string) => (
+        <Badge
+          status={val === "active" ? "success" : "default"}
+          text={val === "active" ? "Đang làm việc" : "Đã hủy"}
+          className="text-slate-600"
+        />
+      ),
+    },
+    {
+      title: "Thao tác",
+      key: "action",
+      width: 120,
+      render: (_: any, record: AssignmentResponse) => (
+        <div className="flex gap-2">
+          <Button
+            type="text"
+            size="small"
+            icon={<EditOutlined className="text-blue-500" />}
+            onClick={() => {
+              setActiveAssignment(record);
+              setIsAssignmentModalOpen(true);
+            }}
+            title="Sửa phân công"
+          />
+          {record.status === "active" && (
+            <Popconfirm
+              title="Xác nhận hủy phân công"
+              description="Nhân viên sẽ không thể chấm công tại công trình này nữa. Bạn có chắc chắn?"
+              onConfirm={() => handleCancelAssignment(record)}
+              okText="Xác nhận hủy"
+              cancelText="Không"
+              okButtonProps={{ danger: true }}
+            >
+              <Button
+                type="text"
+                size="small"
+                icon={<DeleteOutlined className="text-red-500" />}
+                title="Hủy phân công"
+              />
+            </Popconfirm>
+          )}
+        </div>
+      ),
     },
   ];
 
@@ -356,20 +440,141 @@ export default function SiteDetailsPage() {
                   key: "2",
                   label: <span className="text-slate-700 font-medium">Nhân sự phân công ({totalAssignments})</span>,
                   children: (
-                    <Table 
-                      dataSource={assignments} 
-                      columns={assignmentColumns} 
-                      rowKey="id"
-                      loading={isAssignmentsLoading}
-                      bordered
-                      pagination={{
-                        current: assignmentPage + 1,
-                        pageSize: 10,
-                        total: totalAssignments,
-                        onChange: (page) => setAssignmentPage(page - 1),
-                        showTotal: (total, range) => `${range[0]}-${range[1]} trên tổng số ${total} bản ghi`,
-                      }}
-                    />
+                    <div className="space-y-4">
+                      <div className="flex justify-end">
+                        <Button 
+                          type="primary" 
+                          icon={<PlusOutlined />}
+                          onClick={() => {
+                            setActiveAssignment(null);
+                            setIsAssignmentModalOpen(true);
+                          }}
+                        >
+                          Tạo phân công
+                        </Button>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                        {/* Search Input */}
+                        <div className="flex flex-col gap-1 lg:col-span-2">
+                          <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tìm kiếm</label>
+                          <Input
+                            placeholder="Tìm kiếm theo tên, mã..."
+                            prefix={<SearchOutlined className="text-slate-400" />}
+                            allowClear
+                            className="w-full"
+                            onPressEnter={() => message.info("Chức năng tìm kiếm (search) đang chờ Backend cập nhật API")}
+                          />
+                        </div>
+                        
+                        {/* Empty space to force next row on desktop */}
+                        <div className="hidden lg:block lg:col-span-2"></div>
+
+                        {/* Filters */}
+                        <div className="flex flex-col gap-1">
+                          <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Nhân viên</label>
+                          <Select
+                            showSearch
+                            placeholder="Lọc theo nhân viên..."
+                            allowClear
+                            className="w-full"
+                            value={assignmentFilters.employeeId}
+                            onChange={(val) => {
+                              setAssignmentFilters(prev => ({ ...prev, employeeId: val || undefined }));
+                              setAssignmentPage(0);
+                            }}
+                            filterOption={(input, option) =>
+                              (option?.label as string ?? "").toLowerCase().includes(input.toLowerCase())
+                            }
+                            options={employees.map(emp => ({
+                              label: `${emp.firstName} ${emp.lastName} ${emp.employeeCode ? `(${emp.employeeCode})` : ''}`,
+                              value: emp.id
+                            }))}
+                          />
+                        </div>
+                        
+                        <div className="flex flex-col gap-1">
+                          <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Trạng thái</label>
+                          <Select
+                            placeholder="Tất cả trạng thái"
+                            allowClear
+                            className="w-full"
+                            value={assignmentFilters.status}
+                            onChange={(val) => {
+                              setAssignmentFilters(prev => ({ ...prev, status: val || undefined }));
+                              setAssignmentPage(0);
+                            }}
+                            options={[
+                              { label: "Đang làm việc", value: "active" },
+                              { label: "Đã hủy", value: "cancelled" }
+                            ]}
+                          />
+                        </div>
+                        
+                        <div className="flex flex-col gap-1">
+                          <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Vai trò</label>
+                          <Select
+                            placeholder="Tất cả vai trò"
+                            allowClear
+                            className="w-full"
+                            value={assignmentFilters.role}
+                            onChange={(val) => {
+                              setAssignmentFilters(prev => ({ ...prev, role: val || undefined }));
+                              setAssignmentPage(0);
+                            }}
+                            options={[
+                              { label: "Nhân viên", value: "worker" },
+                              { label: "Giám sát", value: "supervisor" }
+                            ]}
+                          />
+                        </div>
+                        
+                        <div className="flex flex-col gap-1">
+                          <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Ca làm việc</label>
+                          <Select
+                            placeholder="Tất cả ca làm việc"
+                            allowClear
+                            className="w-full"
+                            value={assignmentFilters.shiftId}
+                            onChange={(val) => {
+                              setAssignmentFilters(prev => ({ ...prev, shiftId: val || undefined }));
+                              setAssignmentPage(0);
+                            }}
+                            options={[
+                              ...shifts.map(shift => ({
+                                label: shift.name,
+                                value: shift.id
+                              }))
+                            ]}
+                          />
+                        </div>
+                      </div>
+                      <Table 
+                        dataSource={assignments} 
+                        columns={assignmentColumns} 
+                        rowKey="id"
+                        loading={isAssignmentsLoading}
+                        bordered
+                        pagination={{
+                          current: assignmentPage + 1,
+                          pageSize: 10,
+                          total: totalAssignments,
+                          showTotal: (total, range) => `${range[0]}-${range[1]} trên tổng số ${total} bản ghi`,
+                        }}
+                        onChange={(pagination, filters, sorter: any) => {
+                          if (pagination.current) {
+                            setAssignmentPage(pagination.current - 1);
+                          }
+                          if (sorter && sorter.columnKey) {
+                            setAssignmentSort({
+                              sortBy: sorter.columnKey,
+                              sortDir: sorter.order === 'ascend' ? 'asc' : 'desc'
+                            });
+                          } else {
+                            setAssignmentSort({ sortBy: "startDate", sortDir: "desc" });
+                          }
+                        }}
+                      />
+                    </div>
                   ),
                 },
                 {
@@ -493,6 +698,14 @@ export default function SiteDetailsPage() {
         onClose={() => setIsOtModalOpen(false)}
         siteId={siteId}
         activeShift={activeShift}
+      />
+
+      {/* Assignment Form Modal */}
+      <AssignmentFormModal
+        isOpen={isAssignmentModalOpen}
+        onClose={() => setIsAssignmentModalOpen(false)}
+        siteId={siteId}
+        activeAssignment={activeAssignment}
       />
     </div>
   );

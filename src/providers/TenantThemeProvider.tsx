@@ -28,7 +28,14 @@ export function TenantThemeProvider({ children }: { children: React.ReactNode })
           colorPrimary: primaryColor,
           borderRadius: 6,
           colorLink: primaryColor,
-          colorLinkHover: primaryColor, // Có thể chỉnh opacity hoặc tính toán sau nếu cần
+          colorLinkHover: primaryColor,
+          
+          // Kích thước tiêu chuẩn (Typography Scale)
+          fontSize: 16,            // Body text: 16px
+          fontSizeHeading1: 38,    // H1 (Nằm trong khoảng 32-48)
+          fontSizeHeading2: 28,    // H2 (Nằm trong khoảng 24-32)
+          fontSizeHeading3: 22,    // H3 (Nằm trong khoảng 20-24)
+          fontSizeSM: 13,          // Small text: 13px (Nằm trong khoảng 12-14)
         },
       }}
     >

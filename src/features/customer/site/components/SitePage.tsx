@@ -50,18 +50,17 @@ export default function SitePage() {
       title: "Mã công trình",
       dataIndex: "code",
       key: "code",
+      width: 140,
       render: (text: string) => text || <span className="text-slate-400">---</span>,
     },
     {
       title: "Tên công trình",
       dataIndex: "name",
       key: "name",
+      width: 180,
       render: (text: string, record: SiteResponse) => (
-        <Link href={`/customer/sites/${record.id}`} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
-            <MapPin size={16} />
-          </div>
-          <div className="font-medium text-brand-600 hover:text-brand-700 underline underline-offset-2">{text}</div>
+        <Link href={`/customer/sites/${record.id}`} className="font-medium text-brand-600 hover:text-brand-700 underline underline-offset-2 transition-colors">
+          {text}
         </Link>
       ),
     },
@@ -75,6 +74,7 @@ export default function SitePage() {
       title: "Mô tả",
       dataIndex: "description",
       key: "description",
+      width: 220,
       render: (text: string) => {
         if (!text) return <span className="text-slate-400">---</span>;
         return (
@@ -90,6 +90,7 @@ export default function SitePage() {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
+      width: 130,
       render: (status: string) => (
         <Tag color={status === "active" ? "green" : "red"}>
           {status === "active" ? "Hoạt động" : "Ngưng hoạt động"}
@@ -100,6 +101,7 @@ export default function SitePage() {
       title: "Ngày tạo",
       dataIndex: "createdAt",
       key: "createdAt",
+      width: 120,
       render: (date: string) => new Date(date).toLocaleDateString("vi-VN"),
     },
   ];
@@ -109,27 +111,28 @@ export default function SitePage() {
       title: "Thao tác",
       dataIndex: "actions" as any,
       key: "actions",
+      width: 100,
       /* align: "right" as any */
       render: (_, record: SiteResponse) => (
         <div className="flex items-center gap-2">
           <Link href={`/customer/sites/${record.id}`}>
-            <Button
-              type="text"
-              icon={<Eye className="h-4 w-4 text-brand-600" />}
-              className="hover:bg-brand-50 text-brand-600 rounded-lg"
-            >
-              Chi tiết
-            </Button>
+            <Tooltip title="Chi tiết">
+              <Button
+                type="text"
+                icon={<Eye className="h-4 w-4 text-brand-600" />}
+                className="hover:bg-brand-50 text-brand-600 rounded-lg flex items-center justify-center w-8 h-8 p-0"
+              />
+            </Tooltip>
           </Link>
           {hasPermission("sites:update") && (
-            <Button
-              type="text"
-              icon={<Edit3 className="h-4 w-4 text-slate-500" />}
-              onClick={() => setEditingSite(record)}
-              className="hover:bg-slate-100 rounded-lg"
-            >
-              Sửa
-            </Button>
+            <Tooltip title="Sửa">
+              <Button
+                type="text"
+                icon={<Edit3 className="h-4 w-4 text-slate-500" />}
+                onClick={() => setEditingSite(record)}
+                className="hover:bg-slate-100 rounded-lg flex items-center justify-center w-8 h-8 p-0"
+              />
+            </Tooltip>
           )}
         </div>
       ),
@@ -160,28 +163,34 @@ export default function SitePage() {
       </div>
 
       {/* Filters */}
-      <div className="flex items-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-slate-100">
-        <Input
-          placeholder="Tìm kiếm theo tên, mã, địa chỉ..."
-          prefix={<Search className="h-4 w-4 text-slate-400" />}
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="max-w-md h-10"
-        />
-        <Select
-          placeholder="Tất cả trạng thái"
-          allowClear
-          value={statusFilter}
-          onChange={(val) => {
-            setStatusFilter(val);
-            setPage(0);
-          }}
-          className="w-48 h-10"
-          options={[
-            { value: "active", label: "Hoạt động" },
-            { value: "inactive", label: "Ngưng hoạt động" },
-          ]}
-        />
+      <div className="flex flex-wrap items-start gap-4 bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+        <div className="flex flex-col gap-1 flex-1 min-w-[250px] max-w-md">
+          <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tìm kiếm</label>
+          <Input
+            placeholder="Tìm kiếm theo tên, mã, địa chỉ..."
+            prefix={<Search className="h-4 w-4 text-slate-400" />}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full h-10"
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Trạng thái</label>
+          <Select
+            placeholder="Tất cả trạng thái"
+            allowClear
+            value={statusFilter}
+            onChange={(val) => {
+              setStatusFilter(val);
+              setPage(0);
+            }}
+            className="w-48 h-10"
+            options={[
+              { value: "active", label: "Hoạt động" },
+              { value: "inactive", label: "Ngưng hoạt động" },
+            ]}
+          />
+        </div>
       </div>
 
       {/* Table */}
@@ -192,6 +201,7 @@ export default function SitePage() {
           dataSource={sites}
           rowKey="id"
           loading={isLoading}
+          scroll={{ x: 1000 }}
           pagination={{
             current: page + 1,
             pageSize: size,

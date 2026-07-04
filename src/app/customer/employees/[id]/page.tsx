@@ -57,7 +57,7 @@ export default function EditEmployeePage({ params }: { params: Promise<{ id: str
   return (
     <div className="space-y-6">
       <DetailHeader
-        onBack={() => router.push("/employees")}
+        onBack={() => router.push("/customer/employees")}
         title={`${data.firstName} ${data.lastName}`}
         subtitle={`${data.position || "Chưa cập nhật vị trí"} • ${data.department || "Chưa cập nhật phòng ban"}`}
         avatarUrl={data.avatarUrl}
