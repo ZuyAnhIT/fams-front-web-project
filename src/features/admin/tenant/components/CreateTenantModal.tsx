@@ -1,16 +1,19 @@
 "use client";
 
-import { Modal, message, Divider } from "antd";
-import { useForm } from "react-hook-form";
+import { Modal, message, Divider, Form, AutoComplete } from "antd";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import FormInput from "@/components/forms/FormInput";
 import BaseButton from "@/components/ui/BaseButton";
 import { useCreateTenant } from "../hooks/use-tenant";
 import { createTenantSchema, type CreateTenantFormData } from "../schemas/tenant.schema";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Building2, Globe, Settings2, UserCog } from "lucide-react";
-import { useRolesQuery } from "@/features/admin/role-permission/hooks/use-role-permission";
+import { useRolesQuery, useAssignRoleMutation } from "@/features/admin/role-permission/hooks/use-role-permission";
 import { useSendInvitation } from "@/features/customer/employee/hooks/use-employee";
+import { useSearchUsers } from "@/hooks/use-user";
+import { useDebounce } from "@/hooks/useDebounce";
+import { UserProfile } from "@/features/customer/auth/types/auth.type";
 
 interface CreateTenantModalProps {
   open: boolean;
@@ -20,14 +23,23 @@ interface CreateTenantModalProps {
 export default function CreateTenantModal({ open, onClose }: CreateTenantModalProps) {
   const { mutateAsync: createTenant, isPending: isCreating } = useCreateTenant();
   const { mutateAsync: sendInvitation, isPending: isSending } = useSendInvitation();
+  const { mutateAsync: assignRole, isPending: isAssigning } = useAssignRoleMutation();
   const { data: rolesData } = useRolesQuery({ isSystem: true, size: 50 });
-  const isPending = isCreating || isSending;
+  
+  const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearch = useDebounce(searchQuery, 500);
+  const { data: usersData, isFetching: isSearching } = useSearchUsers({ search: debouncedSearch, size: 10 });
+  
+  const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
+
+  const isPending = isCreating || isSending || isAssigning;
 
   const {
     control,
     handleSubmit,
     reset,
     formState: { errors },
+    watch,
   } = useForm<CreateTenantFormData>({
     resolver: zodResolver(createTenantSchema),
     defaultValues: {
@@ -43,15 +55,26 @@ export default function CreateTenantModal({ open, onClose }: CreateTenantModalPr
     },
   });
 
+  const adminEmailValue = watch("adminEmail");
+
   useEffect(() => {
     if (open) {
       reset();
+      setSearchQuery("");
+      setSelectedUser(null);
     }
   }, [open, reset]);
 
+  // Keep selectedUser in sync with the input
+  useEffect(() => {
+    if (selectedUser && selectedUser.email !== adminEmailValue) {
+      setSelectedUser(null);
+    }
+  }, [adminEmailValue, selectedUser]);
+
   const onSubmit = async (data: CreateTenantFormData) => {
     try {
-      // Remove empty string fields so they don't fail backend validation (like @Size for countryCode)
+      // Remove empty string fields so they don't fail backend validation
       const { adminEmail, ...restData } = data;
       const payload = Object.fromEntries(
         Object.entries(restData).filter(([_, v]) => v !== "")
@@ -62,15 +85,25 @@ export default function CreateTenantModal({ open, onClose }: CreateTenantModalPr
       if (adminEmail) {
         const tenantAdminRole = rolesData?.data?.content?.find((r) => r.name === "TENANT_ADMIN");
         if (tenantAdminRole) {
-          await sendInvitation({
-            payload: {
-              email: adminEmail,
+          if (selectedUser && selectedUser.email === adminEmail) {
+            // User exists, assign role directly
+            await assignRole({
+              userId: selectedUser.id,
               roleId: tenantAdminRole.id,
-            },
-            tenantId: createdTenant.id,
-          });
+              tenantId: createdTenant.id,
+            });
+          } else {
+            // User doesn't exist or wasn't selected, send invitation
+            await sendInvitation({
+              payload: {
+                email: adminEmail,
+                roleId: tenantAdminRole.id,
+              },
+              tenantId: createdTenant.id,
+            });
+          }
         } else {
-          message.warning("Không tìm thấy role TENANT_ADMIN trong hệ thống. Lời mời chưa được gửi.");
+          message.warning("Không tìm thấy role TENANT_ADMIN trong hệ thống. Lời mời/Gán quyền chưa được thực hiện.");
         }
       }
 
@@ -82,6 +115,17 @@ export default function CreateTenantModal({ open, onClose }: CreateTenantModalPr
       message.error(errorMessage);
     }
   };
+
+  const userOptions = usersData?.content?.map((user) => ({
+    value: user.email || "",
+    label: (
+      <div className="flex flex-col py-1">
+        <span className="font-semibold text-slate-800">{user.displayName}</span>
+        <span className="text-xs text-slate-500">{user.email}</span>
+      </div>
+    ),
+    user,
+  })) || [];
 
   return (
     <Modal
@@ -122,7 +166,7 @@ export default function CreateTenantModal({ open, onClose }: CreateTenantModalPr
         </div>
       }
       classNames={{
-        wrapper: "!bg-white !rounded-3xl !p-0 overflow-hidden shadow-2xl shadow-brand-primary/10",
+        content: "!bg-white !rounded-3xl !p-0 overflow-hidden shadow-2xl shadow-brand-primary/10",
         header: "!bg-white border-b border-slate-100 px-8 py-5 m-0",
         body: "!bg-slate-50/50 p-6 md:p-8 overflow-y-auto max-h-[60vh] scrollbar-thin scrollbar-thumb-slate-200",
         footer: "!bg-white border-t border-slate-100 px-8 py-4 m-0",
@@ -241,14 +285,26 @@ export default function CreateTenantModal({ open, onClose }: CreateTenantModalPr
             <h4 className="font-bold text-slate-800 text-[15px]">Quản trị viên (Tùy chọn)</h4>
           </div>
 
-          <FormInput
-            control={control}
+          <Controller
             name="adminEmail"
-            label="Email Quản trị viên"
-            placeholder="Ví dụ: ceo@abc.com"
-            error={errors.adminEmail}
-            helpText="Nhập Email để hệ thống gửi lời mời thiết lập tài khoản Chủ công ty."
-            labelClassName="!text-slate-700 !font-semibold !text-sm"
+            control={control}
+            render={({ field }) => (
+              <Form.Item
+                label={<span className="text-slate-700 font-semibold text-sm">Email Quản trị viên</span>}
+                validateStatus={errors.adminEmail ? "error" : ""}
+                help={errors.adminEmail?.message || "Nhập Email để Gán quyền (nếu đã có tài khoản) hoặc Gửi lời mời (nếu chưa có)."}
+              >
+                <AutoComplete
+                  {...field}
+                  options={userOptions}
+                  onSearch={setSearchQuery}
+                  onSelect={(value, option: any) => setSelectedUser(option.user)}
+                  placeholder="Ví dụ: ceo@abc.com"
+                  size="large"
+                  className="w-full"
+                />
+              </Form.Item>
+            )}
           />
         </div>
 
