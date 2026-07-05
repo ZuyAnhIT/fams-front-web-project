@@ -33,7 +33,7 @@ export default function DashboardPage() {
       show: canViewEmployees
     },
     {
-      title: "Địa bàn thực địa",
+      title: "Công trình thực địa",
       value: "14",
       change: "Hoạt động ổn định",
       icon: MapPin,

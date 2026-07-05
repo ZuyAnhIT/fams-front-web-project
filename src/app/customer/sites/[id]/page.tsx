@@ -110,7 +110,7 @@ export default function SiteDetailsPage() {
   if (!site) {
     return (
       <div className="p-6">
-        <h1 className="text-xl text-slate-800">Không tìm thấy thông tin địa bàn.</h1>
+        <h1 className="text-xl text-slate-800">Không tìm thấy thông tin công trình.</h1>
       </div>
     );
   }
@@ -341,7 +341,7 @@ export default function SiteDetailsPage() {
               className="text-slate-600 bg-slate-100 px-2 py-1 rounded-full border border-slate-200" 
             />
           </div>
-          {site.code && <p className="text-slate-500 mt-1">Mã địa bàn: {site.code}</p>}
+          {site.code && <p className="text-slate-500 mt-1">Mã công trình: {site.code}</p>}
         </div>
       </div>
 
@@ -407,7 +407,7 @@ export default function SiteDetailsPage() {
                   children: (
                     <div className="space-y-4">
                       <div className="flex justify-between items-center">
-                        <p className="text-slate-500 m-0">Quản lý các ca làm việc tiêu chuẩn áp dụng tại địa bàn này.</p>
+                        <p className="text-slate-500 m-0">Quản lý các ca làm việc tiêu chuẩn áp dụng tại công trình này.</p>
                         <Button 
                           type="primary" 
                           icon={<PlusOutlined />}
