@@ -72,22 +72,10 @@ export const SIDEBAR_MENU: MenuItem[] = [
     allowedRoles: [SystemRole.TENANT_ADMIN, SystemRole.HR_MANAGER, SystemRole.SITE_SUPERVISOR]
   },
   {
-    title: "Ca làm việc",
-    path: CUSTOMER_ROUTES.SHIFTS,
-    icon: "Clock",
-    allowedRoles: [SystemRole.TENANT_ADMIN, SystemRole.HR_MANAGER]
-  },
-  {
-    title: "Địa bàn",
+    title: "Công trình",
     path: CUSTOMER_ROUTES.SITES,
     icon: "MapPin",
     allowedRoles: [SystemRole.TENANT_ADMIN, SystemRole.SITE_SUPERVISOR]
-  },
-  {
-    title: "Phân công",
-    path: CUSTOMER_ROUTES.ASSIGNMENTS,
-    icon: "ClipboardList",
-    allowedRoles: [SystemRole.TENANT_ADMIN, SystemRole.HR_MANAGER]
   },
   {
     title: "Vi phạm",

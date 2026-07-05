@@ -72,7 +72,7 @@ export default function SitePage() {
         if (!text) return <span className="text-slate-400">---</span>;
         return (
           <Tooltip title={text} placement="topLeft">
-            <div className="max-w-[350px] truncate text-slate-700">
+            <div className="max-w-[200px] truncate text-slate-700">
               {text}
             </div>
           </Tooltip>
