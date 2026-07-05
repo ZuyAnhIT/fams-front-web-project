@@ -64,6 +64,18 @@ export interface InvitationResponse {
   tenantId: string;
   status: string;
   token: string;
+  firstName?: string;
+  lastName?: string;
+  createdAt: string;
+  expiresAt: string;
+}
+
+export interface InvitationListParams {
+  tenantId?: string;
+  email?: string;
+  status?: string;
+  page?: number;
+  size?: number;
 }
 
 export interface AcceptInvitationPayload {

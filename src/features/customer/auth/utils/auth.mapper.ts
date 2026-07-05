@@ -11,10 +11,10 @@ export const authMapper = {
     const decoded = decodeJwt(accessToken);
     const isPlatformAdmin = decoded?.isPlatformAdmin === true;
     
-    let tenantRole: SystemRole | undefined = undefined;
-    let tenantId: string | undefined = undefined;
+    let tenantRole: SystemRole | undefined = decoded?.role as SystemRole | undefined;
+    let tenantId: string | undefined = decoded?.tenantId;
 
-    if (!isPlatformAdmin && userRoles && userRoles.length > 0) {
+    if (!isPlatformAdmin && userRoles && userRoles.length > 0 && !tenantId) {
       // Dùng role đầu tiên tìm được làm role hiện tại
       const firstRole = userRoles[0];
       tenantRole = firstRole.roleName as SystemRole;

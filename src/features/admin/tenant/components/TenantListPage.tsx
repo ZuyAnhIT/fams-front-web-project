@@ -131,7 +131,7 @@ export default function TenantListPage() {
             e.stopPropagation();
             const { setActiveTenant } = require("@/stores/tenant.store").useTenantStore.getState();
             setActiveTenant(record as Tenant);
-            router.push(`/tenants/${record.id}`);
+            router.push(`/admin/tenants/${record.id}`);
           }}
         >
           Chi tiết

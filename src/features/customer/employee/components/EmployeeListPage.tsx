@@ -20,6 +20,7 @@ import ContentCard from "@/components/shared/layout/ContentCard";
 
 export default function EmployeeListPage() {
   const hasPermission = useAuthStore((state) => state.hasPermission);
+  const currentUser = useAuthStore((state) => state.user);
   const { message } = App.useApp();
   const router = useRouter();
   const { state, setPagination } = usePagination(20);
@@ -250,7 +251,7 @@ export default function EmployeeListPage() {
       <ContentCard noPadding>
         <DataTable
           columns={columns}
-          data={pageData?.content || []}
+          data={pageData?.content?.filter((emp) => emp.email !== currentUser?.email) || []}
           loading={isLoading}
           totalElements={pageData?.totalElements || 0}
           currentPage={state.page}

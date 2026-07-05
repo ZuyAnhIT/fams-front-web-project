@@ -3,6 +3,8 @@ import { jwtDecode } from "jwt-decode";
 export interface CustomJwtPayload {
   sub?: string;
   isPlatformAdmin?: boolean;
+  tenantId?: string;
+  role?: string;
   exp?: number;
   iat?: number;
   jti?: string;
