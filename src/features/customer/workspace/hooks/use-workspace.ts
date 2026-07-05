@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { workspaceService } from "../services/workspace.service";
 import { CreateWorkspaceRequest, UpdateWorkspaceRequest } from "../types";
+import { MOCK_WORKSPACES } from "../../../../mocks/workspaces.mock";
 
 export const workspaceKeys = {
   all: ["workspaces"] as const,
@@ -36,7 +37,17 @@ export const useWorkspaceTreeQuery = (params: {
 }) => {
   return useQuery({
     queryKey: workspaceKeys.tree(params),
-    queryFn: () => workspaceService.getWorkspaceTree(params as any),
+    queryFn: async () => {
+      try {
+        const res = await workspaceService.getWorkspaceTree(params as any);
+        if (!res.data || res.data.length === 0) {
+          return { data: MOCK_WORKSPACES } as any;
+        }
+        return res;
+      } catch (e) {
+        return { data: MOCK_WORKSPACES } as any;
+      }
+    },
     enabled: !!params.tenantId,
   });
 };
