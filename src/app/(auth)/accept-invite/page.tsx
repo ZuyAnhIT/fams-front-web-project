@@ -6,10 +6,10 @@ import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { message, Radio } from "antd";
-import { useAcceptInvitation } from "@/features/customer/employee/hooks/use-employee";
+import { useAcceptInvitation, useValidateInvitation } from "@/features/customer/employee/hooks/use-employee";
 import FormInput from "@/components/forms/FormInput";
 import BaseButton from "@/components/ui/BaseButton";
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import Image from "next/image";
 import { APP_NAME } from "@/constants/app";
 import { useAuthStore } from "@/stores/auth.store";
@@ -50,6 +50,8 @@ function AcceptInviteForm() {
   const { mutateAsync: acceptInvitation, isPending } = useAcceptInvitation();
   const { setAuth } = useAuthStore();
 
+  const { data: validationData, isLoading: isValidating, error: validationError } = useValidateInvitation(token);
+
   const {
     control,
     handleSubmit,
@@ -67,6 +69,13 @@ function AcceptInviteForm() {
 
   const isExistingUser = watch("isExistingUser");
 
+  useEffect(() => {
+    if (validationData) {
+      const isExisting = validationData.isExistingUser ?? validationData.existingUser ?? false;
+      setValue("isExistingUser", isExisting);
+    }
+  }, [validationData, setValue]);
+
   if (!token) {
     return (
       <div className="text-center p-8 bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl">
@@ -76,9 +85,26 @@ function AcceptInviteForm() {
     );
   }
 
+  if (validationError) {
+    return (
+      <div className="text-center p-8 bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl">
+        <h2 className="text-xl font-bold text-rose-600 mb-2">Đường dẫn không hợp lệ hoặc đã hết hạn</h2>
+        <p className="text-slate-600">Vui lòng kiểm tra lại email hoặc liên hệ với bộ phận nhân sự.</p>
+      </div>
+    );
+  }
+
+  if (isValidating) {
+    return (
+      <div className="flex justify-center items-center p-12 bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-brand-500 border-t-transparent" />
+      </div>
+    );
+  }
+
   const onSubmit: any = async (data: AcceptFormData) => {
     try {
-      const payloadPassword = data.isExistingUser ? "" : (data.password || "");
+      const payloadPassword = data.isExistingUser ? undefined : data.password;
       const result = await acceptInvitation({ token, password: payloadPassword });
       
       if (result.accessToken) {
@@ -123,32 +149,20 @@ function AcceptInviteForm() {
         <div className="mx-auto w-16 h-16 bg-brand-600 rounded-xl flex items-center justify-center mb-4 shadow-lg shadow-brand-500/30">
           <span className="text-3xl font-black text-white select-none tracking-tighter">Q</span>
         </div>
-        <h1 className="text-2xl font-bold text-slate-800 mb-2">Gia nhập {APP_NAME}</h1>
-        <p className="text-slate-500 text-sm">
-          {isExistingUser ? "Xác nhận tham gia vào công ty" : "Thiết lập mật khẩu để hoàn tất tạo tài khoản"}
+        <h1 className="text-2xl font-bold text-slate-800 mb-2">
+          Gia nhập {validationData?.tenantName || APP_NAME}
+        </h1>
+        <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 inline-block mt-2 mb-2">
+          <p className="text-slate-700 text-sm font-medium">{validationData?.email}</p>
+        </div>
+        <p className="text-slate-500 text-sm mt-2">
+          {isExistingUser 
+            ? "Tuyệt vời! Bạn đã có tài khoản. Bấm xác nhận để tham gia ngay." 
+            : "Thiết lập mật khẩu để hoàn tất tạo tài khoản."}
         </p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-        <div className="flex justify-center mb-6">
-          <Controller
-            name="isExistingUser"
-            control={control}
-            render={({ field }) => (
-              <Radio.Group 
-                optionType="button" 
-                buttonStyle="solid"
-                value={field.value}
-                onChange={field.onChange}
-                className="w-full text-center flex"
-              >
-                <Radio.Button value={false} className="flex-1">Tạo tài khoản mới</Radio.Button>
-                <Radio.Button value={true} className="flex-1">Đã có tài khoản</Radio.Button>
-              </Radio.Group>
-            )}
-          />
-        </div>
-
         {!isExistingUser && (
           <div className="space-y-5 animate-fade-in">
             <FormInput
