@@ -70,6 +70,13 @@ export interface InvitationResponse {
   expiresAt: string;
 }
 
+export interface ValidateInvitationResponse {
+  email: string;
+  isExistingUser?: boolean;
+  existingUser?: boolean;
+  tenantName: string;
+}
+
 export interface InvitationListParams {
   tenantId?: string;
   email?: string;

@@ -11,6 +11,7 @@ import type {
   InvitationResponse,
   AcceptInvitationPayload,
   InvitationListParams,
+  ValidateInvitationResponse,
 } from "../types/employee.type";
 
 import { useAuthStore } from "@/stores/auth.store";
@@ -182,6 +183,14 @@ export const employeeService = {
    */
   async acceptInvitation(payload: AcceptInvitationPayload) {
     const response = await apiClient.post<ApiResponse<any>>(`/invitations/accept`, payload);
+    return response.data.data;
+  },
+
+  /**
+   * Kiểm tra token lời mời hợp lệ (Public API)
+   */
+  async validateInvitation(token: string): Promise<ValidateInvitationResponse> {
+    const response = await apiClient.get<ApiResponse<ValidateInvitationResponse>>(`/invitations/validate?token=${token}`);
     return response.data.data;
   },
 

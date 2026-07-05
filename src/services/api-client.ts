@@ -24,51 +24,100 @@ apiClient.interceptors.request.use(
 );
 
 // ─── Response Interceptor ───────────────────────────────────────────────────
-// Xử lý lỗi 401 (Token hết hạn / không hợp lệ)
-//
-// [NOTE FOR BACKEND TEAM]:
-// Hiện tại Backend chưa có API POST /api/v1/auth/refresh-token.
-// Khi Backend xây dựng xong, hãy bổ sung logic ở đây để:
-//   1. Dùng refreshToken lấy từ authTokenService.getRefreshToken()
-//   2. Gọi POST /auth/refresh-token để lấy accessToken mới
-//   3. Lưu token mới bằng authTokenService.setAccessToken(newToken)
-//   4. Retry lại request ban đầu với token mới
-//   5. Nếu refresh thất bại → mới logout và redirect về /login
-//
-// Pattern: axios-auth-refresh hoặc tự implement với biến isRefreshing + queue
+// Xử lý lỗi 401 (Token hết hạn / không hợp lệ) và tự động Refresh Token
 
-let isRedirectingToLogin = false; // Chống redirect nhiều lần cùng lúc
+let isRefreshing = false;
+let failedQueue: Array<{
+  resolve: (value?: unknown) => void;
+  reject: (reason?: any) => void;
+}> = [];
+
+const processQueue = (error: any, token: string | null = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
+
+let isRedirectingToLogin = false;
+function forceLogout() {
+  if (!isRedirectingToLogin && typeof window !== "undefined" && !window.location.pathname.includes("/login")) {
+    isRedirectingToLogin = true;
+    authTokenService.clearTokens();
+    message.error({
+      content: "Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại!",
+      duration: 3,
+      key: "session-expired",
+    });
+    setTimeout(() => {
+      isRedirectingToLogin = false;
+      window.location.href = "/login";
+    }, 1500);
+  }
+}
 
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const isLogoutEndpoint = error.config?.url?.includes("/auth/logout");
-    const isLoginEndpoint  = error.config?.url?.includes("/auth/login");
-    const isRefreshEndpoint = error.config?.url?.includes("/auth/refresh");
+    const originalRequest = error.config;
+    const isLogoutEndpoint = originalRequest?.url?.includes("/auth/logout");
+    const isLoginEndpoint  = originalRequest?.url?.includes("/auth/login");
+    const isRefreshEndpoint = originalRequest?.url?.includes("/auth/refresh-token");
 
-    // Bỏ qua lỗi 401 từ chính endpoint login/logout/refresh (xử lý riêng ở component)
+    // Bỏ qua lỗi 401 từ chính endpoint login/logout/refresh
     if (isLogoutEndpoint || isLoginEndpoint || isRefreshEndpoint) {
       return Promise.reject(error);
     }
 
-    if (error.response?.status === 401) {
-      // Chỉ redirect một lần duy nhất dù có nhiều request cùng thất bại
-      if (!isRedirectingToLogin && typeof window !== "undefined" && !window.location.pathname.includes("/login")) {
-        isRedirectingToLogin = true;
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      if (isRefreshing) {
+        return new Promise(function (resolve, reject) {
+          failedQueue.push({ resolve, reject });
+        })
+          .then((token) => {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            return apiClient(originalRequest);
+          })
+          .catch((err) => Promise.reject(err));
+      }
 
-        // Xóa token cũ
-        authTokenService.clearTokens();
+      originalRequest._retry = true;
+      isRefreshing = true;
 
-        message.error({
-          content: "Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại!",
-          duration: 3,
-          key: "session-expired",
+      const refreshToken = authTokenService.getRefreshToken();
+      if (!refreshToken) {
+        processQueue(new Error("No refresh token"), null);
+        isRefreshing = false;
+        forceLogout();
+        return Promise.reject(error);
+      }
+
+      try {
+        // Sử dụng axios riêng biệt để tránh lặp vô hạn với apiClient
+        const res = await axios.post(`${apiClient.defaults.baseURL || ''}/auth/refresh-token`, {
+          refreshToken,
         });
 
-        setTimeout(() => {
-          isRedirectingToLogin = false;
-          window.location.href = "/login";
-        }, 1500);
+        const newAccessToken = res.data.data.accessToken;
+        const newRefreshToken = res.data.data.refreshToken;
+
+        authTokenService.setAccessToken(newAccessToken);
+        authTokenService.setRefreshToken(newRefreshToken);
+
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+        processQueue(null, newAccessToken);
+
+        return apiClient(originalRequest);
+      } catch (refreshError) {
+        processQueue(refreshError, null);
+        forceLogout();
+        return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
       }
     }
 

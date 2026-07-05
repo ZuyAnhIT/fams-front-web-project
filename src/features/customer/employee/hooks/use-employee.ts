@@ -109,3 +109,15 @@ export const useCancelInvitation = () => {
     },
   });
 };
+
+export const useValidateInvitation = (token: string | null) => {
+  return useQuery({
+    queryKey: ["validate-invitation", token],
+    queryFn: () => {
+      if (!token) throw new Error("No token provided");
+      return employeeService.validateInvitation(token);
+    },
+    enabled: !!token,
+    retry: false,
+  });
+};
