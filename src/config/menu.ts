@@ -54,16 +54,16 @@ export const SIDEBAR_MENU: MenuItem[] = [
 
   // -- DÀNH CHO TENANT ADMIN & HR (CUSTOMER) --
   {
-    title: "Phòng ban",
-    path: CUSTOMER_ROUTES.WORKSPACES,
-    icon: "Network",
-    allowedRoles: [SystemRole.TENANT_ADMIN, SystemRole.HR_MANAGER]
-  },
-  {
     title: "Nhân viên",
     path: CUSTOMER_ROUTES.EMPLOYEES,
     icon: "Users",
     allowedRoles: [SystemRole.TENANT_ADMIN, SystemRole.HR_MANAGER, SystemRole.SITE_SUPERVISOR]
+  },
+  {
+    title: "Phòng ban",
+    path: CUSTOMER_ROUTES.WORKSPACES,
+    icon: "Network",
+    allowedRoles: [SystemRole.TENANT_ADMIN, SystemRole.HR_MANAGER]
   },
   {
     title: "Chấm công",
