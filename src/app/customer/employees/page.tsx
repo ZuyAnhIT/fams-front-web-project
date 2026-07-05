@@ -1,6 +1,6 @@
 import RoleGuard from "@/components/guards/RoleGuard";
 import { SystemRole } from "@/features/customer/auth/types/auth.type";
-import EmployeeListPage from "@/features/customer/employee/components/EmployeeListPage";
+import EmployeeTabs from "@/features/customer/employee/components/EmployeeTabs";
 
 export const metadata = {
   title: "Quản lý nhân viên | FAMS",
@@ -16,7 +16,7 @@ export default function EmployeesPage() {
       Danh sách toàn bộ nhân viên và tài khoản trong công ty
       </p>
       </div>
-      <EmployeeListPage />
+      <EmployeeTabs />
       </div>
     </RoleGuard>
   );

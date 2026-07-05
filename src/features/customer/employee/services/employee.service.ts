@@ -10,6 +10,7 @@ import type {
   InviteEmployeePayload,
   InvitationResponse,
   AcceptInvitationPayload,
+  InvitationListParams,
 } from "../types/employee.type";
 
 import { useAuthStore } from "@/stores/auth.store";
@@ -148,6 +149,18 @@ export const employeeService = {
     const response = await apiClient.patch<ApiResponse<Employee>>(
       `/tenants/${tenantId}/employees/${id}/status`,
       payload
+    );
+    return response.data.data;
+  },
+
+  /**
+   * Lấy danh sách lời mời có phân trang và filter
+   */
+  async listInvitations(params: InvitationListParams): Promise<PageResponse<InvitationResponse>> {
+    const tenantId = getTenantId();
+    const response = await apiClient.get<ApiResponse<PageResponse<InvitationResponse>>>(
+      `/tenants/${tenantId}/invitations`,
+      { params }
     );
     return response.data.data;
   },

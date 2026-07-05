@@ -1,51 +1,52 @@
-import { Modal, message, Input } from "antd";
-import { useState } from "react";
+import { Modal, message } from "antd";
 import BaseButton from "@/components/ui/BaseButton";
 import { useCancelInvitation } from "../hooks/use-employee";
+import type { InvitationResponse } from "../types/employee.type";
+import { AlertCircle } from "lucide-react";
 
 interface CancelInvitationModalProps {
   open: boolean;
   onClose: () => void;
+  invitation: InvitationResponse | null;
 }
 
-export default function CancelInvitationModal({ open, onClose }: CancelInvitationModalProps) {
+export default function CancelInvitationModal({ open, onClose, invitation }: CancelInvitationModalProps) {
   const { mutateAsync: cancelInvitation, isPending } = useCancelInvitation();
-  const [invitationId, setInvitationId] = useState("");
 
   const handleCancel = async () => {
-    if (!invitationId) {
-      message.error("Vui lòng nhập ID lời mời.");
-      return;
-    }
+    if (!invitation?.id) return;
     try {
-      await cancelInvitation(invitationId);
+      await cancelInvitation(invitation.id);
       message.success("Hủy lời mời thành công.");
-      setInvitationId("");
       onClose();
     } catch (error: any) {
-      message.error(error?.response?.data?.message || "Lỗi khi hủy lời mời. Vui lòng kiểm tra lại ID.");
+      message.error(error?.response?.data?.message || "Lỗi khi hủy lời mời.");
     }
   };
 
   return (
     <Modal
-      title="Hủy lời mời"
+      title={
+        <div className="flex items-center gap-2 text-rose-600">
+          <AlertCircle className="w-5 h-5" />
+          <span>Xác nhận hủy lời mời</span>
+        </div>
+      }
       open={open}
       onCancel={onClose}
       footer={null}
       destroyOnHidden
+      width={480}
     >
       <div className="mt-4">
         <p className="mb-2 text-slate-600">
-          Nhập ID của lời mời (UUID) mà bạn muốn hủy. (Tính năng này được thiết kế để thao tác nhanh khi chưa có giao diện danh sách lời mời chờ xác nhận).
+          Bạn có chắc chắn muốn hủy lời mời đã gửi đến email <span className="font-semibold text-slate-900">{invitation?.email}</span> không?
         </p>
-        <Input
-          placeholder="Nhập Invitation ID..."
-          value={invitationId}
-          onChange={(e) => setInvitationId(e.target.value)}
-        />
+        <p className="text-sm text-slate-500">
+          Sau khi hủy, đường link đăng ký trong email sẽ không còn hiệu lực.
+        </p>
 
-        <div className="flex justify-end gap-3 mt-6">
+        <div className="flex justify-end gap-3 mt-8">
           <BaseButton type="default" onClick={onClose}>
             Đóng
           </BaseButton>

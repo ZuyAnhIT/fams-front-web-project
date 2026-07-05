@@ -16,6 +16,14 @@ export const useEmployees = (params: any, options?: Omit<import("@tanstack/react
   });
 };
 
+export const useInvitations = (params: any, options?: Omit<import("@tanstack/react-query").UseQueryOptions<any, any, any, any>, "queryKey" | "queryFn">) => {
+  return useQuery({
+    queryKey: ["invitations", params],
+    queryFn: () => employeeService.listInvitations(params),
+    ...options,
+  });
+};
+
 export const useExportEmployees = () => {
   return useMutation({
     mutationFn: (params: { search?: string; status?: string; department?: string }) =>
@@ -71,7 +79,7 @@ export const useSendInvitation = () => {
     mutationFn: ({ payload, tenantId }: { payload: InviteEmployeePayload; tenantId?: string }) => 
       employeeService.sendInvitation(payload, tenantId),
     onSuccess: () => {
-      // Có thể invalidate list lời mời nếu sau này có API list invitations
+      queryClient.invalidateQueries({ queryKey: ["invitations"] });
     },
   });
 };
@@ -93,7 +101,11 @@ export const useImportEmployees = () => {
 };
 
 export const useCancelInvitation = () => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (invitationId: string) => employeeService.cancelInvitation(invitationId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["invitations"] });
+    },
   });
 };
