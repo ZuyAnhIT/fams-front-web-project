@@ -13,18 +13,22 @@ export const authMapper = {
     
     let tenantRole: SystemRole | undefined = decoded?.role as SystemRole | undefined;
     let tenantId: string | undefined = decoded?.tenantId;
+    let permissions: string[] = [];
 
-    if (!isPlatformAdmin && userRoles && userRoles.length > 0 && !tenantId) {
+    if (!isPlatformAdmin && userRoles && userRoles.length > 0) {
       // Dùng role đầu tiên tìm được làm role hiện tại
       const firstRole = userRoles[0];
-      tenantRole = firstRole.roleName as SystemRole;
-      tenantId = firstRole.tenantId;
+      if (!tenantRole) tenantRole = firstRole.roleName as SystemRole;
+      if (!tenantId) tenantId = firstRole.tenantId;
+      
+      permissions = Array.from(new Set(userRoles.flatMap(r => r.permissions || [])));
     }
 
     return {
       ...profile,
       role: isPlatformAdmin ? SystemRole.PLATFORM_ADMIN : tenantRole,
       tenantId: tenantId,
+      permissions: permissions,
     };
   },
 };

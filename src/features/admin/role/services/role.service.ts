@@ -14,7 +14,7 @@ const getTenantId = () => {
   if (state.user && state.user.tenantId) {
     return state.user.tenantId;
   }
-  return "89239420-a819-4dc5-9ac4-10cefadd6e06"; // Fallback dev
+  throw new Error("Tenant ID is required but not found in user state.");
 };
 
 export const roleService = {
@@ -30,7 +30,7 @@ export const roleService = {
     sortDir?: "asc" | "desc";
     tenantId?: string; // Platform Admin filter
   }): Promise<PageResponse<Role>> {
-    // Tự động thêm tenantId vào params nếu không phải Platform Admin (mock)
+    // Tự động thêm tenantId vào params nếu không phải Platform Admin
     const effectiveParams = { ...params, tenantId: params.tenantId || getTenantId() };
     const response = await apiClient.get<ApiResponse<PageResponse<Role>>>("/roles", {
       params: effectiveParams,

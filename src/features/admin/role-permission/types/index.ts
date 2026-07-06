@@ -61,4 +61,5 @@ export interface UserRoleResponse {
   tenantId: string;
   assignedAt?: string;
   roleName?: string;
+  permissions?: string[];
 }

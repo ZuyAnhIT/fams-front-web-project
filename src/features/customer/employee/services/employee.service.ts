@@ -16,15 +16,12 @@ import type {
 
 import { useAuthStore } from "@/stores/auth.store";
 
-// Fallback tenant ID cho quá trình dev 
-const FALLBACK_TENANT_ID = "89239420-a819-4dc5-9ac4-10cefadd6e06";
-
 const getTenantId = () => {
   const state = useAuthStore.getState();
   if (state.user && state.user.tenantId) {
     return state.user.tenantId;
   }
-  return FALLBACK_TENANT_ID;
+  throw new Error("Tenant ID is required but not found in user state.");
 };
 
 export const employeeService = {
@@ -41,51 +38,11 @@ export const employeeService = {
     department?: string;
   }): Promise<PageResponse<Employee>> {
     const tenantId = getTenantId();
-    try {
-      const response = await apiClient.get<ApiResponse<PageResponse<Employee>>>(
-        `/tenants/${tenantId}/employees`,
-        { params }
-      );
-      return response.data.data;
-    } catch (error) {
-      console.warn("Using mock data for listEmployees due to API error", error);
-      // MOCK DATA FALLBACK
-      return {
-        content: [
-          {
-            id: "emp-mock-1",
-            tenantId,
-            firstName: "Nguyễn",
-            lastName: "Văn A",
-            fullName: "Nguyễn Văn A",
-            email: "nva@example.com",
-            employeeCode: "NV001",
-            position: "Nhân viên",
-            status: "active",
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          },
-          {
-            id: "emp-mock-2",
-            tenantId,
-            firstName: "Trần",
-            lastName: "Thị B",
-            fullName: "Trần Thị B",
-            email: "ttb@example.com",
-            employeeCode: "NV002",
-            position: "Trưởng nhóm",
-            status: "active",
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          },
-        ],
-        // pageNumber: 0,
-        // pageSize: 20,
-        totalElements: 2,
-        totalPages: 1,
-        last: true, page: 0, size: 10, first: true,
-      };
-    }
+    const response = await apiClient.get<ApiResponse<PageResponse<Employee>>>(
+      `/tenants/${tenantId}/employees`,
+      { params }
+    );
+    return response.data.data;
   },
 
   /**

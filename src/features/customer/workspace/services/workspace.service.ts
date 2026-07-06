@@ -75,65 +75,11 @@ export const workspaceService = {
     page: number = 0,
     size: number = 20
   ): Promise<ApiResponse<PageResponse<any>>> => {
-    try {
-      const response = await apiClient.get<ApiResponse<PageResponse<any>>>(
-        `/tenants/${tenantId}/workspaces/${workspaceId}/members`,
-        { params: { page, size } }
-      );
-      return response.data;
-    } catch (error) {
-      console.warn("Using mock data for getWorkspaceMembers due to API error", error);
-      // MOCK DATA FALLBACK
-      return {
-        success: true,
-        message: "Mock data",
-        data: {
-          content: [
-            {
-              id: "member-mock-1",
-              workspaceId,
-              tenantId,
-              employeeId: "emp-mock-1",
-              role: "manager",
-              assignedBy: "admin",
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-              employee: {
-                id: "emp-mock-1",
-                firstName: "Nguyễn",
-                lastName: "Văn A",
-                fullName: "Nguyễn Văn A",
-                employeeCode: "NV001",
-                position: "Quản lý phòng",
-              }
-            },
-            {
-              id: "member-mock-2",
-              workspaceId,
-              tenantId,
-              employeeId: "emp-mock-2",
-              role: "member",
-              assignedBy: "admin",
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-              employee: {
-                id: "emp-mock-2",
-                firstName: "Trần",
-                lastName: "Thị B",
-                fullName: "Trần Thị B",
-                employeeCode: "NV002",
-                position: "Nhân viên",
-              }
-            }
-          ],
-          // pageNumber: page,
-          // pageSize: size,
-          totalElements: 2,
-          totalPages: 1,
-          last: true, page: 0, size: 10, first: true,
-        }
-      };
-    }
+    const response = await apiClient.get<ApiResponse<PageResponse<any>>>(
+      `/tenants/${tenantId}/workspaces/${workspaceId}/members`,
+      { params: { page, size } }
+    );
+    return response.data;
   },
 
   assignWorkspaceMember: async (
@@ -141,38 +87,11 @@ export const workspaceService = {
     workspaceId: string,
     data: any
   ): Promise<ApiResponse<any>> => {
-    try {
-      const response = await apiClient.post<ApiResponse<any>>(
-        `/tenants/${tenantId}/workspaces/${workspaceId}/members`,
-        data
-      );
-      return response.data;
-    } catch (error) {
-      console.warn("Mocking assignWorkspaceMember success due to API error", error);
-      // MOCK DATA FALLBACK
-      return {
-        success: true,
-        message: "Assigned member successfully (Mock)",
-        data: {
-          id: "member-mock-new",
-          workspaceId,
-          tenantId,
-          employeeId: data.employeeId,
-          role: data.role,
-          assignedBy: "admin",
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          employee: {
-            id: data.employeeId,
-            firstName: "Thành viên",
-            lastName: "Mới",
-            fullName: "Thành viên Mới",
-            employeeCode: "NV-NEW",
-            position: "Nhân sự mới",
-          }
-        }
-      };
-    }
+    const response = await apiClient.post<ApiResponse<any>>(
+      `/tenants/${tenantId}/workspaces/${workspaceId}/members`,
+      data
+    );
+    return response.data;
   },
 
   transferWorkspaceMember: async (

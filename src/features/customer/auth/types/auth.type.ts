@@ -135,11 +135,3 @@ export interface LoginTotpPayload {
   deviceId?: string;
 }
 
-/** Dữ liệu tài khoản lưu trữ tạm thời trong LocalStorage (Mock Mode) */
-export interface StoredUser {
-  id?: string;
-  fullName: string;
-  emailOrPhone: string;
-  password?: string;
-  role?: SystemRole;
-}
