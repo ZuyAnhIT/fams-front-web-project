@@ -14,6 +14,8 @@ import { format } from "date-fns";
 import ListHeader from "@/components/shared/layout/ListHeader";
 import ContentCard from "@/components/shared/layout/ContentCard";
 import { useAuthStore } from "@/stores/auth.store";
+import StatusBadge from "@/components/ui/StatusBadge";
+import { INVITATION_STATUS } from "@/constants/status";
 
 export default function InvitationListPage() {
   const hasPermission = useAuthStore((state) => state.hasPermission);
@@ -44,6 +46,7 @@ export default function InvitationListPage() {
       title: "Email",
       dataIndex: "email",
       key: "email",
+      sorter: true,
       render: (text: string) => <span className="font-medium text-slate-700">{text}</span>,
     },
     {
@@ -59,21 +62,13 @@ export default function InvitationListPage() {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
-      render: (status: string) => {
-        const statusConfig: Record<string, { color: string; text: string }> = {
-          pending: { color: "blue", text: "Chờ xác nhận" },
-          accepted: { color: "green", text: "Đã chấp nhận" },
-          cancelled: { color: "red", text: "Đã hủy" },
-          expired: { color: "default", text: "Hết hạn" },
-        };
-        const config = statusConfig[status] || { color: "default", text: status };
-        return <Tag color={config.color}>{config.text}</Tag>;
-      },
+      render: (status: string) => <StatusBadge status={status} variant="tag" configMap={INVITATION_STATUS} />,
     },
     {
       title: "Ngày gửi",
       dataIndex: "createdAt",
       key: "createdAt",
+      sorter: true,
       render: (dateStr: string) => (
         <span className="text-slate-600 text-sm">
           {dateStr ? format(new Date(dateStr), "dd/MM/yyyy HH:mm") : "---"}
@@ -143,6 +138,16 @@ export default function InvitationListPage() {
           currentPage={state.page}
           pageSize={state.size}
           onPageChange={(page, size) => setPagination({ page, size })}
+          onChange={(_, __, sorter: any) => {
+            if (!Array.isArray(sorter) && (sorter.columnKey || sorter.field)) {
+              setPagination({
+                sortBy: (sorter.columnKey || sorter.field) as string,
+                sortDir: sorter.order === "ascend" ? "asc" : sorter.order === "descend" ? "desc" : undefined,
+              });
+            } else {
+              setPagination({ sortBy: undefined, sortDir: undefined });
+            }
+          }}
         />
       </ContentCard>
 

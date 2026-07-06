@@ -17,6 +17,8 @@ import type { Employee, EmployeeDetailResponse } from "../types/employee.type";
 import { format } from "date-fns";
 import ListHeader from "@/components/shared/layout/ListHeader";
 import ContentCard from "@/components/shared/layout/ContentCard";
+import StatusBadge from "@/components/ui/StatusBadge";
+import { EMPLOYEE_STATUS } from "@/constants/status";
 
 export default function EmployeeListPage() {
   const hasPermission = useAuthStore((state) => state.hasPermission);
@@ -90,6 +92,7 @@ export default function EmployeeListPage() {
     {
       title: "Nhân viên",
       key: "name",
+      sorter: true,
       render: (_: any, record: Employee) => (
         <div className="flex items-center gap-3 py-1">
           {record.avatarUrl ? (
@@ -133,18 +136,10 @@ export default function EmployeeListPage() {
       dataIndex: "status",
       key: "status",
       render: (status: string, record: Employee) => {
-        const statusConfig: Record<string, { dot: string, text: string, label: string }> = {
-          active: { dot: "bg-emerald-500", text: "text-slate-700", label: "Hoạt động" },
-          inactive: { dot: "bg-amber-500", text: "text-slate-700", label: "Tạm nghỉ" },
-          terminated: { dot: "bg-rose-500", text: "text-slate-500 line-through", label: "Đã nghỉ" },
-        };
-        const config = statusConfig[status] || { dot: "bg-slate-300", text: "text-slate-500", label: status };
-
         return (
           <Dropdown menu={{ items: getStatusActionMenu(record) }} trigger={["click"]} disabled={!hasPermission("employees:update")}>
-            <div className={`inline-flex items-center gap-2 ${hasPermission("employees:update") ? "cursor-pointer hover:opacity-70" : ""} transition-opacity ${config.text}`}>
-              <div className={`w-2 h-2 rounded-full ${config.dot} shadow-sm`}></div>
-              <span className="font-semibold text-sm">{config.label}</span>
+            <div className={`${hasPermission("employees:update") ? "cursor-pointer hover:opacity-70" : ""} transition-opacity`}>
+              <StatusBadge status={status} variant="dot" configMap={EMPLOYEE_STATUS} />
             </div>
           </Dropdown>
         );
@@ -154,6 +149,7 @@ export default function EmployeeListPage() {
       title: "Ngày tham gia",
       dataIndex: "createdAt",
       key: "createdAt",
+      sorter: true,
       render: (dateStr: string) => (
         <span className="font-medium text-slate-600 text-sm">
           {format(new Date(dateStr), "dd/MM/yyyy")}
@@ -257,6 +253,16 @@ export default function EmployeeListPage() {
           currentPage={state.page}
           pageSize={state.size}
           onPageChange={(page, size) => setPagination({ page, size })}
+          onChange={(_, __, sorter: any) => {
+            if (!Array.isArray(sorter) && (sorter.columnKey || sorter.field)) {
+              setPagination({
+                sortBy: (sorter.columnKey || sorter.field) as string,
+                sortDir: sorter.order === "ascend" ? "asc" : sorter.order === "descend" ? "desc" : undefined,
+              });
+            } else {
+              setPagination({ sortBy: undefined, sortDir: undefined });
+            }
+          }}
           onRow={(record) => ({
             className: "hover:bg-brand-50/50 transition-colors duration-200 group cursor-pointer",
             onClick: () => router.push(`/customer/employees/${record.id}`),

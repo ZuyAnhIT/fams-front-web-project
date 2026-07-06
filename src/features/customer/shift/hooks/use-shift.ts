@@ -16,7 +16,7 @@ export const shiftKeys = {
 export const useShiftsQuery = (
   tenantId: string | undefined,
   siteId: string,
-  params: { status?: string; page: number; size: number }
+  params: { status?: string; page: number; size: number; sortBy?: string; sortDir?: string }
 ) => {
   return useQuery({
     queryKey: shiftKeys.list(siteId, params),

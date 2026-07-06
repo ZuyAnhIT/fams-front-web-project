@@ -16,8 +16,9 @@ import { useShiftsQuery } from "@/features/customer/shift/hooks/use-shift";
 import ShiftFormModal from "@/features/customer/shift/components/ShiftFormModal";
 import ShiftOtConfigModal from "@/features/customer/shift/components/ShiftOtConfigModal";
 import { ShiftResponse } from "@/features/customer/shift/types/shift.type";
-import { Tabs, Table, Badge, Card, Tag, Button, Spin, Modal, Popconfirm, message, Select, Input } from "antd";
+import { Tabs, Badge, Card, Tag, Button, Spin, Modal, Popconfirm, message, Select, Input } from "antd";
 import { ArrowLeftOutlined, ClockCircleOutlined, EnvironmentOutlined, GlobalOutlined, EditOutlined, EyeOutlined, PlusOutlined, SettingOutlined, DeleteOutlined, SearchOutlined } from "@ant-design/icons";
+import DataTable from "@/components/tables/DataTable";
 import { GeofenceResponse } from "@/features/customer/site/types/site.type";
 
 export default function SiteDetailsPage() {
@@ -31,6 +32,8 @@ export default function SiteDetailsPage() {
   const [assignmentPage, setAssignmentPage] = useState(0);
   const [historyPage, setHistoryPage] = useState(0);
   const [shiftPage, setShiftPage] = useState(0);
+  const [shiftSort, setShiftSort] = useState({ sortBy: "name", sortDir: "asc" as "asc" | "desc" | undefined });
+  const [historySort, setHistorySort] = useState({ sortBy: "createdAt", sortDir: "desc" as "asc" | "desc" | undefined });
 
   // Assignment Filters & Sorting
   const [assignmentFilters, setAssignmentFilters] = useState({
@@ -72,7 +75,7 @@ export default function SiteDetailsPage() {
   const { data: shiftsRes, isLoading: isShiftsLoading } = useShiftsQuery(
     tenantId,
     siteId,
-    { page: shiftPage, size: 10 }
+    { page: shiftPage, size: 10, sortBy: shiftSort.sortBy, sortDir: shiftSort.sortDir }
   );
   const shifts = shiftsRes?.content || [];
   const totalShifts = shiftsRes?.totalElements || 0;
@@ -80,7 +83,7 @@ export default function SiteDetailsPage() {
   const { data: historyRes, isLoading: isHistoryLoading } = useGeofenceHistoryQuery(
     tenantId,
     siteId,
-    { page: historyPage, size: 10 }
+    { page: historyPage, size: 10, sortBy: historySort.sortBy, sortDir: historySort.sortDir }
   );
   const history = historyRes?.content || [];
   const totalHistory = historyRes?.totalElements || 0;
@@ -121,6 +124,7 @@ export default function SiteDetailsPage() {
       title: "Tên ca",
       dataIndex: "name",
       key: "name",
+      sorter: true,
       className: "font-medium text-slate-700",
     },
     {
@@ -201,6 +205,7 @@ export default function SiteDetailsPage() {
       title: "Nhân viên",
       dataIndex: "employeeId",
       key: "employeeId",
+      sorter: true,
       render: (val: string) => <span className="font-medium text-slate-700">{getEmployeeName(val)}</span>,
     },
     {
@@ -291,6 +296,7 @@ export default function SiteDetailsPage() {
       title: "Thời gian",
       dataIndex: "createdAt",
       key: "createdAt",
+      sorter: true,
       render: (val: string) => new Date(val).toLocaleString("vi-VN"),
     },
     {
@@ -419,18 +425,23 @@ export default function SiteDetailsPage() {
                           Tạo ca làm việc
                         </Button>
                       </div>
-                      <Table 
-                        dataSource={shifts} 
-                        columns={shiftColumns} 
-                        rowKey="id"
+                      <DataTable 
+                        data={shifts} 
+                        columns={shiftColumns as any} 
                         loading={isShiftsLoading}
-                        bordered
-                        pagination={{
-                          current: shiftPage + 1,
-                          pageSize: 10,
-                          total: totalShifts,
-                          onChange: (page) => setShiftPage(page - 1),
-                          showTotal: (total, range) => `${range[0]}-${range[1]} trên tổng số ${total} bản ghi`,
+                        totalElements={totalShifts}
+                        currentPage={shiftPage}
+                        pageSize={10}
+                        onPageChange={(p) => setShiftPage(p)}
+                        onChange={(pagination, filters, sorter: any) => {
+                          if (sorter && (sorter.columnKey || sorter.field)) {
+                            setShiftSort({
+                              sortBy: sorter.columnKey || sorter.field,
+                              sortDir: sorter.order === 'ascend' ? 'asc' : 'desc'
+                            });
+                          } else {
+                            setShiftSort({ sortBy: "name", sortDir: "asc" });
+                          }
                         }}
                       />
                     </div>
@@ -548,22 +559,15 @@ export default function SiteDetailsPage() {
                           />
                         </div>
                       </div>
-                      <Table 
-                        dataSource={assignments} 
-                        columns={assignmentColumns} 
-                        rowKey="id"
+                      <DataTable 
+                        data={assignments} 
+                        columns={assignmentColumns as any} 
                         loading={isAssignmentsLoading}
-                        bordered
-                        pagination={{
-                          current: assignmentPage + 1,
-                          pageSize: 10,
-                          total: totalAssignments,
-                          showTotal: (total, range) => `${range[0]}-${range[1]} trên tổng số ${total} bản ghi`,
-                        }}
+                        totalElements={totalAssignments}
+                        currentPage={assignmentPage}
+                        pageSize={10}
+                        onPageChange={(p) => setAssignmentPage(p)}
                         onChange={(pagination, filters, sorter: any) => {
-                          if (pagination.current) {
-                            setAssignmentPage(pagination.current - 1);
-                          }
                           if (sorter && sorter.columnKey) {
                             setAssignmentSort({
                               sortBy: sorter.columnKey,
@@ -581,18 +585,23 @@ export default function SiteDetailsPage() {
                   key: "3",
                   label: <span className="text-slate-700 font-medium">Lịch sử cấu hình</span>,
                   children: (
-                    <Table 
-                      dataSource={history} 
-                      columns={historyColumns} 
-                      rowKey="id"
+                    <DataTable 
+                      data={history} 
+                      columns={historyColumns as any} 
                       loading={isHistoryLoading}
-                      bordered
-                      pagination={{
-                        current: historyPage + 1,
-                        pageSize: 10,
-                        total: totalHistory,
-                        onChange: (page) => setHistoryPage(page - 1),
-                        showTotal: (total, range) => `${range[0]}-${range[1]} trên tổng số ${total} bản ghi`,
+                      totalElements={totalHistory}
+                      currentPage={historyPage}
+                      pageSize={10}
+                      onPageChange={(p) => setHistoryPage(p)}
+                      onChange={(pagination, filters, sorter: any) => {
+                        if (sorter && (sorter.columnKey || sorter.field)) {
+                          setHistorySort({
+                            sortBy: sorter.columnKey || sorter.field,
+                            sortDir: sorter.order === 'ascend' ? 'asc' : 'desc'
+                          });
+                        } else {
+                          setHistorySort({ sortBy: "createdAt", sortDir: "desc" });
+                        }
                       }}
                     />
                   ),

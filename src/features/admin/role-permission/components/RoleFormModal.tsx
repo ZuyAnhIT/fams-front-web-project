@@ -213,7 +213,7 @@ export const RoleFormModal: React.FC<RoleFormModalProps> = ({ open, onClose, ten
           )
         }
         classNames={{
-          wrapper: "!bg-white !rounded-3xl !p-0 overflow-hidden shadow-2xl shadow-brand-primary/10",
+          content: "!bg-white !rounded-3xl !p-0 overflow-hidden shadow-2xl shadow-brand-primary/10",
           header: "!bg-white border-b border-slate-100 px-8 py-5 m-0",
           body: "!bg-slate-50/50 p-6 md:p-8 overflow-y-auto max-h-[60vh] scrollbar-thin scrollbar-thumb-slate-200",
           footer: "!bg-white border-t border-slate-100 px-8 py-4 m-0",

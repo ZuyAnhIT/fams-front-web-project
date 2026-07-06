@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Table, Modal, message, Alert } from "antd";
+import { Modal, message, Alert } from "antd";
 import { Trash2, ShieldCheck, Plus } from "lucide-react";
 import { format } from "date-fns";
+import DataTable from "@/components/tables/DataTable";
 import { useQueryClient } from "@tanstack/react-query";
 import BaseButton from "@/components/ui/BaseButton";
 import GlassCard from "@/components/ui/GlassCard";
@@ -49,12 +50,14 @@ export default function EmployeeRolesTab({ employee }: EmployeeRolesTabProps) {
       title: "Tên Role",
       dataIndex: "roleName",
       key: "roleName",
+      sorter: (a: UserRoleResponse, b: UserRoleResponse) => a.roleName.localeCompare(b.roleName),
       render: (text: string) => <span className="font-semibold text-brand-900">{text}</span>,
     },
     {
       title: "Ngày gán",
       dataIndex: "createdAt",
       key: "createdAt",
+      sorter: (a: UserRoleResponse, b: UserRoleResponse) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
       render: (dateStr: string) => format(new Date(dateStr), "dd/MM/yyyy HH:mm"),
     },
     {
@@ -107,11 +110,10 @@ export default function EmployeeRolesTab({ employee }: EmployeeRolesTabProps) {
       )}
 
       <GlassCard className="border-brand-200 bg-white shadow-sm overflow-hidden">
-        <Table
-          columns={columns}
-          dataSource={employee.roles || []}
-          rowKey="id"
-          pagination={false}
+        <DataTable
+          columns={columns as any}
+          data={employee.roles || []}
+          showPagination={false}
         />
       </GlassCard>
 
