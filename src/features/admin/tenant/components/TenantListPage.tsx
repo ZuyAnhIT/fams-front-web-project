@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Plus, Search, Building2, ChevronRight } from "lucide-react";
-import { Input } from "antd";
+import { Input, Select } from "antd";
 import DataTable from "@/components/tables/DataTable";
 import BaseButton from "@/components/ui/BaseButton";
 import { usePagination } from "@/hooks/usePagination";
@@ -15,6 +15,8 @@ import RoleGuard from "@/components/guards/RoleGuard";
 import { SystemRole } from "@/features/customer/auth/types/auth.type";
 import ListHeader from "@/components/shared/layout/ListHeader";
 import ContentCard from "@/components/shared/layout/ContentCard";
+import StatusBadge from "@/components/ui/StatusBadge";
+import { TENANT_STATUS } from "@/constants/status";
 
 import { useRouter } from "next/navigation";
 
@@ -82,22 +84,9 @@ export default function TenantListPage() {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
-      render: (status: string) => {
-        const statusConfig: Record<string, { dot: string, text: string, label: string }> = {
-          active: { dot: "bg-emerald-500", text: "text-slate-700", label: "Hoạt động" },
-          inactive: { dot: "bg-amber-500", text: "text-slate-700", label: "Tạm dừng" },
-          suspended: { dot: "bg-rose-500", text: "text-slate-500 line-through", label: "Đình chỉ" },
-          trial: { dot: "bg-blue-500", text: "text-blue-700", label: "Dùng thử" },
-        };
-        const config = statusConfig[status] || { dot: "bg-slate-300", text: "text-slate-500", label: status };
-
-        return (
-          <div className={`inline-flex items-center gap-2 ${config.text}`}>
-            <div className={`w-2 h-2 rounded-full ${config.dot} shadow-sm`}></div>
-            <span className="font-semibold text-sm">{config.label}</span>
-          </div>
-        );
-      },
+      render: (status: string) => (
+        <StatusBadge status={status} variant="dot" configMap={TENANT_STATUS} />
+      ),
     },
     {
       title: "Quốc gia",
@@ -147,6 +136,22 @@ export default function TenantListPage() {
           searchValue={searchInput}
           onSearchChange={setSearchInput}
           searchPlaceholder="Tìm kiếm theo tên công ty, đường dẫn, tên miền,..."
+          filters={
+            <Select
+              placeholder="Trạng thái"
+              allowClear
+              className="w-40 h-11 [&_.ant-select-selector]:rounded-xl [&_.ant-select-selector]:border-slate-200 hover:[&_.ant-select-selector]:border-blue-300 focus:[&_.ant-select-selector]:border-blue-500 bg-slate-50/50 hover:bg-white"
+              value={state.status}
+              onChange={(val) => setPagination({ status: val || undefined, page: 0 })}
+              options={[
+                { label: "Tất cả trạng thái", value: "" },
+                ...Object.entries(TENANT_STATUS).map(([key, config]) => ({
+                  label: config.label,
+                  value: key,
+                }))
+              ]}
+            />
+          }
           actions={
             <BaseButton
               type="primary"

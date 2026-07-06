@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Table, Input, Button, Space, Tag, Modal, message, Select, Tooltip, App } from "antd";
+import { Input, Button, Space, Tag, Modal, message, Select, Tooltip, App } from "antd";
 import { useAuthStore } from "@/stores/auth.store";
 import { PlusOutlined, SearchOutlined, EditOutlined, DeleteOutlined, InfoCircleOutlined, EyeOutlined } from "@ant-design/icons";
 import { useRolesQuery, useDeleteRoleMutation } from "../hooks/use-role-permission";
@@ -14,6 +14,7 @@ import { rolePermissionService } from "../services/role-permission.service";
 import ListHeader from "@/components/shared/layout/ListHeader";
 import ContentCard from "@/components/shared/layout/ContentCard";
 import BaseButton from "@/components/ui/BaseButton";
+import DataTable from "@/components/tables/DataTable";
 import { Plus } from "lucide-react";
 
 
@@ -32,6 +33,8 @@ export const RoleManagementPage: React.FC = () => {
   const [searchInput, setSearchInput] = useState("");
   const [isSystemFilter, setIsSystemFilter] = useState<boolean | undefined>(undefined);
   const [selectedFilterTenantId, setSelectedFilterTenantId] = useState<string | undefined>(undefined);
+  const [sortBy, setSortBy] = useState<string | undefined>(undefined);
+  const [sortDir, setSortDir] = useState<"asc" | "desc" | undefined>(undefined);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState<RoleDetailResponse | undefined>(undefined);
@@ -41,6 +44,8 @@ export const RoleManagementPage: React.FC = () => {
     tenantId: user?.role === "PLATFORM_ADMIN" ? selectedFilterTenantId : (tenantId || undefined),
     search,
     isSystem: isSystemFilter,
+    sortBy,
+    sortDir,
     page,
     size,
   });
@@ -109,9 +114,10 @@ export const RoleManagementPage: React.FC = () => {
 
   const columns = [
     {
-      title: "Tên Role",
+      title: "Tên Quyền",
       dataIndex: "name",
       key: "name",
+      sorter: true,
       render: (text: string, record: RoleResponse) => (
         <span className="font-semibold text-gray-800">
           {text} {(record.isSystem || (record as any).system) && <Tag color="blue" className="ml-2">Hệ thống</Tag>}
@@ -136,6 +142,7 @@ export const RoleManagementPage: React.FC = () => {
       title: "Ngày cập nhật",
       dataIndex: "updatedAt",
       key: "updatedAt",
+      sorter: true,
       render: (dateStr: string) => format(new Date(dateStr), "dd/MM/yyyy HH:mm"),
     },
     {
@@ -236,20 +243,25 @@ export const RoleManagementPage: React.FC = () => {
       />
 
       <ContentCard noPadding>
-        <Table
-          columns={columns}
-          dataSource={rolesResponse?.data?.content || []}
-          rowKey="id"
+        <DataTable
+          columns={columns as any}
+          data={rolesResponse?.data?.content || []}
           loading={isLoading || isFetching}
-          pagination={{
-            current: page + 1,
-            pageSize: size,
-            total: rolesResponse?.data?.totalElements || 0,
-            showSizeChanger: true,
-            onChange: (p, s) => {
-              setPage(p - 1);
-              setSize(s);
-            },
+          totalElements={rolesResponse?.data?.totalElements || 0}
+          currentPage={page}
+          pageSize={size}
+          onPageChange={(p, s) => {
+            setPage(p);
+            setSize(s);
+          }}
+          onChange={(_, __, sorter: any) => {
+            if (!Array.isArray(sorter) && (sorter.columnKey || sorter.field)) {
+              setSortBy((sorter.columnKey || sorter.field) as string);
+              setSortDir(sorter.order === "ascend" ? "asc" : sorter.order === "descend" ? "desc" : undefined);
+            } else {
+              setSortBy(undefined);
+              setSortDir(undefined);
+            }
           }}
         />
       </ContentCard>

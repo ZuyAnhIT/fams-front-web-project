@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { Input, Button, Empty, Spin, Tree, Table, Tag, Select } from "antd";
+import { Input, Button, Empty, Spin, Tree, Tag, Select } from "antd";
 import { Search, Plus, Building2, Users, Edit3, Filter } from "lucide-react";
+import DataTable from "@/components/tables/DataTable";
 import CreateWorkspaceModal from "./CreateWorkspaceModal";
 import UpdateWorkspaceModal from "./UpdateWorkspaceModal";
 import AddMemberModal from "./AddMemberModal";
@@ -227,7 +228,7 @@ export default function WorkspacePage() {
                   </Button>
                 )}
               </div>
-              <Table
+              <DataTable
                 columns={[
                   {
                     title: "Mã NV",
@@ -239,6 +240,11 @@ export default function WorkspacePage() {
                     title: "Họ và tên",
                     dataIndex: ["employee", "fullName"],
                     key: "name",
+                    sorter: (a: any, b: any) => {
+                      const nameA = a.employee?.fullName || `${a.employee?.firstName} ${a.employee?.lastName}`;
+                      const nameB = b.employee?.fullName || `${b.employee?.firstName} ${b.employee?.lastName}`;
+                      return nameA.localeCompare(nameB);
+                    },
                     render: (_, record: any) => record.employee?.fullName || `${record.employee?.firstName} ${record.employee?.lastName}`
                   },
                   {
@@ -248,25 +254,36 @@ export default function WorkspacePage() {
                     render: (text) => text || "-"
                   },
                   {
-                    title: "Vai trò nhóm",
+                    title: "Quyền trong PB",
                     dataIndex: "role",
                     key: "role",
-                    render: (role) => {
-                      if (role === 'manager') return <Tag color="blue">Quản lý</Tag>;
-                      if (role === 'lead') return <Tag color="cyan">Trưởng nhóm</Tag>;
-                      return <Tag color="default">Nhân viên</Tag>;
+                    render: (role: string) => (
+                      <Tag color={role === "manager" ? "blue" : "default"}>
+                        {role === "manager" ? "Quản lý" : "Nhân viên"}
+                      </Tag>
+                    )
+                  },
+                  {
+                    title: "Trạng thái",
+                    dataIndex: ["employee", "status"],
+                    key: "status",
+                    render: (status: string) => {
+                      const isActive = status === "active";
+                      return (
+                        <Tag color={isActive ? "green" : "red"}>
+                          {isActive ? "Đang làm việc" : "Đã nghỉ"}
+                        </Tag>
+                      );
                     }
                   },
                   {
-                    title: "Hành động",
+                    title: "Thao tác",
                     key: "actions",
-                    align: "right",
+                    width: 100,
                     render: (_, record: any) => {
-                      const canTransfer = hasPermission("workspace_members:create") && hasPermission("workspace_members:delete");
-                      if (!canTransfer) return null;
-
+                      if (!hasPermission("workspaces:update")) return null;
                       return (
-                        <Button
+                        <Button 
                           type="text"
                           size="small"
                           className="text-brand-600 hover:text-brand-700 hover:bg-brand-50"
@@ -282,11 +299,9 @@ export default function WorkspacePage() {
                     }
                   }
                 ]}
-                dataSource={memberData}
+                data={memberData}
                 loading={isLoadingMembers}
-                rowKey="id"
-                pagination={false}
-                className="border border-slate-100 rounded-xl overflow-hidden"
+                showPagination={false}
               />
             </div>
           </div>

@@ -9,6 +9,7 @@ import { useSitesQuery } from "../hooks/use-site";
 import CreateSiteModal from "./CreateSiteModal";
 import UpdateSiteModal from "./UpdateSiteModal";
 import { SiteResponse } from "../types/site.type";
+import DataTable from "@/components/tables/DataTable";
 
 export default function SitePage() {
   const user = useAuthStore((state) => state.user);
@@ -20,6 +21,8 @@ export default function SitePage() {
   const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
   const [page, setPage] = useState(0);
   const [size, setSize] = useState(20);
+  const [sortBy, setSortBy] = useState<string | undefined>("name");
+  const [sortDir, setSortDir] = useState<"asc" | "desc" | undefined>("asc");
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingSite, setEditingSite] = useState<SiteResponse | null>(null);
@@ -38,8 +41,8 @@ export default function SitePage() {
     status: statusFilter,
     page,
     size,
-    sortBy: "name",
-    sortDir: "asc"
+    sortBy,
+    sortDir,
   });
 
   const sites = pageResponse?.data?.content || [];
@@ -57,6 +60,7 @@ export default function SitePage() {
       title: "Tên công trình",
       dataIndex: "name",
       key: "name",
+      sorter: true,
       width: 180,
       render: (text: string, record: SiteResponse) => (
         <Link href={`/customer/sites/${record.id}`} className="font-medium text-brand-600 hover:text-brand-700 underline underline-offset-2 transition-colors">
@@ -111,6 +115,7 @@ export default function SitePage() {
       dataIndex: "createdAt",
       key: "createdAt",
       width: 120,
+      sorter: true,
       render: (date: string) => new Date(date).toLocaleDateString("vi-VN"),
     },
   ];
@@ -203,28 +208,27 @@ export default function SitePage() {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-        <Table
-          bordered
-          columns={columns}
-          dataSource={sites}
-          rowKey="id"
-          loading={isLoading}
-          scroll={{ x: 1000 }}
-          pagination={{
-            current: page + 1,
-            pageSize: size,
-            total: totalElements,
-            showSizeChanger: true,
-            onChange: (p, s) => {
-              setPage(p - 1);
-              setSize(s);
-            },
-            showTotal: (total, range) => `${range[0]}-${range[1]} trên tổng số ${total} bản ghi`,
-            position: ["bottomCenter"],
-          }}
-        />
-      </div>
+      <DataTable
+        columns={columns as any}
+        data={sites}
+        loading={isLoading}
+        totalElements={totalElements}
+        currentPage={page}
+        pageSize={size}
+        onPageChange={(p, s) => {
+          setPage(p);
+          setSize(s);
+        }}
+        onChange={(_, __, sorter: any) => {
+          if (!Array.isArray(sorter) && (sorter.columnKey || sorter.field)) {
+            setSortBy((sorter.columnKey || sorter.field) as string);
+            setSortDir(sorter.order === "ascend" ? "asc" : sorter.order === "descend" ? "desc" : undefined);
+          } else {
+            setSortBy(undefined);
+            setSortDir(undefined);
+          }
+        }}
+      />
 
       {/* Modals */}
       <CreateSiteModal
