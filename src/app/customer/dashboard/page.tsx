@@ -147,9 +147,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="mt-6 p-3 rounded-xl bg-brand-50 border border-brand-200 text-xs text-brand-600">
-            Hệ thống đang chạy chế độ giả lập dữ liệu (Mock Mode). Mọi thao tác lưu trữ được duy trì trên trình duyệt của bạn.
-          </div>
+
         </div>
 
         {/* Card danh sách nhân viên hoặc card mặc định cho USER */}
