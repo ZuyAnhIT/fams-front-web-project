@@ -46,6 +46,7 @@ export interface CreateTenantPayload {
 export interface UpdateTenantPayload {
   name?: string;
   domain?: string;
+  logoUrl?: string;
   industry?: string;
   countryCode?: string;
   timezone?: string;

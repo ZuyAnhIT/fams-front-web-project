@@ -96,3 +96,23 @@ export const useDeleteIpWhitelist = () => {
     },
   });
 };
+
+export const useSuspendTenant = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => tenantService.suspendTenant(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tenants"] });
+    },
+  });
+};
+
+export const useReactivateTenant = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => tenantService.reactivateTenant(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tenants"] });
+    },
+  });
+};

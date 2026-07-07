@@ -114,4 +114,19 @@ export const tenantService = {
     const tenantId = id || getTenantId();
     await apiClient.delete(`/tenants/${tenantId}/ip-whitelists/${entryId}`);
   },
+  /**
+   * Đình chỉ (Suspend) Tenant
+   */
+  async suspendTenant(id: string): Promise<Tenant> {
+    const response = await apiClient.post<ApiResponse<Tenant>>(`/tenants/${id}/suspend`);
+    return response.data.data;
+  },
+
+  /**
+   * Kích hoạt lại (Reactivate) Tenant
+   */
+  async reactivateTenant(id: string): Promise<Tenant> {
+    const response = await apiClient.post<ApiResponse<Tenant>>(`/tenants/${id}/reactivate`);
+    return response.data.data;
+  },
 };
