@@ -70,7 +70,8 @@ export const useUpdateWorkspaceMutation = () => {
     }: {
       tenantId: string;
       workspaceId: string;
-    }) => workspaceService.updateWorkspace(params.tenantId, params.workspaceId, params.data || params),
+      data: UpdateWorkspaceRequest;
+    }) => workspaceService.updateWorkspace(tenantId, workspaceId, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: workspaceKeys.all });
       queryClient.invalidateQueries({ queryKey: workspaceKeys.detail(variables.workspaceId) });
