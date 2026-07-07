@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Search, Building2, ChevronRight } from "lucide-react";
-import { Input, Select } from "antd";
+import { Plus, Search, Building2, ChevronRight, MoreVertical, Ban, PlayCircle } from "lucide-react";
+import { Input, Select, Dropdown, MenuProps, Modal, message } from "antd";
 import DataTable from "@/components/tables/DataTable";
 import BaseButton from "@/components/ui/BaseButton";
 import { usePagination } from "@/hooks/usePagination";
 import { useDebounce } from "@/hooks/useDebounce";
-import { useTenants } from "../hooks/use-tenant";
+import { useTenants, useSuspendTenant, useReactivateTenant } from "../hooks/use-tenant";
 import CreateTenantModal from "./CreateTenantModal";
 import type { Tenant } from "../types/tenant.type";
 import { format } from "date-fns";
@@ -23,6 +23,8 @@ import { useRouter } from "next/navigation";
 export default function TenantListPage() {
   const router = useRouter();
   const { state, setPagination } = usePagination(20);
+  const { mutate: suspendTenant, isPending: isSuspending } = useSuspendTenant();
+  const { mutate: reactivateTenant, isPending: isReactivating } = useReactivateTenant();
   const [searchInput, setSearchInput] = useState(state.search || "");
   const debouncedSearch = useDebounce(searchInput, 600);
 
@@ -53,6 +55,90 @@ export default function TenantListPage() {
       </div>
     );
   }
+
+  const handleSuspend = (tenant: Tenant) => {
+    Modal.confirm({
+      title: "Xác nhận đình chỉ",
+      content: `Bạn có chắc chắn muốn đình chỉ công ty "${tenant.name}" không? Toàn bộ truy cập của công ty này sẽ bị chặn ngay lập tức.`,
+      okText: "Đình chỉ",
+      cancelText: "Hủy",
+      okButtonProps: { danger: true },
+      onOk: () => {
+        return new Promise((resolve, reject) => {
+          suspendTenant(tenant.id, {
+            onSuccess: () => {
+              message.success(`Đã đình chỉ công ty ${tenant.name} thành công`);
+              resolve(true);
+            },
+            onError: (err: any) => {
+              message.error(`Không thể đình chỉ công ty: ${err?.response?.data?.message || err.message}`);
+              reject(err);
+            }
+          });
+        });
+      }
+    });
+  };
+
+  const handleReactivate = (tenant: Tenant) => {
+    Modal.confirm({
+      title: "Xác nhận kích hoạt",
+      content: `Bạn có chắc chắn muốn kích hoạt lại công ty "${tenant.name}" không?`,
+      okText: "Kích hoạt",
+      cancelText: "Hủy",
+      onOk: () => {
+        return new Promise((resolve, reject) => {
+          reactivateTenant(tenant.id, {
+            onSuccess: () => {
+              message.success(`Đã kích hoạt công ty ${tenant.name} thành công`);
+              resolve(true);
+            },
+            onError: (err: any) => {
+              message.error(`Không thể kích hoạt công ty: ${err?.response?.data?.message || err.message}`);
+              reject(err);
+            }
+          });
+        });
+      }
+    });
+  };
+
+  const getActionMenuItems = (record: Tenant): MenuProps['items'] => {
+    const items: MenuProps['items'] = [
+      {
+        key: 'detail',
+        label: 'Chi tiết',
+        icon: <ChevronRight className="h-4 w-4" />,
+        onClick: () => {
+          const { setActiveTenant } = require("@/stores/tenant.store").useTenantStore.getState();
+          setActiveTenant(record);
+          router.push(`/admin/tenants/${record.id}`);
+        }
+      }
+    ];
+
+    if (record.status !== 'cancelled') {
+      items.push({ type: 'divider' });
+      if (record.status === 'suspended') {
+        items.push({
+          key: 'reactivate',
+          label: 'Kích hoạt lại',
+          icon: <PlayCircle className="h-4 w-4 text-green-600" />,
+          onClick: () => handleReactivate(record)
+        });
+      } else {
+        items.push({
+          key: 'suspend',
+          label: 'Đình chỉ',
+          danger: true,
+          icon: <Ban className="h-4 w-4 text-red-600" />,
+          onClick: () => handleSuspend(record)
+        });
+      }
+    }
+
+    return items;
+  };
 
   const columns = [
     {
@@ -110,21 +196,18 @@ export default function TenantListPage() {
     {
       title: "Thao tác",
       key: "action",
-      width: 120,
+      width: 80,
+      align: 'center',
       render: (_: unknown, record: Tenant) => (
-        <BaseButton
-          type="default"
-          icon={<ChevronRight className="h-4 w-4" />}
-          className="!text-blue-600 !border-blue-200 hover:!bg-blue-50 hover:!border-blue-300 shadow-[0_2px_10px_rgb(0,0,0,0.04)] h-8 px-3 rounded-lg text-xs font-bold flex flex-row-reverse hover:-translate-y-0.5 transition-all duration-200"
-          onClick={(e) => {
-            e.stopPropagation();
-            const { setActiveTenant } = require("@/stores/tenant.store").useTenantStore.getState();
-            setActiveTenant(record as Tenant);
-            router.push(`/admin/tenants/${record.id}`);
-          }}
-        >
-          Chi tiết
-        </BaseButton>
+        <Dropdown menu={{ items: getActionMenuItems(record) }} trigger={['click']} placement="bottomRight">
+          <BaseButton
+            type="default"
+            icon={<MoreVertical className="h-4 w-4" />}
+            className="!text-slate-600 !border-transparent hover:!bg-slate-100 hover:!border-slate-200 h-8 w-8 px-0 rounded-lg flex items-center justify-center transition-all duration-200"
+            onClick={(e) => e.stopPropagation()}
+            disabled={isSuspending || isReactivating}
+          />
+        </Dropdown>
       ),
     },
   ];
