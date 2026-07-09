@@ -1,5 +1,6 @@
 import React from "react";
-import { Modal, Form, Select, Button, message, Spin, Typography } from "antd";
+import { Form, Select, Button, message, Spin, Typography } from "antd";
+import BaseModal from "@/components/ui/BaseModal";
 import { useAuthStore } from "@/stores/auth.store";
 import { useWorkspacesQuery, useTransferMemberMutation } from "../hooks/use-workspace";
 import { TransferWorkspaceMemberRequest } from "../types";
@@ -28,7 +29,7 @@ export default function TransferMemberModal({
 
   // Fetch all workspaces to populate target workspace dropdown
   const { data: workspacesData, isLoading: isLoadingWorkspaces } = useWorkspacesQuery({
-    tenantId: user?.tenantId,
+    tenantId: user?.tenantId || undefined,
     size: 100,
   });
 
@@ -70,12 +71,13 @@ export default function TransferMemberModal({
     })) || [];
 
   return (
-    <Modal
-      title={<span className="text-lg font-bold">Chuyển Phòng Ban</span>}
-      open={isOpen}
-      onCancel={onClose}
-      footer={null}
-      destroyOnClose
+    <BaseModal
+      title="Chuyển Phòng Ban"
+      isOpen={isOpen}
+      onClose={onClose}
+      onConfirm={() => form.submit()}
+      confirmLoading={isPending}
+      confirmText="Chuyển ngay"
     >
       <div className="mb-4 text-slate-600">
         Bạn đang thao tác điều chuyển nhân viên <Text strong>{employeeName || "Không xác định"}</Text> sang một phòng ban mới.
@@ -117,21 +119,7 @@ export default function TransferMemberModal({
             className="h-10"
           />
         </Form.Item>
-
-        <Form.Item className="mb-0 flex justify-end mt-8">
-          <Button onClick={onClose} className="mr-3">
-            Hủy
-          </Button>
-          <Button
-            type="primary"
-            htmlType="submit"
-            loading={isPending}
-            className="bg-brand-600 hover:bg-brand-700 font-semibold"
-          >
-            Chuyển ngay
-          </Button>
-        </Form.Item>
       </Form>
-    </Modal>
+    </BaseModal>
   );
 }

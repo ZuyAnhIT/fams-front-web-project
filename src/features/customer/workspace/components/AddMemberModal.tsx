@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Modal, Form, Select, Button, message, Spin } from "antd";
+import { Form, Select, Button, message, Spin } from "antd";
+import BaseModal from "@/components/ui/BaseModal";
 import { useAuthStore } from "@/stores/auth.store";
 import { useEmployees } from "@/features/customer/employee/hooks/use-employee";
 import { useAssignMemberMutation } from "../hooks/use-workspace";
@@ -54,12 +55,13 @@ export default function AddMemberModal({
   };
 
   return (
-    <Modal
-      title={<span className="text-lg font-bold">Thêm Nhân Sự</span>}
-      open={isOpen}
-      onCancel={onClose}
-      footer={null}
-      destroyOnClose
+    <BaseModal
+      title="Thêm Nhân Sự"
+      isOpen={isOpen}
+      onClose={onClose}
+      onConfirm={() => form.submit()}
+      confirmLoading={isPending}
+      confirmText="Thêm"
     >
       <Form
         form={form}
@@ -103,20 +105,7 @@ export default function AddMemberModal({
           />
         </Form.Item>
 
-        <div className="flex justify-end gap-3 mt-8">
-          <Button onClick={onClose} disabled={isPending}>
-            Hủy
-          </Button>
-          <Button
-            type="primary"
-            htmlType="submit"
-            loading={isPending}
-            className="bg-brand-600 hover:bg-brand-700"
-          >
-            Thêm
-          </Button>
-        </div>
       </Form>
-    </Modal>
+    </BaseModal>
   );
 }

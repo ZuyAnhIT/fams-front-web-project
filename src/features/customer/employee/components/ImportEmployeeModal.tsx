@@ -1,7 +1,7 @@
 import { Modal, message, Upload } from "antd";
 import { InboxOutlined } from "@ant-design/icons";
 import { useState } from "react";
-import BaseButton from "@/components/ui/BaseButton";
+import BaseModal from "@/components/ui/BaseModal";
 import { useImportEmployees } from "../hooks/use-employee";
 
 const { Dragger } = Upload;
@@ -45,12 +45,13 @@ export default function ImportEmployeeModal({ open, onClose }: ImportEmployeeMod
   };
 
   return (
-    <Modal
+    <BaseModal
       title="Import danh sách nhân viên"
-      open={open}
-      onCancel={onClose}
-      footer={null}
-      destroyOnHidden
+      isOpen={open}
+      onClose={onClose}
+      onConfirm={handleImport}
+      confirmLoading={isPending}
+      confirmText="Xác nhận Import"
     >
       <div className="mt-4">
         <Dragger {...uploadProps}>
@@ -60,16 +61,7 @@ export default function ImportEmployeeModal({ open, onClose }: ImportEmployeeMod
           <p className="ant-upload-text">Nhấp hoặc kéo thả file Excel vào đây để upload</p>
           <p className="ant-upload-hint">Chỉ hỗ trợ file định dạng .xlsx, .xls.</p>
         </Dragger>
-
-        <div className="flex justify-end gap-3 mt-6">
-          <BaseButton type="default" onClick={onClose}>
-            Hủy
-          </BaseButton>
-          <BaseButton type="primary" onClick={handleImport} loading={isPending}>
-            Xác nhận Import
-          </BaseButton>
-        </div>
       </div>
-    </Modal>
+    </BaseModal>
   );
 }

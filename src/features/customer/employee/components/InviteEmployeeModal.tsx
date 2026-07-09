@@ -4,7 +4,7 @@ import { Modal, message, Select } from "antd";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import FormInput from "@/components/forms/FormInput";
-import BaseButton from "@/components/ui/BaseButton";
+import BaseModal from "@/components/ui/BaseModal";
 import { useSendInvitation } from "../hooks/use-employee";
 import { inviteEmployeeSchema, type InviteEmployeeFormData } from "../schemas/employee.schema";
 import { useEffect } from "react";
@@ -64,19 +64,19 @@ export default function InviteEmployeeModal({ open, onClose }: InviteEmployeeMod
     })) || [];
 
   return (
-    <Modal
+    <BaseModal
       title="Mời nhân viên mới"
-      open={open}
-      onCancel={onClose}
-      footer={null}
-      destroyOnHidden
-      centered
+      isOpen={open}
+      onClose={onClose}
+      confirmText="Gửi lời mời"
+      confirmLoading={isPending}
+      confirmButtonProps={{ htmlType: "submit", form: "invite-employee-form" }}
       classNames={{
         header: "border-b pb-3",
         body: "pt-4",
       }}
     >
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <form id="invite-employee-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <p className="text-sm text-brand-700">
           Hệ thống sẽ gửi một email chứa đường dẫn đặc biệt để nhân viên tự tạo tài khoản và điền thông tin cá nhân.
         </p>
@@ -131,15 +131,7 @@ export default function InviteEmployeeModal({ open, onClose }: InviteEmployeeMod
           />
         </div>
 
-        <div className="flex justify-end gap-3 pt-4 border-t border-brand-100 mt-6">
-          <BaseButton onClick={onClose} disabled={isPending}>
-            Hủy
-          </BaseButton>
-          <BaseButton type="primary" htmlType="submit" loading={isPending} className="bg-brand-600">
-            Gửi lời mời
-          </BaseButton>
-        </div>
       </form>
-    </Modal>
+    </BaseModal>
   );
 }

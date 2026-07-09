@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Mail, Search, FileDown, FileUp, ChevronRight } from "lucide-react";
-import { Input, Tag, Dropdown, MenuProps, Select, App } from "antd";
+import { Input, Tag, Dropdown, MenuProps, App } from "antd";
+import BaseSelect from "@/components/ui/BaseSelect";
 import DataTable from "@/components/tables/DataTable";
 import BaseButton from "@/components/ui/BaseButton";
 import { usePagination } from "@/hooks/usePagination";
@@ -177,15 +178,15 @@ export default function EmployeeListPage() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-2 sm:px-4 pb-4">
       <ListHeader
         searchValue={searchInput}
         onSearchChange={setSearchInput}
         searchPlaceholder="Tìm kiếm theo tên, mã NV, email..."
         filters={
-          <Select
+          <BaseSelect
             placeholder="Tất cả trạng thái"
-            className="w-40 h-11"
+            className="w-40"
             allowClear
             value={state.status}
             onChange={(val) => setPagination({ status: val, page: 0 })}
@@ -202,7 +203,7 @@ export default function EmployeeListPage() {
               <BaseButton
                 icon={<FileUp className="h-4.5 w-4.5" />}
                 onClick={() => setIsImportOpen(true)}
-                className="h-11 px-4 rounded-xl font-semibold shadow-sm text-slate-700 hover:text-brand-600 hover:border-brand-300 transition-all"
+                className="font-semibold shadow-sm text-slate-700 hover:text-brand-600 hover:border-brand-300 transition-all"
               >
                 Nhập Excel
               </BaseButton>
@@ -212,7 +213,7 @@ export default function EmployeeListPage() {
                 icon={<FileDown className="h-4.5 w-4.5" />}
                 onClick={handleExport}
                 loading={isExporting}
-                className="h-11 px-4 rounded-xl font-semibold shadow-sm text-slate-700 hover:text-brand-600 hover:border-brand-300 transition-all"
+                className="font-semibold shadow-sm text-slate-700 hover:text-brand-600 hover:border-brand-300 transition-all"
               >
                 Xuất Excel
               </BaseButton>
@@ -221,7 +222,7 @@ export default function EmployeeListPage() {
               <BaseButton
                 icon={<Mail className="h-4.5 w-4.5" />}
                 onClick={() => setIsInviteOpen(true)}
-                className="!bg-emerald-600 !text-white hover:!bg-emerald-700 !border-0 shadow-lg shadow-emerald-500/25 h-11 px-5 rounded-xl font-bold hover:-translate-y-0.5 transition-all flex items-center gap-2"
+                className="!bg-emerald-600 !text-white hover:!bg-emerald-700 !border-0 shadow-lg shadow-emerald-500/25 font-bold hover:-translate-y-0.5 transition-all gap-2"
               >
                 Mời nhân viên
               </BaseButton>
@@ -234,7 +235,7 @@ export default function EmployeeListPage() {
                   setEditingEmployee(null);
                   setIsEmployeeFormOpen(true);
                 }}
-                className="!bg-brand-600 !text-white hover:!bg-brand-700 !border-0 shadow-lg shadow-brand-500/25 h-11 px-5 rounded-xl font-bold hover:-translate-y-0.5 transition-all flex items-center gap-2"
+                className="!bg-blue-600 !text-white hover:!bg-blue-700 !border-0 shadow-lg shadow-blue-500/25 font-bold hover:-translate-y-0.5 transition-all gap-2"
               >
                 Thêm mới
               </BaseButton>
@@ -244,7 +245,6 @@ export default function EmployeeListPage() {
       />
 
       {/* Data Table Wrapper */}
-      <ContentCard noPadding>
         <DataTable
           columns={columns}
           data={pageData?.content?.filter((emp) => emp.email !== currentUser?.email) || []}
@@ -268,7 +268,7 @@ export default function EmployeeListPage() {
             onClick: () => router.push(`/customer/employees/${record.id}`),
           })}
         />
-      </ContentCard>
+
 
       {/* Modal Mời Nhân Viên */}
       <InviteEmployeeModal open={isInviteOpen} onClose={() => setIsInviteOpen(false)} />

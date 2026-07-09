@@ -1,42 +1,39 @@
 import React from "react";
-import { SelectProps } from "antd";
+import { TreeSelectProps } from "antd";
 import { Controller, Control } from "react-hook-form";
-import BaseSelect from "@/components/ui/BaseSelect";
+import BaseTreeSelect from "@/components/ui/BaseTreeSelect";
 
-interface FormSelectProps extends SelectProps {
+interface FormTreeSelectProps extends TreeSelectProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   control: any;
   name: string;
   label?: string;
   error?: any;
-  options: { label: React.ReactNode; value: any }[];
   helperText?: React.ReactNode;
 }
 
-export default function FormSelect({
+export default function FormTreeSelect({
   control,
   name,
   label,
   error,
-  options,
   helperText,
-  ...selectProps
-}: FormSelectProps) {
+  ...treeSelectProps
+}: FormTreeSelectProps) {
   return (
     <div className="flex flex-col space-y-1.5 w-full">
       {label && (
         <label className="text-[13px] font-semibold text-slate-700">
-          {label} {selectProps.disabled && <span className="text-slate-400 font-normal ml-1">(Chỉ xem)</span>}
+          {label} {treeSelectProps.disabled && <span className="text-slate-400 font-normal ml-1">(Chỉ xem)</span>}
         </label>
       )}
       <Controller
         control={control}
         name={name}
         render={({ field }) => (
-          <BaseSelect
+          <BaseTreeSelect
             {...field}
-            {...selectProps}
-            options={options}
+            {...treeSelectProps}
             status={error ? "error" : undefined}
           />
         )}

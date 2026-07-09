@@ -40,7 +40,7 @@ export default function BaseButton({
     <Button
       type={effectiveType}
       className={cn(
-        "!rounded-[5px] !font-medium transition-all duration-200 active:scale-95",
+        "!rounded-md !h-10 !px-4 !font-medium transition-all duration-200 active:scale-95 flex items-center justify-center",
         variantClasses[customVariant],
         className
       )}

@@ -1,10 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { Modal, Form, Input, Button, Select, message, Switch } from "antd";
+import { Form, Button, message, Input } from "antd";
 import { useAuthStore } from "@/stores/auth.store";
 import { useUpdateSiteMutation } from "../hooks/use-site";
 import { SiteResponse, UpdateSiteRequest } from "../types/site.type";
 import MapWrapper from "@/components/maps/MapWrapper";
 import { MapPin } from "lucide-react";
+import BaseModal from "@/components/ui/BaseModal";
+import BaseButton from "@/components/ui/BaseButton";
+import BaseInput from "@/components/ui/BaseInput";
+import BaseSelect from "@/components/ui/BaseSelect";
+import BaseSwitch from "@/components/ui/BaseSwitch";
 
 interface UpdateSiteModalProps {
   isOpen: boolean;
@@ -41,13 +46,13 @@ export default function UpdateSiteModal({ isOpen, onClose, site }: UpdateSiteMod
   const handleMapChange = (latitude: number, longitude: number, address?: string) => {
     setLat(latitude);
     setLng(longitude);
-    
+
     // Auto-fill form fields
     form.setFieldsValue({
       latitude,
       longitude,
     });
-    
+
     if (address) {
       form.setFieldsValue({ address });
     }
@@ -82,7 +87,7 @@ export default function UpdateSiteModal({ isOpen, onClose, site }: UpdateSiteMod
       handleClose();
     } catch (error: any) {
       console.error("Update Site Error:", error.response?.data || error);
-      const errorMsg = error.response?.data?.message 
+      const errorMsg = error.response?.data?.message
         || (error.response?.data?.details ? JSON.stringify(error.response.data.details) : "Có lỗi xảy ra khi cập nhật công trình");
       message.error(errorMsg);
     }
@@ -96,27 +101,50 @@ export default function UpdateSiteModal({ isOpen, onClose, site }: UpdateSiteMod
   };
 
   return (
-    <Modal
-      title={<span className="text-xl font-bold">Cập Nhật Công Trình</span>}
-      open={isOpen}
-      onCancel={handleClose}
-      footer={null}
-      destroyOnHidden
+    <BaseModal
+      title={
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 bg-blue-50 rounded-xl flex items-center justify-center">
+            <MapPin className="h-5 w-5 text-blue-600" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-slate-900 tracking-tight leading-tight">Cập Nhật Công Trình</h2>
+            <p className="text-sm text-slate-500 font-normal mt-0.5">Nhấp vào bản đồ để cập nhật lại tọa độ và địa chỉ</p>
+          </div>
+        </div>
+      }
+      isOpen={isOpen}
+      onClose={handleClose}
+      destroyOnClose
+      centered
       width={1000} // Increased width for 2-column layout
+      footer={
+        <div className="flex justify-end gap-3 w-full">
+          <BaseButton onClick={handleClose} className="!bg-white !text-slate-700 !border-slate-300 hover:!bg-slate-50 hover:!text-slate-900 h-10 px-6 rounded-lg font-semibold transition-all">
+            Hủy bỏ
+          </BaseButton>
+          <BaseButton
+            type="primary"
+            htmlType="submit"
+            form="update-site-form"
+            loading={isPending}
+            className="!bg-blue-600 !text-white hover:!bg-blue-700 !border-0 shadow-lg shadow-blue-500/25 h-10 px-6 rounded-lg font-bold transition-all"
+          >
+            Lưu công trình
+          </BaseButton>
+        </div>
+      }
     >
-      <div className="text-slate-500 mb-6 flex items-center gap-2">
-        <MapPin size={16} />
-        <span>Nhấp vào bản đồ để cập nhật lại tọa độ và địa chỉ</span>
-      </div>
-
       <Form
         form={form}
         layout="vertical"
         onFinish={handleFinish}
+        id="update-site-form"
+        className="max-h-[65vh] overflow-y-auto overflow-x-hidden pr-2"
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* LEFT COLUMN: Input Fields */}
-          <div className="flex flex-col space-y-2">
+          <div className="flex flex-col h-full space-y-4">
             <Form.Item
               name="name"
               label={<span className="font-medium text-slate-700">Tên công trình <span className="text-red-500">*</span></span>}
@@ -125,7 +153,7 @@ export default function UpdateSiteModal({ isOpen, onClose, site }: UpdateSiteMod
                 { max: 100, message: "Tối đa 100 ký tự" }
               ]}
             >
-              <Input placeholder="Ví dụ: Landmark 81" className="h-10" />
+              <BaseInput placeholder="Ví dụ: Landmark 81" />
             </Form.Item>
 
             <Form.Item
@@ -136,36 +164,36 @@ export default function UpdateSiteModal({ isOpen, onClose, site }: UpdateSiteMod
                 { pattern: /^[A-Za-z0-9\-_]*$/, message: "Chỉ chứa chữ cái, số, gạch ngang, gạch dưới" }
               ]}
             >
-              <Input placeholder="Ví dụ: LM81-HCM" className="h-10" />
+              <BaseInput placeholder="Ví dụ: LM81-HCM" />
             </Form.Item>
 
-            <div className="grid grid-cols-2 gap-4">
-              <Form.Item
-                name="timezone"
-                label={<span className="font-medium text-slate-700">Múi giờ</span>}
-              >
-                <Select className="h-10">
-                  <Select.Option value="Asia/Ho_Chi_Minh">Asia/Ho_Chi_Minh (GMT+7)</Select.Option>
-                  <Select.Option value="UTC">UTC (GMT+0)</Select.Option>
-                </Select>
-              </Form.Item>
+            <Form.Item
+              name="timezone"
+              label={<span className="font-medium text-slate-700">Múi giờ</span>}
+            >
+              <BaseSelect
+                options={[
+                  { value: "Asia/Ho_Chi_Minh", label: "Asia/Ho_Chi_Minh (GMT+7)" },
+                  { value: "UTC", label: "UTC (GMT+0)" }
+                ]}
+              />
+            </Form.Item>
 
-              <Form.Item
-                name="status"
-                label={<span className="font-medium text-slate-700">Trạng thái</span>}
-                valuePropName="checked"
-              >
-                <Switch checkedChildren="Hoạt động" unCheckedChildren="Ngưng" />
-              </Form.Item>
-            </div>
+            <Form.Item
+              name="status"
+              label={<span className="font-medium text-slate-700">Trạng thái</span>}
+              valuePropName="checked"
+            >
+              <BaseSwitch />
+            </Form.Item>
 
             <Form.Item
               name="address"
               label={<span className="font-medium text-slate-700">Địa chỉ thực tế</span>}
             >
-              <Input.TextArea 
-                placeholder="Nhấp vào bản đồ để tự động điền hoặc gõ tay..." 
-                rows={2} 
+              <Input.TextArea
+                placeholder="Nhấp vào bản đồ để tự động điền hoặc gõ tay..."
+                rows={2}
               />
             </Form.Item>
 
@@ -187,35 +215,21 @@ export default function UpdateSiteModal({ isOpen, onClose, site }: UpdateSiteMod
           <div className="flex flex-col h-full">
             <label className="font-medium text-slate-700 mb-2">Bản đồ định vị</label>
             <div className="flex-1 relative rounded-lg overflow-hidden border border-slate-200" style={{ minHeight: "400px" }}>
-              <MapWrapper 
-                latitude={lat} 
-                longitude={lng} 
-                onChange={handleMapChange} 
-                className="h-full w-full absolute inset-0 z-0" 
+              <MapWrapper
+                latitude={lat}
+                longitude={lng}
+                onChange={handleMapChange}
+                className="h-full w-full absolute inset-0 z-0"
               />
             </div>
             {/* Display selected coordinates nicely */}
-            <div className="mt-3 flex gap-4 text-sm bg-slate-50 p-3 rounded-lg border border-slate-100">
-              <div><span className="text-slate-500">Vĩ độ (Lat):</span> <span className="font-medium">{lat ? lat.toFixed(6) : "---"}</span></div>
-              <div><span className="text-slate-500">Kinh độ (Lng):</span> <span className="font-medium">{lng ? lng.toFixed(6) : "---"}</span></div>
+            <div className="mt-4 flex gap-6 text-sm">
+              <div className="flex-1"><span className="text-slate-500 mr-2">Vĩ độ (Lat):</span><span className="font-semibold text-slate-700">{lat ? lat.toFixed(6) : "---"}</span></div>
+              <div className="flex-1"><span className="text-slate-500 mr-2">Kinh độ (Lng):</span><span className="font-semibold text-slate-700">{lng ? lng.toFixed(6) : "---"}</span></div>
             </div>
           </div>
         </div>
-
-        <div className="flex justify-end mt-8 border-t border-slate-100 pt-6">
-          <Button onClick={handleClose} className="mr-3 h-10 px-6">
-            Hủy
-          </Button>
-          <Button
-            type="primary"
-            htmlType="submit"
-            loading={isPending}
-            className="bg-brand-600 hover:bg-brand-700 font-semibold h-10 px-6"
-          >
-            Lưu công trình
-          </Button>
-        </div>
       </Form>
-    </Modal>
+    </BaseModal>
   );
 }

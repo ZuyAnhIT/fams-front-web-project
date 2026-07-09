@@ -21,8 +21,8 @@ export default function BaseSelect({ className, ...props }: BaseSelectProps) {
   return (
     <Select
       className={cn(
-        "w-full",
-        "[&_.ant-select-selector]:!rounded-[5px] [&_.ant-select-selector]:!h-10 [&_.ant-select-selector]:!flex [&_.ant-select-selector]:!items-center [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:hover:!bg-slate-100 [&.ant-select-focused_.ant-select-selector]:!bg-white [&_.ant-select-selector]:!border-slate-200 [&_.ant-select-selector]:!shadow-none",
+        "w-full h-10",
+        "[&_.ant-select-selector]:!rounded-md [&_.ant-select-selector]:!h-10 [&_.ant-select-selector]:!flex [&_.ant-select-selector]:!items-center [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:hover:!bg-slate-100 [&.ant-select-focused_.ant-select-selector]:!bg-white [&_.ant-select-selector]:!border-slate-200 [&_.ant-select-selector]:!shadow-none",
         className
       )}
       {...props}

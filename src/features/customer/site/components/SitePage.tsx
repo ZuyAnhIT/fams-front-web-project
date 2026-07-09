@@ -1,10 +1,13 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Input, Button, Table, Tag, Select, Tooltip } from "antd";
+import { Input, Button, Table, Tag, Select, Tooltip, type TableProps } from "antd";
 import { Search, Plus, MapPin, Edit3, Eye } from "lucide-react";
 import Link from "next/link";
 import { useAuthStore } from "@/stores/auth.store";
+import BaseButton from "@/components/ui/BaseButton";
+import ContentCard from "@/components/shared/layout/ContentCard";
+import ListHeader from "@/components/shared/layout/ListHeader";
 import { useSitesQuery } from "../hooks/use-site";
 import CreateSiteModal from "./CreateSiteModal";
 import UpdateSiteModal from "./UpdateSiteModal";
@@ -48,7 +51,7 @@ export default function SitePage() {
   const sites = pageResponse?.data?.content || [];
   const totalElements = pageResponse?.data?.totalElements || 0;
 
-  const columns = [
+  const columns: TableProps<SiteResponse>['columns'] = [
     {
       title: "Mã công trình",
       dataIndex: "code",
@@ -72,11 +75,12 @@ export default function SitePage() {
       title: "Địa chỉ",
       dataIndex: "address",
       key: "address",
+      width: 350,
       render: (text: string) => {
         if (!text) return <span className="text-slate-400">---</span>;
         return (
           <Tooltip title={text} placement="topLeft">
-            <div className="max-w-[200px] truncate text-slate-700">
+            <div className="max-w-[330px] truncate text-slate-700">
               {text}
             </div>
           </Tooltip>
@@ -87,12 +91,12 @@ export default function SitePage() {
       title: "Mô tả",
       dataIndex: "description",
       key: "description",
-      width: 220,
+      width: 300,
       render: (text: string) => {
         if (!text) return <span className="text-slate-400">---</span>;
         return (
           <Tooltip title={text} placement="topLeft">
-            <div className="max-w-[200px] truncate text-slate-600">
+            <div className="max-w-[270px] truncate text-slate-600">
               {text}
             </div>
           </Tooltip>
@@ -121,9 +125,9 @@ export default function SitePage() {
   ];
 
   if (hasPermission("sites:update") || hasPermission("sites:read") || true) {
-    columns.push({
+    columns!.push({
       title: "Thao tác",
-      dataIndex: "actions" as any,
+      dataIndex: "actions",
       key: "actions",
       width: 100,
       /* align: "right" as any */
@@ -154,81 +158,79 @@ export default function SitePage() {
   }
 
   return (
-    <div className="flex h-full flex-col p-6 space-y-6">
+    <div className="flex flex-col space-y-6">
       {/* Header */}
-      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800">Quản lý Công trình</h1>
-          <p className="text-sm text-slate-500">
-            Danh sách tất cả các địa điểm chấm công của công ty
-          </p>
-        </div>
-
-        {hasPermission("sites:create") && (
-          <Button
-            type="primary"
-            icon={<Plus className="h-5 w-5" />}
-            className="flex items-center bg-brand-600 hover:bg-brand-700 h-10 px-4 font-semibold rounded-lg shadow-sm"
-            onClick={() => setIsCreateModalOpen(true)}
-          >
-            Thêm công trình
-          </Button>
-        )}
+      <div>
+        <h1 className="text-[32px] font-extrabold text-slate-900 tracking-tight">Quản lý Công trình</h1>
+        <p className="text-sm text-slate-500 mt-2">
+          Danh sách tất cả các địa điểm chấm công của công ty
+        </p>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap items-start gap-4 bg-white p-4 rounded-xl shadow-sm border border-slate-100">
-        <div className="flex flex-col gap-1 flex-1 min-w-[250px] max-w-md">
-          <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tìm kiếm</label>
-          <Input
-            placeholder="Tìm kiếm theo tên, mã, địa chỉ..."
-            prefix={<Search className="h-4 w-4 text-slate-400" />}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full h-10"
-          />
-        </div>
-        <div className="flex flex-col gap-1">
-          <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Trạng thái</label>
-          <Select
-            placeholder="Tất cả trạng thái"
-            allowClear
-            value={statusFilter}
-            onChange={(val) => {
-              setStatusFilter(val);
-              setPage(0);
-            }}
-            className="w-48 h-10"
-            options={[
-              { value: "active", label: "Hoạt động" },
-              { value: "inactive", label: "Ngưng hoạt động" },
-            ]}
-          />
-        </div>
-      </div>
-
-      {/* Table */}
-      <DataTable
-        columns={columns as any}
-        data={sites}
-        loading={isLoading}
-        totalElements={totalElements}
-        currentPage={page}
-        pageSize={size}
-        onPageChange={(p, s) => {
-          setPage(p);
-          setSize(s);
-        }}
-        onChange={(_, __, sorter: any) => {
-          if (!Array.isArray(sorter) && (sorter.columnKey || sorter.field)) {
-            setSortBy((sorter.columnKey || sorter.field) as string);
-            setSortDir(sorter.order === "ascend" ? "asc" : sorter.order === "descend" ? "desc" : undefined);
-          } else {
-            setSortBy(undefined);
-            setSortDir(undefined);
+      <ContentCard noPadding>
+        <ListHeader
+          className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-5 border-b border-slate-100"
+          searchValue={searchTerm}
+          onSearchChange={setSearchTerm}
+          searchPlaceholder="Tìm kiếm theo tên, mã, địa chỉ..."
+          filters={
+            <Select
+              placeholder="Tất cả trạng thái"
+              allowClear
+              value={statusFilter}
+              onChange={(val) => {
+                setStatusFilter(val);
+                setPage(0);
+              }}
+              className="w-48 h-10 [&_.ant-select-selector]:rounded-xl [&_.ant-select-selector]:border-slate-200 hover:[&_.ant-select-selector]:border-blue-300 focus:[&_.ant-select-selector]:border-blue-500 bg-slate-50/50 hover:bg-white"
+              options={[
+                { value: "active", label: "Hoạt động" },
+                { value: "inactive", label: "Ngưng hoạt động" },
+              ]}
+            />
           }
-        }}
-      />
+          actions={
+            hasPermission("sites:create") && (
+              <BaseButton
+                type="primary"
+                icon={<Plus className="h-4.5 w-4.5" />}
+                onClick={() => setIsCreateModalOpen(true)}
+                className="!bg-blue-600 !text-white hover:!bg-blue-700 !border-0 shadow-lg shadow-blue-500/25 h-10 px-5 rounded-xl font-bold hover:-translate-y-0.5 transition-all flex items-center gap-2"
+              >
+                Thêm công trình
+              </BaseButton>
+            )
+          }
+        />
+
+        <div className="p-5">
+          {/* Table */}
+          <DataTable
+            columns={columns as any}
+            data={sites}
+            loading={isLoading}
+            totalElements={totalElements}
+            currentPage={page}
+            pageSize={size}
+            onPageChange={(p, s) => {
+              setPage(p);
+              setSize(s);
+            }}
+            onChange={(_, __, sorter: any) => {
+              if (!Array.isArray(sorter) && (sorter.columnKey || sorter.field)) {
+                setSortBy((sorter.columnKey || sorter.field) as string);
+                setSortDir(sorter.order === "ascend" ? "asc" : sorter.order === "descend" ? "desc" : undefined);
+              } else {
+                setSortBy(undefined);
+                setSortDir(undefined);
+              }
+            }}
+            onRow={(record) => ({
+              className: "hover:bg-blue-50/50 transition-colors duration-200 group",
+            })}
+          />
+        </div>
+      </ContentCard>
 
       {/* Modals */}
       <CreateSiteModal
