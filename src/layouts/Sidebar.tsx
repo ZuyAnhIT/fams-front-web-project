@@ -86,7 +86,16 @@ export default function Sidebar() {
         "flex-1 overflow-y-auto overflow-x-hidden py-4 space-y-1 transition-all duration-300",
         isCollapsed ? "px-2" : "px-4"
       )}>
-        {SIDEBAR_MENU.filter((item) => {
+        {(() => {
+          const isCompanySelected = typeof window !== 'undefined' ? localStorage.getItem('mock_company_selected') !== 'false' : true;
+          
+          if (!isCompanySelected && user?.role === "TENANT_ADMIN") {
+            // Khi chưa chọn công ty, chỉ hiển thị "Danh sách công ty"
+            return [{ title: "Danh sách công ty", path: CUSTOMER_ROUTES.SELECT_COMPANY, icon: "Building2" }];
+          }
+          
+          return SIDEBAR_MENU;
+        })().filter((item: any) => {
           // Nếu item không yêu cầu role cụ thể, ai cũng xem được
           if (!item.allowedRoles || item.allowedRoles.length === 0) return true;
           // Nếu user hiện tại có role khớp với mảng allowedRoles

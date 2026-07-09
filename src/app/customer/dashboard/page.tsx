@@ -26,8 +26,8 @@ export default function DashboardPage() {
   const stats = [
     {
       title: "Tổng nhân viên",
-      value: "128",
-      change: "+4 trong tháng này",
+      value: isLoadingEmployees ? "..." : (employeesData?.totalElements?.toString() || "0"),
+      change: "Tổng số trên hệ thống",
       icon: Users,
       color: "from-blue-500 to-cyan-500",
       show: canViewEmployees
@@ -103,56 +103,10 @@ export default function DashboardPage() {
       </div>
 
       {/* Bố cục nội dung chi tiết */}
-      <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
-        {/* Card thông tin user */}
-        <div className="p-6 rounded-2xl border border-brand-200/60 bg-white shadow-[0_4px_20px_rgba(0,0,0,0.02)] lg:col-span-1 flex flex-col justify-between">
-          <div>
-            <h2 className="text-lg font-semibold text-brand-950 border-b border-brand-100 pb-3">
-              Thông tin phiên làm việc
-            </h2>
-
-            <div className="flex items-center gap-4 py-6">
-              {user?.avatarUrl ? (
-                <img
-                  src={user.avatarUrl}
-                  alt={user.displayName || "Ảnh đại diện"}
-                  className="h-16 w-16 rounded-full bg-brand-100 border border-brand-200 p-1 shadow-inner object-cover"
-                />
-              ) : (
-                <div className="h-16 w-16 rounded-full bg-brand-100 border border-brand-200 flex items-center justify-center text-brand-500">
-                  <Users className="h-8 w-8" />
-                </div>
-              )}
-              <div>
-                <h3 className="font-bold text-brand-950 text-lg leading-snug">{user?.displayName}</h3>
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-600/10 text-blue-600 border border-blue-500/20 mt-1">
-                  {user?.role}
-                </span>
-              </div>
-            </div>
-
-            <div className="space-y-3.5 text-sm">
-              <div className="flex justify-between">
-                <span className="text-brand-500">Mã định danh:</span>
-                <span className="text-brand-800 font-mono font-medium">{user?.id}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-brand-500">Email/Tài khoản:</span>
-                <span className="text-brand-800 font-medium">{user?.email}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-brand-500">Tenant ID:</span>
-                <span className="text-brand-800 font-mono font-medium">{user?.tenantId}</span>
-              </div>
-            </div>
-          </div>
-
-
-        </div>
-
+      <div className="w-full">
         {/* Card danh sách nhân viên hoặc card mặc định cho USER */}
         {canViewEmployees ? (
-        <div className="p-6 rounded-2xl border border-brand-200/60 bg-white shadow-[0_4px_20px_rgba(0,0,0,0.02)] lg:col-span-2 space-y-4 flex flex-col h-[380px]">
+        <div className="p-6 rounded-2xl border border-brand-200/60 bg-white shadow-[0_4px_20px_rgba(0,0,0,0.02)] w-full space-y-4 flex flex-col h-[380px]">
           <div>
             <h2 className="text-lg font-semibold text-brand-950">Danh sách nhân viên mới nhất</h2>
             <p className="text-xs text-brand-500 mt-0.5">
@@ -201,7 +155,7 @@ export default function DashboardPage() {
           </div>
         </div>
         ) : (
-          <div className="p-6 rounded-2xl border border-brand-200/60 bg-white shadow-[0_4px_20px_rgba(0,0,0,0.02)] lg:col-span-2 flex flex-col items-center justify-center text-center h-[380px]">
+          <div className="p-6 rounded-2xl border border-brand-200/60 bg-white shadow-[0_4px_20px_rgba(0,0,0,0.02)] w-full flex flex-col items-center justify-center text-center h-[380px]">
             <div className="h-20 w-20 rounded-full bg-brand-50 flex items-center justify-center mb-4">
               <FileText className="h-10 w-10 text-brand-300" />
             </div>

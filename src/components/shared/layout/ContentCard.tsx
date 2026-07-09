@@ -15,7 +15,7 @@ export default function ContentCard({
   return (
     <div
       className={cn(
-        "bg-white rounded-[2rem] border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden",
+        "bg-white rounded-[10px] border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden",
         !noPadding && "p-6 sm:p-8",
         className
       )}

@@ -36,6 +36,24 @@ export function TenantThemeProvider({ children }: { children: React.ReactNode })
           fontSizeHeading2: 28,    // H2 (Nằm trong khoảng 24-32)
           fontSizeHeading3: 22,    // H3 (Nằm trong khoảng 20-24)
           fontSizeSM: 13,          // Small text: 13px (Nằm trong khoảng 12-14)
+          
+          // Tắt hiệu ứng viền sáng mờ (glow/box-shadow) mặc định khi focus của toàn bộ Ant Design
+          controlOutlineWidth: 0,
+        },
+        components: {
+          Input: {
+            colorBorder: '#94a3b8', // slate-400
+            activeBorderColor: '#3b82f6', // blue-500
+            hoverBorderColor: '#93c5fd', // blue-300
+            fontSize: 14,
+          },
+          Select: {
+            colorBorder: '#94a3b8', // slate-400
+            activeBorderColor: '#3b82f6',
+            hoverBorderColor: '#93c5fd',
+            fontSize: 14,
+            optionFontSize: 14,
+          },
         },
       }}
     >

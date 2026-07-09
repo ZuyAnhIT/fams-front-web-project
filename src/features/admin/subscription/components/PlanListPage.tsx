@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Plus, Edit2, Settings2, ShieldAlert, Star } from "lucide-react";
-import { Switch, App, Tag, Pagination } from "antd";
+import { Switch, App, Tag } from "antd";
 import BaseButton from "@/components/ui/BaseButton";
 import { usePagination } from "@/hooks/usePagination";
 import { usePlans, useUpdatePlan } from "../hooks/use-subscription";
@@ -11,7 +11,7 @@ import PlanFormModal from "./PlanFormModal";
 import PlanLimitsDrawer from "./PlanLimitsDrawer";
 
 export default function PlanListPage() {
-  const { state, setPagination } = usePagination(8);
+  const { state } = usePagination(50);
   const { message } = App.useApp();
   const { data: plansData, isLoading, error } = usePlans(false, state);
   const plans = Array.isArray(plansData) ? plansData : (plansData?.content || []);
@@ -74,7 +74,7 @@ export default function PlanListPage() {
           type="primary"
           icon={<Plus className="h-4 w-4" />}
           onClick={handleCreateNew}
-          className="!bg-slate-900 !text-white hover:!bg-slate-800 shadow-md shadow-slate-900/10 border-0 px-6 h-10 rounded-xl font-semibold transition-all hover:-translate-y-0.5"
+          className="!bg-[#343634] !text-white hover:!bg-[#232423] shadow-md shadow-[#343634]/20 border-0 px-6 h-10 font-semibold transition-all hover:-translate-y-0.5"
         >
           Thêm gói mới
         </BaseButton>
@@ -83,7 +83,7 @@ export default function PlanListPage() {
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 animate-pulse">
           {[1, 2, 3, 4].map(i => (
-            <div key={i} className="h-[420px] bg-slate-100 rounded-3xl border border-slate-200"></div>
+            <div key={i} className="h-[420px] bg-slate-100 rounded-[10px] border border-slate-200"></div>
           ))}
         </div>
       ) : plans && plans.length > 0 ? (
@@ -94,9 +94,9 @@ export default function PlanListPage() {
             return (
               <div
                 key={plan.id}
-                className={`flex flex-col relative rounded-3xl bg-white/80 backdrop-blur-xl transition-all duration-300
+                className={`flex flex-col relative rounded-[10px] bg-white transition-all duration-300
                 ${!plan.isActive ? 'opacity-60 grayscale-[40%]' : ''}
-                ${isPro ? 'ring-2 ring-blue-500 shadow-2xl shadow-blue-500/15 scale-[1.03] z-10' : 'ring-1 ring-slate-200/80 hover:ring-slate-300 hover:shadow-xl hover:shadow-slate-200/50 hover:-translate-y-1'}
+                ${isPro ? 'ring-2 ring-blue-500 shadow-2xl shadow-blue-500/15 scale-[1.03] z-10' : 'ring-1 ring-slate-300 shadow-xl shadow-slate-300/70 hover:ring-slate-400 hover:shadow-2xl hover:shadow-slate-400/80 hover:-translate-y-1'}
               `}
               >
                 {isPro && (
@@ -111,7 +111,7 @@ export default function PlanListPage() {
                   </div>
                 )}
 
-                <div className={`p-8 border-b border-slate-100/80 flex-1 rounded-t-3xl ${isPro ? 'bg-gradient-to-b from-blue-50/40 to-transparent' : ''}`}>
+                <div className={`p-8 border-b border-slate-100/80 flex-1 rounded-t-[20px] ${isPro ? 'bg-gradient-to-b from-blue-50/40 to-transparent' : ''}`}>
                   <h3 className={`text-2xl font-bold tracking-tight mb-2 ${isPro ? 'text-blue-900' : 'text-slate-900'}`}>
                     {plan.displayName}
                   </h3>
@@ -120,15 +120,15 @@ export default function PlanListPage() {
                   </p>
 
                   <div className="flex items-end gap-1 mt-4">
-                    <span className="text-4xl font-black text-slate-900 tracking-tighter">${plan.priceMonthly}</span>
-                    <span className="text-sm font-bold text-slate-400 mb-1">/tháng</span>
+                    <span className="text-4xl font-bold text-slate-900 tracking-tight">${plan.priceMonthly}</span>
+                    <span className="text-sm font-semibold text-slate-400 mb-1">/tháng</span>
                   </div>
                   <div className="text-xs text-slate-400 mt-2 font-medium">
                     Thanh toán hàng năm: <span className="text-slate-700 font-bold">${plan.priceYearly}</span>
                   </div>
                 </div>
 
-                <div className="p-6 bg-slate-50/50 rounded-b-3xl flex flex-col gap-5">
+                <div className="p-6 bg-slate-50/50 rounded-b-[20px] flex flex-col gap-5">
                   <div className="flex items-center justify-between px-2">
                     <span className="text-sm font-bold text-slate-600">Trạng thái (Bật/Tắt)</span>
                     <Switch
@@ -142,15 +142,17 @@ export default function PlanListPage() {
                     <BaseButton
                       icon={<Edit2 className="h-4 w-4" />}
                       onClick={() => handleEditPlan(plan)}
-                      className="w-full text-sm font-bold h-11 !bg-white !border-slate-200 !text-slate-700 hover:!border-blue-400 hover:!text-blue-600 transition-all shadow-sm rounded-xl cursor-pointer"
+                      className={`w-full text-sm font-bold h-11 !border-0 transition-all shadow-sm cursor-pointer
+                        ${isPro ? '!bg-gradient-to-r !from-blue-500 !to-cyan-600 !text-white hover:!from-blue-600 hover:!to-cyan-700' : '!bg-[#343634] !text-white hover:!bg-[#232423]'}
+                      `}
                     >
                       Sửa
                     </BaseButton>
                     <BaseButton
                       icon={<Settings2 className="h-4 w-4" />}
                       onClick={() => handleConfigLimits(plan)}
-                      className={`w-full text-sm font-bold h-11 !border-0 !text-white transition-all shadow-md rounded-xl cursor-pointer
-                        ${isPro ? '!bg-blue-600 hover:!bg-blue-700 shadow-blue-600/20' : '!bg-slate-900 hover:!bg-slate-800 shadow-slate-900/20'}
+                      className={`w-full text-sm font-bold h-11 !border-0 transition-all shadow-sm cursor-pointer
+                        ${isPro ? '!bg-gradient-to-r !from-blue-500 !to-cyan-600 !text-white hover:!from-blue-600 hover:!to-cyan-700' : '!bg-[#343634] !text-white hover:!bg-[#232423]'}
                       `}
                     >
                       Giới hạn
@@ -162,30 +164,19 @@ export default function PlanListPage() {
           })}
         </div>
       ) : (
-        <div className="text-center py-24 bg-white/60 backdrop-blur-sm rounded-3xl border border-slate-200 border-dashed">
+        <div className="text-center py-24 bg-white/60 backdrop-blur-sm rounded-[20px] border border-slate-200 border-dashed">
           <p className="text-slate-500 mb-6 font-medium">Chưa có gói dịch vụ nào được tạo trong hệ thống.</p>
-          <BaseButton 
-            type="primary" 
+          <BaseButton
+            type="primary"
             onClick={handleCreateNew}
-            className="!bg-slate-900 !text-white hover:!bg-slate-800 shadow-md border-0 px-6 h-10 rounded-xl font-semibold"
+            className="!bg-[#343634] !text-white hover:!bg-[#232423] shadow-md shadow-[#343634]/20 border-0 px-6 h-10 font-semibold"
           >
             Tạo gói dịch vụ đầu tiên
           </BaseButton>
         </div>
       )}
 
-      {plansData && totalElements > 0 && (
-        <div className="flex justify-end mt-4">
-          <Pagination
-            current={state.page + 1}
-            pageSize={state.size}
-            total={totalElements}
-            onChange={(page, pageSize) => setPagination({ page: page - 1, size: pageSize })}
-            showSizeChanger
-            showTotal={(total) => `Tổng số ${total} gói`}
-          />
-        </div>
-      )}
+
 
       <PlanFormModal
         open={isFormModalOpen}
