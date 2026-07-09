@@ -20,7 +20,7 @@ import { useLogin, useLoginTotp, useGoogleLogin as useGoogleLoginBackend } from 
 import { authService } from "@/features/customer/auth/services/auth.service";
 import { authTokenService } from "@/services/auth-token.service";
 import { GoogleLogin } from "@react-oauth/google";
-import { ROUTES } from "@/constants/routes";
+import { ROUTES, CUSTOMER_ROUTES } from "@/constants/routes";
 import { APP_NAME } from "@/constants/app";
 import { type AuthUser } from "@/features/customer/auth/types/auth.type";
 import { authMapper } from "@/features/customer/auth/utils/auth.mapper";
@@ -58,7 +58,7 @@ export default function LoginForm() {
     defaultValues: {
       email: "",
       password: "",
-          },
+    },
   });
 
   // Tự động điền email vừa đăng ký thành công
@@ -86,7 +86,7 @@ export default function LoginForm() {
       const response = await loginMutation({
         email: data.email,
         password: data.password,
-              });
+      });
 
       if (response.totpRequired && response.pendingToken) {
         setTotpPending(response.pendingToken);
@@ -100,7 +100,7 @@ export default function LoginForm() {
 
       // 2. Fetch actual profile
       const profile = await authService.getProfile();
-      
+
       let rolesResponse = undefined;
       try {
         rolesResponse = await rolePermissionService.getMyRoles();
@@ -113,18 +113,24 @@ export default function LoginForm() {
       // 3. Save to Zustand store
       setAuth(authUser, response.accessToken, response.refreshToken);
       message.success("Đăng nhập thành công!");
-      router.push(getDashboardRoute(authUser?.role));
+      if (authUser?.role === "TENANT_ADMIN") {
+        localStorage.setItem("mock_company_selected", "false");
+        router.push(CUSTOMER_ROUTES.SELECT_COMPANY);
+      } else {
+        localStorage.setItem("mock_company_selected", "true");
+        router.push(getDashboardRoute(authUser?.role));
+      }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       // Backend error response format
       let errorMessage = error.response?.data?.message || "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.";
-      
+
       if (error.response?.status === 401 || errorMessage.toLowerCase().includes("bad credentials")) {
         errorMessage = "Sai tài khoản hoặc mật khẩu.";
       } else if (errorMessage.includes("has not been verified")) {
         errorMessage = "Bạn chưa xác nhận email. Vui lòng kiểm tra hòm thư và bấm vào link xác thực!";
       }
-      
+
       message.error(errorMessage);
     }
   };
@@ -137,7 +143,7 @@ export default function LoginForm() {
       authTokenService.setAccessToken(response.accessToken);
       authTokenService.setRefreshToken(response.refreshToken);
       const profile = await authService.getProfile();
-      
+
       let rolesResponse = undefined;
       try {
         rolesResponse = await rolePermissionService.getMyRoles();
@@ -150,7 +156,13 @@ export default function LoginForm() {
       setAuth(authUser, response.accessToken, response.refreshToken);
       clearTotpPending();
       message.success("Đăng nhập thành công!");
-      router.push(getDashboardRoute(authUser?.role));
+      if (authUser?.role === "TENANT_ADMIN") {
+        localStorage.setItem("mock_company_selected", "false");
+        router.push(CUSTOMER_ROUTES.SELECT_COMPANY);
+      } else {
+        localStorage.setItem("mock_company_selected", "true");
+        router.push(getDashboardRoute(authUser?.role));
+      }
     } catch (error: any) {
       message.error("Mã xác thực không chính xác hoặc đã hết hạn.");
     }
@@ -171,7 +183,7 @@ export default function LoginForm() {
 
       // 2. Fetch actual profile
       const profile = await authService.getProfile();
-      
+
       let rolesResponse = undefined;
       try {
         rolesResponse = await rolePermissionService.getMyRoles();
@@ -185,7 +197,13 @@ export default function LoginForm() {
       setAuth(authUser, response.accessToken, response.refreshToken);
 
       message.success("Đăng nhập bằng Google thành công!");
-      router.push(getDashboardRoute(authUser?.role));
+      if (authUser?.role === "TENANT_ADMIN") {
+        localStorage.setItem("mock_company_selected", "false");
+        router.push(CUSTOMER_ROUTES.SELECT_COMPANY);
+      } else {
+        localStorage.setItem("mock_company_selected", "true");
+        router.push(getDashboardRoute(authUser?.role));
+      }
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || "Đăng nhập Google thất bại.";
       message.error(errorMessage);

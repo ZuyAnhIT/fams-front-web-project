@@ -110,12 +110,9 @@ export default function RegisterForm() {
     <div className="w-full">
       <div className="bg-white">
         {/* Tiêu đề */}
-        <h1 className="mb-2 text-3xl font-bold text-slate-900 tracking-tight">
-          Tạo tài khoản {APP_NAME}
+        <h1 className="mb-8 text-3xl font-bold text-slate-900 tracking-tight">
+          Đăng ký
         </h1>
-        <p className="mb-8 text-slate-500 text-[15px]">
-          Điền thông tin bên dưới để bắt đầu
-        </p>
 
         {step === "waiting_email" ? (
           <div className="flex flex-col items-center justify-center text-center animate-in fade-in zoom-in duration-300">

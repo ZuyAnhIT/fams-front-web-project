@@ -38,15 +38,16 @@ export default function DataTable<T extends object>({
   } : false;
 
   return (
-    <div className="bg-white rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 overflow-hidden">
+    <div className="w-full overflow-hidden border border-slate-300 rounded-[5px] bg-white shadow-sm">
       <Table
+        bordered
         columns={columns}
         dataSource={data}
         loading={loading}
         pagination={paginationConfig}
         rowKey="id"
         scroll={{ x: "max-content" }}
-        className="[&_.ant-table-wrapper]:!border-0 [&_.ant-table-thead_th]:!bg-transparent [&_.ant-table-thead_th]:!text-slate-700 [&_.ant-table-thead_th]:!font-extrabold [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!text-[13px] [&_.ant-table-thead_th]:!tracking-[0.05em] [&_.ant-table-thead_th]:!py-5 [&_.ant-table-thead_th]:!border-b-[1.5px] [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-thead_th]:!whitespace-nowrap [&_.ant-table-cell]:!py-5 [&_.ant-table-cell]:!border-b [&_.ant-table-cell]:!border-slate-50 [&_.ant-table-tbody_tr:hover_td]:!bg-blue-50/40 [&_.ant-table-tbody_tr:last-child_td]:!border-b-0"
+        className="[&_.ant-table-wrapper]:!border-0 [&_.ant-table-container]:!border-t-0 [&_.ant-table-container]:!border-l-0 [&_.ant-table-thead_th]:!bg-gray-100 [&_.ant-table-thead_th]:!text-slate-700 [&_.ant-table-thead_th]:!font-bold [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!text-[14px] [&_.ant-table-thead_th]:!tracking-[0.05em] [&_.ant-table-thead_th]:!py-5 [&_.ant-table-thead_th]:!border-b-[1.5px] [&_.ant-table-thead_th]:!border-slate-300 [&_.ant-table-thead_th]:!whitespace-nowrap [&_.ant-table-cell]:!py-5 [&_.ant-table-cell]:!border-slate-300 [&_.ant-table-tbody_tr:hover_td]:!bg-blue-50/40 [&_.ant-table-cell:last-child]:!border-r-0 [&_.ant-table-pagination]:!bg-gray-100 [&_.ant-table-pagination]:!border-t [&_.ant-table-pagination]:!border-slate-300 [&_.ant-table-pagination]:!px-5 [&_.ant-table-pagination]:!py-4 [&_.ant-table-pagination]:!m-0"
         {...rest}
       />
     </div>

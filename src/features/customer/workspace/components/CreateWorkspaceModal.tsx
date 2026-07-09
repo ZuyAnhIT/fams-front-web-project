@@ -3,6 +3,7 @@ import { Modal, Select, TreeSelect, App } from "antd";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import FormInput from "@/components/forms/FormInput";
+import FormSelect from "@/components/forms/FormSelect";
 import { CreateWorkspaceFormData, createWorkspaceSchema } from "../schemas/workspace.schema";
 import { useCreateWorkspaceMutation, useWorkspaceTreeQuery } from "../hooks/use-workspace";
 import { useAuthStore } from "@/stores/auth.store";
@@ -94,25 +95,17 @@ export default function CreateWorkspaceModal({ isOpen, onClose }: CreateWorkspac
           required
         />
 
-        <div className="flex flex-col space-y-1.5">
-          <label className="text-[13px] font-semibold text-slate-700">Loại tổ chức</label>
-          <Controller
-            control={control}
-            name="type"
-            render={({ field }) => (
-              <Select
-                {...field}
-                className="w-full"
-                size="large"
-                options={[
-                  { value: "department", label: "Phòng ban (Department)" },
-                  { value: "team", label: "Đội nhóm (Team)" },
-                ]}
-              />
-            )}
-          />
-          {errors.type && <p className="text-xs text-rose-500">{errors.type.message}</p>}
-        </div>
+        <FormSelect
+          control={control}
+          name="type"
+          label="Loại tổ chức"
+          error={errors.type}
+          size="large"
+          options={[
+            { value: "department", label: "Phòng ban (Department)" },
+            { value: "team", label: "Đội nhóm (Team)" },
+          ]}
+        />
 
         <div className="flex flex-col space-y-1.5">
           <label className="text-[13px] font-semibold text-slate-700">Trực thuộc (Phòng ban cha)</label>

@@ -3,6 +3,7 @@ import { Modal, Select, TreeSelect, App } from "antd";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import FormInput from "@/components/forms/FormInput";
+import FormSelect from "@/components/forms/FormSelect";
 import { UpdateWorkspaceFormData, updateWorkspaceSchema } from "../schemas/workspace.schema";
 import { useUpdateWorkspaceMutation, useWorkspaceTreeQuery } from "../hooks/use-workspace";
 import { useAuthStore } from "@/stores/auth.store";
@@ -115,45 +116,29 @@ export default function UpdateWorkspaceModal({ workspace, isOpen, onClose }: Upd
         />
 
         <div className="grid grid-cols-2 gap-4">
-          <div className="flex flex-col space-y-1.5">
-            <label className="text-[13px] font-semibold text-slate-700">Loại tổ chức</label>
-            <Controller
-              control={control}
-              name="type"
-              render={({ field }) => (
-                <Select
-                  {...field}
-                  className="w-full"
-                  size="large"
-                  options={[
-                    { value: "department", label: "Phòng ban" },
-                    { value: "team", label: "Đội nhóm" },
-                  ]}
-                />
-              )}
-            />
-            {errors.type && <p className="text-xs text-rose-500">{errors.type.message}</p>}
-          </div>
+          <FormSelect
+            control={control}
+            name="type"
+            label="Loại tổ chức"
+            error={errors.type}
+            size="large"
+            options={[
+              { value: "department", label: "Phòng ban" },
+              { value: "team", label: "Đội nhóm" },
+            ]}
+          />
 
-          <div className="flex flex-col space-y-1.5">
-            <label className="text-[13px] font-semibold text-slate-700">Trạng thái</label>
-            <Controller
-              control={control}
-              name="status"
-              render={({ field }) => (
-                <Select
-                  {...field}
-                  className="w-full"
-                  size="large"
-                  options={[
-                    { value: "active", label: "Hoạt động" },
-                    { value: "inactive", label: "Tạm dừng" },
-                  ]}
-                />
-              )}
-            />
-            {errors.status && <p className="text-xs text-rose-500">{errors.status.message}</p>}
-          </div>
+          <FormSelect
+            control={control}
+            name="status"
+            label="Trạng thái"
+            error={errors.status}
+            size="large"
+            options={[
+              { value: "active", label: "Hoạt động" },
+              { value: "inactive", label: "Tạm dừng" },
+            ]}
+          />
         </div>
 
         <div className="flex flex-col space-y-1.5">

@@ -215,62 +215,64 @@ export default function TenantListPage() {
   return (
     <RoleGuard allowedRoles={[SystemRole.PLATFORM_ADMIN]}>
       <div className="space-y-6">
-        <ListHeader
-          searchValue={searchInput}
-          onSearchChange={setSearchInput}
-          searchPlaceholder="Tìm kiếm theo tên công ty, đường dẫn, tên miền,..."
-          filters={
-            <Select
-              placeholder="Trạng thái"
-              allowClear
-              className="w-40 h-11 [&_.ant-select-selector]:rounded-xl [&_.ant-select-selector]:border-slate-200 hover:[&_.ant-select-selector]:border-blue-300 focus:[&_.ant-select-selector]:border-blue-500 bg-slate-50/50 hover:bg-white"
-              value={state.status}
-              onChange={(val) => setPagination({ status: val || undefined, page: 0 })}
-              options={[
-                { label: "Tất cả trạng thái", value: "" },
-                ...Object.entries(TENANT_STATUS).map(([key, config]) => ({
-                  label: config.label,
-                  value: key,
-                }))
-              ]}
-            />
-          }
-          actions={
-            <BaseButton
-              type="primary"
-              icon={<Plus className="h-4.5 w-4.5" />}
-              onClick={() => setIsCreateModalOpen(true)}
-              className="!bg-brand-primary !text-white hover:!bg-brand-primary/90 !border-0 shadow-lg shadow-brand-primary/25 h-11 px-5 rounded-xl font-bold hover:-translate-y-0.5 transition-all flex items-center gap-2"
-            >
-              Thêm mới
-            </BaseButton>
-          }
-        />
-
         {/* Data Table Wrapper */}
         <ContentCard noPadding>
-          <DataTable
-            columns={columns}
-            data={pageData?.content || []}
-            loading={isLoading}
-            totalElements={pageData?.totalElements || 0}
-            currentPage={state.page}
-            pageSize={state.size}
-            onPageChange={(page, size) => setPagination({ page, size })}
-            onChange={(_, __, sorter) => {
-              if (!Array.isArray(sorter) && sorter.field) {
-                setPagination({
-                  sortBy: sorter.field as string,
-                  sortDir: sorter.order === "ascend" ? "asc" : sorter.order === "descend" ? "desc" : undefined,
-                });
-              } else {
-                setPagination({ sortBy: undefined, sortDir: undefined });
-              }
-            }}
-            onRow={(record) => ({
-              className: "hover:bg-blue-50/50 transition-colors duration-200 group",
-            })}
+          <ListHeader
+            className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-5"
+            searchValue={searchInput}
+            onSearchChange={setSearchInput}
+            searchPlaceholder="Tìm kiếm theo tên công ty, đường dẫn, tên miền,..."
+            filters={
+              <Select
+                placeholder="Trạng thái"
+                allowClear
+                className="w-40 h-10 [&_.ant-select-selector]:rounded-xl [&_.ant-select-selector]:border-slate-200 hover:[&_.ant-select-selector]:border-blue-300 focus:[&_.ant-select-selector]:border-blue-500 bg-slate-50/50 hover:bg-white"
+                value={state.status}
+                onChange={(val) => setPagination({ status: val || undefined, page: 0 })}
+                options={[
+                  { label: "Tất cả trạng thái", value: "" },
+                  ...Object.entries(TENANT_STATUS).map(([key, config]) => ({
+                    label: config.label,
+                    value: key,
+                  }))
+                ]}
+              />
+            }
+            actions={
+              <BaseButton
+                type="primary"
+                icon={<Plus className="h-4.5 w-4.5" />}
+                onClick={() => setIsCreateModalOpen(true)}
+                className="!bg-brand-primary !text-white hover:!bg-brand-primary/90 !border-0 shadow-lg shadow-brand-primary/25 h-10 px-5 rounded-xl font-bold hover:-translate-y-0.5 transition-all flex items-center gap-2"
+              >
+                Thêm mới
+              </BaseButton>
+            }
           />
+          <div className="p-5">
+            <DataTable
+              columns={columns}
+              data={pageData?.content || []}
+              loading={isLoading}
+              totalElements={pageData?.totalElements || 0}
+              currentPage={state.page}
+              pageSize={state.size}
+              onPageChange={(page, size) => setPagination({ page, size })}
+              onChange={(_, __, sorter) => {
+                if (!Array.isArray(sorter) && sorter.field) {
+                  setPagination({
+                    sortBy: sorter.field as string,
+                    sortDir: sorter.order === "ascend" ? "asc" : sorter.order === "descend" ? "desc" : undefined,
+                  });
+                } else {
+                  setPagination({ sortBy: undefined, sortDir: undefined });
+                }
+              }}
+              onRow={(record) => ({
+                className: "hover:bg-blue-50/50 transition-colors duration-200 group",
+              })}
+            />
+          </div>
         </ContentCard>
 
         <CreateTenantModal
