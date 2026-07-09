@@ -1,14 +1,16 @@
 import React, { useEffect } from "react";
-import { Modal, Select, TreeSelect, App } from "antd";
+import { App } from "antd";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import FormInput from "@/components/forms/FormInput";
 import FormSelect from "@/components/forms/FormSelect";
+import FormTreeSelect from "@/components/forms/FormTreeSelect";
+import BaseModal from "@/components/ui/BaseModal";
+import { Building2 } from "lucide-react";
 import { CreateWorkspaceFormData, createWorkspaceSchema } from "../schemas/workspace.schema";
 import { useCreateWorkspaceMutation, useWorkspaceTreeQuery } from "../hooks/use-workspace";
 import { useAuthStore } from "@/stores/auth.store";
 import { WorkspaceTreeResponse } from "../types";
-import { Building2 } from "lucide-react";
 
 interface CreateWorkspaceModalProps {
   isOpen: boolean;
@@ -69,21 +71,19 @@ export default function CreateWorkspaceModal({ isOpen, onClose }: CreateWorkspac
   };
 
   return (
-    <Modal
-      open={isOpen}
-      onCancel={onClose}
-      onOk={() => handleSubmit(onSubmit)()}
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      onConfirm={() => handleSubmit(onSubmit)()}
       confirmLoading={createMutation.isPending}
       title={
-        <div className="flex items-center gap-2 text-slate-800">
+        <div className="flex items-center gap-2">
           <Building2 className="h-5 w-5 text-brand-600" />
           <span>Thêm Phòng ban / Đội nhóm mới</span>
         </div>
       }
-      okText="Thêm mới"
-      cancelText="Hủy"
+      confirmText="Thêm mới"
       width={500}
-      okButtonProps={{ className: "bg-brand-600 hover:bg-brand-700" }}
     >
       <form className="mt-6 space-y-5">
         <FormInput
@@ -100,32 +100,22 @@ export default function CreateWorkspaceModal({ isOpen, onClose }: CreateWorkspac
           name="type"
           label="Loại tổ chức"
           error={errors.type}
-          size="large"
           options={[
             { value: "department", label: "Phòng ban (Department)" },
             { value: "team", label: "Đội nhóm (Team)" },
           ]}
         />
 
-        <div className="flex flex-col space-y-1.5">
-          <label className="text-[13px] font-semibold text-slate-700">Trực thuộc (Phòng ban cha)</label>
-          <Controller
-            control={control}
-            name="parentId"
-            render={({ field }) => (
-              <TreeSelect
-                {...field}
-                className="w-full"
-                size="large"
-                allowClear
-                placeholder="Chọn phòng ban quản lý (nếu có)"
-                treeData={formatTreeData(treeData)}
-                treeDefaultExpandAll
-              />
-            )}
-          />
-          <p className="text-xs text-slate-500">Bỏ trống nếu đây là phòng ban độc lập cấp cao nhất.</p>
-        </div>
+        <FormTreeSelect
+          control={control}
+          name="parentId"
+          label="Trực thuộc (Phòng ban cha)"
+          allowClear
+          placeholder="Chọn phòng ban quản lý (nếu có)"
+          treeData={formatTreeData(treeData)}
+          treeDefaultExpandAll
+          helperText="Bỏ trống nếu đây là phòng ban độc lập cấp cao nhất."
+        />
 
         <FormInput
           control={control}
@@ -136,6 +126,6 @@ export default function CreateWorkspaceModal({ isOpen, onClose }: CreateWorkspac
           type="text"
         />
       </form>
-    </Modal>
+    </BaseModal>
   );
 }

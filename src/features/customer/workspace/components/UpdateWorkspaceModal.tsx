@@ -4,6 +4,8 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import FormInput from "@/components/forms/FormInput";
 import FormSelect from "@/components/forms/FormSelect";
+import FormTreeSelect from "@/components/forms/FormTreeSelect";
+import BaseModal from "@/components/ui/BaseModal";
 import { UpdateWorkspaceFormData, updateWorkspaceSchema } from "../schemas/workspace.schema";
 import { useUpdateWorkspaceMutation, useWorkspaceTreeQuery } from "../hooks/use-workspace";
 import { useAuthStore } from "@/stores/auth.store";
@@ -89,21 +91,19 @@ export default function UpdateWorkspaceModal({ workspace, isOpen, onClose }: Upd
   };
 
   return (
-    <Modal
-      open={isOpen}
-      onCancel={onClose}
-      onOk={() => handleSubmit(onSubmit)()}
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      onConfirm={() => handleSubmit(onSubmit)()}
       confirmLoading={updateMutation.isPending}
       title={
-        <div className="flex items-center gap-2 text-slate-800">
+        <div className="flex items-center gap-2">
           <Edit3 className="h-5 w-5 text-brand-600" />
           <span>Chỉnh sửa Phòng ban / Đội nhóm</span>
         </div>
       }
-      okText="Lưu thay đổi"
-      cancelText="Hủy"
+      confirmText="Lưu thay đổi"
       width={500}
-      okButtonProps={{ className: "bg-brand-600 hover:bg-brand-700" }}
     >
       <form className="mt-6 space-y-5">
         <FormInput
@@ -121,7 +121,6 @@ export default function UpdateWorkspaceModal({ workspace, isOpen, onClose }: Upd
             name="type"
             label="Loại tổ chức"
             error={errors.type}
-            size="large"
             options={[
               { value: "department", label: "Phòng ban" },
               { value: "team", label: "Đội nhóm" },
@@ -133,7 +132,6 @@ export default function UpdateWorkspaceModal({ workspace, isOpen, onClose }: Upd
             name="status"
             label="Trạng thái"
             error={errors.status}
-            size="large"
             options={[
               { value: "active", label: "Hoạt động" },
               { value: "inactive", label: "Tạm dừng" },
@@ -141,25 +139,16 @@ export default function UpdateWorkspaceModal({ workspace, isOpen, onClose }: Upd
           />
         </div>
 
-        <div className="flex flex-col space-y-1.5">
-          <label className="text-[13px] font-semibold text-slate-700">Trực thuộc (Phòng ban cha)</label>
-          <Controller
-            control={control}
-            name="parentId"
-            render={({ field }) => (
-              <TreeSelect
-                {...field}
-                className="w-full"
-                size="large"
-                allowClear
-                placeholder="Chọn phòng ban quản lý (nếu có)"
-                treeData={formatTreeData(treeData)}
-                treeDefaultExpandAll
-              />
-            )}
-          />
-          <p className="text-xs text-slate-500">Bỏ trống nếu đây là phòng ban độc lập cấp cao nhất.</p>
-        </div>
+        <FormTreeSelect
+          control={control}
+          name="parentId"
+          label="Trực thuộc (Phòng ban cha)"
+          allowClear
+          placeholder="Chọn phòng ban quản lý (nếu có)"
+          treeData={formatTreeData(treeData)}
+          treeDefaultExpandAll
+          helperText="Bỏ trống nếu đây là phòng ban độc lập cấp cao nhất."
+        />
 
         <FormInput
           control={control}
@@ -170,6 +159,6 @@ export default function UpdateWorkspaceModal({ workspace, isOpen, onClose }: Upd
           type="text"
         />
       </form>
-    </Modal>
+    </BaseModal>
   );
 }

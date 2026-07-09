@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { Search, RotateCcw } from "lucide-react";
-import { Input, Select, Tag } from "antd";
+import { Input, Tag } from "antd";
+import BaseSelect from "@/components/ui/BaseSelect";
 import DataTable from "@/components/tables/DataTable";
 import BaseButton from "@/components/ui/BaseButton";
 import { usePagination } from "@/hooks/usePagination";
@@ -107,15 +108,15 @@ export default function InvitationListPage() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-2 sm:px-4 pb-4">
       <ListHeader
         searchValue={searchInput}
         onSearchChange={setSearchInput}
         searchPlaceholder="Tìm kiếm theo email..."
         filters={
-          <Select
+          <BaseSelect
             placeholder="Tất cả trạng thái"
-            className="w-40 h-11"
+            className="w-40"
             allowClear
             value={state.status}
             onChange={(val) => setPagination({ status: val, page: 0 })}
@@ -129,7 +130,7 @@ export default function InvitationListPage() {
         }
       />
 
-      <ContentCard noPadding>
+
         <DataTable
           columns={columns}
           data={pageData?.content || []}
@@ -149,7 +150,7 @@ export default function InvitationListPage() {
             }
           }}
         />
-      </ContentCard>
+
 
       <CancelInvitationModal
         open={isCancelModalOpen}

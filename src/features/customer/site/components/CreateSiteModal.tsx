@@ -1,10 +1,14 @@
 import React, { useState } from "react";
-import { Modal, Form, Input, Button, Select, message, Tooltip } from "antd";
+import { Form, Button, message, Tooltip, Input } from "antd";
 import { useAuthStore } from "@/stores/auth.store";
 import { useCreateSiteMutation } from "../hooks/use-site";
 import { CreateSiteRequest } from "../types/site.type";
 import MapWrapper from "@/components/maps/MapWrapper";
 import { MapPin } from "lucide-react";
+import BaseModal from "@/components/ui/BaseModal";
+import BaseButton from "@/components/ui/BaseButton";
+import BaseInput from "@/components/ui/BaseInput";
+import BaseSelect from "@/components/ui/BaseSelect";
 
 interface CreateSiteModalProps {
   isOpen: boolean;
@@ -75,11 +79,11 @@ export default function CreateSiteModal({ isOpen, onClose }: CreateSiteModalProp
   };
 
   return (
-    <Modal
+    <BaseModal
       title={
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 bg-brand-primary/10 rounded-xl flex items-center justify-center">
-            <MapPin className="h-5 w-5 text-brand-primary" />
+          <div className="h-10 w-10 bg-blue-50 rounded-xl flex items-center justify-center">
+            <MapPin className="h-5 w-5 text-blue-600" />
           </div>
           <div>
             <h2 className="text-xl font-bold text-slate-900 tracking-tight leading-tight">Thêm Công Trình Mới</h2>
@@ -87,38 +91,31 @@ export default function CreateSiteModal({ isOpen, onClose }: CreateSiteModalProp
           </div>
         </div>
       }
-      open={isOpen}
-      onCancel={handleClose}
-      destroyOnHidden
+      isOpen={isOpen}
+      onClose={handleClose}
+      destroyOnClose
       centered
       width={1000}
       footer={
-        <div className="flex justify-end gap-3 mt-4">
-          <Button
+        <div className="flex justify-end gap-3 w-full">
+          <BaseButton
             onClick={handleClose}
             disabled={isPending}
-            className="!bg-white !text-slate-700 !border-slate-300 hover:!bg-slate-50 hover:!text-slate-900 h-11 px-6 rounded-xl font-semibold transition-all"
+            className="!bg-white !text-slate-700 !border-slate-300 hover:!bg-slate-50 hover:!text-slate-900 h-10 px-6 rounded-lg font-semibold transition-all"
           >
             Hủy bỏ
-          </Button>
-          <Button
+          </BaseButton>
+          <BaseButton
             type="primary"
             htmlType="submit"
             form="create-site-form"
             loading={isPending}
-            className="!bg-brand-primary !text-white hover:opacity-90 !border-0 shadow-lg shadow-brand-primary/25 h-11 px-8 rounded-xl font-bold hover:-translate-y-0.5 transition-all"
+            className="!bg-blue-600 !text-white hover:!bg-blue-700 !border-0 shadow-lg shadow-blue-500/25 h-10 px-8 rounded-lg font-bold transition-all"
           >
             Lưu công trình
-          </Button>
+          </BaseButton>
         </div>
       }
-      classNames={{
-        content: "!bg-white !rounded-3xl !p-0 overflow-hidden shadow-2xl shadow-brand-primary/10",
-        header: "!bg-white border-b border-slate-100 px-8 py-5 m-0",
-        body: "!bg-slate-50/50 p-6 md:p-8 overflow-y-auto max-h-[65vh] scrollbar-thin scrollbar-thumb-slate-200",
-        footer: "!bg-white border-t border-slate-100 px-8 py-4 m-0",
-        close: "mt-4 mr-4 hover:!bg-slate-100 !rounded-full transition-colors",
-      }}
     >
       <Form
         form={form}
@@ -128,11 +125,11 @@ export default function CreateSiteModal({ isOpen, onClose }: CreateSiteModalProp
           timezone: "Asia/Ho_Chi_Minh",
         }}
         id="create-site-form"
+        className="max-h-[65vh] overflow-y-auto overflow-x-hidden pr-2"
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* LEFT COLUMN: Input Fields */}
-          <div className="flex flex-col space-y-4">
-            <div className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm space-y-4">
+          <div className="flex flex-col h-full space-y-4">
               <Form.Item
                 name="name"
                 label={<span className="font-medium text-slate-700">Tên công trình <span className="text-red-500">*</span></span>}
@@ -142,7 +139,7 @@ export default function CreateSiteModal({ isOpen, onClose }: CreateSiteModalProp
                 ]}
                 className="mb-0"
               >
-                <Input placeholder="Ví dụ: Landmark 81" className="h-10" />
+                <BaseInput placeholder="Ví dụ: Landmark 81" />
               </Form.Item>
 
               <Form.Item
@@ -154,7 +151,7 @@ export default function CreateSiteModal({ isOpen, onClose }: CreateSiteModalProp
                 ]}
                 className="mb-0"
               >
-                <Input placeholder="Ví dụ: LM81-HCM" className="h-10" />
+                <BaseInput placeholder="Ví dụ: LM81-HCM" />
               </Form.Item>
 
               <Form.Item
@@ -162,14 +159,14 @@ export default function CreateSiteModal({ isOpen, onClose }: CreateSiteModalProp
                 label={<span className="font-medium text-slate-700">Múi giờ</span>}
                 className="mb-0"
               >
-                <Select className="h-10">
-                  <Select.Option value="Asia/Ho_Chi_Minh">Asia/Ho_Chi_Minh (GMT+7)</Select.Option>
-                  <Select.Option value="UTC">UTC (GMT+0)</Select.Option>
-                </Select>
+                <BaseSelect 
+                  options={[
+                    { value: "Asia/Ho_Chi_Minh", label: "Asia/Ho_Chi_Minh (GMT+7)" },
+                    { value: "UTC", label: "UTC (GMT+0)" }
+                  ]}
+                />
               </Form.Item>
-            </div>
 
-            <div className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm space-y-4">
               <Form.Item
                 name="address"
                 label={<span className="font-medium text-slate-700">Địa chỉ thực tế</span>}
@@ -188,8 +185,6 @@ export default function CreateSiteModal({ isOpen, onClose }: CreateSiteModalProp
               >
                 <Input.TextArea placeholder="Ghi chú..." rows={2} />
               </Form.Item>
-            </div>
-
             {/* Hidden actual inputs for submission */}
             <div className="hidden">
               <Form.Item name="latitude"><Input /></Form.Item>
@@ -198,7 +193,7 @@ export default function CreateSiteModal({ isOpen, onClose }: CreateSiteModalProp
           </div>
 
           {/* RIGHT COLUMN: Map */}
-          <div className="flex flex-col h-full bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm">
+          <div className="flex flex-col h-full">
             <label className="font-bold text-slate-800 text-[15px] mb-3">Bản đồ định vị</label>
             <div className="flex-1 relative rounded-xl overflow-hidden border border-slate-200" style={{ minHeight: "360px" }}>
               <MapWrapper 
@@ -209,13 +204,13 @@ export default function CreateSiteModal({ isOpen, onClose }: CreateSiteModalProp
               />
             </div>
             {/* Display selected coordinates nicely */}
-            <div className="mt-4 flex gap-6 text-sm bg-slate-50 p-3.5 rounded-xl border border-slate-100">
-              <div className="flex-1"><span className="text-slate-500 block mb-1">Vĩ độ (Lat)</span> <span className="font-semibold text-slate-700">{lat ? lat.toFixed(6) : "---"}</span></div>
-              <div className="flex-1"><span className="text-slate-500 block mb-1">Kinh độ (Lng)</span> <span className="font-semibold text-slate-700">{lng ? lng.toFixed(6) : "---"}</span></div>
+            <div className="mt-4 flex gap-6 text-sm">
+              <div className="flex-1"><span className="text-slate-500 mr-2">Vĩ độ (Lat):</span><span className="font-semibold text-slate-700">{lat ? lat.toFixed(6) : "---"}</span></div>
+              <div className="flex-1"><span className="text-slate-500 mr-2">Kinh độ (Lng):</span><span className="font-semibold text-slate-700">{lng ? lng.toFixed(6) : "---"}</span></div>
             </div>
           </div>
         </div>
       </Form>
-    </Modal>
+    </BaseModal>
   );
 }

@@ -24,7 +24,7 @@ export default function BaseInputPassword({
   return (
     <Input.Password
       className={cn(
-        "!rounded-[5px] !px-4 !h-10 !py-2 !shadow-none !bg-slate-50 hover:!bg-slate-100 focus:!bg-white focus-within:!bg-white !text-[14px] !text-gray-900 transition-all duration-300 [&_.ant-input]:!bg-transparent [&_.ant-input]:!text-[14px] [&_.ant-input]:!text-gray-900 [&_.anticon]:!text-gray-400 hover:[&_.anticon]:!text-gray-600 [&_input:-webkit-autofill]:[transition:background-color_9999s_ease-in-out_0s] [&_input:-webkit-autofill]:[-webkit-text-fill-color:#0f172a]",
+        "!rounded-md !px-4 !h-10 !py-2 !shadow-none !bg-slate-50 hover:!bg-slate-100 focus:!bg-white focus-within:!bg-white !text-[14px] !text-gray-900 transition-all duration-300 [&_.ant-input]:!bg-transparent [&_.ant-input]:!text-[14px] [&_.ant-input]:!text-gray-900 [&_.anticon]:!text-gray-400 hover:[&_.anticon]:!text-gray-600 [&_input:-webkit-autofill]:[transition:background-color_9999s_ease-in-out_0s] [&_input:-webkit-autofill]:[-webkit-text-fill-color:#0f172a]",
         className
       )}
       {...props}

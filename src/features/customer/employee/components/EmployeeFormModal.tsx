@@ -3,10 +3,10 @@
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { App, Modal } from "antd";
+import { App } from "antd";
 import { UserPlus } from "lucide-react";
 import FormInput from "@/components/forms/FormInput";
-import BaseButton from "@/components/ui/BaseButton";
+import BaseModal from "@/components/ui/BaseModal";
 import { useCreateEmployee, useUpdateEmployee } from "../hooks/use-employee";
 import { employeeSchema, type EmployeeFormData } from "../schemas/employee.schema";
 import type { EmployeeDetailResponse } from "../types/employee.type";
@@ -97,59 +97,22 @@ export default function EmployeeFormModal({ open, onClose, initialData }: Employ
   };
 
   return (
-    <Modal
-      title={
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 bg-brand-primary/10 rounded-xl flex items-center justify-center">
-            <UserPlus className="h-5 w-5 text-brand-primary" />
-          </div>
-          <div>
-            <h2 className="text-xl font-bold text-slate-900 tracking-tight leading-tight">
-              {isEditMode ? "Sửa thông tin nhân viên" : "Thêm nhân viên mới"}
-            </h2>
-            <p className="text-sm text-slate-500 font-normal mt-0.5">
-              {isEditMode ? "Cập nhật hồ sơ nhân sự" : "Điền đầy đủ thông tin hồ sơ nhân sự"}
-            </p>
-          </div>
-        </div>
-      }
-      open={open}
-      onCancel={onClose}
-      destroyOnHidden
-      centered
+    <BaseModal
+      title={isEditMode ? "Sửa thông tin nhân viên" : "Thêm nhân viên mới"}
+      isOpen={open}
+      onClose={onClose}
       width={760}
-      footer={
-        <div className="flex justify-end gap-3 mt-4">
-          <BaseButton
-            onClick={onClose}
-            disabled={isPending}
-            className="!bg-white !text-slate-700 !border-slate-300 hover:!bg-slate-50 hover:!text-slate-900 h-11 px-6 rounded-xl font-semibold transition-all"
-          >
-            Hủy bỏ
-          </BaseButton>
-          <BaseButton
-            type="primary"
-            htmlType="submit"
-            form="employee-form"
-            loading={isPending}
-            disabled={!isDirty}
-            className="!bg-brand-primary !text-white hover:opacity-90 !border-0 shadow-lg shadow-brand-primary/25 h-11 px-8 rounded-xl font-bold hover:-translate-y-0.5 transition-all disabled:!bg-slate-300 disabled:!shadow-none disabled:!translate-y-0"
-          >
-            {isEditMode ? "Lưu thay đổi" : "Tạo mới"}
-          </BaseButton>
-        </div>
-      }
-      classNames={{
-        wrapper: "!bg-white !rounded-3xl !p-0 overflow-hidden shadow-2xl shadow-brand-primary/10",
-        header: "!bg-white border-b border-slate-100 px-8 py-5 m-0",
-        body: "!bg-slate-50/50 p-6 md:p-8 overflow-y-auto max-h-[60vh] scrollbar-thin scrollbar-thumb-slate-200",
-        footer: "!bg-white border-t border-slate-100 px-8 py-4 m-0",
-        close: "mt-4 mr-4 hover:!bg-slate-100 !rounded-full transition-colors",
+      confirmText={isEditMode ? "Lưu thay đổi" : "Tạo mới"}
+      confirmLoading={isPending}
+      confirmButtonProps={{ 
+        htmlType: "submit", 
+        form: "employee-form",
+        disabled: !isDirty 
       }}
     >
       <form id="employee-form" onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Thông tin cơ bản */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm space-y-5">
+        <div className="space-y-4">
           <div className="flex items-center gap-2 mb-2">
             <h4 className="font-bold text-slate-800 text-[15px]">Thông tin cơ bản</h4>
           </div>
@@ -196,7 +159,7 @@ export default function EmployeeFormModal({ open, onClose, initialData }: Employ
         </div>
 
         {/* Thông tin công việc */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm space-y-5">
+        <div className="space-y-4 pt-2">
           <div className="flex items-center gap-2 mb-2">
             <h4 className="font-bold text-slate-800 text-[15px]">Thông tin công việc</h4>
           </div>
@@ -240,6 +203,6 @@ export default function EmployeeFormModal({ open, onClose, initialData }: Employ
           </div>
         </div>
       </form>
-    </Modal>
+    </BaseModal>
   );
 }

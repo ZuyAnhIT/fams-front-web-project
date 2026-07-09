@@ -243,7 +243,7 @@ export default function TenantListPage() {
                 type="primary"
                 icon={<Plus className="h-4.5 w-4.5" />}
                 onClick={() => setIsCreateModalOpen(true)}
-                className="!bg-brand-primary !text-white hover:!bg-brand-primary/90 !border-0 shadow-lg shadow-brand-primary/25 h-10 px-5 rounded-xl font-bold hover:-translate-y-0.5 transition-all flex items-center gap-2"
+                className="!bg-blue-600 !text-white hover:!bg-blue-700 !border-0 shadow-lg shadow-blue-500/25 h-10 px-5 rounded-xl font-bold hover:-translate-y-0.5 transition-all flex items-center gap-2"
               >
                 Thêm mới
               </BaseButton>
