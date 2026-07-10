@@ -111,7 +111,7 @@ export default function WorkspacePage() {
       {/* HEADER TRANG */}
       <div className="mb-6 flex justify-between items-center">
         <div>
-          <h1 className="text-xl font-bold text-brand-950">Cơ cấu tổ chức</h1>
+          <h1 className="!text-[35px] !font-semibold text-brand-950">Cơ cấu tổ chức</h1>
           <p className="text-sm text-brand-600 mt-1">
             Quản lý sơ đồ phòng ban, đội nhóm và nhân sự trực thuộc
           </p>

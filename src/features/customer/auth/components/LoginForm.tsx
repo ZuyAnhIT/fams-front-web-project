@@ -254,7 +254,7 @@ export default function LoginForm() {
               loading={isTotpSubmitting}
               block
               size="large"
-              className="mt-6 font-bold !bg-brand-600 !text-white hover:opacity-90 !border-0 shadow-lg shadow-brand-600/25 h-12 rounded-xl transition-all"
+              className="mt-6 font-bold !bg-blue-600 !text-white hover:!bg-blue-700 !border-0 shadow-lg shadow-blue-500/25 h-12 rounded-xl transition-all"
             >
               Xác nhận
             </BaseButton>
@@ -262,7 +262,7 @@ export default function LoginForm() {
               <button
                 type="button"
                 onClick={clearTotpPending}
-                className="text-sm font-medium text-slate-500 hover:text-brand-600 transition-colors"
+                className="text-sm font-medium text-slate-500 hover:text-blue-600 transition-colors"
               >
                 Quay lại đăng nhập
               </button>
@@ -278,6 +278,7 @@ export default function LoginForm() {
               placeholder="Nhập địa chỉ email"
               id="login-email"
               error={errors.email}
+              required
             />
 
             {/* Mật khẩu */}
@@ -289,13 +290,14 @@ export default function LoginForm() {
               type="password"
               id="login-password"
               error={errors.password}
+              required
             />
 
             {/* Quên mật khẩu */}
             <div className="flex justify-end mt-2">
               <Link
                 href={ROUTES.FORGOT_PASSWORD}
-                className="text-sm font-semibold text-brand-600 hover:text-brand-700 transition-colors"
+                className="text-sm font-semibold !text-blue-600 hover:!text-blue-700 transition-colors"
               >
                 Quên mật khẩu?
               </Link>
@@ -308,7 +310,7 @@ export default function LoginForm() {
               loading={isSubmitting}
               block
               size="large"
-              className="mt-2 font-bold !bg-brand-600 !text-white hover:opacity-90 !border-0 shadow-lg shadow-brand-600/25 h-12 rounded-xl transition-all"
+              className="mt-2 font-bold !bg-blue-600 !text-white hover:!bg-blue-700 !border-0 shadow-lg shadow-blue-500/25 h-12 rounded-xl transition-all"
             >
               Đăng nhập
             </BaseButton>
@@ -320,7 +322,7 @@ export default function LoginForm() {
           Chưa có tài khoản?{" "}
           <Link
             href={ROUTES.REGISTER}
-            className="font-bold text-brand-600 hover:text-brand-700 transition-colors"
+            className="font-bold !text-blue-600 hover:!text-blue-700 transition-colors"
           >
             Đăng ký ngay
           </Link>

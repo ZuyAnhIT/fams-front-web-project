@@ -1,44 +1,42 @@
 import React from "react";
-import { SelectProps } from "antd";
-import { Controller, Control } from "react-hook-form";
-import BaseSelect from "@/components/ui/BaseSelect";
+import { Input } from "antd";
+import { Controller } from "react-hook-form";
+import BaseTextArea from "@/components/ui/BaseTextArea";
+import { TextAreaProps } from "antd/es/input";
 
-interface FormSelectProps extends SelectProps {
+interface FormTextAreaProps extends Omit<TextAreaProps, 'name'> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   control: any;
   name: string;
   label?: string;
   error?: any;
-  options: { label: React.ReactNode; value: any }[];
   helperText?: React.ReactNode;
   required?: boolean;
 }
 
-export default function FormSelect({
+export default function FormTextArea({
   control,
   name,
   label,
   error,
-  options,
   helperText,
   required,
-  ...selectProps
-}: FormSelectProps) {
+  ...textAreaProps
+}: FormTextAreaProps) {
   return (
     <div className="flex flex-col space-y-1.5 w-full">
       {label && (
         <label className="text-[13px] font-semibold text-slate-700">
-          {label} {required && <span className="text-red-500">*</span>} {selectProps.disabled && <span className="text-slate-400 font-normal ml-1">(Chỉ xem)</span>}
+          {label} {required && <span className="text-red-500">*</span>} {textAreaProps.disabled && <span className="text-slate-400 font-normal ml-1">(Chỉ xem)</span>}
         </label>
       )}
       <Controller
         control={control}
         name={name}
         render={({ field }) => (
-          <BaseSelect
+          <BaseTextArea
             {...field}
-            {...selectProps}
-            options={options}
+            {...textAreaProps}
             status={error ? "error" : undefined}
           />
         )}

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import "leaflet/dist/leaflet.css";
+import BaseButton from "@/components/ui/BaseButton";
 
 // Dynamic import for react-leaflet components to avoid SSR issues
 const MapContainer = dynamic(() => import("react-leaflet").then((mod) => mod.MapContainer), { ssr: false });
@@ -80,26 +81,24 @@ export function GeofenceEditorMap({
     <div className="relative h-[400px] w-full rounded-lg overflow-hidden border border-slate-300 z-0 group">
       {/* Overlay Toolbar */}
       <div className="absolute top-2 right-2 z-[1000] flex flex-col gap-2 bg-white/90 backdrop-blur-sm p-2 rounded-lg shadow-md border border-slate-200">
-        <button 
-          onClick={(e) => { e.preventDefault(); undo(); }}
+        <BaseButton
+          onClick={(e: React.MouseEvent) => { e.preventDefault(); undo(); }}
           disabled={points.length === 0}
-          className="px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          type="button"
+          className="!bg-white !text-slate-700 !border-slate-300 hover:!bg-slate-50 hover:!text-slate-900 !h-7 !px-2.5 !py-0 rounded-md !text-[11px] font-semibold shadow-sm transition-all"
         >
           Hoàn tác điểm cuối
-        </button>
-        <button 
-          onClick={(e) => { e.preventDefault(); clear(); }}
+        </BaseButton>
+        <BaseButton
+          onClick={(e: React.MouseEvent) => { e.preventDefault(); clear(); }}
           disabled={points.length === 0}
-          className="px-3 py-1.5 text-sm font-medium text-red-600 bg-white border border-slate-200 rounded hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          type="button"
+          className="!bg-white !text-red-600 !border-red-200 hover:!bg-red-50 hover:!border-red-300 !h-7 !px-2.5 !py-0 rounded-md !text-[11px] font-semibold shadow-sm transition-all"
         >
           Xóa toàn bộ
-        </button>
+        </BaseButton>
       </div>
 
       <div className="absolute top-2 left-12 z-[1000] bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-sm border border-slate-200 text-sm text-slate-700 pointer-events-none">
-        Click lên bản đồ để vẽ các điểm ranh giới. Cần tối thiểu 3 điểm.
+        Cần tối thiểu 3 điểm.
       </div>
 
       <MapContainer
@@ -113,7 +112,7 @@ export function GeofenceEditorMap({
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         <MapEvents onClick={handleMapClick} />
-        
+
         <Marker position={[latitude, longitude]} />
 
         {isPolygon ? (
@@ -136,11 +135,11 @@ export function GeofenceEditorMap({
             radius={6}
             pathOptions={{ color: i === 0 ? "#10b981" : "#ef4444", fillColor: "white", fillOpacity: 1, weight: 2 }}
           >
-            <Tooltip 
-              direction="top" 
-              offset={[0, -10]} 
-              opacity={1} 
-              permanent 
+            <Tooltip
+              direction="top"
+              offset={[0, -10]}
+              opacity={1}
+              permanent
               className="font-bold text-slate-700 bg-white/90 border border-slate-200 shadow-sm rounded px-1.5 py-0.5 text-[10px]"
             >
               Điểm {i + 1}

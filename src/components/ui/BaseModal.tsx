@@ -66,6 +66,12 @@ export default function BaseModal({
       onCancel={onClose}
       footer={footer !== undefined ? footer : defaultFooter}
       destroyOnClose
+      classNames={{
+        header: "border-b border-slate-100 pb-3 mb-4",
+        body: "overflow-y-auto max-h-[65vh] scrollbar-thin scrollbar-thumb-slate-200 pr-1",
+        footer: "border-t border-slate-100 pt-4 mt-4",
+        ...(props.classNames || {})
+      }}
       {...props}
     >
       {children}

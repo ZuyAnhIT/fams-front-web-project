@@ -53,14 +53,14 @@ export default function SitePage() {
 
   const columns: TableProps<SiteResponse>['columns'] = [
     {
-      title: "Mã công trình",
+      title: "Mã CT",
       dataIndex: "code",
       key: "code",
       width: 140,
       render: (text: string) => text || <span className="text-slate-400">---</span>,
     },
     {
-      title: "Tên công trình",
+      title: "Tên CT",
       dataIndex: "name",
       key: "name",
       sorter: true,
@@ -75,12 +75,12 @@ export default function SitePage() {
       title: "Địa chỉ",
       dataIndex: "address",
       key: "address",
-      width: 350,
+
       render: (text: string) => {
         if (!text) return <span className="text-slate-400">---</span>;
         return (
           <Tooltip title={text} placement="topLeft">
-            <div className="max-w-[330px] truncate text-slate-700">
+            <div className="max-w-[200px] truncate text-slate-700">
               {text}
             </div>
           </Tooltip>
@@ -91,12 +91,12 @@ export default function SitePage() {
       title: "Mô tả",
       dataIndex: "description",
       key: "description",
-      width: 300,
+
       render: (text: string) => {
         if (!text) return <span className="text-slate-400">---</span>;
         return (
           <Tooltip title={text} placement="topLeft">
-            <div className="max-w-[270px] truncate text-slate-600">
+            <div className="max-w-[170px] truncate text-slate-600">
               {text}
             </div>
           </Tooltip>
@@ -158,13 +158,25 @@ export default function SitePage() {
   }
 
   return (
-    <div className="flex flex-col space-y-6">
+    <div className="flex flex-col space-y-6 max-w-[1600px] mx-auto py-2 w-full">
       {/* Header */}
-      <div>
-        <h1 className="text-[32px] font-extrabold text-slate-900 tracking-tight">Quản lý Công trình</h1>
-        <p className="text-sm text-slate-500 mt-2">
-          Danh sách tất cả các địa điểm chấm công của công ty
-        </p>
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="!text-[35px] !font-semibold text-slate-900 tracking-tight">Quản lý công trình</h1>
+          <p className="text-sm text-slate-500 mt-1">
+            Danh sách tất cả các địa điểm chấm công của công ty
+          </p>
+        </div>
+        {hasPermission("sites:create") && (
+          <BaseButton
+            type="primary"
+            icon={<Plus className="h-4.5 w-4.5" />}
+            onClick={() => setIsCreateModalOpen(true)}
+            className="!bg-blue-600 !text-white hover:!bg-blue-700 !border-0 shadow-lg shadow-blue-500/25 h-10 px-5 rounded-xl font-bold hover:-translate-y-0.5 transition-all flex items-center gap-2"
+          >
+            Thêm công trình
+          </BaseButton>
+        )}
       </div>
 
       <ContentCard noPadding>
@@ -188,18 +200,6 @@ export default function SitePage() {
                 { value: "inactive", label: "Ngưng hoạt động" },
               ]}
             />
-          }
-          actions={
-            hasPermission("sites:create") && (
-              <BaseButton
-                type="primary"
-                icon={<Plus className="h-4.5 w-4.5" />}
-                onClick={() => setIsCreateModalOpen(true)}
-                className="!bg-blue-600 !text-white hover:!bg-blue-700 !border-0 shadow-lg shadow-blue-500/25 h-10 px-5 rounded-xl font-bold hover:-translate-y-0.5 transition-all flex items-center gap-2"
-              >
-                Thêm công trình
-              </BaseButton>
-            )
           }
         />
 

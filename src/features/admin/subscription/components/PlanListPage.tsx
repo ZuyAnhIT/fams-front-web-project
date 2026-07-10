@@ -62,11 +62,11 @@ export default function PlanListPage() {
   return (
     <div className="space-y-8">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
-        <div className="space-y-1.5">
-          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
+        <div>
+          <h2 className="!text-[35px] !font-semibold text-slate-900 tracking-tight">
             Cấu hình Gói dịch vụ
           </h2>
-          <p className="text-sm text-slate-500 font-medium">
+          <p className="text-sm text-slate-500 mt-1">
             Thiết lập giá và giới hạn tính năng cho các gói SaaS.
           </p>
         </div>
@@ -74,7 +74,7 @@ export default function PlanListPage() {
           type="primary"
           icon={<Plus className="h-4 w-4" />}
           onClick={handleCreateNew}
-          className="!bg-[#343634] !text-white hover:!bg-[#232423] shadow-md shadow-[#343634]/20 border-0 px-6 h-10 font-semibold transition-all hover:-translate-y-0.5"
+          className="!bg-blue-600 !text-white hover:!bg-blue-700 !border-0 shadow-lg shadow-blue-500/25 h-10 px-5 rounded-xl font-bold hover:-translate-y-0.5 transition-all flex items-center gap-2"
         >
           Thêm gói mới
         </BaseButton>
@@ -169,7 +169,7 @@ export default function PlanListPage() {
           <BaseButton
             type="primary"
             onClick={handleCreateNew}
-            className="!bg-[#343634] !text-white hover:!bg-[#232423] shadow-md shadow-[#343634]/20 border-0 px-6 h-10 font-semibold"
+            className="!bg-blue-600 !text-white hover:!bg-blue-700 !border-0 shadow-lg shadow-blue-500/25 h-10 px-5 rounded-xl font-bold hover:-translate-y-0.5 transition-all flex items-center gap-2"
           >
             Tạo gói dịch vụ đầu tiên
           </BaseButton>

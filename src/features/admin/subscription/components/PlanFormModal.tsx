@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
-import { Modal, App } from "antd";
+import { App } from "antd";
+import { BaseModal } from "@/components/ui";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import FormInput from "@/components/forms/FormInput";
@@ -87,19 +88,28 @@ export default function PlanFormModal({ open, onClose, initialData }: PlanFormMo
   };
 
   return (
-    <Modal
-      title={isEditMode ? "Chỉnh sửa Gói dịch vụ" : "Thêm Gói dịch vụ mới"}
-      open={open}
-      onCancel={onClose}
-      footer={null}
-      destroyOnHidden
+    <BaseModal
+      title={isEditMode ? "Chỉnh sửa gói dịch vụ" : "Thêm gói dịch vụ mới"}
+      isOpen={open}
+      onClose={onClose}
+      destroyOnClose
       centered
-      classNames={{
-        header: "border-b pb-3",
-        body: "pt-4",
+      width={600}
+      confirmText={isEditMode ? "Lưu thay đổi" : "Tạo gói mới"}
+      cancelText="Hủy bỏ"
+      confirmLoading={isPending}
+      confirmButtonProps={{
+        htmlType: "submit",
+        form: "plan-form",
+        disabled: !isDirty,
+        className: "!bg-blue-600 hover:!bg-blue-700 !border-0 text-white font-bold shadow-lg shadow-blue-500/25 transition-all h-10 px-6 rounded-lg disabled:!bg-slate-300 disabled:!text-slate-500 disabled:!shadow-none"
+      }}
+      cancelButtonProps={{
+        disabled: isPending,
+        className: "!bg-white !text-slate-700 !border-slate-300 hover:!bg-slate-50 hover:!text-slate-900 h-10 px-6 rounded-lg font-semibold transition-all"
       }}
     >
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <form id="plan-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-2">
         <div className="grid grid-cols-2 gap-4">
           <FormInput
             control={control}
@@ -165,15 +175,8 @@ export default function PlanFormModal({ open, onClose, initialData }: PlanFormMo
           />
         </div>
 
-        <div className="flex justify-end gap-3 pt-4 border-t border-brand-100 mt-6">
-          <BaseButton onClick={onClose} disabled={isPending} className="!bg-red-500 !text-white hover:!bg-red-600 !border-0">
-            Hủy
-          </BaseButton>
-          <BaseButton type="primary" htmlType="submit" loading={isPending} disabled={!isDirty} className="!bg-blue-600 !text-white hover:!bg-blue-700 !border-0 disabled:!bg-slate-300 disabled:!text-slate-500">
-            {isEditMode ? "Lưu thay đổi" : "Tạo gói mới"}
-          </BaseButton>
-        </div>
+
       </form>
-    </Modal>
+    </BaseModal>
   );
 }

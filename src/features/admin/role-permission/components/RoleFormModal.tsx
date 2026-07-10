@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Modal, Form, Input, Checkbox, Spin, message, Row, Col, Card, Select } from "antd";
+import { Form, Checkbox, Spin, message, Row, Col, Card } from "antd";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Shield } from "lucide-react";
-import BaseButton from "@/components/ui/BaseButton";
+import { BaseButton, BaseInput, BaseTextArea, BaseSelect, BaseModal } from "@/components/ui";
 import { usePermissionsGroupedQuery, useCreateRoleMutation, useUpdateRoleMutation } from "../hooks/use-role-permission";
 import { RoleDetailResponse } from "../types";
 import { useQuery } from "@tanstack/react-query";
@@ -161,64 +161,40 @@ export const RoleFormModal: React.FC<RoleFormModalProps> = ({ open, onClose, ten
   return (
     <>
       {contextHolder}
-      <Modal
+      <BaseModal
         title={
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 bg-brand-primary/10 rounded-xl flex items-center justify-center">
-              <Shield className="h-5 w-5 text-brand-primary" />
+            <div className="h-10 w-10 bg-blue-100 rounded-xl flex items-center justify-center">
+              <Shield className="h-5 w-5 text-blue-600" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-slate-900 tracking-tight leading-tight">
+              <div className="text-xl font-bold text-slate-900 tracking-tight leading-tight">
                 {isSystemRole ? "Chi tiết Role Hệ thống" : (isEdit ? "Sửa Role" : "Tạo Role Tùy Chỉnh")}
-              </h2>
+              </div>
               <p className="text-sm text-slate-500 font-normal mt-0.5">
                 Thiết lập quyền hạn cho nhóm người dùng
               </p>
             </div>
           </div>
         }
-        open={open}
-        onCancel={onClose}
+        isOpen={open}
+        onClose={onClose}
         width={800}
-        destroyOnHidden={true}
-        footer={
-          isSystemRole ? (
-            <div className="flex justify-end mt-4">
-              <BaseButton
-                onClick={onClose}
-                className="!bg-white !text-slate-700 !border-slate-300 hover:!bg-slate-50 hover:!text-slate-900 h-11 px-6 rounded-xl font-semibold transition-all"
-              >
-                Đóng
-              </BaseButton>
-            </div>
-          ) : (
-            <div className="flex justify-end gap-3 mt-4">
-              <BaseButton
-                onClick={onClose}
-                disabled={createRole.isPending || updateRole.isPending}
-                className="!bg-white !text-slate-700 !border-slate-300 hover:!bg-slate-50 hover:!text-slate-900 h-11 px-6 rounded-xl font-semibold transition-all"
-              >
-                Hủy bỏ
-              </BaseButton>
-              <BaseButton
-                type="primary"
-                htmlType="submit"
-                form="role-form"
-                loading={createRole.isPending || updateRole.isPending}
-                className="!bg-brand-primary !text-white hover:opacity-90 !border-0 shadow-lg shadow-brand-primary/25 h-11 px-8 rounded-xl font-bold hover:-translate-y-0.5 transition-all"
-              >
-                {isEdit ? "Cập nhật" : "Tạo mới"}
-              </BaseButton>
-            </div>
-          )
-        }
-        classNames={{
-          content: "!bg-white !rounded-3xl !p-0 overflow-hidden shadow-2xl shadow-brand-primary/10",
-          header: "!bg-white border-b border-slate-100 px-8 py-5 m-0",
-          body: "!bg-slate-50/50 p-6 md:p-8 overflow-y-auto max-h-[60vh] scrollbar-thin scrollbar-thumb-slate-200",
-          footer: "!bg-white border-t border-slate-100 px-8 py-4 m-0",
-          close: "mt-4 mr-4 hover:!bg-slate-100 !rounded-full transition-colors",
+        centered
+        confirmText={isSystemRole ? "Đóng" : (isEdit ? "Cập nhật" : "Tạo mới")}
+        cancelText="Hủy bỏ"
+        onConfirm={isSystemRole ? onClose : handleSubmit(onSubmit)}
+        confirmLoading={createRole.isPending || updateRole.isPending}
+        confirmButtonProps={{
+          className: isSystemRole ? "hidden" : "!bg-blue-600 hover:!bg-blue-700 !border-0 text-white font-bold shadow-lg shadow-blue-500/25 px-8",
+          form: "role-form",
+          htmlType: "submit"
         }}
+        cancelButtonProps={
+          isSystemRole
+            ? { className: "!bg-slate-100 !text-slate-700 hover:!bg-slate-200 !border-0 font-semibold px-8 h-10" }
+            : { disabled: createRole.isPending || updateRole.isPending }
+        }
       >
         <Form id="role-form" layout="vertical" onFinish={handleSubmit(onSubmit)} requiredMark={(label, info) => info.required ? <>{label} <span className="text-red-500 ml-1">*</span></> : label}>
           {showTenantSelector && (
@@ -232,7 +208,7 @@ export const RoleFormModal: React.FC<RoleFormModalProps> = ({ open, onClose, ten
                   help={fieldState.error?.message}
                   required
                 >
-                  <Select
+                  <BaseSelect
                     {...field}
                     placeholder="-- Chọn công ty --"
                     options={tenantOptions}
@@ -255,7 +231,7 @@ export const RoleFormModal: React.FC<RoleFormModalProps> = ({ open, onClose, ten
                 help={fieldState.error?.message}
                 required
               >
-                <Input {...field} placeholder="Nhập tên role" disabled={isSystemRole} />
+                <BaseInput {...field} placeholder="Nhập tên role" disabled={isSystemRole} />
               </Form.Item>
             )}
           />
@@ -269,7 +245,7 @@ export const RoleFormModal: React.FC<RoleFormModalProps> = ({ open, onClose, ten
                 validateStatus={fieldState.error ? "error" : ""}
                 help={fieldState.error?.message}
               >
-                <Input.TextArea {...field} placeholder="Nhập mô tả cho role này" rows={3} disabled={isSystemRole} />
+                <BaseTextArea {...field} placeholder="Nhập mô tả cho role này" rows={3} disabled={isSystemRole} />
               </Form.Item>
             )}
           />
@@ -278,7 +254,7 @@ export const RoleFormModal: React.FC<RoleFormModalProps> = ({ open, onClose, ten
             <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
               <div className="flex items-center gap-4 flex-wrap">
                 <h3 className="text-base font-medium">Phân quyền</h3>
-                <Select
+                <BaseSelect
                   mode="multiple"
                   placeholder="Lọc theo nhóm quyền..."
                   value={filterResources}
@@ -356,7 +332,7 @@ export const RoleFormModal: React.FC<RoleFormModalProps> = ({ open, onClose, ten
             )}
           </div>
         </Form>
-      </Modal>
+      </BaseModal>
     </>
   );
 };

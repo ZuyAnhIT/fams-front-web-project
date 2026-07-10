@@ -1,8 +1,10 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { Modal, Form, InputNumber, Button, message } from "antd";
+import { Form, InputNumber, message } from "antd";
 import { BaseSwitch } from "@/components/ui";
+import BaseModal from "@/components/ui/BaseModal";
+import BaseButton from "@/components/ui/BaseButton";
 import { useAuthStore } from "@/stores/auth.store";
 import { useConfigureOtMutation } from "../hooks/use-shift";
 import { ShiftResponse } from "../types/shift.type";
@@ -66,22 +68,34 @@ export default function ShiftOtConfigModal({
   const isLoading = configureOtMutation.isPending;
 
   return (
-    <Modal
+    <BaseModal
       title={
         <div>
-          <span className="block text-lg">Cấu hình Tăng ca & Chấm công</span>
+          <span className="block text-lg font-bold text-slate-900 tracking-tight leading-tight">Cấu hình Tăng ca & Chấm công</span>
           <span className="block text-sm text-slate-500 font-normal mt-1">
             Ca làm việc: <strong className="text-blue-600">{activeShift?.name}</strong> ({activeShift?.startTime} - {activeShift?.endTime})
           </span>
         </div>
       }
-      open={isOpen}
-      onCancel={onClose}
-      footer={null}
-      destroyOnHidden
+      isOpen={isOpen}
+      onClose={onClose}
+      destroyOnClose
+      confirmText="Lưu cấu hình"
+      cancelText="Hủy bỏ"
+      confirmLoading={isLoading}
+      confirmButtonProps={{
+        htmlType: "submit",
+        form: "ot-config-form",
+        className: "!bg-blue-600 hover:!bg-blue-700 !border-0 text-white font-bold shadow-lg shadow-blue-500/25 transition-all h-10 px-6 rounded-lg"
+      }}
+      cancelButtonProps={{
+        disabled: isLoading,
+        className: "!bg-white !text-slate-700 !border-slate-300 hover:!bg-slate-50 hover:!text-slate-900 h-10 px-6 rounded-lg font-semibold transition-all"
+      }}
     >
       <Form
         form={form}
+        id="ot-config-form"
         layout="vertical"
         onFinish={handleFinish}
         className="mt-6"
@@ -148,15 +162,7 @@ export default function ShiftOtConfigModal({
           <strong>Lưu ý:</strong> Nhân viên check-in/out trong khoảng thời gian châm chước này sẽ được tính là đúng giờ.
         </div>
 
-        <div className="flex justify-end gap-3 mt-8">
-          <Button onClick={onClose} disabled={isLoading}>
-            Hủy bỏ
-          </Button>
-          <Button type="primary" htmlType="submit" loading={isLoading}>
-            Lưu cấu hình
-          </Button>
-        </div>
       </Form>
-    </Modal>
+    </BaseModal>
   );
 }

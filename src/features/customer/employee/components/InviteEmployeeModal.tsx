@@ -1,9 +1,10 @@
 "use client";
 
-import { Modal, message, Select } from "antd";
-import { useForm, Controller } from "react-hook-form";
+import { message } from "antd";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import FormInput from "@/components/forms/FormInput";
+import FormSelect from "@/components/forms/FormSelect";
 import BaseModal from "@/components/ui/BaseModal";
 import { useSendInvitation } from "../hooks/use-employee";
 import { inviteEmployeeSchema, type InviteEmployeeFormData } from "../schemas/employee.schema";
@@ -88,6 +89,7 @@ export default function InviteEmployeeModal({ open, onClose }: InviteEmployeeMod
           placeholder="Ví dụ: nhanvien@congty.com"
           id="invite-email"
           error={errors.email}
+          required
           className="text-brand-900 border-brand-300 focus:border-brand-500"
         />
 
@@ -110,26 +112,17 @@ export default function InviteEmployeeModal({ open, onClose }: InviteEmployeeMod
           />
         </div>
 
-        <div className="flex flex-col space-y-1">
-          <label className="text-sm font-medium text-slate-700">
-            Vai trò (Role)
-          </label>
-          <Controller
-            name="roleId"
-            control={control}
-            render={({ field }) => (
-              <Select
-                {...field}
-                className="w-full h-11"
-                placeholder="Chọn vai trò cho nhân viên"
-                options={roleOptions}
-                loading={isLoadingRoles}
-                allowClear
-                size="large"
-              />
-            )}
-          />
-        </div>
+        <FormSelect
+          control={control}
+          name="roleId"
+          label="Vai trò (Role)"
+          placeholder="Chọn vai trò cho nhân viên"
+          options={roleOptions}
+          loading={isLoadingRoles}
+          error={errors.roleId}
+          required
+          allowClear
+        />
 
       </form>
     </BaseModal>

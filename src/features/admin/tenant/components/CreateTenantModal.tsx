@@ -1,10 +1,11 @@
 "use client";
 
-import { Modal, message, Divider, Form, AutoComplete } from "antd";
+import { message, Divider, Form, AutoComplete } from "antd";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import FormInput from "@/components/forms/FormInput";
 import BaseButton from "@/components/ui/BaseButton";
+import BaseModal from "@/components/ui/BaseModal";
 import { useCreateTenant } from "../hooks/use-tenant";
 import { createTenantSchema, type CreateTenantFormData } from "../schemas/tenant.schema";
 import { useEffect, useState } from "react";
@@ -128,7 +129,7 @@ export default function CreateTenantModal({ open, onClose }: CreateTenantModalPr
   })) || [];
 
   return (
-    <Modal
+    <BaseModal
       title={
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 bg-brand-primary/10 rounded-xl flex items-center justify-center">
@@ -140,40 +141,25 @@ export default function CreateTenantModal({ open, onClose }: CreateTenantModalPr
           </div>
         </div>
       }
-      open={open}
-      onCancel={onClose}
-      destroyOnHidden
+      isOpen={open}
+      onClose={onClose}
+      destroyOnClose
       centered
       width={760}
-      footer={
-        <div className="flex justify-end gap-3 mt-4">
-          <BaseButton
-            onClick={onClose}
-            disabled={isPending}
-            className="!bg-white !text-slate-700 !border-slate-300 hover:!bg-slate-50 hover:!text-slate-900 h-11 px-6 rounded-xl font-semibold transition-all"
-          >
-            Hủy bỏ
-          </BaseButton>
-          <BaseButton
-            type="primary"
-            htmlType="submit"
-            form="create-tenant-form"
-            loading={isPending}
-            className="!bg-brand-primary !text-white hover:opacity-90 !border-0 shadow-lg shadow-brand-primary/25 h-11 px-8 rounded-xl font-bold hover:-translate-y-0.5 transition-all"
-          >
-            Tạo mới
-          </BaseButton>
-        </div>
-      }
-      classNames={{
-        content: "!bg-white !rounded-3xl !p-0 overflow-hidden shadow-2xl shadow-brand-primary/10",
-        header: "!bg-white border-b border-slate-100 px-8 py-5 m-0",
-        body: "!bg-slate-50/50 p-6 md:p-8 overflow-y-auto max-h-[60vh] scrollbar-thin scrollbar-thumb-slate-200",
-        footer: "!bg-white border-t border-slate-100 px-8 py-4 m-0",
-        close: "mt-4 mr-4 hover:!bg-slate-100 !rounded-full transition-colors",
+      confirmText="Tạo mới"
+      cancelText="Hủy bỏ"
+      confirmLoading={isPending}
+      confirmButtonProps={{
+        htmlType: "submit",
+        form: "create-tenant-form",
+        className: "!bg-blue-600 hover:!bg-blue-700 !border-0 text-white font-bold shadow-lg shadow-blue-500/25 transition-all h-10 px-6 rounded-lg"
+      }}
+      cancelButtonProps={{
+        disabled: isPending,
+        className: "!bg-white !text-slate-700 !border-slate-300 hover:!bg-slate-50 hover:!text-slate-900 h-10 px-6 rounded-lg font-semibold transition-all"
       }}
     >
-      <form id="create-tenant-form" onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form id="create-tenant-form" onSubmit={handleSubmit(onSubmit)} className="space-y-6 pt-2">
         {/* Basic Info Section */}
         <div className="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm space-y-5">
           <div className="flex items-center gap-2 mb-2">
@@ -309,6 +295,6 @@ export default function CreateTenantModal({ open, onClose }: CreateTenantModalPr
         </div>
 
       </form>
-    </Modal>
+    </BaseModal>
   );
 }
