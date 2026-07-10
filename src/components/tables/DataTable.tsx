@@ -31,7 +31,7 @@ export default function DataTable<T extends object>({
     pageSize: pageSize,
     total: totalElements,
     showSizeChanger: true,
-    showTotal: (total, range) => `${range[0]}-${range[1]} trên tổng số ${total} bản ghi`,
+    showTotal: (total, range) => `${range[0]}-${range[1]} of  ${total} items`,
     onChange: (page, size) => {
       if (onPageChange) onPageChange(page - 1, size); // Trả về 0-indexed cho backend
     },

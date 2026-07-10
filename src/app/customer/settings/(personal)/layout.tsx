@@ -16,7 +16,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
 
   return (
     <div className="max-w-6xl mx-auto py-8 px-4 md:px-0">
-      <h2 className="text-2xl font-bold text-brand-950 mb-6">Cài đặt tài khoản</h2>
+      <h2 className="!text-[35px] !font-semibold text-brand-950 mb-6">Cài đặt tài khoản</h2>
 
       <div className="flex flex-col md:flex-row gap-8 min-h-[600px]">
         {/* Sidebar Tabs */}

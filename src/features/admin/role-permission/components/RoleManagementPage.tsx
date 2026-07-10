@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Input, Button, Space, Tag, Modal, message, Select, Tooltip, App } from "antd";
+import { Button, Space, Tag, Modal, message, Tooltip, App } from "antd";
 import { useAuthStore } from "@/stores/auth.store";
 import { PlusOutlined, SearchOutlined, EditOutlined, DeleteOutlined, InfoCircleOutlined, EyeOutlined } from "@ant-design/icons";
 import { useRolesQuery, useDeleteRoleMutation } from "../hooks/use-role-permission";
@@ -14,6 +14,7 @@ import { rolePermissionService } from "../services/role-permission.service";
 import ListHeader from "@/components/shared/layout/ListHeader";
 import ContentCard from "@/components/shared/layout/ContentCard";
 import BaseButton from "@/components/ui/BaseButton";
+import BaseSelect from "@/components/ui/BaseSelect";
 import DataTable from "@/components/tables/DataTable";
 import { Plus } from "lucide-react";
 
@@ -198,53 +199,63 @@ export const RoleManagementPage: React.FC = () => {
     <div className="space-y-6 max-w-7xl mx-auto">
       {contextHolder}
 
-      <ListHeader
-        searchValue={searchInput}
-        onSearchChange={setSearchInput}
-        searchPlaceholder="Tìm kiếm theo tên..."
-        filters={
-          <div className="flex gap-3">
-            <Select
-              placeholder="Lọc theo loại Role"
-              allowClear
-              className="w-48 h-11"
-              onChange={handleFilterChange}
-              options={[
-                { value: true, label: 'Role Hệ thống' },
-                { value: false, label: 'Role Tùy chỉnh' },
-              ]}
-            />
-            {user?.role === "PLATFORM_ADMIN" && (
-              <Select
-                placeholder="Lọc theo Công ty"
-                allowClear
-                showSearch
-                optionFilterProp="label"
-                className="w-56 h-11"
-                onChange={handleTenantFilterChange}
-                options={tenantOptions}
-                loading={isLoadingTenants}
-              />
-            )}
-          </div>
-        }
-        actions={
-          hasPermission("roles:create") && (
-            <BaseButton
-              type="primary"
-              icon={<Plus className="h-4.5 w-4.5" />}
-              onClick={openCreateModal}
-              className="!bg-brand-600 !text-white hover:!bg-brand-700 !border-0 shadow-lg shadow-brand-500/25 h-11 px-5 rounded-xl font-bold hover:-translate-y-0.5 transition-all flex items-center gap-2"
-            >
-              Tạo Role
-            </BaseButton>
-          )
-        }
-      />
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+        <div>
+          <h2 className="!text-[35px] !font-semibold text-slate-900 tracking-tight">
+            Vai trò & Phân quyền
+          </h2>
+          <p className="text-sm text-slate-500 mt-1">
+            Quản lý các vai trò và thiết lập quyền hạn truy cập hệ thống
+          </p>
+        </div>
+        {hasPermission("roles:create") && (
+          <BaseButton
+            type="primary"
+            icon={<Plus className="h-4.5 w-4.5" />}
+            onClick={openCreateModal}
+            className="!bg-blue-600 !text-white hover:!bg-blue-700 !border-0 shadow-lg shadow-blue-500/25 h-10 px-5 rounded-xl font-bold hover:-translate-y-0.5 transition-all flex items-center gap-2"
+          >
+            Tạo Role
+          </BaseButton>
+        )}
+      </div>
 
       <ContentCard noPadding>
-        <DataTable
-          columns={columns as any}
+        <ListHeader
+          className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-5 border-b border-slate-100"
+          searchValue={searchInput}
+          onSearchChange={setSearchInput}
+          searchPlaceholder="Tìm kiếm theo tên..."
+          filters={
+            <div className="flex gap-3">
+              <BaseSelect
+                placeholder="Lọc theo loại Role"
+                allowClear
+                className="w-48"
+                onChange={handleFilterChange}
+                options={[
+                  { value: true, label: 'Role Hệ thống' },
+                  { value: false, label: 'Role Tùy chỉnh' },
+                ]}
+              />
+              {user?.role === "PLATFORM_ADMIN" && (
+                <BaseSelect
+                  placeholder="Lọc theo Công ty"
+                  allowClear
+                  showSearch
+                  optionFilterProp="label"
+                  className="w-56"
+                  onChange={handleTenantFilterChange}
+                  options={tenantOptions}
+                  loading={isLoadingTenants}
+                />
+              )}
+            </div>
+          }
+        />
+        <div className="p-5">
+          <DataTable
+            columns={columns as any}
           data={rolesResponse?.data?.content || []}
           loading={isLoading || isFetching}
           totalElements={rolesResponse?.data?.totalElements || 0}
@@ -264,7 +275,8 @@ export const RoleManagementPage: React.FC = () => {
             }
           }}
         />
-      </ContentCard>
+      </div>
+    </ContentCard>
 
       <RoleFormModal
         open={isModalOpen}

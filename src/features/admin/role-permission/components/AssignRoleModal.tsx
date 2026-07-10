@@ -1,7 +1,9 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { Modal, Form, Select, message } from "antd";
+import { Form, message } from "antd";
+import BaseModal from "@/components/ui/BaseModal";
+import BaseSelect from "@/components/ui/BaseSelect";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -73,15 +75,24 @@ export const AssignRoleModal: React.FC<AssignRoleModalProps> = ({
   return (
     <>
       {contextHolder}
-      <Modal
+      <BaseModal
         title="Gán Role cho Người Dùng"
-        open={open}
-        onCancel={onClose}
-        onOk={handleSubmit(onSubmit)}
-        confirmLoading={assignRole.isPending}
-        destroyOnHidden
-        okText="Lưu"
+        isOpen={open}
+        onClose={onClose}
+        destroyOnClose
+        centered
+        width={500}
+        confirmText="Lưu"
         cancelText="Hủy"
+        confirmLoading={assignRole.isPending}
+        confirmButtonProps={{
+          onClick: handleSubmit(onSubmit),
+          className: "!bg-blue-600 hover:!bg-blue-700 !border-0 text-white font-bold shadow-lg shadow-blue-500/25 transition-all h-10 px-6 rounded-lg"
+        }}
+        cancelButtonProps={{
+          disabled: assignRole.isPending,
+          className: "!bg-white !text-slate-700 !border-slate-300 hover:!bg-slate-50 hover:!text-slate-900 h-10 px-6 rounded-lg font-semibold transition-all"
+        }}
       >
         <Form layout="vertical" className="mt-4">
           <Controller
@@ -89,24 +100,25 @@ export const AssignRoleModal: React.FC<AssignRoleModalProps> = ({
             control={control}
             render={({ field, fieldState }) => (
               <Form.Item
-                label="Chọn Role"
+                label={<span className="text-sm font-semibold text-slate-700">Chọn Role</span>}
                 validateStatus={fieldState.error ? "error" : ""}
                 help={fieldState.error?.message}
                 required
               >
-                <Select
+                <BaseSelect
                   {...field}
                   placeholder="-- Chọn Role --"
                   options={roleOptions}
                   loading={isLoadingRoles}
                   showSearch
                   optionFilterProp="label"
+                  size="large"
                 />
               </Form.Item>
             )}
           />
         </Form>
-      </Modal>
+      </BaseModal>
     </>
   );
 };

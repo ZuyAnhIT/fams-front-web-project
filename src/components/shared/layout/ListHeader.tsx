@@ -21,7 +21,7 @@ export default function ListHeader({
 }: ListHeaderProps) {
   return (
     <div className={className || "flex flex-col sm:flex-row flex-wrap justify-between items-start sm:items-center gap-4"}>
-      <div className="flex flex-col sm:flex-row flex-1 gap-3 w-full max-w-xl">
+      <div className="flex flex-col lg:flex-row flex-1 gap-3 w-full max-w-4xl">
         <div className="flex-1 relative group">
           <BaseInput
             placeholder={searchPlaceholder}

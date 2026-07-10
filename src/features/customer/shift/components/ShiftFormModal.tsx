@@ -1,8 +1,10 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { Modal, Form, Input, TimePicker, Button, message } from "antd";
-import { BaseSwitch } from "@/components/ui";
+import { Form, message } from "antd";
+import { BaseSwitch, BaseInput, BaseTimePicker } from "@/components/ui";
+import BaseModal from "@/components/ui/BaseModal";
+import BaseButton from "@/components/ui/BaseButton";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import { useAuthStore } from "@/stores/auth.store";
@@ -112,42 +114,63 @@ export default function ShiftFormModal({
   const isLoading = createMutation.isPending || updateMutation.isPending;
 
   return (
-    <Modal
-      title={isUpdate ? "Cập nhật Ca làm việc" : "Tạo mới Ca làm việc"}
-      open={isOpen}
-      onCancel={onClose}
-      footer={null}
-      destroyOnHidden
+    <BaseModal
+      title={
+        <div>
+          <h2 className="text-xl font-bold text-slate-900 tracking-tight leading-tight">
+            {isUpdate ? "Cập nhật Ca làm việc" : "Tạo mới Ca làm việc"}
+          </h2>
+          <p className="text-sm text-slate-500 font-normal mt-0.5">
+            {isUpdate ? "Chỉnh sửa thông tin ca làm việc hiện tại" : "Thêm ca làm việc mới cho công trình này"}
+          </p>
+        </div>
+      }
+      isOpen={isOpen}
+      onClose={onClose}
+      destroyOnClose
+      confirmText={isUpdate ? "Lưu thay đổi" : "Tạo ca"}
+      cancelText="Hủy bỏ"
+      confirmLoading={isLoading}
+      confirmButtonProps={{
+        htmlType: "submit",
+        form: "shift-form",
+        className: "!bg-blue-600 hover:!bg-blue-700 !border-0 text-white font-bold shadow-lg shadow-blue-500/25 transition-all h-10 px-6 rounded-lg"
+      }}
+      cancelButtonProps={{
+        disabled: isLoading,
+        className: "!bg-white !text-slate-700 !border-slate-300 hover:!bg-slate-50 hover:!text-slate-900 h-10 px-6 rounded-lg font-semibold transition-all"
+      }}
     >
       <Form
         form={form}
+        id="shift-form"
         layout="vertical"
         onFinish={handleFinish}
-        className="mt-4"
+        className="mt-2"
       >
         <Form.Item
           name="name"
-          label={<span className="font-medium text-slate-700">Tên ca làm việc</span>}
+          label={<span className="font-semibold text-slate-700 text-sm">Tên ca làm việc</span>}
           rules={[{ required: true, message: "Vui lòng nhập tên ca làm việc" }]}
         >
-          <Input placeholder="VD: Ca hành chính, Ca đêm..." size="large" />
+          <BaseInput placeholder="VD: Ca hành chính, Ca đêm..." />
         </Form.Item>
 
         <div className="grid grid-cols-2 gap-4">
           <Form.Item
             name="startTime"
-            label={<span className="font-medium text-slate-700">Giờ bắt đầu</span>}
+            label={<span className="font-semibold text-slate-700 text-sm">Giờ bắt đầu</span>}
             rules={[{ required: true, message: "Chọn giờ bắt đầu" }]}
           >
-            <TimePicker format={format} size="large" className="w-full" minuteStep={5} />
+            <BaseTimePicker format={format} className="w-full" minuteStep={5} />
           </Form.Item>
 
           <Form.Item
             name="endTime"
-            label={<span className="font-medium text-slate-700">Giờ kết thúc</span>}
+            label={<span className="font-semibold text-slate-700 text-sm">Giờ kết thúc</span>}
             rules={[{ required: true, message: "Chọn giờ kết thúc" }]}
           >
-            <TimePicker format={format} size="large" className="w-full" minuteStep={5} />
+            <BaseTimePicker format={format} className="w-full" minuteStep={5} />
           </Form.Item>
         </div>
 
@@ -181,15 +204,7 @@ export default function ShiftFormModal({
           </div>
         )}
 
-        <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-100">
-          <Button onClick={onClose} disabled={isLoading}>
-            Hủy bỏ
-          </Button>
-          <Button type="primary" htmlType="submit" loading={isLoading}>
-            {isUpdate ? "Lưu thay đổi" : "Tạo ca"}
-          </Button>
-        </div>
       </Form>
-    </Modal>
+    </BaseModal>
   );
 }

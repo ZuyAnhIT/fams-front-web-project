@@ -4,9 +4,10 @@ import { useState } from "react";
 import { useLogoutAll } from "@/features/customer/auth/hooks/use-auth";
 import { useAuthStore } from "@/stores/auth.store";
 import { useRouter } from "next/navigation";
-import { message, Modal } from "antd";
+import { message } from "antd";
 import { ROUTES } from "@/constants/routes";
 import BaseButton from "@/components/ui/BaseButton";
+import BaseModal from "@/components/ui/BaseModal";
 import { MonitorSmartphone, AlertTriangle } from "lucide-react";
 
 export default function SessionManagement() {
@@ -43,7 +44,7 @@ export default function SessionManagement() {
     <div className="max-w-xl">
       <div className="mb-6">
         <h3 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-          <MonitorSmartphone className="w-5 h-5 text-brand-600" />
+          <MonitorSmartphone className="w-5 h-5 text-blue-600" />
           Thiết bị & Phiên đăng nhập
         </h3>
         <p className="mt-1 text-sm text-gray-500">
@@ -70,24 +71,26 @@ export default function SessionManagement() {
         </BaseButton>
       </div>
 
-      <Modal
+      <BaseModal
         title={
           <div className="flex items-center gap-2">
             <AlertTriangle className="text-red-500 w-5 h-5" />
-            <span>Xác nhận đăng xuất khỏi mọi thiết bị</span>
+            <span className="text-xl font-bold text-slate-900">Xác nhận đăng xuất khỏi mọi thiết bị</span>
           </div>
         }
-        open={isConfirmOpen}
-        onCancel={() => setIsConfirmOpen(false)}
-        onOk={handleConfirmLogoutAll}
-        okText="Đăng xuất tất cả"
+        isOpen={isConfirmOpen}
+        onClose={() => setIsConfirmOpen(false)}
+        onConfirm={handleConfirmLogoutAll}
+        confirmText="Đăng xuất tất cả"
         cancelText="Hủy"
-        okButtonProps={{ danger: true, loading: logoutAllMutation.isPending }}
+        confirmButtonProps={{ danger: true }}
+        confirmLoading={logoutAllMutation.isPending}
+        centered
       >
-        <p className="mt-4 text-gray-600">
+        <p className="mt-2 text-slate-600">
           Bạn sẽ bị đăng xuất khỏi tài khoản trên thiết bị này và TẤT CẢ các thiết bị khác hiện đang đăng nhập. Hành động này không thể hoàn tác.
         </p>
-      </Modal>
+      </BaseModal>
     </div>
   );
 }

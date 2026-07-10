@@ -10,6 +10,7 @@ import BaseButton from "@/components/ui/BaseButton";
 import BaseInput from "@/components/ui/BaseInput";
 import BaseSelect from "@/components/ui/BaseSelect";
 import BaseSwitch from "@/components/ui/BaseSwitch";
+import BaseTextArea from "@/components/ui/BaseTextArea";
 
 interface UpdateSiteModalProps {
   isOpen: boolean;
@@ -181,7 +182,7 @@ export default function UpdateSiteModal({ isOpen, onClose, site }: UpdateSiteMod
 
             <Form.Item
               name="status"
-              label={<span className="font-medium text-slate-700">Trạng thái</span>}
+              label={<span className="font-medium text-slate-700">Trạng thái (Tắt/Bật)</span>}
               valuePropName="checked"
             >
               <BaseSwitch />
@@ -191,7 +192,7 @@ export default function UpdateSiteModal({ isOpen, onClose, site }: UpdateSiteMod
               name="address"
               label={<span className="font-medium text-slate-700">Địa chỉ thực tế</span>}
             >
-              <Input.TextArea
+              <BaseTextArea
                 placeholder="Nhấp vào bản đồ để tự động điền hoặc gõ tay..."
                 rows={2}
               />
@@ -201,7 +202,7 @@ export default function UpdateSiteModal({ isOpen, onClose, site }: UpdateSiteMod
               name="description"
               label={<span className="font-medium text-slate-700">Mô tả thêm</span>}
             >
-              <Input.TextArea placeholder="Ghi chú..." rows={2} />
+              <BaseTextArea placeholder="Ghi chú..." rows={2} />
             </Form.Item>
 
             {/* Hidden actual inputs for submission */}

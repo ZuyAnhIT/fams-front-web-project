@@ -74,41 +74,35 @@ export default function ProfileSettingForm() {
           control={control}
           name="displayName"
           label="Tên hiển thị"
-          labelClassName="text-brand-900"
           placeholder="Nhập tên hiển thị"
           id="profile-display-name"
           error={errors.displayName}
-          className="text-brand-900 border-brand-300 focus:border-brand-500 focus:ring-brand-500/20"
         />
 
         <FormInput
           control={control}
           name="phone"
           label="Số điện thoại"
-          labelClassName="text-brand-900"
           placeholder="Nhập số điện thoại"
           id="profile-phone"
           error={errors.phone}
-          className="text-brand-900 border-brand-300 focus:border-brand-500 focus:ring-brand-500/20"
         />
 
         <FormInput
           control={control}
           name="avatarUrl"
           label="Đường dẫn ảnh đại diện (URL)"
-          labelClassName="text-brand-900"
           placeholder="https://example.com/avatar.jpg"
           id="profile-avatar"
           error={errors.avatarUrl}
-          className="text-brand-900 border-brand-300 focus:border-brand-500 focus:ring-brand-500/20"
         />
 
-        <div className="flex justify-start pt-4">
+        <div className="flex justify-end pt-4">
           <BaseButton
             type="primary"
             htmlType="submit"
             loading={isPending}
-            className="bg-brand-600 hover:bg-brand-700 text-white border-transparent"
+            className="!bg-blue-600 !text-white hover:!bg-blue-700 !border-0 shadow-md shadow-blue-500/20 h-10 px-8 rounded-lg font-bold transition-all"
           >
             Lưu thay đổi
           </BaseButton>

@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Modal, message, Alert } from "antd";
+import { Alert, message } from "antd";
 import { Trash2, ShieldCheck, Plus } from "lucide-react";
 import { format } from "date-fns";
 import DataTable from "@/components/tables/DataTable";
 import { useQueryClient } from "@tanstack/react-query";
-import BaseButton from "@/components/ui/BaseButton";
+import { BaseButton, BaseConfirmModal } from "@/components/ui";
 import GlassCard from "@/components/ui/GlassCard";
 import { AssignRoleModal } from "@/features/admin/role-permission/components/AssignRoleModal";
 import { useRevokeRoleMutation } from "@/features/admin/role-permission/hooks/use-role-permission";
@@ -19,30 +19,30 @@ interface EmployeeRolesTabProps {
 
 export default function EmployeeRolesTab({ employee }: EmployeeRolesTabProps) {
   const [isAssignOpen, setIsAssignOpen] = useState(false);
+  const [revokeRoleId, setRevokeRoleId] = useState<string | null>(null);
   const revokeRole = useRevokeRoleMutation();
   const queryClient = useQueryClient();
 
   const handleSuccess = () => {
     queryClient.invalidateQueries({ queryKey: ["employees", employee.id] });
+    setIsAssignOpen(false);
   };
 
   const handleRevoke = (userRoleId: string) => {
-    Modal.confirm({
-      title: "Xác nhận thu hồi quyền",
-      content: "Bạn có chắc chắn muốn thu hồi role này khỏi nhân viên?",
-      okText: "Thu hồi",
-      okType: "danger",
-      cancelText: "Hủy",
-      onOk: async () => {
-        try {
-          await revokeRole.mutateAsync(userRoleId);
-          message.success("Đã thu hồi role thành công");
-          handleSuccess();
-        } catch (error: any) {
-          message.error(error?.response?.data?.message || "Lỗi khi thu hồi role");
-        }
-      },
-    });
+    setRevokeRoleId(userRoleId);
+  };
+
+  const confirmRevoke = async () => {
+    if (!revokeRoleId) return;
+    try {
+      await revokeRole.mutateAsync(revokeRoleId);
+      message.success("Đã thu hồi role thành công");
+      handleSuccess();
+    } catch (error: any) {
+      message.error(error?.response?.data?.message || "Lỗi khi thu hồi role");
+    } finally {
+      setRevokeRoleId(null);
+    }
   };
 
   const columns = [
@@ -94,7 +94,7 @@ export default function EmployeeRolesTab({ employee }: EmployeeRolesTabProps) {
           icon={<Plus className="h-4 w-4" />}
           onClick={() => setIsAssignOpen(true)}
           disabled={!employee.userId}
-          className="bg-brand-600 border-transparent"
+          className="!bg-blue-600 !text-white hover:!bg-blue-700 !border-0 shadow-md shadow-blue-500/20 h-10 px-5 rounded-xl font-semibold hover:-translate-y-0.5 transition-all flex items-center gap-2 disabled:!bg-slate-300 disabled:!text-slate-500 disabled:!shadow-none disabled:translate-y-0"
         >
           Gán Role
         </BaseButton>
@@ -127,6 +127,17 @@ export default function EmployeeRolesTab({ employee }: EmployeeRolesTabProps) {
           onSuccess={handleSuccess}
         />
       )}
+
+      <BaseConfirmModal
+        isOpen={!!revokeRoleId}
+        onClose={() => setRevokeRoleId(null)}
+        onConfirm={confirmRevoke}
+        title="Xác nhận thu hồi quyền"
+        message="Bạn có chắc chắn muốn thu hồi role này khỏi nhân viên? Họ sẽ mất các quyền truy cập tương ứng ngay lập tức."
+        confirmText="Thu hồi"
+        type="danger"
+        isLoading={revokeRole.isPending}
+      />
     </div>
   );
 }

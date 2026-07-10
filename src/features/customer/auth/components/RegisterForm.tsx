@@ -117,7 +117,7 @@ export default function RegisterForm() {
         {step === "waiting_email" ? (
           <div className="flex flex-col items-center justify-center text-center animate-in fade-in zoom-in duration-300">
             {/* Email Icon */}
-            <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-brand-50 text-brand-600">
+            <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-blue-50 text-blue-600">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
               </svg>
@@ -141,7 +141,7 @@ export default function RegisterForm() {
               onClick={() => {
                 router.push(`${ROUTES.LOGIN}?email=${encodeURIComponent(registeredEmail)}`);
               }}
-              className="mt-2 font-bold !bg-brand-600 !text-white hover:opacity-90 !border-0 shadow-lg shadow-brand-600/25 h-12 rounded-xl transition-all"
+              className="mt-2 font-bold !bg-blue-600 !text-white hover:!bg-blue-700 !border-0 shadow-lg shadow-blue-500/25 h-12 rounded-xl transition-all"
             >
               Đi tới Đăng nhập
             </BaseButton>
@@ -149,7 +149,7 @@ export default function RegisterForm() {
             <p className="mt-8 text-sm text-slate-500">
               Chưa nhận được email?{" "}
               <span
-                className="cursor-pointer font-bold text-brand-600 hover:text-brand-700 transition-colors"
+                className="cursor-pointer font-bold !text-blue-600 hover:!text-blue-700 transition-colors"
                 onClick={() => message.info("Chức năng gửi lại email sẽ được cập nhật sau.")}
               >
                 Gửi lại email
@@ -166,6 +166,7 @@ export default function RegisterForm() {
               placeholder="Nhập họ và tên của bạn"
               id="register-fullname"
               error={errors.fullName}
+              required
             />
 
             {/* Email hoặc số điện thoại */}
@@ -176,6 +177,7 @@ export default function RegisterForm() {
               placeholder="Nhập email hoặc số điện thoại"
               id="register-email-phone"
               error={errors.emailOrPhone}
+              required
             />
 
             {/* Mật khẩu */}
@@ -187,6 +189,7 @@ export default function RegisterForm() {
               type="password"
               id="register-password"
               error={errors.password}
+              required
             />
 
             {/* Xác nhận mật khẩu */}
@@ -198,6 +201,7 @@ export default function RegisterForm() {
               type="password"
               id="register-confirmpassword"
               error={errors.confirmPassword}
+              required
             />
 
             {/* Nút đăng ký */}
@@ -207,7 +211,7 @@ export default function RegisterForm() {
               loading={isSubmitting}
               block
               size="large"
-              className="mt-2 font-bold !bg-brand-600 !text-white hover:opacity-90 !border-0 shadow-lg shadow-brand-600/25 h-12 rounded-xl transition-all"
+              className="mt-2 font-bold !bg-blue-600 !text-white hover:!bg-blue-700 !border-0 shadow-lg shadow-blue-500/25 h-12 rounded-xl transition-all"
             >
               Đăng ký
             </BaseButton>
@@ -215,7 +219,7 @@ export default function RegisterForm() {
               Đã có tài khoản?{" "}
               <Link
                 href={ROUTES.LOGIN}
-                className="font-bold text-brand-600 hover:text-brand-700 transition-colors"
+                className="font-bold !text-blue-600 hover:!text-blue-700 transition-colors"
               >
                 Đăng nhập
               </Link>

@@ -85,7 +85,7 @@ export default function TotpSettingForm() {
       </p>
 
       <div className="flex gap-4">
-        <BaseButton onClick={handleSetup} loading={isSettingUp} type="primary" className="bg-brand-600">
+        <BaseButton onClick={handleSetup} loading={isSettingUp} type="primary" className="!bg-blue-600 !text-white hover:!bg-blue-700 !border-0 shadow-md shadow-blue-500/20 font-bold">
           Bật TOTP
         </BaseButton>
         <BaseButton onClick={handleDisable} loading={isDisabling} danger>
@@ -131,7 +131,7 @@ export default function TotpSettingForm() {
                 <p className="text-xs text-red-500 mt-1">{errors.code.message}</p>
               )}
             </div>
-            <BaseButton htmlType="submit" loading={isVerifying} block type="primary" className="bg-brand-600 mt-4">
+            <BaseButton htmlType="submit" loading={isVerifying} block type="primary" className="!bg-blue-600 !text-white hover:!bg-blue-700 !border-0 shadow-md shadow-blue-500/20 mt-4 font-bold">
               Xác nhận & Bật
             </BaseButton>
           </form>

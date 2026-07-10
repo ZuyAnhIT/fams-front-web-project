@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { Plus, Search, Building2, ChevronRight, MoreVertical, Ban, PlayCircle } from "lucide-react";
-import { Input, Select, Dropdown, MenuProps, Modal, message } from "antd";
+import { Input, Dropdown, MenuProps, Modal, message } from "antd";
 import DataTable from "@/components/tables/DataTable";
-import BaseButton from "@/components/ui/BaseButton";
+import { BaseButton, BaseSelect } from "@/components/ui";
 import { usePagination } from "@/hooks/usePagination";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useTenants, useSuspendTenant, useReactivateTenant } from "../hooks/use-tenant";
@@ -215,6 +215,22 @@ export default function TenantListPage() {
   return (
     <RoleGuard allowedRoles={[SystemRole.PLATFORM_ADMIN]}>
       <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="!text-[35px] !font-semibold text-brand-950">Danh sách công ty</h1>
+            <p className="text-sm text-brand-600 mt-1">
+              Quản lý toàn bộ công ty (tenants) đang sử dụng hệ thống
+            </p>
+          </div>
+          <BaseButton
+            type="primary"
+            icon={<Plus className="h-4.5 w-4.5" />}
+            onClick={() => setIsCreateModalOpen(true)}
+            className="!bg-blue-600 !text-white hover:!bg-blue-700 !border-0 shadow-lg shadow-blue-500/25 h-10 px-5 rounded-xl font-bold hover:-translate-y-0.5 transition-all flex items-center gap-2"
+          >
+            Thêm mới
+          </BaseButton>
+        </div>
         {/* Data Table Wrapper */}
         <ContentCard noPadding>
           <ListHeader
@@ -223,10 +239,10 @@ export default function TenantListPage() {
             onSearchChange={setSearchInput}
             searchPlaceholder="Tìm kiếm theo tên công ty, đường dẫn, tên miền,..."
             filters={
-              <Select
+              <BaseSelect
                 placeholder="Trạng thái"
                 allowClear
-                className="w-40 h-10 [&_.ant-select-selector]:rounded-xl [&_.ant-select-selector]:border-slate-200 hover:[&_.ant-select-selector]:border-blue-300 focus:[&_.ant-select-selector]:border-blue-500 bg-slate-50/50 hover:bg-white"
+                className="w-40"
                 value={state.status}
                 onChange={(val) => setPagination({ status: val || undefined, page: 0 })}
                 options={[
@@ -237,16 +253,6 @@ export default function TenantListPage() {
                   }))
                 ]}
               />
-            }
-            actions={
-              <BaseButton
-                type="primary"
-                icon={<Plus className="h-4.5 w-4.5" />}
-                onClick={() => setIsCreateModalOpen(true)}
-                className="!bg-blue-600 !text-white hover:!bg-blue-700 !border-0 shadow-lg shadow-blue-500/25 h-10 px-5 rounded-xl font-bold hover:-translate-y-0.5 transition-all flex items-center gap-2"
-              >
-                Thêm mới
-              </BaseButton>
             }
           />
           <div className="p-5">

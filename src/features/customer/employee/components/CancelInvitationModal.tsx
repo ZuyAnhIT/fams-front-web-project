@@ -1,5 +1,5 @@
-import { Modal, message } from "antd";
-import BaseButton from "@/components/ui/BaseButton";
+import { message } from "antd";
+import BaseModal from "@/components/ui/BaseModal";
 import { useCancelInvitation } from "../hooks/use-employee";
 import type { InvitationResponse } from "../types/employee.type";
 import { AlertCircle } from "lucide-react";
@@ -25,36 +25,34 @@ export default function CancelInvitationModal({ open, onClose, invitation }: Can
   };
 
   return (
-    <Modal
+    <BaseModal
       title={
         <div className="flex items-center gap-2 text-rose-600">
           <AlertCircle className="w-5 h-5" />
           <span>Xác nhận hủy lời mời</span>
         </div>
       }
-      open={open}
-      onCancel={onClose}
-      footer={null}
-      destroyOnHidden
+      isOpen={open}
+      onClose={onClose}
+      onConfirm={handleCancel}
+      confirmText="Hủy lời mời"
+      cancelText="Đóng"
+      confirmLoading={isPending}
+      confirmButtonProps={{ 
+        danger: true, 
+        className: "!bg-rose-600 hover:!bg-rose-700 !border-0 text-white font-bold shadow-lg shadow-rose-500/25 transition-all" 
+      }}
+      destroyOnClose
       width={480}
     >
       <div className="mt-4">
-        <p className="mb-2 text-slate-600">
+        <p className="mb-2 text-slate-600 text-[15px]">
           Bạn có chắc chắn muốn hủy lời mời đã gửi đến email <span className="font-semibold text-slate-900">{invitation?.email}</span> không?
         </p>
         <p className="text-sm text-slate-500">
           Sau khi hủy, đường link đăng ký trong email sẽ không còn hiệu lực.
         </p>
-
-        <div className="flex justify-end gap-3 mt-8">
-          <BaseButton type="default" onClick={onClose}>
-            Đóng
-          </BaseButton>
-          <BaseButton type="primary" danger onClick={handleCancel} loading={isPending}>
-            Hủy lời mời
-          </BaseButton>
-        </div>
       </div>
-    </Modal>
+    </BaseModal>
   );
 }

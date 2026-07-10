@@ -54,44 +54,38 @@ export default function ChangePasswordForm() {
           control={control}
           name="currentPassword"
           label="Mật khẩu hiện tại"
-          labelClassName="text-brand-900"
           placeholder="Nhập mật khẩu hiện tại"
           type="password"
           id="change-current-password"
           error={errors.currentPassword}
-          className="text-brand-900 border-brand-300 focus:border-brand-500 focus:ring-brand-500/20"
         />
 
         <FormInput
           control={control}
           name="newPassword"
           label="Mật khẩu mới"
-          labelClassName="text-brand-900"
           placeholder="Nhập mật khẩu mới"
           type="password"
           id="change-new-password"
           error={errors.newPassword}
-          className="text-brand-900 border-brand-300 focus:border-brand-500 focus:ring-brand-500/20"
         />
 
         <FormInput
           control={control}
           name="confirmPassword"
           label="Xác nhận mật khẩu mới"
-          labelClassName="text-brand-900"
           placeholder="Nhập lại mật khẩu mới"
           type="password"
           id="change-confirm-password"
           error={errors.confirmPassword}
-          className="text-brand-900 border-brand-300 focus:border-brand-500 focus:ring-brand-500/20"
         />
 
-        <div className="flex justify-start pt-4">
+        <div className="flex justify-end pt-4">
           <BaseButton
             type="primary"
             htmlType="submit"
             loading={isPending}
-            className="bg-brand-600 hover:bg-brand-700 text-white border-transparent"
+            className="!bg-blue-600 !text-white hover:!bg-blue-700 !border-0 shadow-md shadow-blue-500/20 h-10 px-8 rounded-lg font-bold transition-all"
           >
             Đổi mật khẩu
           </BaseButton>

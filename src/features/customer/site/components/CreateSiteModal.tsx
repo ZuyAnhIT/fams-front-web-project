@@ -9,6 +9,7 @@ import BaseModal from "@/components/ui/BaseModal";
 import BaseButton from "@/components/ui/BaseButton";
 import BaseInput from "@/components/ui/BaseInput";
 import BaseSelect from "@/components/ui/BaseSelect";
+import BaseTextArea from "@/components/ui/BaseTextArea";
 
 interface CreateSiteModalProps {
   isOpen: boolean;
@@ -172,7 +173,7 @@ export default function CreateSiteModal({ isOpen, onClose }: CreateSiteModalProp
                 label={<span className="font-medium text-slate-700">Địa chỉ thực tế</span>}
                 className="mb-0"
               >
-                <Input.TextArea 
+                <BaseTextArea 
                   placeholder="Nhấp vào bản đồ để tự động điền hoặc gõ tay..." 
                   rows={2} 
                 />
@@ -183,7 +184,7 @@ export default function CreateSiteModal({ isOpen, onClose }: CreateSiteModalProp
                 label={<span className="font-medium text-slate-700">Mô tả thêm</span>}
                 className="mb-0"
               >
-                <Input.TextArea placeholder="Ghi chú..." rows={2} />
+                <BaseTextArea placeholder="Ghi chú..." rows={2} />
               </Form.Item>
             {/* Hidden actual inputs for submission */}
             <div className="hidden">

@@ -150,6 +150,7 @@ export default function EmployeeListPage() {
       title: "Ngày tham gia",
       dataIndex: "createdAt",
       key: "createdAt",
+      width: 120,
       sorter: true,
       render: (dateStr: string) => (
         <span className="font-medium text-slate-600 text-sm">
@@ -245,29 +246,29 @@ export default function EmployeeListPage() {
       />
 
       {/* Data Table Wrapper */}
-        <DataTable
-          columns={columns}
-          data={pageData?.content?.filter((emp) => emp.email !== currentUser?.email) || []}
-          loading={isLoading}
-          totalElements={pageData?.totalElements || 0}
-          currentPage={state.page}
-          pageSize={state.size}
-          onPageChange={(page, size) => setPagination({ page, size })}
-          onChange={(_, __, sorter: any) => {
-            if (!Array.isArray(sorter) && (sorter.columnKey || sorter.field)) {
-              setPagination({
-                sortBy: (sorter.columnKey || sorter.field) as string,
-                sortDir: sorter.order === "ascend" ? "asc" : sorter.order === "descend" ? "desc" : undefined,
-              });
-            } else {
-              setPagination({ sortBy: undefined, sortDir: undefined });
-            }
-          }}
-          onRow={(record) => ({
-            className: "hover:bg-brand-50/50 transition-colors duration-200 group cursor-pointer",
-            onClick: () => router.push(`/customer/employees/${record.id}`),
-          })}
-        />
+      <DataTable
+        columns={columns}
+        data={pageData?.content?.filter((emp) => emp.email !== currentUser?.email) || []}
+        loading={isLoading}
+        totalElements={pageData?.totalElements || 0}
+        currentPage={state.page}
+        pageSize={state.size}
+        onPageChange={(page, size) => setPagination({ page, size })}
+        onChange={(_, __, sorter: any) => {
+          if (!Array.isArray(sorter) && (sorter.columnKey || sorter.field)) {
+            setPagination({
+              sortBy: (sorter.columnKey || sorter.field) as string,
+              sortDir: sorter.order === "ascend" ? "asc" : sorter.order === "descend" ? "desc" : undefined,
+            });
+          } else {
+            setPagination({ sortBy: undefined, sortDir: undefined });
+          }
+        }}
+        onRow={(record) => ({
+          className: "hover:bg-brand-50/50 transition-colors duration-200 group cursor-pointer",
+          onClick: () => router.push(`/customer/employees/${record.id}`),
+        })}
+      />
 
 
       {/* Modal Mời Nhân Viên */}
