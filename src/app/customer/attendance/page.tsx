@@ -1,11 +1,30 @@
 import RoleGuard from "@/components/guards/RoleGuard";
 import { SystemRole } from "@/features/customer/auth/types/auth.type";
+import { Tabs } from "antd";
+import CheckinListTab from "@/features/customer/checkin/components/CheckinListTab";
+import AttendanceSummaryTab from "@/features/customer/attendance/components/AttendanceSummaryTab";
+
 export default function AttendancePage() {
+  const items = [
+    {
+      key: "1",
+      label: "Lịch sử Check-in",
+      children: <CheckinListTab />,
+    },
+    {
+      key: "2",
+      label: "Bảng công tổng hợp",
+      children: <AttendanceSummaryTab />,
+    },
+  ];
+
   return (
     <RoleGuard allowedRoles={[SystemRole.TENANT_ADMIN, SystemRole.HR_MANAGER, SystemRole.SITE_SUPERVISOR, SystemRole.PLATFORM_ADMIN]}>
-      <div className="p-6 bg-slate-900/40 rounded-2xl border border-white/10">
-      <h1 className="text-xl font-bold text-white mb-2">Quản lý chấm công</h1>
-      <p className="text-slate-400 text-sm">Trang quản lý chấm công đang được phát triển.</p>
+      <div className="space-y-6 px-2 sm:px-4 pb-4">
+        <h1 className="text-2xl font-bold text-slate-800">Quản lý chấm công</h1>
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+          <Tabs defaultActiveKey="1" items={items} />
+        </div>
       </div>
     </RoleGuard>
   );

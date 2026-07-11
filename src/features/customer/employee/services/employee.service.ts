@@ -181,4 +181,15 @@ export const employeeService = {
     );
     return response.data.data;
   },
+
+  /**
+   * Thu hồi Face ID
+   */
+  async revokeFaceId(employeeId: string) {
+    const tenantId = getTenantId();
+    const response = await apiClient.delete<ApiResponse<any>>(
+      `/tenants/${tenantId}/employees/${employeeId}/face-id`
+    );
+    return response.data.data;
+  },
 };

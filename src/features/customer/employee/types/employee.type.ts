@@ -15,6 +15,15 @@ export interface EmployeeResponse {
   status: string; // 'active' | 'inactive' | 'terminated'
   createdAt: string;
   updatedAt: string;
+  faceId?: FaceIdStatus;
+}
+
+export interface FaceIdStatus {
+  status: "not_enrolled" | "enrolled" | "revoked";
+  consentGiven: boolean;
+  consentGivenAt?: string;
+  enrolledAt?: string;
+  revokedAt?: string;
 }
 
 export interface EmployeeListParams {

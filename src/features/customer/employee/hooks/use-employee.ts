@@ -121,3 +121,14 @@ export const useValidateInvitation = (token: string | null) => {
     retry: false,
   });
 };
+
+export const useRevokeFaceId = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (employeeId: string) => employeeService.revokeFaceId(employeeId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["employees"] });
+      queryClient.invalidateQueries({ queryKey: ["employees", variables] });
+    },
+  });
+};

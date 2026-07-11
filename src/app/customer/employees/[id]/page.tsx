@@ -2,9 +2,10 @@
 
 import { use } from "react";
 import { Tabs, Tag } from "antd";
-import { User, ShieldCheck, ArrowLeft } from "lucide-react";
+import { User, ShieldCheck, ArrowLeft, ScanFace } from "lucide-react";
 import EmployeeForm from "@/features/customer/employee/components/EmployeeForm";
 import EmployeeRolesTab from "@/features/customer/employee/components/EmployeeRolesTab";
+import EmployeeFaceIdTab from "@/features/customer/employee/components/EmployeeFaceIdTab";
 import { useEmployeeDetail } from "@/features/customer/employee/hooks/use-employee";
 import { useRouter } from "next/navigation";
 import DetailHeader from "@/components/shared/layout/DetailHeader";
@@ -51,6 +52,16 @@ export default function EditEmployeePage({ params }: { params: Promise<{ id: str
         </span>
       ),
       children: <EmployeeRolesTab employee={data} />,
+    },
+    {
+      key: "faceid",
+      label: (
+        <span className="flex items-center gap-2">
+          <ScanFace className="h-4 w-4" />
+          Sinh trắc học
+        </span>
+      ),
+      children: <EmployeeFaceIdTab employee={data} />,
     },
   ];
 
