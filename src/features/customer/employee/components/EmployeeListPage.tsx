@@ -147,6 +147,20 @@ export default function EmployeeListPage() {
       },
     },
     {
+      title: "Face ID",
+      key: "faceId",
+      render: (_: any, record: Employee) => {
+        const status = record.faceId?.status;
+        if (status === "enrolled") {
+          return <Tag color="success" className="font-medium m-0">Đã đăng ký</Tag>;
+        }
+        if (status === "revoked") {
+          return <Tag color="error" className="font-medium m-0">Đã thu hồi</Tag>;
+        }
+        return <Tag color="default" className="font-medium m-0 text-slate-500">Chưa đăng ký</Tag>;
+      },
+    },
+    {
       title: "Ngày tham gia",
       dataIndex: "createdAt",
       key: "createdAt",
