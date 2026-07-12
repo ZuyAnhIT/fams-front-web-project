@@ -3,7 +3,7 @@ import { SystemRole } from "@/features/customer/auth/types/auth.type";
 import { Tabs } from "antd";
 import CheckinListTab from "@/features/customer/checkin/components/CheckinListTab";
 import AttendanceSummaryTab from "@/features/customer/attendance/components/AttendanceSummaryTab";
-
+import AttendanceMonthlyTab from "@/features/customer/attendance/components/AttendanceMonthlyTab";
 export default function AttendancePage() {
   const items = [
     {
@@ -15,6 +15,11 @@ export default function AttendancePage() {
       key: "2",
       label: "Bảng công tổng hợp",
       children: <AttendanceSummaryTab />,
+    },
+    {
+      key: "3",
+      label: "Bảng công tháng",
+      children: <AttendanceMonthlyTab />,
     },
   ];
 

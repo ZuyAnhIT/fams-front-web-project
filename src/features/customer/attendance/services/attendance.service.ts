@@ -20,4 +20,15 @@ export const attendanceService = {
     >(`/tenants/${tenantId}/attendance/monthly`, { params });
     return data.data;
   },
+
+  exportMonthlyAttendance: async (
+    tenantId: string,
+    params: { year: number; month: number; siteId?: string }
+  ) => {
+    const response = await apiClient.get(`/tenants/${tenantId}/reports/attendance/export`, {
+      params,
+      responseType: "blob",
+    });
+    return response.data;
+  },
 };
