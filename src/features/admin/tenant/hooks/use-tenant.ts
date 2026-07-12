@@ -116,3 +116,13 @@ export const useReactivateTenant = () => {
     },
   });
 };
+
+export const useCancelTenant = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => tenantService.cancelTenant(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tenants"] });
+    },
+  });
+};

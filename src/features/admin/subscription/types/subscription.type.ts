@@ -52,11 +52,9 @@ export interface SubscriptionResponse {
   planName?: string;
   status: "TRIAL" | "ACTIVE" | "EXPIRED" | "CANCELLED";
   billingCycle: "MONTHLY" | "YEARLY";
-  currentPeriodStart: string;
-  currentPeriodEnd: string;
-  cancelAtPeriodEnd: boolean;
-  stripeSubscriptionId?: string;
-  stripeCustomerId?: string;
+  startedAt: string;
+  expiresAt?: string;
+  cancelledAt?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -70,6 +68,7 @@ export interface UpdateSubscriptionPayload {
   planId?: string;
   status?: "TRIAL" | "ACTIVE" | "EXPIRED" | "CANCELLED";
   billingCycle?: "MONTHLY" | "YEARLY";
-  currentPeriodEnd?: string;
-  cancelAtPeriodEnd?: boolean;
+  startedAt?: string;
+  expiresAt?: string;
+  clearExpiresAt?: boolean;
 }

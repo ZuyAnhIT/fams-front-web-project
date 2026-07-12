@@ -25,6 +25,7 @@ export default function SubscriptionManager({ tenantId }: { tenantId: string }) 
     planId: string;
     billingCycle: "MONTHLY" | "YEARLY";
     status?: "TRIAL" | "ACTIVE" | "EXPIRED" | "CANCELLED";
+    expiresAt?: string;
   }>({
     defaultValues: {
       planId: "",
@@ -45,6 +46,7 @@ export default function SubscriptionManager({ tenantId }: { tenantId: string }) 
         planId: currentSub.planId,
         billingCycle: currentSub.billingCycle,
         status: currentSub.status,
+        expiresAt: currentSub.expiresAt ? new Date(currentSub.expiresAt).toISOString().slice(0, 16) : "",
       });
     }
     setIsModalOpen(true);
@@ -56,7 +58,14 @@ export default function SubscriptionManager({ tenantId }: { tenantId: string }) 
         await assignSub({ tenantId, payload: data as AssignSubscriptionPayload });
         message.success("Gán gói dịch vụ thành công");
       } else {
-        await updateSub({ tenantId, payload: data as UpdateSubscriptionPayload });
+        const payload = { ...data };
+        if (payload.expiresAt) {
+          payload.expiresAt = new Date(payload.expiresAt).toISOString();
+        } else {
+          payload.clearExpiresAt = true;
+          delete payload.expiresAt;
+        }
+        await updateSub({ tenantId, payload: payload as UpdateSubscriptionPayload });
         message.success("Cập nhật gói dịch vụ thành công");
       }
       setIsModalOpen(false);
@@ -138,10 +147,13 @@ export default function SubscriptionManager({ tenantId }: { tenantId: string }) 
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Gia hạn tiếp theo</p>
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Hết hạn vào</p>
                   <p className="font-semibold text-slate-700">
-                    {currentSub.currentPeriodEnd ? format(new Date(currentSub.currentPeriodEnd), "dd/MM/yyyy HH:mm") : "---"}
+                    {currentSub.expiresAt ? format(new Date(currentSub.expiresAt), "dd/MM/yyyy HH:mm") : "Không thời hạn"}
                   </p>
+                  {currentSub.expiresAt && new Date(currentSub.expiresAt) < new Date() && currentSub.status !== "EXPIRED" && (
+                    <p className="text-xs text-red-500 font-bold mt-1">Đã quá hạn (chờ xử lý đồng bộ)</p>
+                  )}
                 </div>
               </div>
 
@@ -224,25 +236,41 @@ export default function SubscriptionManager({ tenantId }: { tenantId: string }) 
             </div>
 
             {mode === "update" && (
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Trạng thái</label>
-                <Controller
-                  name="status"
-                  control={control}
-                  render={({ field }) => (
-                    <Select
-                      {...field}
-                      className="w-full h-11"
-                      options={[
-                        { label: "Active (Đang hoạt động)", value: "ACTIVE" },
-                        { label: "Trial (Dùng thử)", value: "TRIAL" },
-                        { label: "Expired (Đã hết hạn)", value: "EXPIRED" },
-                        { label: "Cancelled (Đã hủy)", value: "CANCELLED" },
-                      ]}
-                    />
-                  )}
-                />
-              </div>
+              <>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Trạng thái</label>
+                  <Controller
+                    name="status"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        {...field}
+                        className="w-full h-11"
+                        options={[
+                          { label: "Active (Đang hoạt động)", value: "ACTIVE" },
+                          { label: "Trial (Dùng thử)", value: "TRIAL" },
+                          { label: "Expired (Đã hết hạn)", value: "EXPIRED" },
+                          { label: "Cancelled (Đã hủy)", value: "CANCELLED" },
+                        ]}
+                      />
+                    )}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Ngày hết hạn (Để trống nếu không giới hạn)</label>
+                  <Controller
+                    name="expiresAt"
+                    control={control}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="datetime-local"
+                        className="w-full h-11 px-3 border border-slate-300 rounded-lg focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary"
+                      />
+                    )}
+                  />
+                </div>
+              </>
             )}
           </div>
 

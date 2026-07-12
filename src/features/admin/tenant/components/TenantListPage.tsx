@@ -7,7 +7,7 @@ import DataTable from "@/components/tables/DataTable";
 import { BaseButton, BaseSelect } from "@/components/ui";
 import { usePagination } from "@/hooks/usePagination";
 import { useDebounce } from "@/hooks/useDebounce";
-import { useTenants, useSuspendTenant, useReactivateTenant } from "../hooks/use-tenant";
+import { useTenants, useSuspendTenant, useReactivateTenant, useCancelTenant } from "../hooks/use-tenant";
 import CreateTenantModal from "./CreateTenantModal";
 import type { Tenant } from "../types/tenant.type";
 import { format } from "date-fns";
@@ -25,6 +25,7 @@ export default function TenantListPage() {
   const { state, setPagination } = usePagination(20);
   const { mutate: suspendTenant, isPending: isSuspending } = useSuspendTenant();
   const { mutate: reactivateTenant, isPending: isReactivating } = useReactivateTenant();
+  const { mutate: cancelTenant } = useCancelTenant();
   const [searchInput, setSearchInput] = useState(state.search || "");
   const debouncedSearch = useDebounce(searchInput, 600);
 
@@ -103,6 +104,30 @@ export default function TenantListPage() {
     });
   };
 
+  const handleCancel = (tenant: Tenant) => {
+    Modal.confirm({
+      title: "Xác nhận hủy bỏ vĩnh viễn",
+      content: `Bạn có chắc chắn muốn hủy bỏ vĩnh viễn công ty "${tenant.name}" không? Hành động này không thể hoàn tác và toàn bộ dữ liệu truy cập sẽ bị chặn vĩnh viễn.`,
+      okText: "Hủy bỏ vĩnh viễn",
+      cancelText: "Thoát",
+      okButtonProps: { danger: true },
+      onOk: () => {
+        return new Promise((resolve, reject) => {
+          cancelTenant(tenant.id, {
+            onSuccess: () => {
+              message.success(`Đã hủy bỏ vĩnh viễn công ty ${tenant.name} thành công`);
+              resolve(true);
+            },
+            onError: (err: any) => {
+              message.error(`Không thể hủy bỏ công ty: ${err?.response?.data?.message || err.message}`);
+              reject(err);
+            }
+          });
+        });
+      }
+    });
+  };
+
   const getActionMenuItems = (record: Tenant): MenuProps['items'] => {
     const items: MenuProps['items'] = [
       {
@@ -135,6 +160,14 @@ export default function TenantListPage() {
           onClick: () => handleSuspend(record)
         });
       }
+      
+      items.push({
+        key: 'cancel',
+        label: 'Hủy bỏ',
+        danger: true,
+        icon: <Ban className="h-4 w-4 text-red-600" />,
+        onClick: () => handleCancel(record)
+      });
     }
 
     return items;
@@ -163,6 +196,16 @@ export default function TenantListPage() {
             <span className="font-bold text-slate-900 text-sm">{record.name}</span>
             <span className="text-xs text-slate-500 font-medium">{record.domain || record.slug}</span>
           </div>
+        </div>
+      ),
+    },
+    {
+      title: "Chủ công ty",
+      key: "owner",
+      render: (_: unknown, record: Tenant) => (
+        <div className="flex flex-col">
+          <span className="font-medium text-slate-900 text-sm">{record.ownerName || "---"}</span>
+          <span className="text-xs text-slate-500">{record.ownerEmail || ""}</span>
         </div>
       ),
     },

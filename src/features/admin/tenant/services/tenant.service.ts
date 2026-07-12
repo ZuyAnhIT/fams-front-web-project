@@ -129,4 +129,12 @@ export const tenantService = {
     const response = await apiClient.post<ApiResponse<Tenant>>(`/tenants/${id}/reactivate`);
     return response.data.data;
   },
+
+  /**
+   * Hủy bỏ (Cancel) Tenant vĩnh viễn
+   */
+  async cancelTenant(id: string): Promise<Tenant> {
+    const response = await apiClient.post<ApiResponse<Tenant>>(`/tenants/${id}/cancel`);
+    return response.data.data;
+  },
 };
