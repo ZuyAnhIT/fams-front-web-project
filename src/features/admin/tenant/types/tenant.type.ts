@@ -10,6 +10,9 @@ export interface Tenant {
   locale: string;
   currency: string;
   logoUrl?: string | null;
+  ownerId?: string | null;
+  ownerName?: string | null;
+  ownerEmail?: string | null;
   createdAt: string;
   updatedAt: string;
 }
