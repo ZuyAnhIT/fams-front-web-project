@@ -89,6 +89,12 @@ export const SIDEBAR_MENU: MenuItem[] = [
     icon: "ShieldAlert",
     allowedRoles: [SystemRole.TENANT_ADMIN, SystemRole.SITE_SUPERVISOR]
   },
+  {
+    title: "Báo cáo Face ID",
+    path: CUSTOMER_ROUTES.FACE_ID_REPORT,
+    icon: "ScanFace",
+    allowedRoles: [SystemRole.TENANT_ADMIN, SystemRole.HR_MANAGER]
+  },
 
   // -- CẤU HÌNH HỆ THỐNG (CUSTOMER) --
   {
