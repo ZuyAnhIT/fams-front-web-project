@@ -1,12 +1,13 @@
 "use client";
 
 import { useAuthStore } from "@/stores/auth.store";
-import { LogOut, User as UserIcon, Bell, Settings, ShieldCheck } from "lucide-react";
+import { LogOut, User as UserIcon, Settings, ShieldCheck } from "lucide-react";
 import { App, Dropdown, type MenuProps } from "antd";
 import { useRouter } from "next/navigation";
 import { ROUTES } from "@/constants/routes";
 import { useLogout } from "@/features/customer/auth/hooks/use-auth";
 import { authTokenService } from "@/services/auth-token.service";
+import NotificationBell from "@/features/customer/notification/components/NotificationBell";
 
 export default function Header() {
   const { message } = App.useApp();
@@ -43,11 +44,8 @@ export default function Header() {
 
       {/* Thông tin user & Đăng xuất */}
       <div className="flex items-center gap-4">
-        {/* Chuông thông báo */}
-        <button className="text-slate-500 hover:text-brand-600 transition-colors relative p-2 rounded-xl hover:bg-slate-100 cursor-pointer active:scale-95">
-          <Bell className="h-5 w-5" />
-          <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-rose-500 ring-2 ring-white" />
-        </button>
+        {/* Notification Bell */}
+        <NotificationBell />
 
         {/* Nút đăng xuất trực tiếp */}
         <div className="flex items-center gap-2 pl-4 border-l border-slate-200">
