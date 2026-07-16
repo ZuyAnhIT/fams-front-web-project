@@ -31,4 +31,5 @@ export const CUSTOMER_ROUTES = {
   TENANT_SETTINGS: "/customer/settings/tenant",
   WORKSPACES: "/customer/workspaces",
   SELECT_COMPANY: "/customer/select-company",
+  NOTIFICATIONS: "/customer/notifications",
 };
