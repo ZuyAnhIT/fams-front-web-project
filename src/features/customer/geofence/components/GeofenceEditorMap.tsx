@@ -86,14 +86,14 @@ export function GeofenceEditorMap({
           disabled={points.length === 0}
           className="!bg-white !text-slate-700 !border-slate-300 hover:!bg-slate-50 hover:!text-slate-900 !h-7 !px-2.5 !py-0 rounded-md !text-[11px] font-semibold shadow-sm transition-all"
         >
-          Hoàn tác điểm cuối
+          HOÀN TÁC ĐIỂM CUỐI
         </BaseButton>
         <BaseButton
           onClick={(e: React.MouseEvent) => { e.preventDefault(); clear(); }}
           disabled={points.length === 0}
           className="!bg-white !text-red-600 !border-red-200 hover:!bg-red-50 hover:!border-red-300 !h-7 !px-2.5 !py-0 rounded-md !text-[11px] font-semibold shadow-sm transition-all"
         >
-          Xóa toàn bộ
+          XÓA TOÀN BỘ
         </BaseButton>
       </div>
 

@@ -157,7 +157,7 @@ export default function EditGeofenceModal({
                 onClick={() => setCoordinates([...coordinates, [latitude, longitude]])}
                 className="!bg-white !text-slate-600 !border-slate-300 hover:!bg-slate-50 border-dashed !h-7 !px-2.5 !py-0 !text-[11px] font-medium rounded transition-all"
               >
-                + Thêm
+                + THÊM
               </BaseButton>
             </div>
 
@@ -179,7 +179,7 @@ export default function EditGeofenceModal({
                         }}
                         className="!bg-transparent !border-0 !text-red-500 hover:!text-red-700 hover:!bg-red-50 !h-6 !px-2 !py-0 !text-[10px] font-medium rounded transition-colors shadow-none"
                       >
-                        Xóa
+                        XÓA
                       </BaseButton>
                     </div>
                     <div className="flex gap-2">

@@ -26,6 +26,7 @@ export const CUSTOMER_ROUTES = {
   SITES: "/customer/sites",
   VIOLATIONS: "/customer/violations",
   RANDOM_CHECKS: "/customer/random-checks",
+  FACE_ID_REPORT: "/customer/reports/face-id-enrollment",
   SETTINGS: "/customer/settings",
   TENANT_SETTINGS: "/customer/settings/tenant",
   WORKSPACES: "/customer/workspaces",
