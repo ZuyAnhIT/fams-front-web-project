@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { Button, Empty, Spin, Tree, Tag } from "antd";
+import { Empty, Spin, Tree, Tag } from "antd";
 import { Search, Plus, Building2, Users, Edit3, Filter } from "lucide-react";
 import BaseInput from "@/components/ui/BaseInput";
 import BaseSelect from "@/components/ui/BaseSelect";
@@ -305,7 +305,7 @@ export default function WorkspacePage() {
                       render: (_, record: any) => {
                         if (!hasPermission("workspaces:update")) return null;
                         return (
-                          <Button
+                          <BaseButton
                             type="text"
                             size="small"
                             className="text-brand-600 hover:text-brand-700 hover:bg-brand-50"
@@ -316,7 +316,7 @@ export default function WorkspacePage() {
                             }}
                           >
                             Chuyển
-                          </Button>
+                          </BaseButton>
                         );
                       }
                     }

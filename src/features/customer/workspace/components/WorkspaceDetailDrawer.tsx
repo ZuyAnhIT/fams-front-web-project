@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
-import { Drawer, Descriptions, Tag, Button, App } from "antd";
+import { Drawer, Descriptions, Tag, App } from "antd";
+import BaseButton from "@/components/ui/BaseButton";
 import { WorkspaceResponse } from "../types";
 import dayjs from "dayjs";
 import { Building2, Users, Edit3, Trash2 } from "lucide-react";
@@ -38,14 +39,14 @@ export default function WorkspaceDetailDrawer({ workspace, isOpen, onClose, onEd
       onClose={onClose}
       open={isOpen}
       extra={
-        <Button
+        <BaseButton
           type="text"
           icon={<Edit3 className="h-4 w-4" />}
           onClick={() => onEdit(detail)}
           className="text-brand-600 hover:bg-brand-50"
         >
           Sửa
-        </Button>
+        </BaseButton>
       }
     >
       <div className="space-y-6">

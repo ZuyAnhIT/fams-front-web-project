@@ -1,13 +1,16 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Table, DatePicker, Button, message } from "antd";
+import { message } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { DownloadOutlined } from "@ant-design/icons";
 import { attendanceService } from "../services/attendance.service";
 import { AttendanceHrMonthlyResponse } from "../types/attendance.type";
 import dayjs, { Dayjs } from "dayjs";
 import { useAuthStore } from "@/stores/auth.store";
+import BaseDatePicker from "@/components/ui/BaseDatePicker";
+import BaseButton from "@/components/ui/BaseButton";
+import DataTable from "@/components/tables/DataTable";
 
 export default function AttendanceMonthlyTab() {
   const user = useAuthStore((state) => state.user);
@@ -110,20 +113,38 @@ export default function AttendanceMonthlyTab() {
     {
       title: "Đi muộn",
       key: "late",
-      render: (_, record) => record.lateDays > 0 ? (
-        <span className="text-orange-500">
-          {record.lateDays} ngày ({record.totalLateMinutes}p)
-        </span>
-      ) : "-",
+      render: (_, record) => {
+        const formatMin = (m?: number) => {
+          if (!m) return "";
+          const h = Math.floor(m / 60);
+          const min = m % 60;
+          if (h > 0) return min > 0 ? `${h}h ${min}p` : `${h}h`;
+          return `${min}p`;
+        };
+        return record.lateDays > 0 ? (
+          <span className="text-orange-500">
+            {record.lateDays} ngày ({formatMin(record.totalLateMinutes)})
+          </span>
+        ) : "-";
+      },
     },
     {
       title: "Về sớm",
       key: "earlyLeave",
-      render: (_, record) => record.earlyLeaveDays > 0 ? (
-        <span className="text-orange-500">
-          {record.earlyLeaveDays} ngày ({record.totalEarlyLeaveMinutes}p)
-        </span>
-      ) : "-",
+      render: (_, record) => {
+        const formatMin = (m?: number) => {
+          if (!m) return "";
+          const h = Math.floor(m / 60);
+          const min = m % 60;
+          if (h > 0) return min > 0 ? `${h}h ${min}p` : `${h}h`;
+          return `${min}p`;
+        };
+        return record.earlyLeaveDays > 0 ? (
+          <span className="text-orange-500">
+            {record.earlyLeaveDays} ngày ({formatMin(record.totalEarlyLeaveMinutes)})
+          </span>
+        ) : "-";
+      },
     },
     {
       title: "Làm thêm (OT)",
@@ -144,7 +165,7 @@ export default function AttendanceMonthlyTab() {
       <div className="flex gap-4 flex-wrap bg-slate-50 p-4 rounded-lg border border-slate-200 justify-between items-center">
         <div className="flex gap-4 items-center">
           <span className="text-slate-600 font-medium">Chọn tháng:</span>
-          <DatePicker
+          <BaseDatePicker
             picker="month"
             value={selectedMonth}
             onChange={(date) => {
@@ -157,7 +178,7 @@ export default function AttendanceMonthlyTab() {
           />
         </div>
         
-        <Button 
+        <BaseButton 
           type="primary" 
           icon={<DownloadOutlined />} 
           onClick={handleExport}
@@ -165,20 +186,17 @@ export default function AttendanceMonthlyTab() {
           className="bg-green-600 hover:bg-green-700"
         >
           Xuất báo cáo
-        </Button>
+        </BaseButton>
       </div>
 
-      <Table
+      <DataTable
         columns={columns}
-        dataSource={data}
+        data={data}
         rowKey={(record) => `${record.employeeId}-${record.siteId}-${record.month}-${record.year}`}
         loading={loading}
-        pagination={{
-          current: page + 1,
-          pageSize: size,
-          total: total,
-          showSizeChanger: true,
-        }}
+        currentPage={page}
+        pageSize={size}
+        totalElements={total}
         onChange={handleTableChange}
         scroll={{ x: 1200 }}
       />

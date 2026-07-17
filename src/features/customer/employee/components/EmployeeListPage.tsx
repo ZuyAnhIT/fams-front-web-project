@@ -127,7 +127,7 @@ export default function EmployeeListPage() {
       render: (text: string) => <span className="font-medium text-slate-600 text-sm">{text || "---"}</span>,
     },
     {
-      title: "Vị trí",
+      title: "Chức vụ",
       dataIndex: "position",
       key: "position",
       render: (text: string) => <span className="font-medium text-slate-600 text-sm">{text || "---"}</span>,

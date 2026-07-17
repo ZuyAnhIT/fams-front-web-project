@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Form, Button, message, Tooltip, Input } from "antd";
+import { Form, message, Tooltip } from "antd";
 import { useAuthStore } from "@/stores/auth.store";
 import { useCreateSiteMutation } from "../hooks/use-site";
 import { CreateSiteRequest } from "../types/site.type";
@@ -188,8 +188,8 @@ export default function CreateSiteModal({ isOpen, onClose }: CreateSiteModalProp
               </Form.Item>
             {/* Hidden actual inputs for submission */}
             <div className="hidden">
-              <Form.Item name="latitude"><Input /></Form.Item>
-              <Form.Item name="longitude"><Input /></Form.Item>
+              <Form.Item name="latitude"><BaseInput /></Form.Item>
+              <Form.Item name="longitude"><BaseInput /></Form.Item>
             </div>
           </div>
 

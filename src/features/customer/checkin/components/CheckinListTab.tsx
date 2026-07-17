@@ -1,13 +1,16 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Table, Tag, Button, Space, DatePicker, Select } from "antd";
+import { Tag, Space, DatePicker } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { checkinService } from "../services/checkin.service";
 import { CheckinResponse, CheckinListParams } from "../types/checkin.type";
 import dayjs from "dayjs";
 import { EyeOutlined } from "@ant-design/icons";
 import { useAuthStore } from "@/stores/auth.store";
+import BaseSelect from "@/components/ui/BaseSelect";
+import BaseButton from "@/components/ui/BaseButton";
+import DataTable from "@/components/tables/DataTable";
 import CheckinDetailModal from "./CheckinDetailModal";
 
 const { RangePicker } = DatePicker;
@@ -123,13 +126,13 @@ export default function CheckinListTab() {
       title: "Thao tác",
       key: "action",
       render: (_, record) => (
-        <Button 
+        <BaseButton 
           type="link" 
           icon={<EyeOutlined />} 
           onClick={() => openDetail(record.id)}
         >
           Chi tiết
-        </Button>
+        </BaseButton>
       ),
     },
   ];
@@ -137,7 +140,7 @@ export default function CheckinListTab() {
   return (
     <div className="space-y-4">
       <div className="flex gap-4 flex-wrap bg-slate-50 p-4 rounded-lg border border-slate-200">
-        <Select
+        <BaseSelect
           allowClear
           placeholder="Trạng thái"
           style={{ width: 150 }}
@@ -162,17 +165,14 @@ export default function CheckinListTab() {
         {/* We can add Employee/Site filters here if we have APIs to fetch their lists */}
       </div>
 
-      <Table
+      <DataTable
         columns={columns}
-        dataSource={data}
+        data={data}
         rowKey="id"
         loading={loading}
-        pagination={{
-          current: (params.page || 0) + 1,
-          pageSize: params.size || 20,
-          total: total,
-          showSizeChanger: true,
-        }}
+        currentPage={params.page || 0}
+        pageSize={params.size || 20}
+        totalElements={total}
         onChange={handleTableChange}
         scroll={{ x: 800 }}
       />
