@@ -166,7 +166,7 @@ export default function EmployeeForm({ initialData, isEditMode = false }: Employ
           <FormInput
             control={control}
             name="position"
-            label="Vị trí/Chức vụ"
+            label="Chức vụ"
             placeholder="Ví dụ: Developer"
             error={errors.position}
           />

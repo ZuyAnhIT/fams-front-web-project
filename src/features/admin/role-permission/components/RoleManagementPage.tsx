@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Button, Space, Tag, Modal, message, Tooltip, App } from "antd";
+import { Space, Tag, Modal, message, Tooltip, App } from "antd";
 import { useAuthStore } from "@/stores/auth.store";
 import { PlusOutlined, SearchOutlined, EditOutlined, DeleteOutlined, InfoCircleOutlined, EyeOutlined } from "@ant-design/icons";
 import { useRolesQuery, useDeleteRoleMutation } from "../hooks/use-role-permission";
@@ -155,7 +155,7 @@ export const RoleManagementPage: React.FC = () => {
           <Space size="middle">
             {isSystemRole ? (
               <Tooltip title="Xem chi tiết">
-                <Button
+                <BaseButton
                   type="text"
                   icon={<EyeOutlined />}
                   onClick={() => openEditModal(record)}
@@ -167,7 +167,7 @@ export const RoleManagementPage: React.FC = () => {
               <>
                 {hasPermission("roles:update") && (
                   <Tooltip title="Sửa">
-                    <Button
+                    <BaseButton
                       type="text"
                       icon={<EditOutlined />}
                       onClick={() => openEditModal(record)}
@@ -179,7 +179,7 @@ export const RoleManagementPage: React.FC = () => {
                 )}
                 {hasPermission("roles:delete") && (
                   <Tooltip title="Xóa">
-                    <Button
+                    <BaseButton
                       type="text"
                       danger
                       icon={<DeleteOutlined />}

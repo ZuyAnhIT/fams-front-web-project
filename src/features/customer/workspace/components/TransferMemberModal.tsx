@@ -1,6 +1,7 @@
 import React from "react";
-import { Form, Select, Button, message, Spin, Typography } from "antd";
+import { Form, message, Spin, Typography } from "antd";
 import BaseModal from "@/components/ui/BaseModal";
+import BaseSelect from "@/components/ui/BaseSelect";
 import { useAuthStore } from "@/stores/auth.store";
 import { useWorkspacesQuery, useTransferMemberMutation } from "../hooks/use-workspace";
 import { TransferWorkspaceMemberRequest } from "../types";
@@ -94,7 +95,7 @@ export default function TransferMemberModal({
           label={<span className="font-medium text-slate-700">Phòng ban đích</span>}
           rules={[{ required: true, message: "Vui lòng chọn phòng ban đích!" }]}
         >
-          <Select
+          <BaseSelect
             showSearch
             placeholder="Chọn phòng ban đích..."
             optionFilterProp="label"
@@ -110,7 +111,7 @@ export default function TransferMemberModal({
           rules={[{ required: true, message: "Vui lòng chọn vai trò!" }]}
           tooltip="Vai trò mặc định được giữ nguyên như ở phòng ban cũ."
         >
-          <Select
+          <BaseSelect
             options={[
               { value: "member", label: "Nhân viên (Member)" },
               { value: "lead", label: "Trưởng nhóm (Lead)" },

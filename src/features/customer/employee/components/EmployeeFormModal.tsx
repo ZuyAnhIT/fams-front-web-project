@@ -195,7 +195,7 @@ export default function EmployeeFormModal({ open, onClose, initialData }: Employ
             <FormInput
               control={control}
               name="position"
-              label="Vị trí/Chức vụ"
+              label="Chức vụ"
               placeholder="Ví dụ: Developer"
               error={errors.position}
               labelClassName="!text-slate-700 !font-semibold !text-sm"

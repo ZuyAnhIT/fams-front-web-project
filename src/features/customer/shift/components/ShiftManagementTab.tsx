@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Badge, Tag, Button } from "antd";
+import { Badge, Tag } from "antd";
 import { EditOutlined, SettingOutlined, PlusOutlined } from "@ant-design/icons";
 import { BaseButton } from "@/components/ui";
 import DataTable from "@/components/tables/DataTable";
@@ -73,7 +73,7 @@ export default function ShiftManagementTab({ tenantId, siteId }: ShiftManagement
       width: 120,
       render: (_: any, record: ShiftResponse) => (
         <div className="flex gap-2">
-          <Button 
+          <BaseButton 
             type="text" 
             size="small"
             icon={<EditOutlined className="text-blue-500" />} 
@@ -83,7 +83,7 @@ export default function ShiftManagementTab({ tenantId, siteId }: ShiftManagement
             }}
             title="Sửa ca làm việc"
           />
-          <Button 
+          <BaseButton 
             type="text" 
             size="small"
             icon={<SettingOutlined className="text-purple-500" />} 

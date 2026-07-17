@@ -3,9 +3,10 @@
 import { useState } from "react";
 import { format } from "date-fns";
 import { CreditCard, Edit, Plus, AlertCircle, Package } from "lucide-react";
-import { Modal, message, Tag, Select, Spin } from "antd";
+import { Modal, message, Tag, Spin } from "antd";
 import { useForm, Controller } from "react-hook-form";
 import BaseButton from "@/components/ui/BaseButton";
+import BaseSelect from "@/components/ui/BaseSelect";
 import { usePlans } from "../hooks/use-subscription";
 import { useTenantSubscription, useAssignSubscription, useUpdateSubscription } from "../hooks/use-tenant-subscription";
 import type { AssignSubscriptionPayload, UpdateSubscriptionPayload } from "../types/subscription.type";
@@ -205,7 +206,7 @@ export default function SubscriptionManager({ tenantId }: { tenantId: string }) 
                 control={control}
                 rules={{ required: "Vui lòng chọn gói" }}
                 render={({ field }) => (
-                  <Select
+                  <BaseSelect
                     {...field}
                     className="w-full h-11"
                     options={plans.map(p => ({ label: p.displayName || p.name, value: p.id }))}
@@ -223,7 +224,7 @@ export default function SubscriptionManager({ tenantId }: { tenantId: string }) 
                 name="billingCycle"
                 control={control}
                 render={({ field }) => (
-                  <Select
+                  <BaseSelect
                     {...field}
                     className="w-full h-11"
                     options={[
@@ -243,7 +244,7 @@ export default function SubscriptionManager({ tenantId }: { tenantId: string }) 
                     name="status"
                     control={control}
                     render={({ field }) => (
-                      <Select
+                      <BaseSelect
                         {...field}
                         className="w-full h-11"
                         options={[

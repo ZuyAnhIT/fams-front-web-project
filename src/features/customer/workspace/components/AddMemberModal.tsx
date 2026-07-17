@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { Form, Select, Button, message, Spin } from "antd";
+import { Form, message, Spin } from "antd";
 import BaseModal from "@/components/ui/BaseModal";
+import BaseSelect from "@/components/ui/BaseSelect";
 import { useAuthStore } from "@/stores/auth.store";
 import { useEmployees } from "@/features/customer/employee/hooks/use-employee";
 import { useAssignMemberMutation } from "../hooks/use-workspace";
@@ -75,7 +76,7 @@ export default function AddMemberModal({
           label={<span className="font-medium text-slate-700">Chọn nhân viên</span>}
           rules={[{ required: true, message: "Vui lòng chọn nhân viên!" }]}
         >
-          <Select
+          <BaseSelect
             showSearch
             placeholder="Tìm kiếm theo tên hoặc mã NV..."
             optionFilterProp="children"
@@ -95,7 +96,7 @@ export default function AddMemberModal({
           label={<span className="font-medium text-slate-700">Vai trò</span>}
           rules={[{ required: true, message: "Vui lòng chọn vai trò!" }]}
         >
-          <Select
+          <BaseSelect
             options={[
               { value: "member", label: "Nhân viên (Member)" },
               { value: "lead", label: "Trưởng nhóm (Lead)" },

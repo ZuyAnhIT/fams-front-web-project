@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Card, Button } from "antd";
+import { Card } from "antd";
+import BaseButton from "@/components/ui/BaseButton";
 import { EditOutlined, EnvironmentOutlined, GlobalOutlined, ClockCircleOutlined } from "@ant-design/icons";
 import { SiteDetailResponse } from "../types/site.type";
 import { GeofenceMap } from "./GeofenceMap";
@@ -19,9 +20,9 @@ export default function ActiveGeofenceCard({ site, siteId }: ActiveGeofenceCardP
         className="bg-white border-slate-200 shadow-sm" 
         title={<span className="text-slate-800 font-semibold">Bản đồ khu vực chấm công</span>}
         extra={
-          <Button type="link" icon={<EditOutlined />} onClick={() => setIsGeofenceModalOpen(true)}>
+          <BaseButton type="link" icon={<EditOutlined />} onClick={() => setIsGeofenceModalOpen(true)}>
             Cập nhật
-          </Button>
+          </BaseButton>
         }
       >
         {site.latitude && site.longitude ? (

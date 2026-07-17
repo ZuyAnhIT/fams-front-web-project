@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { Badge, Button } from "antd";
+import { Badge } from "antd";
 import { EyeOutlined } from "@ant-design/icons";
 import DataTable from "@/components/tables/DataTable";
+import BaseButton from "@/components/ui/BaseButton";
 import { BaseModal } from "@/components/ui";
 import { useGeofenceHistoryQuery } from "../hooks/use-geofence";
 import { GeofenceResponse } from "../../site/types/site.type";
@@ -55,13 +56,13 @@ export default function GeofenceHistoryTab({ tenantId, siteId, siteLatitude, sit
       title: "Thao tác",
       key: "action",
       render: (_: any, record: GeofenceResponse) => (
-        <Button 
+        <BaseButton 
           type="text" 
           icon={<EyeOutlined className="text-blue-500" />} 
           onClick={() => setSelectedHistoryGeofence(record)}
         >
           Xem bản đồ
-        </Button>
+        </BaseButton>
       ),
     },
   ];

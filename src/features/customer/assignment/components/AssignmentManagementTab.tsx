@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Badge, Tag, Button, message } from "antd";
+import { Badge, Tag, message } from "antd";
 import { EditOutlined, DeleteOutlined, SearchOutlined, PlusOutlined } from "@ant-design/icons";
 import { BaseButton, BaseInput, BaseSelect, BaseModal } from "@/components/ui";
 import DataTable from "@/components/tables/DataTable";
@@ -133,7 +133,7 @@ export default function AssignmentManagementTab({ tenantId, siteId, shifts }: As
       width: 120,
       render: (_: any, record: AssignmentResponse) => (
         <div className="flex gap-2">
-          <Button
+          <BaseButton
             type="text"
             size="small"
             icon={<EditOutlined className="text-blue-500" />}
@@ -144,7 +144,7 @@ export default function AssignmentManagementTab({ tenantId, siteId, shifts }: As
             title="Sửa phân công"
           />
           {record.status === "active" && (
-            <Button
+            <BaseButton
               type="text"
               size="small"
               icon={<DeleteOutlined className="text-red-500" />}

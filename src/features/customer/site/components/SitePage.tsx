@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Input, Button, Table, Tag, Select, Tooltip, type TableProps } from "antd";
+import { Tag, Tooltip, type TableProps } from "antd";
 import { Search, Plus, MapPin, Edit3, Eye } from "lucide-react";
 import Link from "next/link";
 import { useAuthStore } from "@/stores/auth.store";
 import BaseButton from "@/components/ui/BaseButton";
+import BaseSelect from "@/components/ui/BaseSelect";
 import ContentCard from "@/components/shared/layout/ContentCard";
 import ListHeader from "@/components/shared/layout/ListHeader";
 import { useSitesQuery } from "../hooks/use-site";
@@ -135,7 +136,7 @@ export default function SitePage() {
         <div className="flex items-center gap-2">
           <Link href={`/customer/sites/${record.id}`}>
             <Tooltip title="Chi tiết">
-              <Button
+              <BaseButton
                 type="text"
                 icon={<Eye className="h-4 w-4 text-brand-600" />}
                 className="hover:bg-brand-50 text-brand-600 rounded-lg flex items-center justify-center w-8 h-8 p-0"
@@ -144,7 +145,7 @@ export default function SitePage() {
           </Link>
           {hasPermission("sites:update") && (
             <Tooltip title="Sửa">
-              <Button
+              <BaseButton
                 type="text"
                 icon={<Edit3 className="h-4 w-4 text-slate-500" />}
                 onClick={() => setEditingSite(record)}
@@ -186,7 +187,7 @@ export default function SitePage() {
           onSearchChange={setSearchTerm}
           searchPlaceholder="Tìm kiếm theo tên, mã, địa chỉ..."
           filters={
-            <Select
+            <BaseSelect
               placeholder="Tất cả trạng thái"
               allowClear
               value={statusFilter}
