@@ -17,6 +17,7 @@ import ContentCard from "@/components/shared/layout/ContentCard";
 import { useAuthStore } from "@/stores/auth.store";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { INVITATION_STATUS } from "@/constants/status";
+import { formatVietnameseName } from "@/utils/name.util";
 
 export default function InvitationListPage() {
   const hasPermission = useAuthStore((state) => state.hasPermission);
@@ -55,7 +56,7 @@ export default function InvitationListPage() {
       key: "name",
       render: (_: any, record: InvitationResponse) => (
         <span className="text-slate-600 text-sm">
-          {record.firstName || record.lastName ? `${record.firstName || ""} ${record.lastName || ""}`.trim() : "---"}
+          {record.firstName || record.lastName ? formatVietnameseName(record.firstName, record.lastName) : "---"}
         </span>
       ),
     },

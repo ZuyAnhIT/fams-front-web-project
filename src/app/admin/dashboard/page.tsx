@@ -4,6 +4,7 @@ import { useAuthStore } from "@/stores/auth.store";
 import { Users, MapPin, Clock, CalendarDays, Loader2, FileText } from "lucide-react";
 import { useEmployees } from "@/features/customer/employee/hooks/use-employee";
 import { SystemRole } from "@/features/customer/auth/types/auth.type";
+import { formatVietnameseName } from "@/utils/name.util";
 
 export default function DashboardPage() {
   const { user } = useAuthStore();
@@ -184,7 +185,7 @@ export default function DashboardPage() {
                       </div>
                     )}
                     <div>
-                      <h4 className="font-semibold text-brand-950 text-sm leading-tight">{emp.firstName} {emp.lastName}</h4>
+                      <h4 className="font-semibold text-brand-950 text-sm leading-tight">{formatVietnameseName(emp.firstName, emp.lastName)}</h4>
                       <p className="text-xs text-brand-500 mt-0.5">{emp.email || emp.phone || emp.employeeCode || "Chưa cập nhật liên hệ"}</p>
                     </div>
                   </div>
