@@ -106,13 +106,13 @@ function AcceptInviteForm() {
     try {
       const payloadPassword = data.isExistingUser ? undefined : data.password;
       const result = await acceptInvitation({ token, password: payloadPassword });
-      
+
       if (result.accessToken) {
         authTokenService.setAccessToken(result.accessToken);
         authTokenService.setRefreshToken(result.refreshToken || "");
-        
+
         const profile = await authService.getProfile();
-        
+
         let rolesResponse = undefined;
         try {
           rolesResponse = await rolePermissionService.getMyRoles();
@@ -131,7 +131,7 @@ function AcceptInviteForm() {
       }
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || "Kích hoạt thất bại. Lời mời có thể đã hết hạn.";
-      
+
       // Auto-fallback if the user selected "existing user" but backend requires a password
       if (isExistingUser && errorMessage.toLowerCase().includes("password is required")) {
         message.warning("Hệ thống không tìm thấy tài khoản của bạn. Vui lòng tạo mật khẩu mới nhé!");
@@ -156,8 +156,8 @@ function AcceptInviteForm() {
           <p className="text-slate-700 text-sm font-medium">{validationData?.email}</p>
         </div>
         <p className="text-slate-500 text-sm mt-2">
-          {isExistingUser 
-            ? "Tuyệt vời! Bạn đã có tài khoản. Bấm xác nhận để tham gia ngay." 
+          {isExistingUser
+            ? "Tuyệt vời! Bạn đã có tài khoản. Bấm xác nhận để tham gia ngay."
             : "Thiết lập mật khẩu để hoàn tất tạo tài khoản."}
         </p>
       </div>
@@ -204,7 +204,7 @@ export default function AcceptInvitePage() {
       {/* Background decoration */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-brand-400/20 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-400/20 blur-[120px] pointer-events-none" />
-      
+
       <Suspense fallback={<div className="h-10 w-10 animate-spin rounded-full border-4 border-brand-500 border-t-transparent" />}>
         <AcceptInviteForm />
       </Suspense>

@@ -93,42 +93,42 @@ export default function EmployeeForm({ initialData, isEditMode = false }: Employ
           <div className="flex items-center gap-2 mb-6 border-b border-slate-100 pb-4 relative z-10">
             <h3 className="text-lg font-bold text-slate-800">Thông tin cơ bản</h3>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
 
-          <FormInput
-            control={control}
-            name="firstName"
-            label="Tên"
-            placeholder="Ví dụ: Anh"
-            error={errors.firstName}
-            required
-          />
+            <FormInput
+              control={control}
+              name="firstName"
+              label="Tên"
+              placeholder="Ví dụ: Anh"
+              error={errors.firstName}
+              required
+            />
 
-          <FormInput
-            control={control}
-            name="lastName"
-            label="Họ và tên đệm"
-            placeholder="Ví dụ: Nguyễn Văn"
-            error={errors.lastName}
-            required
-          />
+            <FormInput
+              control={control}
+              name="lastName"
+              label="Họ và tên đệm"
+              placeholder="Ví dụ: Nguyễn Văn"
+              error={errors.lastName}
+              required
+            />
 
-          <FormInput
-            control={control}
-            name="email"
-            label="Email liên hệ"
-            placeholder="Ví dụ: email@domain.com"
-            error={errors.email}
-          />
+            <FormInput
+              control={control}
+              name="email"
+              label="Email liên hệ"
+              placeholder="Ví dụ: email@domain.com"
+              error={errors.email}
+            />
 
-          <FormInput
-            control={control}
-            name="phone"
-            label="Số điện thoại"
-            placeholder="Ví dụ: 0912345678"
-            error={errors.phone}
-          />
+            <FormInput
+              control={control}
+              name="phone"
+              label="Số điện thoại"
+              placeholder="Ví dụ: 0912345678"
+              error={errors.phone}
+            />
 
           </div>
 
@@ -139,37 +139,37 @@ export default function EmployeeForm({ initialData, isEditMode = false }: Employ
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
 
-          <FormInput
-            control={control}
-            name="employeeCode"
-            label="Mã nhân viên (Tùy chọn)"
-            placeholder="Ví dụ: NV001"
-            error={errors.employeeCode}
-          />
+            <FormInput
+              control={control}
+              name="employeeCode"
+              label="Mã nhân viên (Tùy chọn)"
+              placeholder="Ví dụ: NV001"
+              error={errors.employeeCode}
+            />
 
-          <FormInput
-            control={control}
-            name="hiredDate"
-            label="Ngày vào làm"
-            type="date"
-            error={errors.hiredDate}
-          />
+            <FormInput
+              control={control}
+              name="hiredDate"
+              label="Ngày vào làm"
+              type="date"
+              error={errors.hiredDate}
+            />
 
-          <FormInput
-            control={control}
-            name="department"
-            label="Phòng ban"
-            placeholder="Ví dụ: Kỹ thuật"
-            error={errors.department}
-          />
+            <FormInput
+              control={control}
+              name="department"
+              label="Phòng ban"
+              placeholder="Ví dụ: Kỹ thuật"
+              error={errors.department}
+            />
 
-          <FormInput
-            control={control}
-            name="position"
-            label="Chức vụ"
-            placeholder="Ví dụ: Developer"
-            error={errors.position}
-          />
+            <FormInput
+              control={control}
+              name="position"
+              label="Chức vụ"
+              placeholder="Ví dụ: Developer"
+              error={errors.position}
+            />
           </div>
 
           <div className="flex justify-end pt-4 pb-4">

@@ -28,6 +28,7 @@ import type {
   FaceIdStatus,
 } from "../types/face-id-report.type";
 import { CUSTOMER_ROUTES } from "@/constants/routes";
+import { formatVietnameseName } from "@/utils/name.util";
 
 type StatusFilter = FaceIdStatus | "all";
 
@@ -160,7 +161,7 @@ export default function FaceIdEnrollmentReportPage() {
       return (
         r.firstName?.toLowerCase().includes(q) ||
         r.lastName?.toLowerCase().includes(q) ||
-        `${r.firstName} ${r.lastName}`.toLowerCase().includes(q) ||
+        formatVietnameseName(r.firstName, r.lastName).toLowerCase().includes(q) ||
         r.email?.toLowerCase().includes(q) ||
         r.employeeCode?.toLowerCase().includes(q) ||
         r.department?.toLowerCase().includes(q)
@@ -186,11 +187,11 @@ export default function FaceIdEnrollmentReportPage() {
       render: (_: any, record) => (
         <div className="flex items-center gap-3 py-1">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-100 text-brand-700 font-bold uppercase shadow-inner">
-            {(record.firstName?.[0] || "?").toUpperCase()}
+            {(record.lastName || record.firstName || "?")[0]?.toUpperCase()}
           </div>
           <div className="flex flex-col min-w-0">
             <span className="font-bold text-slate-900 text-sm truncate">
-              {record.firstName} {record.lastName}
+              {formatVietnameseName(record.firstName, record.lastName)}
             </span>
             <span className="text-xs text-slate-500 font-medium truncate">
               {record.email || "—"}

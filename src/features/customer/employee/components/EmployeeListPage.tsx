@@ -20,6 +20,7 @@ import ListHeader from "@/components/shared/layout/ListHeader";
 import ContentCard from "@/components/shared/layout/ContentCard";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { EMPLOYEE_STATUS } from "@/constants/status";
+import { formatVietnameseName } from "@/utils/name.util";
 
 export default function EmployeeListPage() {
   const hasPermission = useAuthStore((state) => state.hasPermission);
@@ -104,11 +105,11 @@ export default function EmployeeListPage() {
             />
           ) : (
             <div className="h-9 w-9 bg-brand-100 text-brand-700 rounded-lg flex items-center justify-center font-bold text-base shrink-0 shadow-inner uppercase">
-              {record.firstName.charAt(0)}
+              {(record.lastName || record.firstName || "?")[0]}
             </div>
           )}
           <div className="flex flex-col">
-            <span className="font-bold text-slate-900 text-sm">{record.firstName} {record.lastName}</span>
+            <span className="font-bold text-slate-900 text-sm">{formatVietnameseName(record.firstName, record.lastName)}</span>
             <span className="text-xs text-slate-500 font-medium">{record.email}</span>
           </div>
         </div>

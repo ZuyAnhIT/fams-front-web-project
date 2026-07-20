@@ -6,6 +6,7 @@ import { checkinService } from "../services/checkin.service";
 import { CheckinDetailResponse } from "../types/checkin.type";
 import dayjs from "dayjs";
 import { useAuthStore } from "@/stores/auth.store";
+import { formatVietnameseName } from "@/utils/name.util";
 
 const { Text } = Typography;
 
@@ -76,7 +77,7 @@ export default function CheckinDetailModal({ checkinId, isOpen, onClose }: Check
             </Descriptions.Item>
             
             <Descriptions.Item label="Nhân viên">
-              {detail.employee.firstName} {detail.employee.lastName} <br/>
+              {formatVietnameseName(detail.employee.firstName, detail.employee.lastName)} <br/>
               <Text type="secondary" className="text-xs">Mã NV: {detail.employee.employeeCode}</Text>
             </Descriptions.Item>
             

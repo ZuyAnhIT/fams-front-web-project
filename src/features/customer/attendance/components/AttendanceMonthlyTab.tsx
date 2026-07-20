@@ -84,14 +84,14 @@ export default function AttendanceMonthlyTab() {
 
   const columns: ColumnsType<AttendanceHrMonthlyResponse> = [
     {
-      title: "Nhân viên (ID)",
+      title: "Nhân viên",
       key: "employee",
-      render: (_, record) => record.employeeId,
+      render: (_, record) => record.employeeName || record.employeeId,
     },
     {
-      title: "Site (ID)",
+      title: "Site",
       key: "site",
-      render: (_, record) => record.siteId,
+      render: (_, record) => record.siteName || record.siteId,
     },
     {
       title: "Tháng/Năm",

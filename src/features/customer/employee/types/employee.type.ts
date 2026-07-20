@@ -54,7 +54,7 @@ export interface CreateEmployeePayload {
   hiredDate?: string;
 }
 
-export interface UpdateEmployeePayload extends Partial<CreateEmployeePayload> {}
+export interface UpdateEmployeePayload extends Partial<CreateEmployeePayload> { }
 
 export interface ChangeEmployeeStatusPayload {
   status: "active" | "inactive" | "terminated";

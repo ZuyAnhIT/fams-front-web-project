@@ -104,10 +104,10 @@ export default function EmployeeFormModal({ open, onClose, initialData }: Employ
       width={760}
       confirmText={isEditMode ? "Lưu thay đổi" : "Tạo mới"}
       confirmLoading={isPending}
-      confirmButtonProps={{ 
-        htmlType: "submit", 
+      confirmButtonProps={{
+        htmlType: "submit",
         form: "employee-form",
-        disabled: !isDirty 
+        disabled: !isDirty
       }}
     >
       <form id="employee-form" onSubmit={handleSubmit(onSubmit)} className="space-y-6">

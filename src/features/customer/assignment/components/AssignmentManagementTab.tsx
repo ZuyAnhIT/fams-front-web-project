@@ -9,6 +9,7 @@ import { AssignmentResponse } from "../types/assignment.type";
 import AssignmentFormModal from "./AssignmentFormModal";
 import { ShiftResponse } from "@/features/customer/shift/types/shift.type";
 import { useEmployees } from "@/features/customer/employee/hooks/use-employee";
+import { formatVietnameseName } from "@/utils/name.util";
 
 interface AssignmentManagementTabProps {
   tenantId?: string;
@@ -51,7 +52,7 @@ export default function AssignmentManagementTab({ tenantId, siteId, shifts }: As
 
   const getEmployeeName = (id: string) => {
     const emp = employees.find((e: any) => e.id === id);
-    return emp ? `${emp.firstName} ${emp.lastName}` : id;
+    return emp ? formatVietnameseName(emp.firstName, emp.lastName) : id;
   };
 
   const getShiftName = (id: string | null) => {
@@ -209,7 +210,7 @@ export default function AssignmentManagementTab({ tenantId, siteId, shifts }: As
               (option?.label as string ?? "").toLowerCase().includes(input.toLowerCase())
             }
             options={employees.map((emp: any) => ({
-              label: `${emp.firstName} ${emp.lastName} ${emp.employeeCode ? `(${emp.employeeCode})` : ''}`,
+              label: `${formatVietnameseName(emp.firstName, emp.lastName)} ${emp.employeeCode ? `(${emp.employeeCode})` : ''}`,
               value: emp.id
             }))}
           />
