@@ -15,6 +15,9 @@ import { useWorkspaceTreeQuery, useWorkspaceMembersQuery } from "../hooks/use-wo
 import { useAuthStore } from "@/stores/auth.store";
 import { WorkspaceResponse, WorkspaceTreeResponse } from "../types";
 import { DownOutlined } from "@ant-design/icons";
+import { formatVietnameseName } from "@/utils/name.util";
+import StatusBadge from "@/components/ui/StatusBadge";
+import { EMPLOYEE_STATUS } from "@/constants/status";
 
 export default function WorkspacePage() {
   const user = useAuthStore((state) => state.user);
@@ -263,11 +266,11 @@ export default function WorkspacePage() {
                       dataIndex: ["employee", "fullName"],
                       key: "name",
                       sorter: (a: any, b: any) => {
-                        const nameA = a.employee?.fullName || `${a.employee?.firstName} ${a.employee?.lastName}`;
-                        const nameB = b.employee?.fullName || `${b.employee?.firstName} ${b.employee?.lastName}`;
+                        const nameA = a.employee?.fullName || formatVietnameseName(a.employee?.firstName, a.employee?.lastName);
+                        const nameB = b.employee?.fullName || formatVietnameseName(b.employee?.firstName, b.employee?.lastName);
                         return nameA.localeCompare(nameB);
                       },
-                      render: (_, record: any) => record.employee?.fullName || `${record.employee?.firstName} ${record.employee?.lastName}`
+                      render: (_, record: any) => record.employee?.fullName || formatVietnameseName(record.employee?.firstName, record.employee?.lastName)
                     },
                     {
                       title: "Chức vụ",
@@ -289,14 +292,9 @@ export default function WorkspacePage() {
                       title: "Trạng thái",
                       dataIndex: ["employee", "status"],
                       key: "status",
-                      render: (status: string) => {
-                        const isActive = status === "active";
-                        return (
-                          <Tag color={isActive ? "green" : "red"}>
-                            {isActive ? "Đang làm việc" : "Đã nghỉ"}
-                          </Tag>
-                        );
-                      }
+                      render: (status: string) => (
+                        <StatusBadge status={status} variant="dot" configMap={EMPLOYEE_STATUS} />
+                      )
                     },
                     {
                       title: "Thao tác",
@@ -311,7 +309,7 @@ export default function WorkspacePage() {
                             className="text-brand-600 hover:text-brand-700 hover:bg-brand-50"
                             onClick={() => {
                               setTransferMemberId(record.id);
-                              setTransferEmployeeName(record.employee?.fullName || `${record.employee?.firstName || ''} ${record.employee?.lastName || ''}`.trim() || 'Không xác định');
+                              setTransferEmployeeName(record.employee?.fullName || formatVietnameseName(record.employee?.firstName, record.employee?.lastName) || 'Không xác định');
                               setTransferRole(record.role);
                             }}
                           >

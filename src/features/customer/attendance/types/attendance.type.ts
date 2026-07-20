@@ -2,7 +2,9 @@ export interface AttendanceSummaryResponse {
   id: string;
   tenantId: string;
   employeeId: string;
+  employeeName: string;
   siteId: string;
+  siteName: string;
   shiftId: string | null;
   assignmentId: string | null;
   attendanceDate: string; // "yyyy-MM-dd"
@@ -25,7 +27,9 @@ export interface AttendanceSummaryResponse {
 export interface AttendanceHrMonthlyResponse {
   tenantId: string;
   employeeId: string;
+  employeeName: string;
   siteId: string;
+  siteName: string;
   year: number;
   month: number;
   presentDays: number;

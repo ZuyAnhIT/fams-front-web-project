@@ -48,6 +48,7 @@ export interface WorkspaceMemberResponse {
     fullName: string;
     employeeCode?: string;
     position?: string;
+    status?: string;
   };
 }
 

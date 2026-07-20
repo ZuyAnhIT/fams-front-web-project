@@ -10,6 +10,7 @@ import { useEmployeeDetail } from "@/features/customer/employee/hooks/use-employ
 import { useRouter } from "next/navigation";
 import DetailHeader from "@/components/shared/layout/DetailHeader";
 import ContentCard from "@/components/shared/layout/ContentCard";
+import { formatVietnameseName } from "@/utils/name.util";
 
 export default function EditEmployeePage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -69,10 +70,10 @@ export default function EditEmployeePage({ params }: { params: Promise<{ id: str
     <div className="space-y-6">
       <DetailHeader
         onBack={() => router.push("/customer/employees")}
-        title={`${data.firstName} ${data.lastName}`}
+        title={formatVietnameseName(data.firstName, data.lastName)}
         subtitle={`${data.position || "Chưa cập nhật vị trí"} • ${data.department || "Chưa cập nhật phòng ban"}`}
         avatarUrl={data.avatarUrl}
-        avatarFallback={data.firstName?.charAt(0)}
+        avatarFallback={formatVietnameseName(data.firstName, data.lastName).charAt(0)}
         tags={
           <Tag color={data.status === "active" ? "success" : data.status === "inactive" ? "warning" : "error"}>
             {data.status === "active" ? "Hoạt động" : data.status === "inactive" ? "Tạm nghỉ" : "Đã nghỉ"}

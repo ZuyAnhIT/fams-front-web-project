@@ -63,14 +63,14 @@ export default function AttendanceSummaryTab() {
       render: (val) => dayjs(val).format("DD/MM/YYYY"),
     },
     {
-      title: "Nhân viên (ID)",
+      title: "Nhân viên",
       key: "employee",
-      render: (_, record) => record.employeeId, // Should map to name if backend provides it or we join it
+      render: (_, record) => record.employeeName || record.employeeId,
     },
     {
-      title: "Site (ID)",
+      title: "Site",
       key: "site",
-      render: (_, record) => record.siteId, // Same here
+      render: (_, record) => record.siteName || record.siteId,
     },
     {
       title: "Giờ vào - ra",

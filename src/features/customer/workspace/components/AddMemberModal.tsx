@@ -6,6 +6,7 @@ import { useAuthStore } from "@/stores/auth.store";
 import { useEmployees } from "@/features/customer/employee/hooks/use-employee";
 import { useAssignMemberMutation } from "../hooks/use-workspace";
 import { AssignWorkspaceMemberRequest } from "../types";
+import { formatVietnameseName } from "@/utils/name.util";
 
 interface AddMemberModalProps {
   isOpen: boolean;
@@ -85,7 +86,7 @@ export default function AddMemberModal({
             notFoundContent={isLoadingEmployees ? <Spin size="small" /> : "Không tìm thấy nhân viên"}
             options={employeesData?.content?.map((emp: any) => ({
               value: emp.id,
-              label: `${emp.employeeCode ? `[${emp.employeeCode}] ` : ""}${emp.fullName || emp.firstName + ' ' + emp.lastName}`,
+              label: `${emp.employeeCode ? `[${emp.employeeCode}] ` : ""}${emp.fullName || formatVietnameseName(emp.firstName, emp.lastName)}`,
             })) || []}
             className="h-10"
           />
