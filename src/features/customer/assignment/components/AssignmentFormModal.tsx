@@ -14,6 +14,7 @@ import {
   useUpdateAssignmentMutation,
 } from "../hooks/use-assignment";
 import { AssignmentResponse } from "../types/assignment.type";
+import { formatVietnameseName } from "@/utils/name.util";
 import dayjs from "dayjs";
 import { assignmentSchema, type AssignmentFormData } from "../schemas/assignment.schema";
 
@@ -215,7 +216,7 @@ export default function AssignmentFormModal({
           optionFilterProp="label"
           options={employees.map((emp: any) => ({
             value: emp.id,
-            label: `${emp.firstName} ${emp.lastName} (${emp.employeeCode || emp.email})`,
+            label: `${formatVietnameseName(emp.firstName, emp.lastName)} (${emp.employeeCode || emp.email})`,
           }))}
           error={errors.employeeId}
         />
