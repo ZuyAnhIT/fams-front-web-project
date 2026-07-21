@@ -1,9 +1,13 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Bell, CheckCheck, Clock, AlertCircle, TrendingUp, MapPin, AlertTriangle, CheckCircle, XCircle, UserPlus, Megaphone, FileText, ScanFace } from "lucide-react";
-import { NOTIFICATION_TYPE_LABELS, DEFAULT_NOTIFICATION_TYPE } from "../types/notification.type";
-import { notificationService, NotificationResponse } from "../services/notification.service";
+import {
+  NOTIFICATION_TYPE_LABELS,
+  DEFAULT_NOTIFICATION_TYPE,
+  type Notification,
+} from "../types/notification.type";
+import { notificationService } from "../services/notification.service";
 import { Badge, Popover, Spin } from "antd";
 import { useRouter } from "next/navigation";
 import { message } from "antd";
@@ -58,7 +62,7 @@ function getColorClass(color: string): string {
 }
 
 interface NotificationItemProps {
-  notification: NotificationResponse;
+  notification: Notification;
   onClick: (id: string) => void;
   isMarking: boolean;
 }
@@ -103,7 +107,7 @@ function NotificationItem({ notification, onClick, isMarking }: NotificationItem
 }
 
 interface NotificationPopoverContentProps {
-  notifications: NotificationResponse[];
+  notifications: Notification[];
   unreadCount: number;
   onMarkAsRead: (id: string) => void;
   onMarkAllAsRead: () => void;
@@ -162,7 +166,7 @@ function NotificationPopoverContent({
           </div>
         ) : (
           <div className="p-2 space-y-1">
-            {notifications.slice(0, 5).map((notification) => (
+            {notifications.slice(0, 10).map((notification) => (
               <NotificationItem
                 key={notification.id}
                 notification={notification}
@@ -189,7 +193,6 @@ function NotificationPopoverContent({
 
 export default function NotificationBell() {
   const [open, setOpen] = useState(false);
-  const [notifications, setNotifications] = useState<NotificationResponse[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [markingId, setMarkingId] = useState<string | null>(null);
   const [isMarkingAll, setIsMarkingAll] = useState(false);
@@ -197,13 +200,19 @@ export default function NotificationBell() {
 
   // Subscribe to notification store
   const unreadCount = useNotificationStore((state) => state.unreadCount);
+  const notifications = useNotificationStore((state) => state.notifications);
   const setUnreadCount = useNotificationStore((state) => state.setUnreadCount);
-  const decrementUnreadCount = useNotificationStore((state) => state.decrementUnreadCount);
+  const setNotifications = useNotificationStore((state) => state.setNotifications);
+  const markNotificationAsRead = useNotificationStore((state) => state.markNotificationAsRead);
 
   const fetchNotifications = useCallback(async () => {
     setIsLoading(true);
     try {
-      const data = await notificationService.getNotifications(0, 10, false);
+      const data = await notificationService.getNotifications({
+        page: 0,
+        size: 10,
+        unreadOnly: false,
+      });
       setNotifications(data.items);
       setUnreadCount(data.unreadCount);
     } catch (err) {
@@ -211,22 +220,46 @@ export default function NotificationBell() {
     } finally {
       setIsLoading(false);
     }
-  }, [setUnreadCount]);
+  }, [setNotifications, setUnreadCount]);
 
-  // Fetch notifications when popover opens
+  // Fetch latest notifications every time the popover is opened
   useEffect(() => {
     if (open) {
       fetchNotifications();
     }
   }, [open, fetchNotifications]);
 
+  // When the bell is closed, still keep the list fresh by syncing with store updates
+  // (NotificationWatcher in DashboardLayout polls and bumps unreadCount via the store).
+  // We also poll on our own at a slower cadence so that list content (not just count) refreshes.
+  useEffect(() => {
+    // Poll when popover is closed to keep list ready for next open
+    if (open) return;
+
+    const interval = setInterval(() => {
+      fetchNotifications();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [open, fetchNotifications]);
+
+  // If the store's unreadCount changes (e.g., from NotificationWatcher detecting new ones)
+  // and the popover is currently open, refresh the list so the user sees the new item.
+  const prevUnreadCountRef = useRef(unreadCount);
+  useEffect(() => {
+    if (open && prevUnreadCountRef.current !== unreadCount) {
+      fetchNotifications();
+    }
+    prevUnreadCountRef.current = unreadCount;
+  }, [unreadCount, open, fetchNotifications]);
+
   // Initial fetch on mount and listen for external changes
   useEffect(() => {
     fetchNotifications();
 
-    // Subscribe to mark-read events from other components
-    const unsubscribe = notificationEventBus.subscribe("mark-read", () => {
-      decrementUnreadCount();
+    // Listen to refresh events (e.g. fired by handleMarkAllAsRead) to keep list fresh
+    const unsubscribe = notificationEventBus.subscribe("refresh", () => {
+      fetchNotifications();
     });
 
     return () => unsubscribe();
@@ -237,12 +270,9 @@ export default function NotificationBell() {
     setMarkingId(id);
     try {
       await notificationService.markAsRead(id);
-      setNotifications((prev) =>
-        prev.map((n) =>
-          n.id === id ? { ...n, isRead: true, readAt: new Date().toISOString() } : n
-        )
-      );
-      decrementUnreadCount();
+      // Update shared store so other components (NotificationPage) reflect the change
+      markNotificationAsRead(id);
+      notificationEventBus.emit("refresh");
       // Đóng popover và chuyển đến trang thông báo
       setOpen(false);
       router.push("/customer/notifications");
@@ -258,6 +288,7 @@ export default function NotificationBell() {
     try {
       await notificationService.markAllAsRead();
       await fetchNotifications();
+      notificationEventBus.emit("refresh");
       message.success("Đã đánh dấu tất cả đã đọc");
     } catch (err) {
       message.error("Không thể đánh dấu tất cả đã đọc");

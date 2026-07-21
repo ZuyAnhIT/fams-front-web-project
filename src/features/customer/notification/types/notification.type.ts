@@ -1,8 +1,12 @@
+// ======= Domain Types (matches BE wire format) =======
+
 export interface Notification {
   id: string;
+  tenantId: string;
+  userId: string;
   eventType: string;
   title: string;
-  body: string;
+  body: string | null;
   isRead: boolean;
   readAt: string | null;
   createdAt: string;
@@ -10,10 +14,12 @@ export interface Notification {
 
 export interface NotificationPageResponse {
   items: Notification[];
-  totalElements: number;
-  totalPages: number;
   page: number;
   size: number;
+  totalElements: number;
+  totalPages: number;
+  first: boolean;
+  last: boolean;
   unreadCount: number;
 }
 
@@ -23,7 +29,23 @@ export interface NotificationFilter {
   unreadOnly?: boolean;
 }
 
-export const NOTIFICATION_TYPE_LABELS: Record<string, { label: string; icon: string; color: string }> = {
+// ======= Generic API wrapper =======
+
+export interface ApiResponse<T> {
+  success: boolean;
+  message?: string;
+  data: T;
+}
+
+// ======= Display constants =======
+
+export type NotificationTypeMeta = {
+  label: string;
+  icon: string;
+  color: string;
+};
+
+export const NOTIFICATION_TYPE_LABELS: Record<string, NotificationTypeMeta> = {
   // Attendance
   "attendance.late_checkin": { label: "Chấm công trễ", icon: "Clock", color: "orange" },
   "attendance.missing_checkout": { label: "Thiếu giờ ra", icon: "Clock4", color: "orange" },
@@ -54,4 +76,8 @@ export const NOTIFICATION_TYPE_LABELS: Record<string, { label: string; icon: str
   "payment.refund": { label: "Hoàn tiền", icon: "TrendingUp", color: "blue" },
 };
 
-export const DEFAULT_NOTIFICATION_TYPE = { label: "Thông báo", icon: "Bell", color: "gray" };
+export const DEFAULT_NOTIFICATION_TYPE: NotificationTypeMeta = {
+  label: "Thông báo",
+  icon: "Bell",
+  color: "gray",
+};
