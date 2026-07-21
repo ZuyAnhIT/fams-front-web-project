@@ -18,8 +18,12 @@ import {
   ScanFace,
   BellOff,
 } from "lucide-react";
-import { NOTIFICATION_TYPE_LABELS, DEFAULT_NOTIFICATION_TYPE } from "../types/notification.type";
-import { notificationService, NotificationResponse } from "../services/notification.service";
+import {
+  NOTIFICATION_TYPE_LABELS,
+  DEFAULT_NOTIFICATION_TYPE,
+  type Notification,
+} from "../types/notification.type";
+import { notificationService } from "../services/notification.service";
 import { Empty, Segmented, Spin } from "antd";
 import { message } from "antd";
 import { notificationEventBus, useNotificationStore } from "../stores/notification.store";
@@ -73,7 +77,7 @@ function getColorClass(color: string): string {
 }
 
 interface NotificationCardProps {
-  notification: NotificationResponse;
+  notification: Notification;
   onMarkAsRead: (id: string) => void;
   isMarking: boolean;
 }
@@ -164,8 +168,9 @@ type FilterType = "all" | "unread";
 
 export default function NotificationPage() {
   const [filter, setFilter] = useState<FilterType>("all");
-  const [notifications, setNotifications] = useState<NotificationResponse[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [markingId, setMarkingId] = useState<string | null>(null);
@@ -179,21 +184,29 @@ export default function NotificationPage() {
   // Subscribe to notification store
   const setUnreadCount = useNotificationStore((state) => state.setUnreadCount);
 
-  const fetchNotifications = useCallback(async (page: number = 0, append: boolean = false) => {
-    if (page === 0) {
-      setIsLoading(true);
-    } else {
-      setIsLoadingMore(true);
-    }
+  // Merge items by id, keeping the freshest createdAt first (newest → oldest)
+  const mergeByIdDesc = (existing: Notification[], incoming: Notification[]) => {
+    const map = new Map<string, Notification>();
+    for (const n of existing) map.set(n.id, n);
+    for (const n of incoming) map.set(n.id, n);
+    return Array.from(map.values()).sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  };
+
+  // 1) Load the first page (full-screen spinner). Used for initial mount & filter change.
+  const loadFirstPage = useCallback(async () => {
+    setIsLoading(true);
     setError(null);
     try {
-      const data = await notificationService.getNotifications(page, PAGE_SIZE, filter === "unread");
-      if (append) {
-        setNotifications((prev) => [...prev, ...data.items]);
-      } else {
-        setNotifications(data.items);
-      }
-      setCurrentPage(page);
+      const data = await notificationService.getNotifications({
+        page: 0,
+        size: PAGE_SIZE,
+        unreadOnly: filter === "unread",
+      });
+      setNotifications(data.items);
+      setCurrentPage(0);
       setHasMore(!data.last);
       setUnreadCount(data.unreadCount);
     } catch (err: any) {
@@ -201,18 +214,83 @@ export default function NotificationPage() {
       message.error("Không thể tải thông báo");
     } finally {
       setIsLoading(false);
-      setIsLoadingMore(false);
     }
   }, [filter, setUnreadCount]);
 
+  // 2) Load more (next page). Appends to the end of the list.
+  const loadMore = useCallback(async () => {
+    if (isLoadingMore || !hasMore) return;
+    setIsLoadingMore(true);
+    try {
+      const nextPage = currentPage + 1;
+      const data = await notificationService.getNotifications({
+        page: nextPage,
+        size: PAGE_SIZE,
+        unreadOnly: filter === "unread",
+      });
+      setNotifications((prev) =>
+        mergeByIdDesc(prev, data.items)
+      );
+      setCurrentPage(nextPage);
+      setHasMore(!data.last);
+      setUnreadCount(data.unreadCount);
+    } catch (err: any) {
+      setError(err.message || "Không thể tải thêm");
+      message.error("Không thể tải thêm thông báo");
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [currentPage, hasMore, isLoadingMore, filter, setUnreadCount]);
+
+  // 3) Silent refresh: only merge NEW items (createdAt newer than current top).
+  //    Does NOT reset currentPage or replace existing items.
+  const pollNewer = useCallback(async () => {
+    if (isLoading || isLoadingMore) return;
+    setIsRefreshing(true);
+    try {
+      const data = await notificationService.getNotifications({
+        page: 0,
+        size: PAGE_SIZE,
+        unreadOnly: filter === "unread",
+      });
+      setNotifications((prev) => mergeByIdDesc(prev, data.items));
+      setUnreadCount(data.unreadCount);
+      // Don't touch currentPage or hasMore — the list may have grown organically.
+    } catch (err) {
+      // silent: do not toast for poll errors
+      console.warn("Silent refresh failed", err);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [filter, isLoading, isLoadingMore, setUnreadCount]);
+
+  // Initial load + reload when filter changes
   useEffect(() => {
-    fetchNotifications(0);
-  }, [fetchNotifications]);
+    loadFirstPage();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filter]);
+
+  // Poll for new notifications every 30 seconds (merge-only, no spinner, no reset)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      pollNewer();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [pollNewer]);
+
+  // Listen for refresh events from other components (e.g. NotificationBell mark-as-read).
+  // Use pollNewer (merge) instead of loadFirstPage (reset) to preserve loaded pages.
+  useEffect(() => {
+    const unsubscribe = notificationEventBus.subscribe("refresh", () => {
+      pollNewer();
+    });
+    return () => unsubscribe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleLoadMore = () => {
-    if (!isLoadingMore && hasMore) {
-      fetchNotifications(currentPage + 1, true);
-    }
+    loadMore();
   };
 
   const handleMarkAsRead = async (id: string) => {
@@ -226,7 +304,7 @@ export default function NotificationPage() {
       );
       message.success("Đã đánh dấu đã đọc");
       // Emit event để NotificationBell cập nhật badge
-      notificationEventBus.emit("mark-read");
+      notificationEventBus.emit("refresh");
     } catch (err) {
       message.error("Không thể đánh dấu đã đọc");
     } finally {
@@ -237,13 +315,10 @@ export default function NotificationPage() {
   const handleMarkAllAsRead = async () => {
     setIsMarkingAll(true);
     try {
-      const count = await notificationService.markAllAsRead();
-      await fetchNotifications();
+      await notificationService.markAllAsRead();
+      await loadFirstPage();
       message.success("Đã đánh dấu tất cả đã đọc");
-      // Emit event với số lượng đã đánh dấu
-      for (let i = 0; i < count; i++) {
-        notificationEventBus.emit("mark-read");
-      }
+      notificationEventBus.emit("refresh");
     } catch (err) {
       message.error("Không thể đánh dấu tất cả đã đọc");
     } finally {
@@ -259,9 +334,17 @@ export default function NotificationPage() {
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">Thông báo</h1>
-            <p className="text-sm text-slate-500 mt-1">{unreadCount} thông báo chưa đọc</p>
+          <div className="flex items-center gap-3">
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">Thông báo</h1>
+              <p className="text-sm text-slate-500 mt-1">{unreadCount} thông báo chưa đọc</p>
+            </div>
+            {isRefreshing && (
+              <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                <span className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
+                <span>Đang cập nhật...</span>
+              </div>
+            )}
           </div>
           {unreadCount > 0 && (
             <button
@@ -326,7 +409,7 @@ export default function NotificationPage() {
                 <div className="text-center">
                   <p className="text-red-500 font-medium mb-1">{error}</p>
                   <button
-                    onClick={fetchNotifications}
+                    onClick={loadFirstPage}
                     className="text-blue-500 hover:underline"
                   >
                     Thử lại

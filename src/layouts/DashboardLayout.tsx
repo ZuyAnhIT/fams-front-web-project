@@ -6,6 +6,7 @@ import { useAuthStore } from "@/stores/auth.store";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 import { ROUTES } from "@/constants/routes";
+import NotificationWatcher from "@/features/customer/notification/components/NotificationWatcher";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -54,6 +55,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           {children}
         </main>
       </div>
+
+      {/* Watcher: poll + show toast on new notifications */}
+      <NotificationWatcher />
     </div>
   );
 }
