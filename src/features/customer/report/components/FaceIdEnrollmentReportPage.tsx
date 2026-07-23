@@ -152,7 +152,7 @@ export default function FaceIdEnrollmentReportPage() {
   });
 
   const rows = data?.records?.content ?? [];
-  const total = data?.totalElements ?? 0;
+  const total = data?.records.totalElements ?? 0;
 
   const filteredRows = useMemo(() => {
     if (!debouncedSearch.trim()) return rows;
@@ -352,10 +352,12 @@ export default function FaceIdEnrollmentReportPage() {
         <ListHeader
           searchValue={searchInput}
           onSearchChange={setSearchInput}
-          searchPlaceholder="Tìm theo tên, email, mã NV, phòng ban..."
+          searchPlaceholder="Lọc nhanh trong trang hiện tại..."
+          searchAriaLabel="Lọc báo cáo Face ID trong trang hiện tại"
           filters={
             <BaseSelect
-              className="!w-56"
+              aria-label="Lọc báo cáo theo trạng thái Face ID"
+              className="!w-full sm:!w-56"
               value={statusFilter}
               onChange={(val) => {
                 setStatusFilter(val as StatusFilter);
@@ -378,6 +380,9 @@ export default function FaceIdEnrollmentReportPage() {
 
         <div className="mt-5">
           <DataTable<FaceIdReportRow>
+            ariaLabel="Báo cáo trạng thái đăng ký Face ID"
+            emptyTitle="Không có dữ liệu Face ID"
+            emptyDescription="Thử thay đổi trạng thái hoặc từ khóa lọc."
             columns={columns}
             data={filteredRows}
             loading={isLoading}
@@ -397,7 +402,7 @@ export default function FaceIdEnrollmentReportPage() {
           {debouncedSearch && (
             <div>
               Từ khoá:{" "}
-              <span className="font-bold text-blue-600">"{debouncedSearch}"</span>
+              <span className="font-bold text-blue-600">&quot;{debouncedSearch}&quot;</span>
               <span className="ml-2 text-slate-400">
                 (lọc trong trang hiện tại)
               </span>

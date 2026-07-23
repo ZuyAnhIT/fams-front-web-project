@@ -10,18 +10,21 @@ export const authMapper = {
   toAuthUser(profile: UserProfile, accessToken: string, userRoles?: UserRoleResponse[]): AuthUser {
     const decoded = decodeJwt(accessToken);
     const isPlatformAdmin = decoded?.isPlatformAdmin === true;
-    
+
     let tenantRole: SystemRole | undefined = decoded?.role as SystemRole | undefined;
     let tenantId: string | undefined = decoded?.tenantId;
     let permissions: string[] = [];
 
     if (!isPlatformAdmin && userRoles && userRoles.length > 0) {
-      // Dùng role đầu tiên tìm được làm role hiện tại
-      const firstRole = userRoles[0];
-      if (!tenantRole) tenantRole = firstRole.roleName as SystemRole;
-      if (!tenantId) tenantId = firstRole.tenantId;
-      
-      permissions = Array.from(new Set(userRoles.flatMap(r => r.permissions || [])));
+      // Issue #3 (docs/issues/ISSUES.md): a multi-tenant user has one role row per tenant —
+      // pick the one matching the JWT's current tenant (set at login/switch-tenant), not a
+      // flattened union of every tenant's permissions, which would over-grant UI affordances
+      // for tenants the user isn't currently operating as.
+      const currentRole = (tenantId && userRoles.find((r) => r.tenantId === tenantId)) || userRoles[0];
+      if (!tenantRole) tenantRole = currentRole.roleName as SystemRole;
+      if (!tenantId) tenantId = currentRole.tenantId;
+
+      permissions = currentRole.permissions || [];
     }
 
     return {
@@ -29,6 +32,7 @@ export const authMapper = {
       role: isPlatformAdmin ? SystemRole.PLATFORM_ADMIN : tenantRole,
       tenantId: tenantId,
       permissions: permissions,
+      memberships: userRoles,
     };
   },
 };

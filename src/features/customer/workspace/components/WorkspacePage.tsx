@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import { Empty, Spin, Tree, Tag } from "antd";
-import { Search, Plus, Building2, Users, Edit3, Filter } from "lucide-react";
+import { Search, Plus, Building2, Users, Edit3 } from "lucide-react";
 import BaseInput from "@/components/ui/BaseInput";
 import BaseSelect from "@/components/ui/BaseSelect";
 import BaseButton from "@/components/ui/BaseButton";
@@ -18,6 +18,17 @@ import { DownOutlined } from "@ant-design/icons";
 import { formatVietnameseName } from "@/utils/name.util";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { EMPLOYEE_STATUS } from "@/constants/status";
+
+function findNodeById(nodes: WorkspaceTreeResponse[], id: string): WorkspaceTreeResponse | null {
+  for (const node of nodes) {
+    if (node.id === id) return node;
+    if (node.children) {
+      const found = findNodeById(node.children, id);
+      if (found) return found;
+    }
+  }
+  return null;
+}
 
 export default function WorkspacePage() {
   const user = useAuthStore((state) => state.user);
@@ -45,7 +56,7 @@ export default function WorkspacePage() {
     status: statusFilter,
   });
 
-  const treeDataRaw = treeResponse?.data || [];
+  const treeDataRaw = useMemo(() => treeResponse?.data || [], [treeResponse?.data]);
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
@@ -56,25 +67,13 @@ export default function WorkspacePage() {
   const [transferEmployeeName, setTransferEmployeeName] = useState<string>("");
   const [transferRole, setTransferRole] = useState<string>("");
 
-  // Recursively find a node by ID
-  const findNodeById = (nodes: WorkspaceTreeResponse[], id: string): WorkspaceTreeResponse | null => {
-    for (const node of nodes) {
-      if (node.id === id) return node;
-      if (node.children) {
-        const found = findNodeById(node.children, id);
-        if (found) return found;
-      }
-    }
-    return null;
-  };
-
   const selectedWorkspaceData = useMemo(() => {
     if (!selectedKeys.length) return null;
     return findNodeById(treeDataRaw, selectedKeys[0] as string);
   }, [selectedKeys, treeDataRaw]);
 
   const { data: membersResponse, isLoading: isLoadingMembers } = useWorkspaceMembersQuery(
-    tenantId,
+    tenantId || undefined,
     selectedWorkspaceData?.id,
     memberPage,
     memberSize
@@ -110,11 +109,11 @@ export default function WorkspacePage() {
 
 
   return (
-    <div className="flex flex-col h-full max-w-[1600px] mx-auto py-2 w-full">
+    <div className="mx-auto flex h-full w-full max-w-[1600px] flex-col py-1">
       {/* HEADER TRANG */}
-      <div className="mb-6 flex justify-between items-center">
+      <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="!text-[35px] !font-semibold text-brand-950">Cơ cấu tổ chức</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Cơ cấu tổ chức</h1>
           <p className="text-sm text-brand-600 mt-1">
             Quản lý sơ đồ phòng ban, đội nhóm và nhân sự trực thuộc
           </p>
@@ -133,11 +132,12 @@ export default function WorkspacePage() {
 
       <div className="flex flex-col lg:flex-row flex-1 gap-6 min-h-0">
         {/* CỘT TRÁI: SƠ ĐỒ TỔ CHỨC */}
-        <div className="w-full lg:w-1/3 lg:min-w-[320px] lg:max-w-[400px] bg-white rounded-2xl shadow-sm border border-slate-100 p-5 flex flex-col h-[calc(100vh-10.5rem)]">
+        <div className="flex min-h-[420px] w-full flex-col rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5 lg:h-[calc(100dvh-10.5rem)] lg:min-w-[320px] lg:max-w-[400px] lg:basis-1/3">
 
 
-          <div className="flex gap-2 mb-4">
+          <div className="mb-4 flex flex-col gap-2 sm:flex-row lg:flex-col xl:flex-row">
             <BaseInput
+              aria-label="Tìm phòng ban hoặc đội nhóm"
               placeholder="Tìm kiếm..."
               prefix={<Search className="h-4 w-4 text-slate-400" />}
               value={searchTerm}
@@ -146,10 +146,11 @@ export default function WorkspacePage() {
               allowClear
             />
             <BaseSelect
+              aria-label="Lọc cơ cấu theo trạng thái"
               placeholder="Trạng thái"
               value={statusFilter}
               onChange={(val) => setStatusFilter(val === "all" ? undefined : val)}
-              className="w-32"
+              className="w-full sm:w-36 lg:w-full xl:w-36"
               options={[
                 { value: "all", label: "Tất cả" },
                 { value: "active", label: "Đang HĐ" },
@@ -193,13 +194,13 @@ export default function WorkspacePage() {
         </div>
 
         {/* CỘT PHẢI: CHI TIẾT & NHÂN SỰ */}
-        <div className="flex-1 bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col h-[calc(100vh-10.5rem)] overflow-auto custom-scrollbar">
+        <div className="flex min-h-[420px] flex-1 flex-col overflow-auto rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6 lg:h-[calc(100dvh-10.5rem)] custom-scrollbar">
           {selectedWorkspaceData ? (
             <div className="flex flex-col h-full animate-fade-in">
               {/* Header Chi tiết */}
-              <div className="flex items-start justify-between border-b border-slate-100 pb-5 mb-5">
-                <div>
-                  <div className="flex items-center gap-3 mb-1">
+              <div className="mb-5 flex flex-col items-start justify-between gap-4 border-b border-slate-100 pb-5 sm:flex-row">
+                <div className="min-w-0">
+                  <div className="mb-1 flex flex-wrap items-center gap-3">
                     <h2 className="text-lg font-bold text-slate-800">
                       {selectedWorkspaceData.name}
                     </h2>
@@ -209,7 +210,7 @@ export default function WorkspacePage() {
                       <Tag color="default" className="m-0 rounded-md">Tạm dừng</Tag>
                     )}
                   </div>
-                  <p className="text-sm text-slate-500 flex items-center gap-2">
+                  <p className="flex flex-wrap items-center gap-2 text-sm text-slate-500">
                     {selectedWorkspaceData.type === "team" ? (
                       <><Users className="w-4 h-4" /> Đội nhóm</>
                     ) : (
@@ -238,7 +239,7 @@ export default function WorkspacePage() {
 
               {/* Bảng Nhân sự */}
               <div className="flex-1">
-                <div className="flex items-center justify-between mb-4">
+                <div className="mb-4 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
                   <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider">
                     Danh sách Nhân sự
                   </h3>
@@ -254,6 +255,9 @@ export default function WorkspacePage() {
                   )}
                 </div>
                 <DataTable
+                  ariaLabel="Danh sách nhân sự thuộc phòng ban"
+                  emptyTitle="Chưa có nhân sự trong đơn vị này"
+                  emptyDescription="Thêm nhân sự để bắt đầu quản lý cơ cấu tổ chức."
                   columns={[
                     {
                       title: "Mã NV",

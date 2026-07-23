@@ -8,3 +8,19 @@ export function getDashboardRoute(role?: SystemRole | string): string {
   }
   return CUSTOMER_ROUTES.DASHBOARD;
 }
+
+/**
+ * Issue #3 (docs/issues/ISSUES.md): any authenticated user may now belong to zero companies
+ * (fresh self-serve signup, before creating/joining one) — sending them to the ordinary
+ * dashboard would show empty/broken tenant-scoped data. Route them to pick-or-create a
+ * company instead. Used right after login/register/accept-invite, not for general navigation.
+ */
+export function resolvePostLoginRoute(user?: { role?: SystemRole | string; tenantId?: string | null }): string {
+  if (user?.role === SystemRole.PLATFORM_ADMIN) {
+    return ADMIN_ROUTES.DASHBOARD;
+  }
+  if (!user?.tenantId) {
+    return CUSTOMER_ROUTES.SELECT_COMPANY;
+  }
+  return CUSTOMER_ROUTES.DASHBOARD;
+}

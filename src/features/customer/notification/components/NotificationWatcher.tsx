@@ -18,7 +18,11 @@ export default function NotificationWatcher() {
   useEffect(() => {
     const checkNewNotifications = async () => {
       try {
-        const data = await notificationService.getNotifications(0, 5, false);
+        const data = await notificationService.getNotifications({
+          page: 0,
+          size: 5,
+          unreadOnly: false,
+        });
         const newCount = data.unreadCount;
         const latestId = data.items[0]?.id ?? null;
 

@@ -16,7 +16,7 @@ export const metadata: Metadata = {
  */
 export default function RegisterPage() {
   return (
-    <main className="flex min-h-screen items-center justify-center">
+    <main className="w-full">
       <RegisterForm />
     </main>
   );

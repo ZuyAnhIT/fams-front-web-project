@@ -14,6 +14,7 @@ export const TENANT_STATUS: Record<string, StatusDotConfig> = {
   inactive: { dot: "bg-amber-500", text: "text-slate-700", label: "Tạm dừng" },
   suspended: { dot: "bg-rose-500", text: "text-slate-500 line-through", label: "Đình chỉ" },
   trial: { dot: "bg-blue-500", text: "text-blue-700", label: "Dùng thử" },
+  cancelled: { dot: "bg-slate-500", text: "text-slate-500 line-through", label: "Đã hủy" },
 };
 
 export const EMPLOYEE_STATUS: Record<string, StatusDotConfig> = {

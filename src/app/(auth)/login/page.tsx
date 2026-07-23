@@ -17,7 +17,7 @@ export const metadata: Metadata = {
  */
 export default function LoginPage() {
   return (
-    <main className="flex min-h-screen items-center justify-center">
+    <main className="w-full">
       <Suspense fallback={<div className="text-white text-lg">Đang tải biểu mẫu...</div>}>
         <LoginForm />
       </Suspense>

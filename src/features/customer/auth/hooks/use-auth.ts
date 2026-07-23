@@ -3,7 +3,6 @@ import { authService } from "../services/auth.service";
 import {
   type LoginPayload,
   type RegisterPayload,
-  type SendOtpPayload,
   type VerifyOtpPayload,
   type LoginResponse,
   type RegisterResponse,
@@ -16,7 +15,8 @@ import {
   type TotpVerifyPayload,
   type LoginTotpPayload,
   type ResetPasswordPayload,
-  type LogoutPayload
+  type LogoutPayload,
+  type SwitchTenantPayload
 } from "../types/auth.type";
 
 export const useLogin = () => {
@@ -34,12 +34,6 @@ export const useLoginTotp = () => {
 export const useRegister = () => {
   return useMutation<RegisterResponse, Error, RegisterPayload>({
     mutationFn: (payload) => authService.register(payload),
-  });
-};
-
-export const useSendOtp = () => {
-  return useMutation<void, Error, SendOtpPayload>({
-    mutationFn: (payload) => authService.sendOtp(payload),
   });
 };
 
@@ -116,6 +110,20 @@ export const useLogoutAll = () => {
 export const useLogout = () => {
   return useMutation<void, Error, LogoutPayload>({
     mutationFn: (payload) => authService.logout(payload),
+  });
+};
+
+/** Issue #3 (docs/issues/ISSUES.md): switch active company for a multi-tenant user. */
+export const useSwitchTenant = () => {
+  return useMutation<LoginResponse, Error, SwitchTenantPayload>({
+    mutationFn: (payload) => authService.switchTenant(payload),
+  });
+};
+
+/** Issue #4 (docs/issues/ISSUES.md): upload a real avatar image file. */
+export const useUploadAvatar = () => {
+  return useMutation<UserProfile, Error, File>({
+    mutationFn: (file) => authService.uploadAvatar(file),
   });
 };
 

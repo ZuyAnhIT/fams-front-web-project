@@ -21,19 +21,21 @@ export default function DetailHeader({
   actions,
 }: DetailHeaderProps) {
   return (
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-4">
+    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div className="flex min-w-0 items-start gap-3 sm:gap-4">
         {onBack && (
           <button
+            type="button"
             onClick={onBack}
-            className="p-2 rounded-lg hover:bg-brand-50 text-brand-500 transition-colors cursor-pointer border border-transparent hover:border-brand-100 bg-transparent"
+            aria-label="Quay lại trang trước"
+            className="shrink-0 p-2 rounded-lg hover:bg-brand-50 text-brand-500 transition-colors cursor-pointer border border-transparent hover:border-brand-100 bg-transparent"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-5 h-5" aria-hidden="true" />
           </button>
         )}
         
-        <div>
-          <div className="flex items-center gap-4">
+        <div className="min-w-0">
+          <div className="flex min-w-0 items-center gap-3 sm:gap-4">
             {avatarUrl ? (
               <img 
                 src={avatarUrl} 
@@ -46,8 +48,8 @@ export default function DetailHeader({
               </div>
             ) : null}
             
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold text-brand-950">{title}</h1>
+            <div className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-3">
+              <h1 className="break-words text-xl font-bold text-brand-950 sm:text-2xl">{title}</h1>
               {tags}
             </div>
           </div>
@@ -60,7 +62,7 @@ export default function DetailHeader({
       </div>
       
       {actions && (
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 sm:justify-end">
           {actions}
         </div>
       )}

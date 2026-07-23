@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import dynamic from "next/dynamic";
 import "leaflet/dist/leaflet.css";
 import BaseButton from "@/components/ui/BaseButton";
@@ -29,11 +29,9 @@ export function GeofenceEditorMap({
   initialCoordinates = [],
   onChange,
 }: GeofenceEditorMapProps) {
-  const [mounted, setMounted] = useState(false);
-  const [points, setPoints] = useState<[number, number][]>(initialCoordinates);
+  const points = initialCoordinates;
 
   useEffect(() => {
-    setMounted(true);
     // Fix Leaflet icons
     import("leaflet").then((L) => {
       delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -45,35 +43,19 @@ export function GeofenceEditorMap({
     });
   }, []);
 
-  // Sync internal state when initialCoordinates changes (e.g. from modal open)
-  useEffect(() => {
-    setPoints(initialCoordinates);
-  }, [initialCoordinates]);
-
   const handleMapClick = (latlng: { lat: number; lng: number }) => {
     const newPoints = [...points, [latlng.lat, latlng.lng] as [number, number]];
-    setPoints(newPoints);
     onChange(newPoints);
   };
 
   const undo = () => {
     const newPoints = points.slice(0, -1);
-    setPoints(newPoints);
     onChange(newPoints);
   };
 
   const clear = () => {
-    setPoints([]);
     onChange([]);
   };
-
-  if (!mounted) {
-    return (
-      <div className="h-[400px] w-full bg-slate-100 rounded-lg animate-pulse flex items-center justify-center border border-slate-200">
-        <span className="text-slate-400">Đang tải công cụ vẽ bản đồ...</span>
-      </div>
-    );
-  }
 
   const isPolygon = points.length >= 3;
 

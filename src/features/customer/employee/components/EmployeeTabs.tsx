@@ -12,7 +12,7 @@ export default function EmployeeTabs() {
       key: "employees",
       label: (
         <span className="flex items-center gap-2 font-semibold text-base px-2">
-          <Users className="w-5 h-5" />
+          <Users className="w-5 h-5" aria-hidden="true" />
           Danh sách nhân viên
         </span>
       ),
@@ -22,7 +22,7 @@ export default function EmployeeTabs() {
       key: "invitations",
       label: (
         <span className="flex items-center gap-2 font-semibold text-base px-2">
-          <Mail className="w-5 h-5" />
+          <Mail className="w-5 h-5" aria-hidden="true" />
           Lời mời đã gửi
         </span>
       ),
@@ -31,12 +31,12 @@ export default function EmployeeTabs() {
   ];
 
   return (
-    <div className="bg-white p-2 rounded-2xl shadow-sm border border-slate-100">
+    <div className="rounded-xl border border-slate-200 bg-white p-1 shadow-sm sm:p-2">
       <Tabs 
         defaultActiveKey="employees" 
         items={items} 
-        size="large"
-        tabBarStyle={{ marginBottom: 24, paddingLeft: 16, paddingRight: 16, paddingTop: 8 }}
+        size="middle"
+        tabBarStyle={{ marginBottom: 20, paddingLeft: 8, paddingRight: 8, paddingTop: 8 }}
       />
     </div>
   );

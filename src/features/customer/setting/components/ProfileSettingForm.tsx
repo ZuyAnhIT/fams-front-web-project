@@ -1,19 +1,36 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { message } from "antd";
-import GlassCard from "@/components/ui/GlassCard";
+import { message, Avatar } from "antd";
+import { Camera } from "lucide-react";
+import dayjs from "dayjs";
 import FormInput from "@/components/forms/FormInput";
+import FormSelect from "@/components/forms/FormSelect";
+import FormTextArea from "@/components/forms/FormTextArea";
+import FormDatePicker from "@/components/forms/FormDatePicker";
 import BaseButton from "@/components/ui/BaseButton";
 import { useAuthStore } from "@/stores/auth.store";
-import { useUpdateProfile } from "@/features/customer/auth/hooks/use-auth";
+import { useUpdateProfile, useUploadAvatar } from "@/features/customer/auth/hooks/use-auth";
+import type { UserProfile } from "@/features/customer/auth/types/auth.type";
 import { profileSchema, type ProfileFormData } from "../schemas/setting.schema";
+
+const GENDER_OPTIONS = [
+  { label: "Nam", value: "male" },
+  { label: "Nữ", value: "female" },
+  { label: "Khác", value: "other" },
+];
+
+const AVATAR_ACCEPT = "image/jpeg,image/png,image/webp";
+const AVATAR_MAX_MB = 5;
 
 export default function ProfileSettingForm() {
   const { user, setAuth, accessToken } = useAuthStore();
   const { mutateAsync: updateProfile, isPending } = useUpdateProfile();
+  const { mutateAsync: uploadAvatar, isPending: isUploadingAvatar } = useUploadAvatar();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
   const {
     control,
@@ -25,7 +42,10 @@ export default function ProfileSettingForm() {
     defaultValues: {
       displayName: "",
       phone: "",
-      avatarUrl: "",
+      dateOfBirth: null,
+      hometown: "",
+      gender: "",
+      address: "",
     },
   });
 
@@ -34,34 +54,71 @@ export default function ProfileSettingForm() {
       reset({
         displayName: user.displayName || user.email || "",
         phone: user.phone || "",
-        avatarUrl: user.avatarUrl || "",
+        dateOfBirth: user.dateOfBirth ? dayjs(user.dateOfBirth) : null,
+        hometown: user.hometown || "",
+        gender: user.gender || "",
+        address: user.address || "",
       });
     }
   }, [user, reset]);
+
+  const persistUser = (updatedUser: UserProfile) => {
+    const currentRefreshToken = localStorage.getItem("fams_refresh_token") || "";
+    setAuth(
+      { ...user, ...updatedUser, role: user?.role, tenantId: user?.tenantId },
+      accessToken as string,
+      currentRefreshToken
+    );
+  };
 
   const onSubmit = async (data: ProfileFormData) => {
     try {
       const payload = {
         displayName: data.displayName,
         phone: data.phone || undefined,
-        avatarUrl: data.avatarUrl !== undefined && data.avatarUrl !== null ? data.avatarUrl : undefined,
+        dateOfBirth: data.dateOfBirth ? dayjs(data.dateOfBirth).format("YYYY-MM-DD") : undefined,
+        hometown: data.hometown || undefined,
+        gender: data.gender || undefined,
+        address: data.address || undefined,
       };
       const updatedUser = await updateProfile(payload);
-      // Cập nhật lại store, giữ nguyên role và tenantId hiện tại
-      const currentRefreshToken = localStorage.getItem("fams_refresh_token") || "";
-      const authUser = {
-        ...updatedUser,
-        role: user?.role,
-        tenantId: user?.tenantId,
-      };
-      setAuth(authUser, accessToken as string, currentRefreshToken);
+      persistUser(updatedUser);
       message.success("Cập nhật thông tin thành công!");
     } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } } };
-      const errorMessage = err.response?.data?.message || "Cập nhật thất bại.";
-      message.error(errorMessage);
+      const err = error as { response?: { data?: { userMessage?: string; message?: string } } };
+      message.error(err.response?.data?.userMessage || err.response?.data?.message || "Cập nhật thất bại.");
     }
   };
+
+  const handleAvatarFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow re-selecting the same file later
+    if (!file) return;
+
+    if (file.size > AVATAR_MAX_MB * 1024 * 1024) {
+      message.error(`Ảnh quá lớn — tối đa ${AVATAR_MAX_MB}MB.`);
+      return;
+    }
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      message.error("Chỉ hỗ trợ ảnh JPEG, PNG hoặc WEBP.");
+      return;
+    }
+
+    const localPreview = URL.createObjectURL(file);
+    setAvatarPreview(localPreview);
+    try {
+      const updatedUser = await uploadAvatar(file);
+      persistUser(updatedUser);
+      message.success("Cập nhật ảnh đại diện thành công!");
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { userMessage?: string; message?: string } } };
+      message.error(err.response?.data?.userMessage || err.response?.data?.message || "Tải ảnh thất bại.");
+      setAvatarPreview(null);
+    }
+  };
+
+  const displayName = user?.displayName || user?.email || "Người dùng";
+  const avatarFallback = displayName.trim().charAt(0).toUpperCase() || "U";
 
   return (
     <div className="w-full">
@@ -69,32 +126,101 @@ export default function ProfileSettingForm() {
         <h3 className="text-xl font-semibold text-brand-950">Thông tin cá nhân</h3>
         <p className="text-sm text-gray-500 mt-1">Quản lý thông tin cá nhân cơ bản của bạn</p>
       </div>
+
+      <div className="mb-6 flex items-center gap-4">
+        <div className="relative">
+          <Avatar
+            src={avatarPreview || user?.avatarUrl || undefined}
+            size={72}
+            className="bg-blue-600 font-semibold text-2xl"
+          >
+            {avatarFallback}
+          </Avatar>
+          <button
+            type="button"
+            aria-label="Đổi ảnh đại diện"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isUploadingAvatar}
+            className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-blue-600 text-white shadow-md transition-colors hover:bg-blue-700 disabled:opacity-60"
+          >
+            <Camera className="h-3.5 w-3.5" aria-hidden="true" />
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept={AVATAR_ACCEPT}
+            onChange={(e) => void handleAvatarFileChange(e)}
+            className="hidden"
+          />
+        </div>
+        <div>
+          <p className="font-semibold text-slate-800">{displayName}</p>
+          <p className="text-xs text-slate-500">
+            {isUploadingAvatar ? "Đang tải ảnh lên..." : "JPEG, PNG hoặc WEBP, tối đa 5MB"}
+          </p>
+        </div>
+      </div>
+
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 w-full lg:max-w-3xl">
-        <FormInput
-          control={control}
-          name="displayName"
-          label="Tên hiển thị"
-          placeholder="Nhập tên hiển thị"
-          id="profile-display-name"
-          error={errors.displayName}
-        />
+        <div className="grid grid-cols-1 gap-x-5 gap-y-5 md:grid-cols-2">
+          <FormInput
+            control={control}
+            name="displayName"
+            label="Tên hiển thị"
+            placeholder="Nhập tên hiển thị"
+            id="profile-display-name"
+            error={errors.displayName}
+          />
 
-        <FormInput
-          control={control}
-          name="phone"
-          label="Số điện thoại"
-          placeholder="Nhập số điện thoại"
-          id="profile-phone"
-          error={errors.phone}
-        />
+          <FormInput
+            control={control}
+            name="phone"
+            label="Số điện thoại"
+            placeholder="Nhập số điện thoại"
+            id="profile-phone"
+            error={errors.phone}
+          />
 
-        <FormInput
+          <FormDatePicker
+            control={control}
+            name="dateOfBirth"
+            label="Ngày sinh"
+            id="profile-date-of-birth"
+            error={errors.dateOfBirth}
+            className="w-full"
+            format="DD/MM/YYYY"
+            maxDate={dayjs()}
+          />
+
+          <FormSelect
+            control={control}
+            name="gender"
+            label="Giới tính"
+            id="profile-gender"
+            error={errors.gender}
+            options={GENDER_OPTIONS}
+            allowClear
+            placeholder="Chọn giới tính"
+          />
+
+          <FormInput
+            control={control}
+            name="hometown"
+            label="Quê quán"
+            placeholder="Ví dụ: Nghệ An"
+            id="profile-hometown"
+            error={errors.hometown}
+          />
+        </div>
+
+        <FormTextArea
           control={control}
-          name="avatarUrl"
-          label="Đường dẫn ảnh đại diện (URL)"
-          placeholder="https://example.com/avatar.jpg"
-          id="profile-avatar"
-          error={errors.avatarUrl}
+          name="address"
+          label="Địa chỉ"
+          placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành phố"
+          id="profile-address"
+          error={errors.address}
+          rows={2}
         />
 
         <div className="flex justify-end pt-4">

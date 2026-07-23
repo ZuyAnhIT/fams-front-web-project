@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Tag, DatePicker } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { attendanceService } from "../services/attendance.service";
 import { AttendanceSummaryResponse, AttendanceListParams } from "../types/attendance.type";
+import { useAttendanceSummaries } from "../hooks/use-attendance";
 import dayjs from "dayjs";
 import { useAuthStore } from "@/stores/auth.store";
 import BaseSelect from "@/components/ui/BaseSelect";
@@ -16,10 +16,6 @@ export default function AttendanceSummaryTab() {
   const user = useAuthStore(state => state.user);
   const currentTenantId = user?.tenantId;
   
-  const [data, setData] = useState<AttendanceSummaryResponse[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [total, setTotal] = useState(0);
-  
   const [params, setParams] = useState<AttendanceListParams>({
     page: 0,
     size: 20,
@@ -27,33 +23,7 @@ export default function AttendanceSummaryTab() {
     to: dayjs().endOf('month').format('YYYY-MM-DD'),
   });
 
-  useEffect(() => {
-    if (currentTenantId) {
-      fetchData();
-    }
-  }, [params, currentTenantId]);
-
-  const fetchData = async () => {
-    if (!currentTenantId) return;
-    try {
-      setLoading(true);
-      const res = await attendanceService.listSummaries(currentTenantId, params);
-      setData(res.content);
-      setTotal(res.totalElements);
-    } catch (error) {
-      console.error("Failed to fetch attendance summaries", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleTableChange = (pagination: any, filters: any, sorter: any) => {
-    setParams((prev) => ({
-      ...prev,
-      page: pagination.current ? pagination.current - 1 : 0,
-      size: pagination.pageSize || 20,
-    }));
-  };
+  const { data: pageData, isLoading } = useAttendanceSummaries(currentTenantId || undefined, params);
 
   const columns: ColumnsType<AttendanceSummaryResponse> = [
     {
@@ -127,11 +97,12 @@ export default function AttendanceSummaryTab() {
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-4 flex-wrap bg-slate-50 p-4 rounded-lg border border-slate-200">
+      <div className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3 sm:flex-row sm:flex-wrap sm:p-4">
         <BaseSelect
+          aria-label="Lọc bảng công theo trạng thái"
           allowClear
           placeholder="Trạng thái"
-          style={{ width: 150 }}
+          className="w-full sm:w-44"
           onChange={(val) => setParams(p => ({ ...p, status: val, page: 0 }))}
           options={[
             { label: "Hoàn thành", value: "present" },
@@ -139,6 +110,8 @@ export default function AttendanceSummaryTab() {
           ]}
         />
         <RangePicker 
+          aria-label="Lọc bảng công theo khoảng ngày"
+          className="w-full sm:w-auto"
           value={[
             params.from ? dayjs(params.from) : null,
             params.to ? dayjs(params.to) : null,
@@ -155,14 +128,17 @@ export default function AttendanceSummaryTab() {
       </div>
 
       <DataTable
+        ariaLabel="Bảng công tổng hợp theo ngày"
+        emptyTitle="Không có dữ liệu bảng công"
+        emptyDescription="Thử chọn khoảng ngày hoặc trạng thái khác."
         columns={columns}
-        data={data}
+        data={pageData?.content || []}
         rowKey="id"
-        loading={loading}
+        loading={isLoading}
         currentPage={params.page || 0}
         pageSize={params.size || 20}
-        totalElements={total}
-        onChange={handleTableChange}
+        totalElements={pageData?.totalElements || 0}
+        onPageChange={(page, size) => setParams((current) => ({ ...current, page, size }))}
         scroll={{ x: 1000 }}
       />
     </div>

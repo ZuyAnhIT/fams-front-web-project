@@ -72,49 +72,34 @@
 }
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f8fafc;
+  --foreground: #0f172a;
+}
+
+html {
+  background: var(--background);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: "Inter", Arial, Helvetica, sans-serif;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  font-size: 16px; /* Kích thước chuẩn body text */
-}
-
-/* ═══ Typography Scale (Responsive) ═══ */
-h1, .h1 {
-  font-size: clamp(32px, 4vw, 48px);
-  font-weight: 700;
-  line-height: 1.2;
-}
-
-h2, .h2 {
-  font-size: clamp(24px, 3vw, 32px);
-  font-weight: 600;
-  line-height: 1.3;
-}
-
-h3, .h3 {
-  font-size: clamp(20px, 2.5vw, 24px);
-  font-weight: 600;
-  line-height: 1.4;
-}
-
-small, .text-small, .caption {
-  font-size: clamp(12px, 1.5vw, 14px);
+  font-size: 15px;
   line-height: 1.5;
 }
 
-/* Reset Ant Design focus outlines cho Input để Tailwind kiểm soát */
-.ant-input:focus,
-.ant-input-focused,
-.ant-input-affix-wrapper:focus,
-.ant-input-affix-wrapper-focused {
-  box-shadow: none !important;
+/* Focus hiển thị rõ cho người dùng bàn phím. */
+:where(a, button, input, textarea, select, [role="button"], [tabindex]):focus-visible {
+  outline: 2px solid var(--brand-primary, #2563eb);
+  outline-offset: 2px;
+}
+
+.ant-input-affix-wrapper:focus-within,
+.ant-picker-focused,
+.ant-select-focused .ant-select-selector {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-primary, #2563eb) 18%, transparent) !important;
 }
 
 /* ═══ Fade-in animation ═══ */
@@ -131,6 +116,17 @@ small, .text-small, .caption {
 
 .animate-fade-in {
   animation: fadeIn 0.4s ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* ═══ OTP Input Styling (Dark Glassmorphism) ═══ */

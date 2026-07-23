@@ -1,21 +1,21 @@
 "use client";
-import { getDashboardRoute } from "@/utils/route.util";
+import { resolvePostLoginRoute } from "@/utils/route.util";
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { App } from "antd";
-import { cn } from "@/utils/cn";
+import { App, Input } from "antd";
 import FormInput from "@/components/forms/FormInput";
 
 import { useState } from "react";
 import BaseButton from "@/components/ui/BaseButton";
 import { registerSchema, type RegisterFormData } from "@/features/customer/auth/schemas/auth.schema";
 import { useRegister } from "@/features/customer/auth/hooks/use-auth";
+import { useFirebasePhoneAuth } from "@/features/customer/auth/hooks/use-firebase-phone-auth";
+import { mapFirebasePhoneError, toE164 } from "@/features/customer/auth/utils/firebase-phone.util";
 import { useAuthStore } from "@/stores/auth.store";
 import { ROUTES } from "@/constants/routes";
-import { APP_NAME } from "@/constants/app";
 import { authService } from "@/features/customer/auth/services/auth.service";
 import { authTokenService } from "@/services/auth-token.service";
 import { authMapper } from "@/features/customer/auth/utils/auth.mapper";
@@ -25,18 +25,28 @@ import { authMapper } from "@/features/customer/auth/utils/auth.mapper";
  *
  * Giao diện phong cách Dark Glassmorphism đồng nhất với trang đăng nhập.
  * Có tích hợp bộ đo độ mạnh mật khẩu theo thời gian thực.
+ *
+ * Đăng ký chỉ bằng số điện thoại (backlog #2, docs/BACKLOG.md) bắt buộc phải có
+ * Firebase ID token đã xác thực OTP thành công (RegisterService trên backend từ
+ * chối request phone-only không kèm token này) — nên khi phát hiện input là số
+ * điện thoại, form chuyển qua bước xác thực OTP bằng Firebase TRƯỚC khi thực sự
+ * gọi API đăng ký, thay vì đăng ký xong mới yêu cầu xác thực như luồng email.
  */
+const RECAPTCHA_CONTAINER_ID = "recaptcha-container-register";
+
 export default function RegisterForm() {
   const router = useRouter();
   const { message } = App.useApp();
 
   // State quản lý luồng UI
-  const [step, setStep] = useState<"register" | "waiting_email">("register");
+  const [step, setStep] = useState<"register" | "phone_otp" | "waiting_email">("register");
   const [registeredEmail, setRegisteredEmail] = useState("");
+  const [otpValue, setOtpValue] = useState("");
 
   const {
     control,
     handleSubmit,
+    getValues,
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
@@ -50,27 +60,58 @@ export default function RegisterForm() {
   });
 
 
-  const { mutateAsync: registerMutation } = useRegister();
+  const { mutateAsync: registerMutation, isPending: isRegistering } = useRegister();
+  const { sendCode, confirmCode, isSending, isConfirming } = useFirebasePhoneAuth(RECAPTCHA_CONTAINER_ID);
   const setAuth = useAuthStore((state) => state.setAuth);
 
+  const completePhoneRegistration = async (firebaseIdToken: string) => {
+    const data = getValues();
+    const formattedPhone = toE164(data.emailOrPhone);
+
+    const response = await registerMutation({
+      displayName: data.fullName,
+      password: data.password,
+      phone: formattedPhone,
+      firebaseIdToken,
+    });
+
+    if (response.accessToken && response.refreshToken) {
+      authTokenService.setAccessToken(response.accessToken);
+      authTokenService.setRefreshToken(response.refreshToken);
+
+      const profile = await authService.getProfile();
+      const authUser = authMapper.toAuthUser(profile, response.accessToken);
+
+      setAuth(authUser, response.accessToken, response.refreshToken);
+      message.success("Đăng ký và đăng nhập thành công!");
+      router.push(resolvePostLoginRoute(authUser));
+    } else {
+      message.success("Đăng ký thành công!");
+      router.push(`${ROUTES.LOGIN_PHONE}?phone=${encodeURIComponent(formattedPhone)}`);
+    }
+  };
+
   const onSubmit = async (data: RegisterFormData) => {
-    try {
-      const isEmail = data.emailOrPhone.includes("@");
+    const isEmail = data.emailOrPhone.includes("@");
 
-      // Chuyển đổi định dạng số điện thoại (0xxx -> +84xxx) để hợp lệ với backend E.164
-      let formattedPhone = undefined;
-      if (!isEmail) {
-        formattedPhone = data.emailOrPhone;
-        if (formattedPhone.startsWith("0")) {
-          formattedPhone = "+84" + formattedPhone.substring(1);
-        }
+    if (!isEmail) {
+      // Đăng ký bằng SĐT: phải xác thực Firebase OTP trước khi gọi API đăng ký
+      try {
+        await sendCode(toE164(data.emailOrPhone));
+        setOtpValue("");
+        setStep("phone_otp");
+        message.success("Mã OTP đã được gửi đến số điện thoại của bạn!");
+      } catch (error: unknown) {
+        message.error(mapFirebasePhoneError(error));
       }
+      return;
+    }
 
+    try {
       const response = await registerMutation({
         displayName: data.fullName,
         password: data.password,
-        email: isEmail ? data.emailOrPhone : undefined,
-        phone: formattedPhone,
+        email: data.emailOrPhone,
       });
 
       if (response.emailVerificationRequired) {
@@ -78,25 +119,9 @@ export default function RegisterForm() {
         setRegisteredEmail(data.emailOrPhone);
         setStep("waiting_email");
         message.success("Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản.");
-      } else if (response.accessToken && response.refreshToken) {
-        // Đăng ký bằng Phone: Tự động đăng nhập
-        authTokenService.setAccessToken(response.accessToken);
-        authTokenService.setRefreshToken(response.refreshToken);
-        
-        const profile = await authService.getProfile();
-        const authUser = authMapper.toAuthUser(profile, response.accessToken);
-
-        setAuth(authUser, response.accessToken, response.refreshToken);
-        message.success("Đăng ký và đăng nhập thành công!");
-        router.push(getDashboardRoute(authUser?.role));
       } else {
-        // Fallback
         message.success("Đăng ký thành công!");
-        if (!isEmail) {
-          router.push(`${ROUTES.LOGIN_PHONE}?phone=${encodeURIComponent(data.emailOrPhone)}`);
-        } else {
-          router.push(`${ROUTES.LOGIN}?email=${encodeURIComponent(data.emailOrPhone)}`);
-        }
+        router.push(`${ROUTES.LOGIN}?email=${encodeURIComponent(data.emailOrPhone)}`);
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
@@ -106,8 +131,30 @@ export default function RegisterForm() {
     }
   };
 
+  const onVerifyPhoneOtp = async () => {
+    if (otpValue.length !== 6) {
+      message.error("Vui lòng nhập đủ 6 chữ số OTP");
+      return;
+    }
+    try {
+      const firebaseIdToken = await confirmCode(otpValue);
+      await completePhoneRegistration(firebaseIdToken);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      if (error?.code?.startsWith?.("auth/")) {
+        message.error(mapFirebasePhoneError(error));
+      } else {
+        const errorMessage = error.response?.data?.message || "Đăng ký không thành công. Vui lòng thử lại.";
+        message.error(errorMessage);
+      }
+    }
+  };
+
   return (
     <div className="w-full">
+      {/* Container vô hình cho reCAPTCHA của Firebase */}
+      <div id={RECAPTCHA_CONTAINER_ID} />
+
       <div className="bg-white">
         {/* Tiêu đề */}
         <h1 className="mb-8 text-3xl font-bold text-slate-900 tracking-tight">
@@ -155,6 +202,55 @@ export default function RegisterForm() {
                 Gửi lại email
               </span>
             </p>
+          </div>
+        ) : step === "phone_otp" ? (
+          <div className="animate-fade-in">
+            <div className="mb-6 rounded-xl bg-brand-50 border border-brand-100 p-4">
+              <p className="text-sm text-slate-600 text-center">
+                Mã OTP đã được gửi đến{" "}
+                <span className="font-bold text-slate-900">
+                  {toE164(getValues("emailOrPhone"))}
+                </span>
+              </p>
+            </div>
+
+            <div className="mb-6">
+              <label className="mb-3 block text-[15px] font-semibold tracking-wide text-slate-700 text-center">
+                Nhập mã xác thực
+              </label>
+              <div className="flex justify-center otp-container">
+                <Input.OTP
+                  length={6}
+                  value={otpValue}
+                  onChange={(val) => setOtpValue(val)}
+                  size="large"
+                  variant="outlined"
+                  className="[&_input]:!bg-white [&_input]:!text-slate-900 [&_input]:!border-slate-300 [&_input:focus]:!border-brand-500 [&_input:hover]:!border-brand-400"
+                />
+              </div>
+            </div>
+
+            <BaseButton
+              type="primary"
+              onClick={onVerifyPhoneOtp}
+              loading={isConfirming || isRegistering}
+              block
+              size="large"
+              disabled={otpValue.length !== 6}
+              className="mt-2 font-bold !bg-blue-600 !text-white hover:!bg-blue-700 !border-0 shadow-lg shadow-blue-500/25 h-12 rounded-xl transition-all"
+            >
+              Xác nhận & Đăng ký
+            </BaseButton>
+
+            <div className="mt-4 text-center">
+              <button
+                type="button"
+                onClick={() => setStep("register")}
+                className="text-sm font-medium text-slate-500 hover:text-brand-600 transition-colors cursor-pointer"
+              >
+                ← Đổi số điện thoại
+              </button>
+            </div>
           </div>
         ) : (
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -208,7 +304,7 @@ export default function RegisterForm() {
             <BaseButton
               type="primary"
               htmlType="submit"
-              loading={isSubmitting}
+              loading={isSubmitting || isSending}
               block
               size="large"
               className="mt-2 font-bold !bg-blue-600 !text-white hover:!bg-blue-700 !border-0 shadow-lg shadow-blue-500/25 h-12 rounded-xl transition-all"

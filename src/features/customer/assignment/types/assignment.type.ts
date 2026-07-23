@@ -6,8 +6,8 @@ export interface AssignmentResponse {
   shiftId: string | null;
   startDate: string; // yyyy-MM-dd
   endDate: string | null; // yyyy-MM-dd
-  role: "worker" | "supervisor" | string;
-  status: "active" | "cancelled" | string;
+  role: "worker" | "supervisor";
+  status: "active" | "cancelled";
   notes?: string;
   createdBy: string;
   createdAt: string;

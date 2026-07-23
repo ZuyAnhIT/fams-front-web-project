@@ -39,8 +39,18 @@ export interface EmployeeListParams {
 
 export type Employee = EmployeeResponse;
 
+export interface EmployeeRoleAssignment {
+  id: string;
+  userId: string;
+  roleId: string;
+  tenantId: string;
+  assignedAt?: string;
+  roleName?: string;
+  permissions?: string[];
+}
+
 export interface EmployeeDetailResponse extends EmployeeResponse {
-  // Add more detailed fields if necessary
+  roles?: EmployeeRoleAssignment[];
 }
 
 export interface CreateEmployeePayload {
@@ -54,7 +64,7 @@ export interface CreateEmployeePayload {
   hiredDate?: string;
 }
 
-export interface UpdateEmployeePayload extends Partial<CreateEmployeePayload> { }
+export type UpdateEmployeePayload = Partial<CreateEmployeePayload>;
 
 export interface ChangeEmployeeStatusPayload {
   status: "active" | "inactive" | "terminated";

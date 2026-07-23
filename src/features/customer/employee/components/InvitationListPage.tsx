@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, RotateCcw } from "lucide-react";
-import { Input, Tag } from "antd";
 import BaseSelect from "@/components/ui/BaseSelect";
 import DataTable from "@/components/tables/DataTable";
 import BaseButton from "@/components/ui/BaseButton";
@@ -13,7 +11,6 @@ import CancelInvitationModal from "./CancelInvitationModal";
 import type { InvitationResponse } from "../types/employee.type";
 import { format } from "date-fns";
 import ListHeader from "@/components/shared/layout/ListHeader";
-import ContentCard from "@/components/shared/layout/ContentCard";
 import { useAuthStore } from "@/stores/auth.store";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { INVITATION_STATUS } from "@/constants/status";
@@ -114,10 +111,12 @@ export default function InvitationListPage() {
         searchValue={searchInput}
         onSearchChange={setSearchInput}
         searchPlaceholder="Tìm kiếm theo email..."
+        searchAriaLabel="Tìm lời mời theo email"
         filters={
           <BaseSelect
+            aria-label="Lọc lời mời theo trạng thái"
             placeholder="Tất cả trạng thái"
-            className="w-40"
+            className="w-full sm:w-44"
             allowClear
             value={state.status}
             onChange={(val) => setPagination({ status: val, page: 0 })}
@@ -133,6 +132,9 @@ export default function InvitationListPage() {
 
 
         <DataTable
+          ariaLabel="Danh sách lời mời nhân viên"
+          emptyTitle="Không tìm thấy lời mời"
+          emptyDescription="Lời mời nhân viên đã gửi sẽ xuất hiện tại đây."
           columns={columns}
           data={pageData?.content || []}
           loading={isLoading}

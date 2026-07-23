@@ -9,9 +9,12 @@ import FormInput from "@/components/forms/FormInput";
 import BaseButton from "@/components/ui/BaseButton";
 import { useTenantSettings, useUpdateTenantSettings } from "../hooks/use-tenant";
 import { updateTenantSettingsSchema, type UpdateTenantSettingsFormData } from "../schemas/tenant.schema";
+import { useAuthStore } from "@/stores/auth.store";
 
 export default function TenantSettingsPage({ tenantId }: { tenantId?: string }) {
-  const { data: settings, isLoading } = useTenantSettings(tenantId);
+  const authenticatedTenantId = useAuthStore((state) => state.user?.tenantId);
+  const effectiveTenantId = tenantId || authenticatedTenantId || undefined;
+  const { data: settings, isLoading } = useTenantSettings(effectiveTenantId);
   const { mutateAsync: updateSettings, isPending } = useUpdateTenantSettings();
 
   const {
@@ -40,7 +43,7 @@ export default function TenantSettingsPage({ tenantId }: { tenantId?: string }) 
 
   const onSubmitUiSettings = async (data: UpdateTenantSettingsFormData) => {
     try {
-      await updateSettings({ payload: data, id: tenantId });
+      await updateSettings({ payload: data, id: effectiveTenantId });
       message.success("Lưu cấu hình giao diện thành công");
       reset(data); // reset isDirty state
     } catch (error: unknown) {
@@ -58,9 +61,9 @@ export default function TenantSettingsPage({ tenantId }: { tenantId?: string }) 
   }
 
   return (
-    <div className="pt-4 max-w-4xl mx-auto">
+    <div className="mx-auto max-w-4xl pt-2">
       <form onSubmit={handleSubmit(onSubmitUiSettings)} className="space-y-6">
-        <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/60 shadow-sm space-y-6">
+        <div className="space-y-6 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6 lg:p-8">
           <div className="flex items-center gap-2 mb-2 border-b border-slate-100 pb-4">
             <Palette className="h-5 w-5 text-blue-500" />
             <h3 className="text-lg font-bold text-slate-800">Tùy biến hiển thị</h3>

@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Tabs, Tag } from "antd";
 import { ArrowLeft, Building2, Settings, ShieldCheck, CreditCard } from "lucide-react";
 import { useTenantStore } from "@/stores/tenant.store";
-import { ROUTES, ADMIN_ROUTES } from "@/constants/routes";
+import { ADMIN_ROUTES } from "@/constants/routes";
 import UpdateTenantForm from "./UpdateTenantForm";
 import TenantSettingsPage from "./TenantSettingsPage";
 import IpWhitelistTable from "./IpWhitelistTable";
@@ -16,17 +16,14 @@ import ContentCard from "@/components/shared/layout/ContentCard";
 export default function TenantDetailPage({ id }: { id: string }) {
   const router = useRouter();
   const activeTenant = useTenantStore((state) => state.activeTenant);
-  const [mounted, setMounted] = useState(false);
-
   useEffect(() => {
-    setMounted(true);
     // Nếu không có activeTenant trong store (do F5 lại trang), đẩy về list
     if (!activeTenant) {
       router.push(ADMIN_ROUTES.TENANTS);
     }
   }, [activeTenant, router]);
 
-  if (!mounted || !activeTenant) {
+  if (!activeTenant) {
     return null; // Tránh hydration mismatch và đợi redirect
   }
 

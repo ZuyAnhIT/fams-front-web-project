@@ -63,6 +63,15 @@ function forceLogout() {
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
+    // Backend sends both a technical `message` (often raw English, e.g. "Account
+    // locked until 2026-...") and a `userMessage` (always Vietnamese, user-facing —
+    // see BusinessException/ApiResponse on the backend). Every call site in this app
+    // reads `error.response.data.message` for its error toast, so normalize it here
+    // once instead of touching each of those call sites individually.
+    if (error.response?.data?.userMessage) {
+      error.response.data.message = error.response.data.userMessage;
+    }
+
     const originalRequest = error.config;
     const isLogoutEndpoint = originalRequest?.url?.includes("/auth/logout");
     const isLoginEndpoint  = originalRequest?.url?.includes("/auth/login");

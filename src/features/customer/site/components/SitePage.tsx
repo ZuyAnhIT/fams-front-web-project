@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Tag, Tooltip, type TableProps } from "antd";
-import { Search, Plus, MapPin, Edit3, Eye } from "lucide-react";
+import { Plus, Edit3, Eye } from "lucide-react";
 import Link from "next/link";
 import { useAuthStore } from "@/stores/auth.store";
 import BaseButton from "@/components/ui/BaseButton";
@@ -159,11 +159,11 @@ export default function SitePage() {
   }
 
   return (
-    <div className="flex flex-col space-y-6 max-w-[1600px] mx-auto py-2 w-full">
+    <div className="mx-auto flex w-full max-w-[1600px] flex-col space-y-6 py-1">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="!text-[35px] !font-semibold text-slate-900 tracking-tight">Quản lý công trình</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Quản lý công trình</h1>
           <p className="text-sm text-slate-500 mt-1">
             Danh sách tất cả các địa điểm chấm công của công ty
           </p>
@@ -181,11 +181,12 @@ export default function SitePage() {
       </div>
 
       <ContentCard noPadding>
-        <ListHeader
+          <ListHeader
           className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-5 border-b border-slate-100"
           searchValue={searchTerm}
           onSearchChange={setSearchTerm}
-          searchPlaceholder="Tìm kiếm theo tên, mã, địa chỉ..."
+            searchPlaceholder="Tìm kiếm theo tên, mã, địa chỉ..."
+            searchAriaLabel="Tìm công trình theo tên, mã hoặc địa chỉ"
           filters={
             <BaseSelect
               placeholder="Tất cả trạng thái"
@@ -195,7 +196,8 @@ export default function SitePage() {
                 setStatusFilter(val);
                 setPage(0);
               }}
-              className="w-48 h-10 [&_.ant-select-selector]:rounded-xl [&_.ant-select-selector]:border-slate-200 hover:[&_.ant-select-selector]:border-blue-300 focus:[&_.ant-select-selector]:border-blue-500 bg-slate-50/50 hover:bg-white"
+              aria-label="Lọc công trình theo trạng thái"
+              className="w-full sm:w-48 h-10 [&_.ant-select-selector]:rounded-xl [&_.ant-select-selector]:border-slate-200 hover:[&_.ant-select-selector]:border-blue-300 focus:[&_.ant-select-selector]:border-blue-500 bg-slate-50/50 hover:bg-white"
               options={[
                 { value: "active", label: "Hoạt động" },
                 { value: "inactive", label: "Ngưng hoạt động" },
@@ -207,6 +209,9 @@ export default function SitePage() {
         <div className="p-5">
           {/* Table */}
           <DataTable
+            ariaLabel="Danh sách công trình"
+            emptyTitle="Chưa có công trình"
+            emptyDescription="Tạo công trình đầu tiên để cấu hình địa điểm chấm công."
             columns={columns as any}
             data={sites}
             loading={isLoading}
@@ -226,7 +231,7 @@ export default function SitePage() {
                 setSortDir(undefined);
               }
             }}
-            onRow={(record) => ({
+            onRow={() => ({
               className: "hover:bg-blue-50/50 transition-colors duration-200 group",
             })}
           />
@@ -239,11 +244,13 @@ export default function SitePage() {
         onClose={() => setIsCreateModalOpen(false)}
       />
 
-      <UpdateSiteModal
-        site={editingSite}
-        isOpen={!!editingSite}
-        onClose={() => setEditingSite(null)}
-      />
+      {editingSite && (
+        <UpdateSiteModal
+          site={editingSite}
+          isOpen
+          onClose={() => setEditingSite(null)}
+        />
+      )}
     </div>
   );
 }

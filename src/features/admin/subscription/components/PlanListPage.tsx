@@ -15,7 +15,6 @@ export default function PlanListPage() {
   const { message } = App.useApp();
   const { data: plansData, isLoading, error } = usePlans(false, state);
   const plans = Array.isArray(plansData) ? plansData : (plansData?.content || []);
-  const totalElements = Array.isArray(plansData) ? plans.length : (plansData?.totalElements || 0);
   const { mutate: updatePlan } = useUpdatePlan();
 
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
@@ -63,9 +62,9 @@ export default function PlanListPage() {
     <div className="space-y-8">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
-          <h2 className="!text-[35px] !font-semibold text-slate-900 tracking-tight">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
             Cấu hình Gói dịch vụ
-          </h2>
+          </h1>
           <p className="text-sm text-slate-500 mt-1">
             Thiết lập giá và giới hạn tính năng cho các gói SaaS.
           </p>
@@ -81,13 +80,13 @@ export default function PlanListPage() {
       </div>
 
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 animate-pulse">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 animate-pulse">
           {[1, 2, 3, 4].map(i => (
             <div key={i} className="h-[420px] bg-slate-100 rounded-[10px] border border-slate-200"></div>
           ))}
         </div>
       ) : plans && plans.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 relative z-0 pt-4">
+        <div className="relative z-0 grid grid-cols-1 gap-5 pt-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
           {[...plans].sort((a, b) => a.sortOrder - b.sortOrder).map(plan => {
             const isPro = plan.displayName.toLowerCase().includes("pro");
 

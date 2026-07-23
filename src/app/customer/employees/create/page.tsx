@@ -10,7 +10,7 @@ export default function CreateEmployeePage() {
   return (
     <div className="space-y-6">
       <DetailHeader
-        onBack={() => router.push("/employees")}
+        onBack={() => router.push("/customer/employees")}
         title="Thêm mới nhân viên"
         subtitle="Điền đầy đủ thông tin hồ sơ nhân sự"
       />

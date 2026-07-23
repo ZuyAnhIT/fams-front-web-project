@@ -9,14 +9,14 @@ export const metadata = {
 export default function EmployeesPage() {
   return (
     <RoleGuard allowedRoles={[SystemRole.TENANT_ADMIN, SystemRole.HR_MANAGER, SystemRole.SITE_SUPERVISOR, SystemRole.PLATFORM_ADMIN]}>
-      <div className="max-w-[1600px] mx-auto py-2">
-      <div className="mb-6">
-      <h1 className="!text-[35px] !font-semibold text-brand-950">Quản lý nhân sự</h1>
-      <p className="text-sm text-brand-600 mt-1">
-      Danh sách toàn bộ nhân viên và tài khoản trong công ty
-      </p>
-      </div>
-      <EmployeeTabs />
+      <div className="mx-auto max-w-[1600px] py-1">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Quản lý nhân sự</h1>
+          <p className="mt-1 text-sm text-slate-600">
+            Danh sách toàn bộ nhân viên và tài khoản trong công ty
+          </p>
+        </div>
+        <EmployeeTabs />
       </div>
     </RoleGuard>
   );

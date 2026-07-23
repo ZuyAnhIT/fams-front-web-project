@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Mail, Search, FileDown, FileUp, ChevronRight } from "lucide-react";
-import { Input, Tag, Dropdown, MenuProps, App } from "antd";
+import { Plus, Mail, FileDown, FileUp, ChevronRight } from "lucide-react";
+import { Tag, Dropdown, MenuProps, App } from "antd";
 import BaseSelect from "@/components/ui/BaseSelect";
 import DataTable from "@/components/tables/DataTable";
 import BaseButton from "@/components/ui/BaseButton";
@@ -17,14 +17,12 @@ import ImportEmployeeModal from "./ImportEmployeeModal";
 import type { Employee, EmployeeDetailResponse } from "../types/employee.type";
 import { format } from "date-fns";
 import ListHeader from "@/components/shared/layout/ListHeader";
-import ContentCard from "@/components/shared/layout/ContentCard";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { EMPLOYEE_STATUS } from "@/constants/status";
 import { formatVietnameseName } from "@/utils/name.util";
 
 export default function EmployeeListPage() {
   const hasPermission = useAuthStore((state) => state.hasPermission);
-  const currentUser = useAuthStore((state) => state.user);
   const { message } = App.useApp();
   const router = useRouter();
   const { state, setPagination } = usePagination(20);
@@ -70,7 +68,7 @@ export default function EmployeeListPage() {
       link.parentNode?.removeChild(link);
       window.URL.revokeObjectURL(url);
       message.success("Xuất dữ liệu thành công!");
-    } catch (error) {
+    } catch {
       message.error("Lỗi khi xuất dữ liệu, vui lòng thử lại.");
     }
   };
@@ -199,10 +197,12 @@ export default function EmployeeListPage() {
         searchValue={searchInput}
         onSearchChange={setSearchInput}
         searchPlaceholder="Tìm kiếm theo tên, mã NV, email..."
+        searchAriaLabel="Tìm nhân viên theo tên, mã hoặc email"
         filters={
           <BaseSelect
+            aria-label="Lọc nhân viên theo trạng thái"
             placeholder="Tất cả trạng thái"
-            className="w-40"
+            className="w-full sm:w-44"
             allowClear
             value={state.status}
             onChange={(val) => setPagination({ status: val, page: 0 })}
@@ -262,8 +262,11 @@ export default function EmployeeListPage() {
 
       {/* Data Table Wrapper */}
       <DataTable
+        ariaLabel="Danh sách nhân viên"
+        emptyTitle="Không tìm thấy nhân viên"
+        emptyDescription="Thử thay đổi từ khóa hoặc bộ lọc trạng thái."
         columns={columns}
-        data={pageData?.content?.filter((emp) => emp.email !== currentUser?.email) || []}
+        data={pageData?.content || []}
         loading={isLoading}
         totalElements={pageData?.totalElements || 0}
         currentPage={state.page}

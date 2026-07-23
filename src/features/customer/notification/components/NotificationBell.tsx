@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Bell, CheckCheck, Clock, AlertCircle, TrendingUp, MapPin, AlertTriangle, CheckCircle, XCircle, UserPlus, Megaphone, FileText, ScanFace } from "lucide-react";
 import {
   NOTIFICATION_TYPE_LABELS,
@@ -73,15 +73,18 @@ function NotificationItem({ notification, onClick, isMarking }: NotificationItem
   const colorClass = getColorClass(typeInfo.color);
 
   return (
-    <div
-      className={`flex items-start gap-3 p-3 hover:bg-slate-50 transition-colors cursor-pointer rounded-lg ${
+    <button
+      type="button"
+      className={`flex w-full items-start gap-3 rounded-lg p-3 text-left transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
         !notification.isRead ? "bg-blue-50/50" : ""
       } ${isMarking ? "opacity-50" : ""}`}
       onClick={() => !isMarking && onClick(notification.id)}
+      disabled={isMarking}
+      aria-label={`${notification.isRead ? "Mở" : "Đánh dấu đã đọc và mở"}: ${notification.title}`}
     >
       {/* Icon */}
       <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${colorClass}`}>
-        <IconComponent className="w-5 h-5" />
+        <IconComponent className="w-5 h-5" aria-hidden="true" />
       </div>
 
       {/* Content */}
@@ -92,7 +95,7 @@ function NotificationItem({ notification, onClick, isMarking }: NotificationItem
               {notification.title}
             </p>
             {!notification.isRead && (
-              <span className="flex-shrink-0 w-2 h-2 rounded-full bg-blue-500" />
+              <span className="flex-shrink-0 w-2 h-2 rounded-full bg-blue-500" aria-hidden="true" />
             )}
           </div>
           <span className="flex-shrink-0 text-xs text-slate-400 whitespace-nowrap">
@@ -102,7 +105,7 @@ function NotificationItem({ notification, onClick, isMarking }: NotificationItem
         <p className="text-xs text-slate-500 mt-0.5 line-clamp-2">{notification.body}</p>
         <p className="text-xs text-slate-400 mt-1">{typeInfo.label}</p>
       </div>
-    </div>
+    </button>
   );
 }
 
@@ -111,7 +114,6 @@ interface NotificationPopoverContentProps {
   unreadCount: number;
   onMarkAsRead: (id: string) => void;
   onMarkAllAsRead: () => void;
-  onClose: () => void;
   onViewAll: () => void;
   markingId: string | null;
   isMarkingAll: boolean;
@@ -123,14 +125,13 @@ function NotificationPopoverContent({
   unreadCount,
   onMarkAsRead,
   onMarkAllAsRead,
-  onClose,
   onViewAll,
   markingId,
   isMarkingAll,
   isLoading,
 }: NotificationPopoverContentProps) {
   return (
-    <div className="w-[380px] max-h-[500px] flex flex-col">
+    <div className="flex max-h-[min(500px,70vh)] w-[min(380px,calc(100vw-24px))] flex-col">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
         <div className="flex items-center gap-2">
@@ -143,11 +144,12 @@ function NotificationPopoverContent({
         </div>
         {unreadCount > 0 && (
           <button
+            type="button"
             onClick={onMarkAllAsRead}
             disabled={isMarkingAll}
             className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 font-medium disabled:opacity-50"
           >
-            <CheckCheck className="w-3.5 h-3.5" />
+            <CheckCheck className="w-3.5 h-3.5" aria-hidden="true" />
             Đánh dấu đã đọc
           </button>
         )}
@@ -161,7 +163,7 @@ function NotificationPopoverContent({
           </div>
         ) : notifications.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-slate-400">
-            <Bell className="w-12 h-12 mb-3 opacity-30" />
+            <Bell className="w-12 h-12 mb-3 opacity-30" aria-hidden="true" />
             <p className="text-sm">Không có thông báo nào</p>
           </div>
         ) : (
@@ -181,6 +183,7 @@ function NotificationPopoverContent({
       {/* Footer */}
       <div className="border-t border-slate-200 px-4 py-3">
         <button
+          type="button"
           onClick={onViewAll}
           className="w-full py-2 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
         >
@@ -222,13 +225,6 @@ export default function NotificationBell() {
     }
   }, [setNotifications, setUnreadCount]);
 
-  // Fetch latest notifications every time the popover is opened
-  useEffect(() => {
-    if (open) {
-      fetchNotifications();
-    }
-  }, [open, fetchNotifications]);
-
   // When the bell is closed, still keep the list fresh by syncing with store updates
   // (NotificationWatcher in DashboardLayout polls and bumps unreadCount via the store).
   // We also poll on our own at a slower cadence so that list content (not just count) refreshes.
@@ -243,26 +239,28 @@ export default function NotificationBell() {
     return () => clearInterval(interval);
   }, [open, fetchNotifications]);
 
-  // If the store's unreadCount changes (e.g., from NotificationWatcher detecting new ones)
-  // and the popover is currently open, refresh the list so the user sees the new item.
-  const prevUnreadCountRef = useRef(unreadCount);
-  useEffect(() => {
-    if (open && prevUnreadCountRef.current !== unreadCount) {
-      fetchNotifications();
+  const handleOpenChange = (nextOpen: boolean) => {
+    setOpen(nextOpen);
+    if (nextOpen) {
+      void fetchNotifications();
     }
-    prevUnreadCountRef.current = unreadCount;
-  }, [unreadCount, open, fetchNotifications]);
+  };
 
   // Initial fetch on mount and listen for external changes
   useEffect(() => {
-    fetchNotifications();
+    const timeout = window.setTimeout(() => {
+      void fetchNotifications();
+    }, 0);
 
     // Listen to refresh events (e.g. fired by handleMarkAllAsRead) to keep list fresh
     const unsubscribe = notificationEventBus.subscribe("refresh", () => {
       fetchNotifications();
     });
 
-    return () => unsubscribe();
+    return () => {
+      window.clearTimeout(timeout);
+      unsubscribe();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -276,7 +274,7 @@ export default function NotificationBell() {
       // Đóng popover và chuyển đến trang thông báo
       setOpen(false);
       router.push("/customer/notifications");
-    } catch (err) {
+    } catch {
       message.error("Không thể đánh dấu đã đọc");
     } finally {
       setMarkingId(null);
@@ -290,7 +288,7 @@ export default function NotificationBell() {
       await fetchNotifications();
       notificationEventBus.emit("refresh");
       message.success("Đã đánh dấu tất cả đã đọc");
-    } catch (err) {
+    } catch {
       message.error("Không thể đánh dấu tất cả đã đọc");
     } finally {
       setIsMarkingAll(false);
@@ -308,7 +306,6 @@ export default function NotificationBell() {
       unreadCount={unreadCount}
       onMarkAsRead={handleMarkAsRead}
       onMarkAllAsRead={handleMarkAllAsRead}
-      onClose={() => setOpen(false)}
       onViewAll={handleViewAll}
       markingId={markingId}
       isMarkingAll={isMarkingAll}
@@ -321,14 +318,19 @@ export default function NotificationBell() {
       content={content}
       trigger="click"
       open={open}
-      onOpenChange={setOpen}
+      onOpenChange={handleOpenChange}
       placement="bottomRight"
       overlayClassName="notification-popover"
       arrow={false}
     >
-      <button className="text-slate-500 hover:text-blue-600 transition-colors relative p-2 rounded-xl hover:bg-slate-100 cursor-pointer active:scale-95">
+      <button
+        type="button"
+        aria-label={unreadCount > 0 ? `Mở thông báo, có ${unreadCount} thông báo chưa đọc` : "Mở thông báo"}
+        aria-expanded={open}
+        className="relative cursor-pointer rounded-xl p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-blue-600 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+      >
         <Badge count={unreadCount} size="small" offset={[-2, 2]}>
-          <Bell className="h-5 w-5" />
+          <Bell className="h-5 w-5" aria-hidden="true" />
         </Badge>
       </button>
     </Popover>

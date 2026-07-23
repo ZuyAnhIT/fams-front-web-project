@@ -3,7 +3,12 @@ import { z } from "zod";
 export const profileSchema = z.object({
   displayName: z.string().min(1, "Tên hiển thị không được để trống").max(100, "Tên hiển thị tối đa 100 ký tự"),
   phone: z.string().regex(/^\+?[1-9]\d{7,14}$/, "Số điện thoại không hợp lệ. Vui lòng nhập mã quốc gia (VD: +84912345678)").or(z.literal("")).optional().nullable(),
-  avatarUrl: z.string().url("URL ảnh không hợp lệ").or(z.literal("")).optional().nullable(),
+  // Issue #4 (docs/issues/ISSUES.md)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  dateOfBirth: z.any().nullable().optional(),
+  hometown: z.string().max(255, "Quê quán tối đa 255 ký tự").or(z.literal("")).optional().nullable(),
+  gender: z.string().max(20, "Giới tính tối đa 20 ký tự").or(z.literal("")).optional().nullable(),
+  address: z.string().max(500, "Địa chỉ tối đa 500 ký tự").or(z.literal("")).optional().nullable(),
 });
 
 export type ProfileFormData = z.infer<typeof profileSchema>;

@@ -17,7 +17,7 @@ const getTenantId = () => {
   if (state.user && state.user.tenantId) {
     return state.user.tenantId;
   }
-  return "89239420-a819-4dc5-9ac4-10cefadd6e06"; // Fallback dev
+  throw new Error("Tenant ID is required but not found in the authenticated user context.");
 };
 
 export const tenantService = {

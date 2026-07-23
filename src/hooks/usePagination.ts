@@ -7,6 +7,7 @@ export interface PaginationState {
   page: number; // 0-indexed for Backend API, but we display as 1-indexed on UI (Antd)
   size: number;
   search?: string;
+  email?: string;
   sortBy?: string;
   sortDir?: "asc" | "desc";
   status?: string;
@@ -30,6 +31,7 @@ export function usePagination(defaultSize = 20) {
     page: getNumberParam("page", 0), // Default 0 for backend
     size: getNumberParam("size", defaultSize),
     search: getStringParam("search"),
+    email: getStringParam("email"),
     sortBy: getStringParam("sortBy", "createdAt"),
     sortDir: getStringParam("sortDir", "desc") as "asc" | "desc",
     status: getStringParam("status"),
