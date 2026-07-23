@@ -1,4 +1,5 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, type UseQueryOptions } from "@tanstack/react-query";
+import type { PageResponse } from "@/types/api";
 import { employeeService } from "../services/employee.service";
 import type {
   CreateEmployeePayload,
@@ -6,9 +7,26 @@ import type {
   ChangeEmployeeStatusPayload,
   InviteEmployeePayload,
   AcceptInvitationPayload,
+  Employee,
+  EmployeeListParams,
+  InvitationListParams,
+  InvitationResponse,
 } from "../types/employee.type";
 
-export const useEmployees = (params: any, options?: Omit<import("@tanstack/react-query").UseQueryOptions<any, any, any, any>, "queryKey" | "queryFn">) => {
+type EmployeeQueryOptions = Omit<
+  UseQueryOptions<PageResponse<Employee>, Error>,
+  "queryKey" | "queryFn"
+>;
+
+type InvitationQueryOptions = Omit<
+  UseQueryOptions<PageResponse<InvitationResponse>, Error>,
+  "queryKey" | "queryFn"
+>;
+
+export const useEmployees = (
+  params: Omit<EmployeeListParams, "tenantId">,
+  options?: EmployeeQueryOptions
+) => {
   return useQuery({
     queryKey: ["employees", params],
     queryFn: () => employeeService.listEmployees(params),
@@ -16,7 +34,10 @@ export const useEmployees = (params: any, options?: Omit<import("@tanstack/react
   });
 };
 
-export const useInvitations = (params: any, options?: Omit<import("@tanstack/react-query").UseQueryOptions<any, any, any, any>, "queryKey" | "queryFn">) => {
+export const useInvitations = (
+  params: Omit<InvitationListParams, "tenantId">,
+  options?: InvitationQueryOptions
+) => {
   return useQuery({
     queryKey: ["invitations", params],
     queryFn: () => employeeService.listInvitations(params),

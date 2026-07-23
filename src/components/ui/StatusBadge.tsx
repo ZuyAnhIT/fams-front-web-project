@@ -2,10 +2,10 @@ import React from "react";
 import { Tag } from "antd";
 import type { StatusDotConfig, StatusTagConfig } from "@/constants/status";
 
-interface StatusBadgeProps {
+export interface StatusBadgeProps {
   status: string;
   variant: "dot" | "tag";
-  configMap: Record<string, any>;
+  configMap: Record<string, StatusDotConfig | StatusTagConfig>;
   className?: string;
 }
 

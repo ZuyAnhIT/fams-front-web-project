@@ -11,10 +11,24 @@ import { SIDEBAR_MENU } from "@/config/menu";
 import { useAuthStore } from "@/stores/auth.store";
 import { CUSTOMER_ROUTES } from "@/constants/routes";
 
-export default function Sidebar() {
+interface SidebarProps {
+  variant?: "desktop" | "mobile";
+  onNavigate?: () => void;
+}
+
+const ROLE_LABELS: Record<string, string> = {
+  PLATFORM_ADMIN: "Quản trị nền tảng",
+  TENANT_ADMIN: "Quản trị công ty",
+  HR_MANAGER: "Quản lý nhân sự",
+  SITE_SUPERVISOR: "Giám sát công trình",
+  EMPLOYEE: "Nhân viên",
+};
+
+export default function Sidebar({ variant = "desktop", onNavigate }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
+  const isMobile = variant === "mobile";
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
@@ -37,7 +51,9 @@ export default function Sidebar() {
   };
 
   // Avoid layout shift during server-side rendering hydration
-  const sidebarWidthClass = !isMounted
+  const sidebarWidthClass = isMobile
+    ? "w-full"
+    : !isMounted
     ? "w-64"
     : isCollapsed
       ? "w-16"
@@ -45,38 +61,56 @@ export default function Sidebar() {
 
   return (
     <aside className={cn(
-      "border-r border-brand-950 bg-brand-900 text-brand-100 flex flex-col h-screen sticky top-0 transition-all duration-300 ease-in-out shrink-0 overflow-hidden",
+      "border-r border-slate-800 bg-slate-950 text-slate-100 flex-col shrink-0 overflow-hidden",
+      isMobile ? "flex h-full" : "hidden lg:flex h-dvh sticky top-0 transition-all duration-300 ease-in-out",
       sidebarWidthClass
     )}>
       {/* Brand Logo & Toggle */}
       <div className={cn(
         "h-16 flex items-center px-6 border-b border-brand-800/40 justify-between transition-all duration-300",
-        isCollapsed ? "px-0 justify-center" : ""
+        !isMobile && isCollapsed ? "px-0 justify-center" : ""
       )}>
-        {isCollapsed ? (
+        {!isMobile && isCollapsed ? (
           <button
+            type="button"
             onClick={toggleSidebar}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-50 font-black text-brand-950 text-lg shadow-sm hover:bg-brand-100 hover:scale-105 active:scale-95 transition-all group/logo cursor-pointer"
+            aria-label="Mở rộng thanh điều hướng"
+            aria-expanded={false}
+            className="flex h-10 w-10 items-center justify-center rounded-xl bg-white font-black text-blue-700 text-lg shadow-sm hover:bg-blue-50 active:scale-95 transition-all group/logo cursor-pointer"
           >
-            <span className="group-hover/logo:hidden">Q</span>
-            <Icons.ChevronRight className="hidden group-hover/logo:block h-5 w-5 text-brand-950" />
+            <span className="group-hover/logo:hidden">F</span>
+            <Icons.ChevronRight className="hidden group-hover/logo:block h-5 w-5" aria-hidden="true" />
           </button>
         ) : (
           <>
             <div className="flex items-center gap-3 overflow-hidden">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-600 font-black text-white text-lg shadow-sm">
-                Q
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600 font-black text-white text-lg shadow-lg shadow-blue-950/40">
+                F
               </div>
-              <span className="text-xl font-bold tracking-wider bg-gradient-to-r from-blue-500 to-cyan-400 bg-clip-text text-transparent truncate select-none">
+              <span className="text-xl font-bold tracking-wide text-white truncate select-none">
                 {APP_NAME}
               </span>
             </div>
-            <button
-              onClick={toggleSidebar}
-              className="p-1.5 rounded-lg hover:bg-brand-800 text-brand-400 hover:text-brand-50 transition-colors border border-transparent hover:border-brand-700 cursor-pointer active:scale-95 shrink-0"
-            >
-              <Icons.ChevronLeft className="h-4.5 w-4.5" />
-            </button>
+            {isMobile ? (
+              <button
+                type="button"
+                onClick={onNavigate}
+                aria-label="Đóng menu điều hướng"
+                className="shrink-0 rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+              >
+                <Icons.X className="h-5 w-5" aria-hidden="true" />
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={toggleSidebar}
+                aria-label="Thu gọn thanh điều hướng"
+                aria-expanded={true}
+                className="p-2 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors border border-transparent hover:border-slate-700 cursor-pointer active:scale-95 shrink-0"
+              >
+                <Icons.ChevronLeft className="h-4.5 w-4.5" aria-hidden="true" />
+              </button>
+            )}
           </>
         )}
       </div>
@@ -84,37 +118,30 @@ export default function Sidebar() {
       {/* Nav Menu */}
       <nav className={cn(
         "flex-1 overflow-y-auto overflow-x-hidden py-4 space-y-1 transition-all duration-300",
-        isCollapsed ? "px-2" : "px-4"
+        !isMobile && isCollapsed ? "px-2" : "px-4"
       )}>
-        {(() => {
-          const isCompanySelected = typeof window !== 'undefined' ? localStorage.getItem('mock_company_selected') !== 'false' : true;
-          
-          if (!isCompanySelected && user?.role === "TENANT_ADMIN") {
-            // Khi chưa chọn công ty, chỉ hiển thị "Danh sách công ty"
-            return [{ title: "Danh sách công ty", path: CUSTOMER_ROUTES.SELECT_COMPANY, icon: "Building2" }];
-          }
-          
-          return SIDEBAR_MENU;
-        })().filter((item: any) => {
+        {SIDEBAR_MENU.filter((item) => {
           // Nếu item không yêu cầu role cụ thể, ai cũng xem được
           if (!item.allowedRoles || item.allowedRoles.length === 0) return true;
           // Nếu user hiện tại có role khớp với mảng allowedRoles
           if (user?.role && item.allowedRoles.includes(user.role)) return true;
           return false;
         }).map((item) => {
-          const IconComponent = (Icons[item.icon] as React.ComponentType<{ className?: string }>) || Icons.HelpCircle;
-          const isActive = pathname === item.path;
+          const IconComponent = Icons[item.icon] as React.ComponentType<{ className?: string }>;
+          const isActive = pathname === item.path || pathname.startsWith(`${item.path}/`);
 
           const linkContent = (
             <Link
               key={item.path}
               href={item.path}
+              onClick={onNavigate}
+              aria-current={isActive ? "page" : undefined}
               className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 group border border-transparent hover:scale-[1.02]",
-                isCollapsed ? "justify-center px-0 w-10 h-10 mx-auto" : "",
+                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 group border border-transparent",
+                !isMobile && isCollapsed ? "justify-center px-0 w-10 h-10 mx-auto" : "",
                 isActive
-                  ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-lg shadow-blue-500/25"
-                  : "text-slate-400 hover:text-white hover:bg-white/5"
+                  ? "bg-blue-600 text-white shadow-sm"
+                  : "text-slate-300 hover:text-white hover:bg-slate-800"
               )}
             >
               <IconComponent
@@ -123,11 +150,11 @@ export default function Sidebar() {
                   isActive ? "text-white" : "text-slate-400 group-hover:text-white"
                 )}
               />
-              {!isCollapsed && <span className={cn("truncate", isActive ? "text-white font-bold" : "")}>{item.title}</span>}
+              {(isMobile || !isCollapsed) && <span className={cn("truncate", isActive ? "text-white font-semibold" : "")}>{item.title}</span>}
             </Link>
           );
 
-          return isCollapsed ? (
+          return !isMobile && isCollapsed ? (
             <Tooltip
               key={item.path}
               title={item.title}
@@ -145,9 +172,16 @@ export default function Sidebar() {
 
       {/* Footer & User Profile */}
       <div className="border-t border-brand-800/40 bg-brand-950/20 flex flex-col mt-auto">
-        {!isCollapsed ? (
+        {(isMobile || !isCollapsed) ? (
           <div className="p-4 flex items-center justify-between gap-2">
-            <div className="flex items-center gap-3 overflow-hidden cursor-pointer" onClick={() => router.push(CUSTOMER_ROUTES.SETTINGS)}>
+            <button
+              type="button"
+              className="flex min-w-0 flex-1 items-center gap-3 overflow-hidden rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+              onClick={() => {
+                router.push(CUSTOMER_ROUTES.SETTINGS);
+                onNavigate?.();
+              }}
+            >
               {user?.avatarUrl ? (
                 <img
                   src={user.avatarUrl}
@@ -156,21 +190,26 @@ export default function Sidebar() {
                 />
               ) : (
                 <div className="h-10 w-10 shrink-0 rounded-full bg-brand-800 border border-brand-700 flex items-center justify-center shadow-sm">
-                  <Icons.User className="h-5 w-5 text-brand-400" />
+                  <Icons.User className="h-5 w-5 text-brand-400" aria-hidden="true" />
                 </div>
               )}
               <div className="flex flex-col truncate">
                 <span className="text-sm font-bold text-white truncate">{user?.displayName || user?.email}</span>
-                <span className="text-[10px] text-brand-400 font-semibold tracking-wide truncate">{user?.role || "USER"}</span>
+                <span className="text-xs text-slate-400 truncate">{ROLE_LABELS[user?.role || ""] || "Người dùng"}</span>
               </div>
-            </div>
+            </button>
             
             <Tooltip title="Cài đặt tài khoản" placement="top">
               <button
-                onClick={() => router.push(CUSTOMER_ROUTES.SETTINGS)}
+                type="button"
+                aria-label="Mở cài đặt tài khoản"
+                onClick={() => {
+                  router.push(CUSTOMER_ROUTES.SETTINGS);
+                  onNavigate?.();
+                }}
                 className="p-2 shrink-0 rounded-lg text-brand-400 hover:text-brand-300 hover:bg-brand-800 transition-colors cursor-pointer"
               >
-                <Icons.Settings className="h-4.5 w-4.5" />
+                <Icons.Settings className="h-4.5 w-4.5" aria-hidden="true" />
               </button>
             </Tooltip>
           </div>
@@ -181,23 +220,25 @@ export default function Sidebar() {
                 <img src={user.avatarUrl} alt="Avatar" className="h-8 w-8 rounded-full border border-brand-700 object-cover" />
               ) : (
                 <div className="h-8 w-8 rounded-full bg-brand-800 border border-brand-700 flex items-center justify-center">
-                  <Icons.User className="h-4 w-4 text-brand-400" />
+                  <Icons.User className="h-4 w-4 text-brand-400" aria-hidden="true" />
                 </div>
               )}
             </Tooltip>
             <div className="h-[1px] w-8 bg-brand-800/60" />
             <Tooltip title="Cài đặt tài khoản" placement="right">
               <button
+                type="button"
+                aria-label="Mở cài đặt tài khoản"
                 onClick={() => router.push(CUSTOMER_ROUTES.SETTINGS)}
                 className="p-2 rounded-lg text-brand-400 hover:text-brand-300 hover:bg-brand-800 transition-colors cursor-pointer"
               >
-                <Icons.Settings className="h-5 w-5" />
+                <Icons.Settings className="h-5 w-5" aria-hidden="true" />
               </button>
             </Tooltip>
           </div>
         )}
         
-        {!isCollapsed && (
+        {(isMobile || !isCollapsed) && (
           <div className="pb-3 text-[10px] text-brand-500/60 text-center whitespace-nowrap overflow-hidden">
             &copy; 2026 {APP_NAME}. All rights reserved.
           </div>

@@ -39,11 +39,13 @@ export default function FormInput<T extends FieldValues>({
   labelClassName,
 }: FormInputProps<T>) {
   const InputComponent = type === "password" ? BaseInputPassword : BaseInput;
+  const inputId = id || String(name);
+  const messageId = `${inputId}-${error ? "error" : "help"}`;
 
   return (
     <div className={className}>
       <label
-        htmlFor={id || name}
+        htmlFor={inputId}
         className={cn("mb-2 block text-[14px] font-medium tracking-wide text-slate-700", labelClassName)}
       >
         {label} {required && <span className="text-red-500">*</span>}
@@ -54,9 +56,12 @@ export default function FormInput<T extends FieldValues>({
         render={({ field }) => (
           <InputComponent
             {...field}
-            id={id || name}
+            id={inputId}
             placeholder={placeholder}
             status={error ? "error" : undefined}
+            aria-invalid={Boolean(error)}
+            aria-required={required}
+            aria-describedby={(error || helpText) ? messageId : undefined}
             size={size}
             type={type !== "password" ? type : undefined}
             disabled={disabled}
@@ -64,10 +69,10 @@ export default function FormInput<T extends FieldValues>({
         )}
       />
       {helpText && !error && (
-        <p className="mt-1 text-xs text-brand-500">{helpText}</p>
+        <p id={messageId} className="mt-1 text-xs text-brand-500">{helpText}</p>
       )}
       {error && (
-        <p className="mt-1 text-xs text-red-400">{error.message}</p>
+        <p id={messageId} role="alert" className="mt-1 text-xs text-red-600">{error.message}</p>
       )}
     </div>
   );

@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { Modal, Spin, Descriptions, Badge, Tag, Typography, message, Divider } from "antd";
-import { checkinService } from "../services/checkin.service";
-import { CheckinDetailResponse } from "../types/checkin.type";
+import React from "react";
+import { Modal, Spin, Descriptions, Badge, Tag, Typography, Alert, Divider } from "antd";
+import { useCheckinDetail } from "../hooks/use-checkin";
 import dayjs from "dayjs";
 import { useAuthStore } from "@/stores/auth.store";
 import { formatVietnameseName } from "@/utils/name.util";
@@ -19,29 +18,11 @@ interface CheckinDetailModalProps {
 export default function CheckinDetailModal({ checkinId, isOpen, onClose }: CheckinDetailModalProps) {
   const user = useAuthStore(state => state.user);
   const currentTenantId = user?.tenantId;
-  const [loading, setLoading] = useState(false);
-  const [detail, setDetail] = useState<CheckinDetailResponse | null>(null);
-
-  useEffect(() => {
-    if (isOpen && checkinId && currentTenantId) {
-      fetchDetail(currentTenantId, checkinId);
-    } else {
-      setDetail(null);
-    }
-  }, [isOpen, checkinId, currentTenantId]);
-
-  const fetchDetail = async (tenantId: string, id: string) => {
-    try {
-      setLoading(true);
-      const data = await checkinService.getCheckinDetail(tenantId, id);
-      setDetail(data);
-    } catch (error: any) {
-      message.error(error.response?.data?.message || "Lỗi khi tải chi tiết chấm công");
-      onClose();
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: detail, isLoading, isError } = useCheckinDetail(
+    currentTenantId || undefined,
+    checkinId,
+    isOpen
+  );
 
   const getStatusTag = (status: string) => {
     switch (status) {
@@ -64,10 +45,12 @@ export default function CheckinDetailModal({ checkinId, isOpen, onClose }: Check
       footer={null}
       width={700}
     >
-      {loading ? (
+      {isLoading ? (
         <div className="flex justify-center p-8">
           <Spin />
         </div>
+      ) : isError ? (
+        <Alert type="error" showIcon message="Không thể tải chi tiết chấm công" />
       ) : detail ? (
         <div className="flex flex-col gap-4">
           <Descriptions bordered column={2} size="small">
@@ -105,7 +88,7 @@ export default function CheckinDetailModal({ checkinId, isOpen, onClose }: Check
             </Descriptions.Item>
           </Descriptions>
 
-          <Divider orientation="left" plain>Thông tin giờ vào (Check-in)</Divider>
+          <Divider titlePlacement="left" plain>Thông tin giờ vào (Check-in)</Divider>
           <Descriptions bordered column={2} size="small">
             <Descriptions.Item label="Thời gian">
               {dayjs(detail.checkInAt).format("DD/MM/YYYY HH:mm:ss")}
@@ -131,7 +114,7 @@ export default function CheckinDetailModal({ checkinId, isOpen, onClose }: Check
 
           {detail.checkOutAt && (
             <>
-              <Divider orientation="left" plain>Thông tin giờ ra (Check-out)</Divider>
+              <Divider titlePlacement="left" plain>Thông tin giờ ra (Check-out)</Divider>
               <Descriptions bordered column={2} size="small">
                 <Descriptions.Item label="Thời gian">
                   {dayjs(detail.checkOutAt).format("DD/MM/YYYY HH:mm:ss")}

@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Search, Building2, ChevronRight, MoreVertical, Ban, PlayCircle } from "lucide-react";
-import { Input, Dropdown, MenuProps, Modal, message } from "antd";
+import { Plus, Building2, ChevronRight, MoreVertical, Ban, PlayCircle } from "lucide-react";
+import { Dropdown, MenuProps, Modal, message } from "antd";
+import type { ColumnsType } from "antd/es/table";
 import DataTable from "@/components/tables/DataTable";
 import { BaseButton, BaseSelect } from "@/components/ui";
 import { usePagination } from "@/hooks/usePagination";
@@ -19,9 +20,11 @@ import StatusBadge from "@/components/ui/StatusBadge";
 import { TENANT_STATUS } from "@/constants/status";
 
 import { useRouter } from "next/navigation";
+import { useTenantStore } from "@/stores/tenant.store";
 
 export default function TenantListPage() {
   const router = useRouter();
+  const setActiveTenant = useTenantStore((state) => state.setActiveTenant);
   const { state, setPagination } = usePagination(20);
   const { mutate: suspendTenant, isPending: isSuspending } = useSuspendTenant();
   const { mutate: reactivateTenant, isPending: isReactivating } = useReactivateTenant();
@@ -135,7 +138,6 @@ export default function TenantListPage() {
         label: 'Chi tiết',
         icon: <ChevronRight className="h-4 w-4" />,
         onClick: () => {
-          const { setActiveTenant } = require("@/stores/tenant.store").useTenantStore.getState();
           setActiveTenant(record);
           router.push(`/admin/tenants/${record.id}`);
         }
@@ -173,7 +175,7 @@ export default function TenantListPage() {
     return items;
   };
 
-  const columns = [
+  const columns: ColumnsType<Tenant> = [
     {
       title: "Công ty",
       key: "name",
@@ -240,7 +242,7 @@ export default function TenantListPage() {
       title: "Thao tác",
       key: "action",
       width: 80,
-      align: 'center',
+      align: "center",
       render: (_: unknown, record: Tenant) => (
         <Dropdown menu={{ items: getActionMenuItems(record) }} trigger={['click']} placement="bottomRight">
           <BaseButton
@@ -258,9 +260,9 @@ export default function TenantListPage() {
   return (
     <RoleGuard allowedRoles={[SystemRole.PLATFORM_ADMIN]}>
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           <div>
-            <h1 className="!text-[35px] !font-semibold text-brand-950">Danh sách công ty</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Danh sách công ty</h1>
             <p className="text-sm text-brand-600 mt-1">
               Quản lý toàn bộ công ty (tenants) đang sử dụng hệ thống
             </p>
@@ -281,8 +283,10 @@ export default function TenantListPage() {
             searchValue={searchInput}
             onSearchChange={setSearchInput}
             searchPlaceholder="Tìm kiếm theo tên công ty, đường dẫn, tên miền,..."
+            searchAriaLabel="Tìm công ty theo tên, đường dẫn hoặc tên miền"
             filters={
               <BaseSelect
+                aria-label="Lọc công ty theo trạng thái"
                 placeholder="Trạng thái"
                 allowClear
                 className="w-40"
@@ -300,6 +304,9 @@ export default function TenantListPage() {
           />
           <div className="p-5">
             <DataTable
+              ariaLabel="Danh sách công ty sử dụng nền tảng"
+              emptyTitle="Không tìm thấy công ty"
+              emptyDescription="Thử thay đổi từ khóa hoặc bộ lọc trạng thái."
               columns={columns}
               data={pageData?.content || []}
               loading={isLoading}
@@ -317,7 +324,7 @@ export default function TenantListPage() {
                   setPagination({ sortBy: undefined, sortDir: undefined });
                 }
               }}
-              onRow={(record) => ({
+              onRow={() => ({
                 className: "hover:bg-blue-50/50 transition-colors duration-200 group",
               })}
             />

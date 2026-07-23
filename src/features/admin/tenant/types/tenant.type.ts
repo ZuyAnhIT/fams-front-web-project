@@ -3,7 +3,7 @@ export interface Tenant {
   name: string;
   slug: string;
   domain?: string | null;
-  status: "active" | "inactive" | "suspended" | "trial";
+  status: "active" | "inactive" | "suspended" | "trial" | "cancelled";
   industry?: string | null;
   countryCode?: string | null;
   timezone: string;
@@ -43,6 +43,9 @@ export interface CreateTenantPayload {
   countryCode?: string;
   timezone?: string;
   locale?: string;
+  /** Issue #12 (docs/issues/ISSUES.md): invite someone else to be TENANT_ADMIN of the new
+   *  company. The creator still keeps TENANT_ADMIN too — this never leaves a company unowned. */
+  ownerEmail?: string;
   currencyCode?: string;
 }
 

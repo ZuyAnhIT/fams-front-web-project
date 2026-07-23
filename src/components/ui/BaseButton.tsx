@@ -40,7 +40,7 @@ export default function BaseButton({
     <Button
       type={effectiveType}
       className={cn(
-        "!rounded-md !h-10 !px-4 !font-medium transition-all duration-200 active:scale-95 flex items-center justify-center",
+        "!rounded-lg !min-h-10 !px-4 !font-medium transition-colors duration-200 active:scale-[0.98] flex items-center justify-center focus-visible:!outline-none focus-visible:!ring-2 focus-visible:!ring-blue-500 focus-visible:!ring-offset-2",
         variantClasses[customVariant],
         className
       )}

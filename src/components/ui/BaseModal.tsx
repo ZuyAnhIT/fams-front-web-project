@@ -51,7 +51,7 @@ export default function BaseModal({
         type="primary"
         onClick={onConfirm}
         loading={confirmLoading}
-        className="!bg-emerald-600 hover:!bg-emerald-700 !border-0 text-white font-medium shadow-sm shadow-emerald-500/20"
+        className="font-semibold shadow-sm"
         {...confirmButtonProps}
       >
         {confirmText}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import dynamic from "next/dynamic";
 import "leaflet/dist/leaflet.css";
 
@@ -43,10 +43,7 @@ export function GeofenceMap({
   polygonCoordinates,
   heightClassName = "h-[300px]",
 }: GeofenceMapProps) {
-  const [mounted, setMounted] = useState(false);
-
   useEffect(() => {
-    setMounted(true);
     // Fix for Leaflet marker icon issue in Next.js
     import("leaflet").then((L) => {
       delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -57,14 +54,6 @@ export function GeofenceMap({
       });
     });
   }, []);
-
-  if (!mounted) {
-    return (
-      <div className={`${heightClassName} w-full bg-slate-800 rounded-lg animate-pulse flex items-center justify-center`}>
-        <span className="text-slate-500">Đang tải bản đồ...</span>
-      </div>
-    );
-  }
 
   // Convert GeoJSON [lng, lat] to Leaflet [lat, lng]
   const positions: [number, number][] = polygonCoordinates

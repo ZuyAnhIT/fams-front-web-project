@@ -1,13 +1,11 @@
 "use client";
 import { getDashboardRoute } from "@/utils/route.util";
 
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth.store";
 import { SystemRole } from "@/features/customer/auth/types/auth.type";
 import { Result } from "antd";
 import BaseButton from "@/components/ui/BaseButton";
-import { ROUTES } from "@/constants/routes";
 
 interface RoleGuardProps {
   children: React.ReactNode;
@@ -21,29 +19,9 @@ interface RoleGuardProps {
 export default function RoleGuard({ children, allowedRoles }: RoleGuardProps) {
   const router = useRouter();
   const { user, isInitialized } = useAuthStore();
-  const [hasAccess, setHasAccess] = useState<boolean | null>(null);
+  const hasAccess = Boolean(user?.role && allowedRoles.includes(user.role));
 
-  useEffect(() => {
-    if (!isInitialized) return;
-
-    if (!user) {
-      setHasAccess(false);
-      return;
-    }
-
-    if (!user.role) {
-      setHasAccess(false);
-      return;
-    }
-
-    if (allowedRoles.includes(user.role as SystemRole)) {
-      setHasAccess(true);
-    } else {
-      setHasAccess(false);
-    }
-  }, [user, isInitialized, allowedRoles]);
-
-  if (!isInitialized || hasAccess === null) {
+  if (!isInitialized) {
     return (
       <div className="flex h-full min-h-[60vh] items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-500 border-t-transparent" />

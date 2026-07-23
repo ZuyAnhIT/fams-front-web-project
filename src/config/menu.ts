@@ -1,4 +1,4 @@
-import { ROUTES, ADMIN_ROUTES, CUSTOMER_ROUTES } from "@/constants/routes";
+import { ADMIN_ROUTES, CUSTOMER_ROUTES } from "@/constants/routes";
 import * as Icons from "lucide-react";
 import { SystemRole } from "@/features/customer/auth/types/auth.type";
 
@@ -29,12 +29,6 @@ export const SIDEBAR_MENU: MenuItem[] = [
     title: "Công ty",
     path: ADMIN_ROUTES.TENANTS,
     icon: "Building2",
-    allowedRoles: [SystemRole.PLATFORM_ADMIN]
-  },
-  {
-    title: "Báo cáo",
-    path: ADMIN_ROUTES.REPORTS,
-    icon: "BarChart3",
     allowedRoles: [SystemRole.PLATFORM_ADMIN]
   },
   {
@@ -75,18 +69,6 @@ export const SIDEBAR_MENU: MenuItem[] = [
     title: "Công trình",
     path: CUSTOMER_ROUTES.SITES,
     icon: "MapPin",
-    allowedRoles: [SystemRole.TENANT_ADMIN, SystemRole.SITE_SUPERVISOR]
-  },
-  {
-    title: "Vi phạm",
-    path: CUSTOMER_ROUTES.VIOLATIONS,
-    icon: "AlertTriangle",
-    allowedRoles: [SystemRole.TENANT_ADMIN, SystemRole.HR_MANAGER, SystemRole.SITE_SUPERVISOR]
-  },
-  {
-    title: "Kiểm tra đột xuất",
-    path: CUSTOMER_ROUTES.RANDOM_CHECKS,
-    icon: "ShieldAlert",
     allowedRoles: [SystemRole.TENANT_ADMIN, SystemRole.SITE_SUPERVISOR]
   },
   {

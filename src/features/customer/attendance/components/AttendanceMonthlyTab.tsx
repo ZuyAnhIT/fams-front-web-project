@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { message } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { DownloadOutlined } from "@ant-design/icons";
-import { attendanceService } from "../services/attendance.service";
 import { AttendanceHrMonthlyResponse } from "../types/attendance.type";
+import { useExportMonthlyAttendance, useMonthlyAttendance } from "../hooks/use-attendance";
 import dayjs, { Dayjs } from "dayjs";
 import { useAuthStore } from "@/stores/auth.store";
 import BaseDatePicker from "@/components/ui/BaseDatePicker";
@@ -16,49 +16,31 @@ export default function AttendanceMonthlyTab() {
   const user = useAuthStore((state) => state.user);
   const currentTenantId = user?.tenantId;
 
-  const [data, setData] = useState<AttendanceHrMonthlyResponse[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [total, setTotal] = useState(0);
-
   const [selectedMonth, setSelectedMonth] = useState<Dayjs>(dayjs());
   const [page, setPage] = useState(0);
   const [size, setSize] = useState(20);
-  
-  const [exporting, setExporting] = useState(false);
 
-  useEffect(() => {
-    if (currentTenantId) {
-      fetchData();
-    }
-  }, [selectedMonth, page, size, currentTenantId]);
-
-  const fetchData = async () => {
-    if (!currentTenantId) return;
-    try {
-      setLoading(true);
-      const res = await attendanceService.listMonthlyAttendance(currentTenantId, {
-        year: selectedMonth.year(),
-        month: selectedMonth.month() + 1,
-        page,
-        size,
-      });
-      setData(res.content);
-      setTotal(res.totalElements);
-    } catch (error) {
-      console.error("Failed to fetch monthly attendance", error);
-      message.error("Lỗi khi tải bảng công tháng");
-    } finally {
-      setLoading(false);
-    }
+  const monthlyParams = {
+    year: selectedMonth.year(),
+    month: selectedMonth.month() + 1,
+    page,
+    size,
   };
+  const { data: pageData, isLoading } = useMonthlyAttendance(
+    currentTenantId || undefined,
+    monthlyParams
+  );
+  const exportAttendance = useExportMonthlyAttendance();
 
   const handleExport = async () => {
     if (!currentTenantId) return;
     try {
-      setExporting(true);
-      const blob = await attendanceService.exportMonthlyAttendance(currentTenantId, {
-        year: selectedMonth.year(),
-        month: selectedMonth.month() + 1,
+      const blob = await exportAttendance.mutateAsync({
+        tenantId: currentTenantId,
+        params: {
+          year: selectedMonth.year(),
+          month: selectedMonth.month() + 1,
+        },
       });
       
       const url = window.URL.createObjectURL(new Blob([blob]));
@@ -73,13 +55,8 @@ export default function AttendanceMonthlyTab() {
       console.error("Failed to export", error);
       message.error("Lỗi khi xuất báo cáo");
     } finally {
-      setExporting(false);
+      // Mutation state controls the button loading indicator.
     }
-  };
-
-  const handleTableChange = (pagination: any, filters: any, sorter: any) => {
-    setPage(pagination.current ? pagination.current - 1 : 0);
-    setSize(pagination.pageSize || 20);
   };
 
   const columns: ColumnsType<AttendanceHrMonthlyResponse> = [
@@ -162,14 +139,15 @@ export default function AttendanceMonthlyTab() {
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-4 flex-wrap bg-slate-50 p-4 rounded-lg border border-slate-200 justify-between items-center">
-        <div className="flex gap-4 items-center">
+      <div className="flex flex-col gap-4 rounded-lg border border-slate-200 bg-slate-50 p-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:p-4">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
           <span className="text-slate-600 font-medium">Chọn tháng:</span>
           <BaseDatePicker
+            aria-label="Chọn tháng lập bảng công"
             picker="month"
             value={selectedMonth}
             onChange={(date) => {
-              if (date) {
+              if (date && !Array.isArray(date)) {
                 setSelectedMonth(date);
                 setPage(0);
               }
@@ -182,7 +160,7 @@ export default function AttendanceMonthlyTab() {
           type="primary" 
           icon={<DownloadOutlined />} 
           onClick={handleExport}
-          loading={exporting}
+          loading={exportAttendance.isPending}
           className="bg-green-600 hover:bg-green-700"
         >
           Xuất báo cáo
@@ -190,14 +168,20 @@ export default function AttendanceMonthlyTab() {
       </div>
 
       <DataTable
+        ariaLabel="Bảng công tổng hợp theo tháng"
+        emptyTitle="Chưa có bảng công tháng"
+        emptyDescription="Chọn tháng khác để kiểm tra dữ liệu."
         columns={columns}
-        data={data}
+        data={pageData?.content || []}
         rowKey={(record) => `${record.employeeId}-${record.siteId}-${record.month}-${record.year}`}
-        loading={loading}
+        loading={isLoading}
         currentPage={page}
         pageSize={size}
-        totalElements={total}
-        onChange={handleTableChange}
+        totalElements={pageData?.totalElements || 0}
+        onPageChange={(nextPage, nextSize) => {
+          setPage(nextPage);
+          setSize(nextSize);
+        }}
         scroll={{ x: 1200 }}
       />
     </div>

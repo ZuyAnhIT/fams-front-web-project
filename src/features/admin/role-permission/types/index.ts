@@ -59,6 +59,9 @@ export interface UserRoleResponse {
   userId: string;
   roleId: string;
   tenantId: string;
+  /** Issue #3 (docs/issues/ISSUES.md): tenant display name, for building a company switcher. */
+  tenantName?: string;
+  tenantSlug?: string;
   assignedAt?: string;
   roleName?: string;
   permissions?: string[];

@@ -24,10 +24,13 @@ export default function FormSelect({
   required,
   ...selectProps
 }: FormSelectProps) {
+  const inputId = selectProps.id || name;
+  const messageId = `${inputId}-${error ? "error" : "help"}`;
+
   return (
     <div className="flex flex-col space-y-1.5 w-full">
       {label && (
-        <label className="text-[13px] font-semibold text-slate-700">
+        <label htmlFor={inputId} className="text-[13px] font-semibold text-slate-700">
           {label} {required && <span className="text-red-500">*</span>} {selectProps.disabled && <span className="text-slate-400 font-normal ml-1">(Chỉ xem)</span>}
         </label>
       )}
@@ -38,16 +41,20 @@ export default function FormSelect({
           <BaseSelect
             {...field}
             {...selectProps}
+            id={inputId}
             options={options}
             status={error ? "error" : undefined}
+            aria-invalid={Boolean(error)}
+            aria-required={required}
+            aria-describedby={(error?.message || helperText) ? messageId : undefined}
           />
         )}
       />
       {error?.message && (
-        <p className="text-xs text-rose-500">{error.message}</p>
+        <p id={messageId} role="alert" className="text-xs text-rose-600">{error.message}</p>
       )}
       {helperText && !error?.message && (
-        <p className="text-xs text-slate-500">{helperText}</p>
+        <p id={messageId} className="text-xs text-slate-500">{helperText}</p>
       )}
     </div>
   );

@@ -1,5 +1,5 @@
 "use client";
-import { getDashboardRoute } from "@/utils/route.util";
+import { resolvePostLoginRoute } from "@/utils/route.util";
 
 import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
@@ -8,21 +8,18 @@ import { z } from "zod";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { App, Input } from "antd";
-import { GoogleIcon, MicrosoftIcon } from "@/components/icons";
+import { format } from "date-fns";
 import { PhoneOutlined } from "@ant-design/icons";
 import FormInput from "@/components/forms/FormInput";
 
 import BaseButton from "@/components/ui/BaseButton";
-import BaseCheckbox from "@/components/ui/BaseCheckbox";
 import { loginSchema, type LoginFormData } from "@/features/customer/auth/schemas/auth.schema";
 import { useAuthStore } from "@/stores/auth.store";
 import { useLogin, useLoginTotp, useGoogleLogin as useGoogleLoginBackend } from "@/features/customer/auth/hooks/use-auth";
 import { authService } from "@/features/customer/auth/services/auth.service";
 import { authTokenService } from "@/services/auth-token.service";
 import { GoogleLogin } from "@react-oauth/google";
-import { ROUTES, CUSTOMER_ROUTES } from "@/constants/routes";
-import { APP_NAME } from "@/constants/app";
-import { type AuthUser } from "@/features/customer/auth/types/auth.type";
+import { ROUTES } from "@/constants/routes";
 import { authMapper } from "@/features/customer/auth/utils/auth.mapper";
 import { rolePermissionService } from "@/features/admin/role-permission/services/role-permission.service";
 
@@ -113,19 +110,21 @@ export default function LoginForm() {
       // 3. Save to Zustand store
       setAuth(authUser, response.accessToken, response.refreshToken);
       message.success("Đăng nhập thành công!");
-      if (authUser?.role === "TENANT_ADMIN") {
-        localStorage.setItem("mock_company_selected", "false");
-        router.push(CUSTOMER_ROUTES.SELECT_COMPANY);
-      } else {
-        localStorage.setItem("mock_company_selected", "true");
-        router.push(getDashboardRoute(authUser?.role));
-      }
+      router.push(resolvePostLoginRoute(authUser));
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       // Backend error response format
       let errorMessage = error.response?.data?.message || "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.";
 
-      if (error.response?.status === 401 || errorMessage.toLowerCase().includes("bad credentials")) {
+      if (error.response?.status === 423) {
+        // Backend embeds a raw ISO timestamp in the message (e.g. "...sau 2026-07-
+        // 22T15:18:22.813563Z.") — reformat it into something readable instead of
+        // showing that to the user verbatim.
+        const isoMatch = errorMessage.match(/(\d{4}-\d{2}-\d{2}T[\d:.]+Z)/);
+        errorMessage = isoMatch
+          ? `Tài khoản tạm khóa do đăng nhập sai nhiều lần. Vui lòng thử lại sau ${format(new Date(isoMatch[1]), "HH:mm dd/MM/yyyy")}.`
+          : "Tài khoản tạm khóa do đăng nhập sai nhiều lần. Vui lòng thử lại sau.";
+      } else if (error.response?.status === 401 || errorMessage.toLowerCase().includes("bad credentials")) {
         errorMessage = "Sai tài khoản hoặc mật khẩu.";
       } else if (errorMessage.includes("has not been verified")) {
         errorMessage = "Bạn chưa xác nhận email. Vui lòng kiểm tra hòm thư và bấm vào link xác thực!";
@@ -156,14 +155,8 @@ export default function LoginForm() {
       setAuth(authUser, response.accessToken, response.refreshToken);
       clearTotpPending();
       message.success("Đăng nhập thành công!");
-      if (authUser?.role === "TENANT_ADMIN") {
-        localStorage.setItem("mock_company_selected", "false");
-        router.push(CUSTOMER_ROUTES.SELECT_COMPANY);
-      } else {
-        localStorage.setItem("mock_company_selected", "true");
-        router.push(getDashboardRoute(authUser?.role));
-      }
-    } catch (error: any) {
+      router.push(resolvePostLoginRoute(authUser));
+    } catch {
       message.error("Mã xác thực không chính xác hoặc đã hết hạn.");
     }
   };
@@ -197,13 +190,7 @@ export default function LoginForm() {
       setAuth(authUser, response.accessToken, response.refreshToken);
 
       message.success("Đăng nhập bằng Google thành công!");
-      if (authUser?.role === "TENANT_ADMIN") {
-        localStorage.setItem("mock_company_selected", "false");
-        router.push(CUSTOMER_ROUTES.SELECT_COMPANY);
-      } else {
-        localStorage.setItem("mock_company_selected", "true");
-        router.push(getDashboardRoute(authUser?.role));
-      }
+      router.push(resolvePostLoginRoute(authUser));
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || "Đăng nhập Google thất bại.";
       message.error(errorMessage);
@@ -364,5 +351,3 @@ export default function LoginForm() {
     </div>
   );
 }
-
-

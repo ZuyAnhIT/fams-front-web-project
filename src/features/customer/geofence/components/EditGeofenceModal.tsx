@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { InputNumber, message, Alert } from "antd";
 import BaseModal from "@/components/ui/BaseModal";
 import BaseButton from "@/components/ui/BaseButton";
@@ -39,13 +39,6 @@ export default function EditGeofenceModal({
   const [bufferMeters, setBufferMeters] = useState<number>(activeGeofence?.bufferMeters || 50);
   const [coordinates, setCoordinates] = useState<[number, number][]>(initialMapCoords);
 
-  useEffect(() => {
-    if (isOpen) {
-      setBufferMeters(activeGeofence?.bufferMeters || 50);
-      setCoordinates(activeGeofence?.coordinates ? activeGeofence.coordinates.map(c => [c[1], c[0]]) : []);
-    }
-  }, [isOpen, activeGeofence]);
-
   const createMutation = useCreateGeofenceMutation();
   const updateMutation = useUpdateGeofenceMutation();
 
@@ -57,7 +50,7 @@ export default function EditGeofenceModal({
       return;
     }
 
-    let submitCoords = [...coordinates];
+    const submitCoords = [...coordinates];
     // Check if closed
     const firstP = submitCoords[0];
     const lastP = submitCoords[submitCoords.length - 1];
@@ -163,7 +156,7 @@ export default function EditGeofenceModal({
 
             {coordinates.length === 0 ? (
               <div className="text-center text-slate-400 py-8 text-sm italic">
-                Click lên bản đồ hoặc bấm "Thêm" để tạo điểm.
+                Click lên bản đồ hoặc bấm &quot;Thêm&quot; để tạo điểm.
               </div>
             ) : (
               <div className="space-y-3">

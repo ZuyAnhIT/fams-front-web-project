@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Form, message } from "antd";
 import { useAuthStore } from "@/stores/auth.store";
 import { useUpdateSiteMutation } from "../hooks/use-site";
@@ -24,25 +24,8 @@ export default function UpdateSiteModal({ isOpen, onClose, site }: UpdateSiteMod
   const { mutateAsync: updateSite, isPending } = useUpdateSiteMutation();
 
   // Local state to keep map in sync
-  const [lat, setLat] = useState<number | undefined>();
-  const [lng, setLng] = useState<number | undefined>();
-
-  useEffect(() => {
-    if (site && isOpen) {
-      form.setFieldsValue({
-        name: site.name,
-        code: site.code,
-        description: site.description,
-        address: site.address,
-        latitude: site.latitude,
-        longitude: site.longitude,
-        timezone: site.timezone,
-        status: site.status === "active",
-      });
-      setLat(site.latitude);
-      setLng(site.longitude);
-    }
-  }, [site, isOpen, form]);
+  const [lat, setLat] = useState<number | undefined>(site?.latitude);
+  const [lng, setLng] = useState<number | undefined>(site?.longitude);
 
   const handleMapChange = (latitude: number, longitude: number, address?: string) => {
     setLat(latitude);
@@ -96,8 +79,6 @@ export default function UpdateSiteModal({ isOpen, onClose, site }: UpdateSiteMod
 
   const handleClose = () => {
     form.resetFields();
-    setLat(undefined);
-    setLng(undefined);
     onClose();
   };
 
@@ -138,6 +119,16 @@ export default function UpdateSiteModal({ isOpen, onClose, site }: UpdateSiteMod
     >
       <Form
         form={form}
+        initialValues={site ? {
+          name: site.name,
+          code: site.code,
+          description: site.description,
+          address: site.address,
+          latitude: site.latitude,
+          longitude: site.longitude,
+          timezone: site.timezone,
+          status: site.status === "active",
+        } : undefined}
         layout="vertical"
         onFinish={handleFinish}
         id="update-site-form"

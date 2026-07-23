@@ -6,6 +6,7 @@ interface ListHeaderProps {
   searchValue: string;
   onSearchChange: (value: string) => void;
   searchPlaceholder?: string;
+  searchAriaLabel?: string;
   filters?: React.ReactNode;
   actions?: React.ReactNode;
   className?: string;
@@ -15,6 +16,7 @@ export default function ListHeader({
   searchValue,
   onSearchChange,
   searchPlaceholder = "Tìm kiếm...",
+  searchAriaLabel = "Tìm kiếm trong danh sách",
   filters,
   actions,
   className,
@@ -24,6 +26,7 @@ export default function ListHeader({
       <div className="flex flex-col lg:flex-row flex-1 gap-3 w-full max-w-4xl">
         <div className="flex-1 relative group">
           <BaseInput
+            aria-label={searchAriaLabel}
             placeholder={searchPlaceholder}
             prefix={<Search className="h-4 w-4 text-slate-400 group-focus-within:text-brand-500 transition-colors" />}
             value={searchValue}
@@ -33,14 +36,14 @@ export default function ListHeader({
           />
         </div>
         {filters && (
-          <div className="shrink-0 flex items-center">
+          <div className="flex w-full flex-wrap items-center gap-2 lg:w-auto">
             {filters}
           </div>
         )}
       </div>
 
       {actions && (
-        <div className="flex flex-wrap gap-3 w-full sm:w-auto">
+        <div className="flex w-full flex-wrap gap-3 sm:w-auto [&>*]:max-sm:flex-1">
           {actions}
         </div>
       )}

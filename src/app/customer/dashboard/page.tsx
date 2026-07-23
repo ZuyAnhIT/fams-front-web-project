@@ -1,172 +1,183 @@
 "use client";
 
-import { useAuthStore } from "@/stores/auth.store";
-import { Users, MapPin, Clock, CalendarDays, Loader2, FileText } from "lucide-react";
-import { useEmployees } from "@/features/customer/employee/hooks/use-employee";
+import Link from "next/link";
+import {
+  ArrowRight,
+  Building2,
+  CalendarCheck,
+  MapPin,
+  Network,
+  Settings,
+  Users,
+} from "lucide-react";
+import StatCard from "@/components/charts/StatCard";
+import EmptyState from "@/components/feedback/EmptyState";
+import { CUSTOMER_ROUTES } from "@/constants/routes";
 import { SystemRole } from "@/features/customer/auth/types/auth.type";
+import { useEmployees } from "@/features/customer/employee/hooks/use-employee";
+import { useAuthStore } from "@/stores/auth.store";
 import { formatVietnameseName } from "@/utils/name.util";
 
-export default function DashboardPage() {
-  const { user } = useAuthStore();
-  const canViewEmployees = user?.role && [
+const ROLE_LABELS: Record<SystemRole, string> = {
+  [SystemRole.PLATFORM_ADMIN]: "Quản trị nền tảng",
+  [SystemRole.TENANT_ADMIN]: "Quản trị công ty",
+  [SystemRole.HR_MANAGER]: "Quản lý nhân sự",
+  [SystemRole.SITE_SUPERVISOR]: "Giám sát công trình",
+  [SystemRole.EMPLOYEE]: "Nhân viên",
+};
+
+export default function CustomerDashboardPage() {
+  const user = useAuthStore((state) => state.user);
+  const role = user?.role;
+  const canViewEmployees = Boolean(role && [
     SystemRole.TENANT_ADMIN,
     SystemRole.HR_MANAGER,
     SystemRole.SITE_SUPERVISOR,
-    SystemRole.PLATFORM_ADMIN,
-  ].includes(user.role as SystemRole);
+  ].includes(role));
 
-  const { data: employeesData, isLoading: isLoadingEmployees } = useEmployees({
-    page: 0,
-    size: 10,
-    sortBy: "createdAt",
-    sortDir: "desc",
-  }, { enabled: !!canViewEmployees });
-  
+  const { data: employeesData, isLoading } = useEmployees(
+    { page: 0, size: 6, sortBy: "createdAt", sortDir: "desc" },
+    { enabled: Boolean(canViewEmployees && user?.tenantId) }
+  );
   const employees = employeesData?.content || [];
 
-  const stats = [
-    {
-      title: "Tổng nhân viên",
-      value: isLoadingEmployees ? "..." : (employeesData?.totalElements?.toString() || "0"),
-      change: "Tổng số trên hệ thống",
+  const quickActions = [
+    canViewEmployees && {
+      title: "Nhân viên",
+      description: "Tra cứu hồ sơ và trạng thái nhân sự",
+      href: CUSTOMER_ROUTES.EMPLOYEES,
       icon: Users,
-      color: "from-blue-500 to-cyan-500",
-      show: canViewEmployees
     },
-    {
-      title: "Công trình thực địa",
-      value: "14",
-      change: "Hoạt động ổn định",
+    role && [SystemRole.TENANT_ADMIN, SystemRole.HR_MANAGER].includes(role) && {
+      title: "Cơ cấu tổ chức",
+      description: "Quản lý phòng ban và đội nhóm",
+      href: CUSTOMER_ROUTES.WORKSPACES,
+      icon: Network,
+    },
+    role && [SystemRole.TENANT_ADMIN, SystemRole.HR_MANAGER, SystemRole.SITE_SUPERVISOR].includes(role) && {
+      title: "Chấm công",
+      description: "Xem lịch sử và bảng công tổng hợp",
+      href: CUSTOMER_ROUTES.ATTENDANCE,
+      icon: CalendarCheck,
+    },
+    role && [SystemRole.TENANT_ADMIN, SystemRole.SITE_SUPERVISOR].includes(role) && {
+      title: "Công trình",
+      description: "Theo dõi địa điểm và vùng chấm công",
+      href: CUSTOMER_ROUTES.SITES,
       icon: MapPin,
-      color: "from-emerald-500 to-teal-500",
-      show: true
     },
-    {
-      title: "Ca làm việc đang chạy",
-      value: "6",
-      change: "Bình thường",
-      icon: Clock,
-      color: "from-amber-500 to-orange-500",
-      show: true
+    role === SystemRole.TENANT_ADMIN && {
+      title: "Cấu hình công ty",
+      description: "Cập nhật hồ sơ và chính sách truy cập",
+      href: CUSTOMER_ROUTES.TENANT_SETTINGS,
+      icon: Building2,
     },
-    {
-      title: "Tỷ lệ chấm công đúng giờ",
-      value: "97.6%",
-      change: "+1.2% so với hôm qua",
-      icon: CalendarDays,
-      color: "from-rose-500 to-pink-500",
-      show: true
+    role === SystemRole.EMPLOYEE && {
+      title: "Tài khoản của tôi",
+      description: "Cập nhật thông tin và bảo mật tài khoản",
+      href: CUSTOMER_ROUTES.SETTINGS,
+      icon: Settings,
     },
-  ];
-
-  // Chỉ lấy các stat được show
-  const visibleStats = stats.filter(s => s.show);
+  ].filter((item): item is Exclude<typeof item, false | undefined> => Boolean(item));
 
   return (
-    <div className="space-y-8 animate-fadeIn">
-      {/* Lời chào mừng */}
-      <div>
-        <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-brand-950">
-          Xin chào, {user?.displayName || "Người dùng"}! 👋
-        </h1>
-        <p className="text-brand-500 mt-1 text-sm md:text-base">
-          Chào mừng quay trở lại hệ thống quản lý FAMS. Đây là tổng quan hoạt động ngày hôm nay.
+    <div className="mx-auto w-full max-w-[1600px] space-y-6">
+      <section>
+        <p className="text-sm font-medium text-slate-500">
+          {role ? ROLE_LABELS[role] : "Không gian làm việc"}
         </p>
-      </div>
+        <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+          Xin chào, {user?.displayName || "bạn"}
+        </h1>
+        <p className="mt-2 text-sm text-slate-600">
+          Đây là các thông tin và lối tắt phù hợp với phạm vi công việc của bạn.
+        </p>
+      </section>
 
-      {/* Grid thẻ thống kê */}
-      <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-        {visibleStats.map((stat, idx) => {
-          const IconComponent = stat.icon;
-          return (
-            <div
-              key={idx}
-              className="p-6 rounded-2xl border border-brand-200/60 bg-white relative overflow-hidden group hover:border-brand-400 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 shadow-[0_4px_20px_rgba(0,0,0,0.02)]"
-            >
-              {/* Bóng sáng nền trang trí */}
-              <div className={`absolute -right-8 -bottom-8 h-24 w-24 rounded-full bg-gradient-to-br ${stat.color} opacity-5 group-hover:scale-125 transition-transform duration-500 blur-xl`} />
-
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-sm font-medium text-brand-500">{stat.title}</span>
-                <div className={`p-2.5 rounded-xl bg-gradient-to-br ${stat.color} text-white shadow-lg`}>
-                  <IconComponent className="h-5 w-5" />
-                </div>
-              </div>
-              <div>
-                <h3 className="text-2xl font-extrabold text-brand-950 tracking-tight">{stat.value}</h3>
-                <p className="text-xs text-brand-500 mt-1.5 font-medium flex items-center gap-1">
-                  {stat.change}
-                </p>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Bố cục nội dung chi tiết */}
-      <div className="w-full">
-        {/* Card danh sách nhân viên hoặc card mặc định cho USER */}
-        {canViewEmployees ? (
-        <div className="p-6 rounded-2xl border border-brand-200/60 bg-white shadow-[0_4px_20px_rgba(0,0,0,0.02)] w-full space-y-4 flex flex-col h-[380px]">
-          <div>
-            <h2 className="text-lg font-semibold text-brand-950">Danh sách nhân viên mới nhất</h2>
-            <p className="text-xs text-brand-500 mt-0.5">
-              Những nhân viên vừa được thêm vào hệ thống trong thời gian gần đây.
-            </p>
-          </div>
-
-          <div className="flex-1 overflow-y-auto pr-1 space-y-2.5 scrollbar-thin scrollbar-thumb-brand-200">
-            {isLoadingEmployees ? (
-              <div className="h-full flex items-center justify-center text-brand-400">
-                <Loader2 className="h-6 w-6 animate-spin" />
-              </div>
-            ) : employees.length === 0 ? (
-              <div className="h-full flex items-center justify-center text-brand-400 text-sm">
-                Chưa có nhân viên nào trong hệ thống
-              </div>
-            ) : (
-              employees.map((emp: any) => (
-                <div
-                  key={emp.id}
-                  className="flex items-center justify-between p-3.5 rounded-xl bg-brand-50/50 border border-brand-100 hover:border-brand-300 hover:bg-brand-50 transition-all duration-200"
-                >
-                  <div className="flex items-center gap-3">
-                    {emp.avatarUrl ? (
-                      <img src={emp.avatarUrl} alt="Avatar" className="h-9 w-9 rounded-full object-cover border border-brand-200" />
-                    ) : (
-                      <div className="h-9 w-9 rounded-full bg-blue-600/10 border border-blue-500/20 flex items-center justify-center font-bold text-blue-600 text-sm uppercase">
-                        {emp.firstName ? emp.firstName.charAt(0) : "E"}
-                      </div>
-                    )}
-                    <div>
-                      <h4 className="font-semibold text-brand-950 text-sm leading-tight">{formatVietnameseName(emp.firstName, emp.lastName)}</h4>
-                      <p className="text-xs text-brand-500 mt-0.5">{emp.email || emp.phone || emp.employeeCode || "Chưa cập nhật liên hệ"}</p>
-                    </div>
-                  </div>
-
-                  <div className="text-right">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-[10px] font-semibold bg-brand-200 text-brand-800">
-                      {emp.position || "Nhân viên"}
-                    </span>
-                    <p className="text-[10px] text-brand-400 font-medium mt-1">Phòng ban: {emp.department || "Chưa xếp"}</p>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+      {canViewEmployees && (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <StatCard
+            title="Tổng nhân viên"
+            value={employeesData?.totalElements ?? 0}
+            description="Dữ liệu nhân sự hiện tại"
+            icon={Users}
+            href={CUSTOMER_ROUTES.EMPLOYEES}
+            loading={isLoading}
+          />
         </div>
-        ) : (
-          <div className="p-6 rounded-2xl border border-brand-200/60 bg-white shadow-[0_4px_20px_rgba(0,0,0,0.02)] w-full flex flex-col items-center justify-center text-center h-[380px]">
-            <div className="h-20 w-20 rounded-full bg-brand-50 flex items-center justify-center mb-4">
-              <FileText className="h-10 w-10 text-brand-300" />
+      )}
+
+      <section aria-labelledby="quick-actions-heading">
+        <div className="mb-4">
+          <h2 id="quick-actions-heading" className="text-lg font-semibold text-slate-900">Truy cập nhanh</h2>
+          <p className="mt-1 text-sm text-slate-500">Các khu vực bạn thường sử dụng.</p>
+        </div>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {quickActions.map((action) => {
+            const Icon = action.icon;
+            return (
+              <Link
+                key={action.href}
+                href={action.href}
+                className="group flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-colors hover:border-blue-300 hover:bg-blue-50/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+              >
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-700 group-hover:bg-blue-100 group-hover:text-blue-700">
+                  <Icon className="h-5 w-5" aria-hidden="true" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block font-semibold text-slate-900">{action.title}</span>
+                  <span className="mt-0.5 block text-sm text-slate-500">{action.description}</span>
+                </span>
+                <ArrowRight className="h-4 w-4 shrink-0 text-slate-300 transition-transform group-hover:translate-x-1 group-hover:text-blue-600" aria-hidden="true" />
+              </Link>
+            );
+          })}
+        </div>
+      </section>
+
+      {canViewEmployees && (
+        <section className="rounded-xl border border-slate-200 bg-white shadow-sm" aria-labelledby="recent-employees-heading">
+          <div className="flex items-center justify-between border-b border-slate-100 px-4 py-4 sm:px-5">
+            <div>
+              <h2 id="recent-employees-heading" className="font-semibold text-slate-900">Nhân viên mới cập nhật</h2>
+              <p className="mt-0.5 text-xs text-slate-500">Danh sách hồ sơ gần nhất.</p>
             </div>
-            <h2 className="text-xl font-semibold text-brand-950 mb-2">Chưa có thông báo mới</h2>
-            <p className="text-sm text-brand-500 max-w-[300px]">
-              Chào mừng bạn đến với FAMS. Hiện tại bạn chưa có lịch làm việc hoặc công việc cần xử lý.
-            </p>
+            <Link href={CUSTOMER_ROUTES.EMPLOYEES} className="text-sm font-semibold text-blue-700 hover:text-blue-800">
+              Xem tất cả
+            </Link>
           </div>
-        )}
-      </div>
+
+          {isLoading ? (
+            <div className="grid gap-3 p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-3" role="status" aria-label="Đang tải nhân viên">
+              {[1, 2, 3].map((item) => <div key={item} className="h-20 animate-pulse rounded-lg bg-slate-100" />)}
+            </div>
+          ) : employees.length === 0 ? (
+            <EmptyState compact title="Chưa có nhân viên" description="Hồ sơ nhân viên mới sẽ xuất hiện tại đây." />
+          ) : (
+            <div className="grid gap-3 p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-3">
+              {employees.map((employee) => (
+                <Link
+                  key={employee.id}
+                  href={`${CUSTOMER_ROUTES.EMPLOYEES}/${employee.id}`}
+                  className="flex min-w-0 items-center gap-3 rounded-lg border border-slate-100 p-3 transition-colors hover:border-blue-200 hover:bg-blue-50/30"
+                >
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-50 font-semibold text-blue-700">
+                    {(employee.lastName || employee.firstName || "N").charAt(0).toUpperCase()}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-semibold text-slate-900">
+                      {formatVietnameseName(employee.firstName, employee.lastName)}
+                    </span>
+                    <span className="mt-0.5 block truncate text-xs text-slate-500">
+                      {employee.position || employee.department || employee.email || "Chưa cập nhật vị trí"}
+                    </span>
+                  </span>
+                </Link>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
     </div>
   );
 }

@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import { Space, Tag, Modal, message, Tooltip, App } from "antd";
+import { Space, Tag, message, Tooltip, App } from "antd";
 import { useAuthStore } from "@/stores/auth.store";
-import { PlusOutlined, SearchOutlined, EditOutlined, DeleteOutlined, InfoCircleOutlined, EyeOutlined } from "@ant-design/icons";
+import { EditOutlined, DeleteOutlined, EyeOutlined } from "@ant-design/icons";
 import { useRolesQuery, useDeleteRoleMutation } from "../hooks/use-role-permission";
 import { RoleFormModal } from "./RoleFormModal";
 import { RoleResponse, RoleDetailResponse } from "../types";
@@ -17,6 +17,7 @@ import BaseButton from "@/components/ui/BaseButton";
 import BaseSelect from "@/components/ui/BaseSelect";
 import DataTable from "@/components/tables/DataTable";
 import { Plus } from "lucide-react";
+import { useDebounce } from "@/hooks/useDebounce";
 
 
 
@@ -30,8 +31,8 @@ export const RoleManagementPage: React.FC = () => {
   const [messageApi, contextHolder] = message.useMessage();
   const [page, setPage] = useState(0);
   const [size, setSize] = useState(20);
-  const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
+  const debouncedSearch = useDebounce(searchInput, 500);
   const [isSystemFilter, setIsSystemFilter] = useState<boolean | undefined>(undefined);
   const [selectedFilterTenantId, setSelectedFilterTenantId] = useState<string | undefined>(undefined);
   const [sortBy, setSortBy] = useState<string | undefined>(undefined);
@@ -43,7 +44,7 @@ export const RoleManagementPage: React.FC = () => {
 
   const { data: rolesResponse, isLoading, isFetching } = useRolesQuery({
     tenantId: user?.role === "PLATFORM_ADMIN" ? selectedFilterTenantId : (tenantId || undefined),
-    search,
+    search: debouncedSearch,
     isSystem: isSystemFilter,
     sortBy,
     sortDir,
@@ -60,13 +61,8 @@ export const RoleManagementPage: React.FC = () => {
 
   const deleteRole = useDeleteRoleMutation();
 
-  const handleSearch = () => {
-    setSearch(searchInput);
-    setPage(0); // Reset page on search
-  };
-
-  const handleFilterChange = (value: boolean | undefined) => {
-    setIsSystemFilter(value);
+  const handleFilterChange = (value: string | undefined) => {
+    setIsSystemFilter(value === undefined ? undefined : value === "system");
     setPage(0);
   };
 
@@ -201,9 +197,9 @@ export const RoleManagementPage: React.FC = () => {
 
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
-          <h2 className="!text-[35px] !font-semibold text-slate-900 tracking-tight">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
             Vai trò & Phân quyền
-          </h2>
+          </h1>
           <p className="text-sm text-slate-500 mt-1">
             Quản lý các vai trò và thiết lập quyền hạn truy cập hệ thống
           </p>
@@ -224,27 +220,33 @@ export const RoleManagementPage: React.FC = () => {
         <ListHeader
           className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-5 border-b border-slate-100"
           searchValue={searchInput}
-          onSearchChange={setSearchInput}
+          onSearchChange={(value) => {
+            setSearchInput(value);
+            setPage(0);
+          }}
           searchPlaceholder="Tìm kiếm theo tên..."
+          searchAriaLabel="Tìm vai trò theo tên"
           filters={
-            <div className="flex gap-3">
+            <div className="flex w-full flex-col gap-3 sm:flex-row">
               <BaseSelect
+                aria-label="Lọc theo loại vai trò"
                 placeholder="Lọc theo loại Role"
                 allowClear
-                className="w-48"
+                className="w-full sm:w-48"
                 onChange={handleFilterChange}
                 options={[
-                  { value: true, label: 'Role Hệ thống' },
-                  { value: false, label: 'Role Tùy chỉnh' },
+                  { value: "system", label: "Role Hệ thống" },
+                  { value: "custom", label: "Role Tùy chỉnh" },
                 ]}
               />
               {user?.role === "PLATFORM_ADMIN" && (
                 <BaseSelect
+                  aria-label="Lọc vai trò theo công ty"
                   placeholder="Lọc theo Công ty"
                   allowClear
                   showSearch
                   optionFilterProp="label"
-                  className="w-56"
+                  className="w-full sm:w-56"
                   onChange={handleTenantFilterChange}
                   options={tenantOptions}
                   loading={isLoadingTenants}
@@ -255,28 +257,31 @@ export const RoleManagementPage: React.FC = () => {
         />
         <div className="p-5">
           <DataTable
+            ariaLabel="Danh sách vai trò và phân quyền"
+            emptyTitle="Không tìm thấy vai trò"
+            emptyDescription="Thử thay đổi từ khóa hoặc bộ lọc."
             columns={columns as any}
-          data={rolesResponse?.data?.content || []}
-          loading={isLoading || isFetching}
-          totalElements={rolesResponse?.data?.totalElements || 0}
-          currentPage={page}
-          pageSize={size}
-          onPageChange={(p, s) => {
-            setPage(p);
-            setSize(s);
-          }}
-          onChange={(_, __, sorter: any) => {
-            if (!Array.isArray(sorter) && (sorter.columnKey || sorter.field)) {
-              setSortBy((sorter.columnKey || sorter.field) as string);
-              setSortDir(sorter.order === "ascend" ? "asc" : sorter.order === "descend" ? "desc" : undefined);
-            } else {
-              setSortBy(undefined);
-              setSortDir(undefined);
-            }
-          }}
-        />
-      </div>
-    </ContentCard>
+            data={rolesResponse?.data?.content || []}
+            loading={isLoading || isFetching}
+            totalElements={rolesResponse?.data?.totalElements || 0}
+            currentPage={page}
+            pageSize={size}
+            onPageChange={(p, s) => {
+              setPage(p);
+              setSize(s);
+            }}
+            onChange={(_, __, sorter: any) => {
+              if (!Array.isArray(sorter) && (sorter.columnKey || sorter.field)) {
+                setSortBy((sorter.columnKey || sorter.field) as string);
+                setSortDir(sorter.order === "ascend" ? "asc" : sorter.order === "descend" ? "desc" : undefined);
+              } else {
+                setSortBy(undefined);
+                setSortDir(undefined);
+              }
+            }}
+          />
+        </div>
+      </ContentCard>
 
       <RoleFormModal
         open={isModalOpen}

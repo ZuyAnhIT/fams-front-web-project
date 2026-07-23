@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { Tag, Space, DatePicker } from "antd";
+import React, { useState } from "react";
+import { Tag, DatePicker } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { checkinService } from "../services/checkin.service";
 import { CheckinResponse, CheckinListParams } from "../types/checkin.type";
+import { useCheckins } from "../hooks/use-checkin";
 import dayjs from "dayjs";
 import { EyeOutlined } from "@ant-design/icons";
 import { useAuthStore } from "@/stores/auth.store";
@@ -19,10 +19,6 @@ export default function CheckinListTab() {
   const user = useAuthStore(state => state.user);
   const currentTenantId = user?.tenantId;
   
-  const [data, setData] = useState<CheckinResponse[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [total, setTotal] = useState(0);
-  
   const [params, setParams] = useState<CheckinListParams>({
     page: 0,
     size: 20,
@@ -33,25 +29,7 @@ export default function CheckinListTab() {
   const [selectedCheckinId, setSelectedCheckinId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  useEffect(() => {
-    if (currentTenantId) {
-      fetchData();
-    }
-  }, [params, currentTenantId]);
-
-  const fetchData = async () => {
-    if (!currentTenantId) return;
-    try {
-      setLoading(true);
-      const res = await checkinService.listCheckins(currentTenantId, params);
-      setData(res.content);
-      setTotal(res.totalElements);
-    } catch (error) {
-      console.error("Failed to fetch checkins", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: pageData, isLoading } = useCheckins(currentTenantId || undefined, params);
 
   const handleTableChange = (pagination: any, filters: any, sorter: any) => {
     setParams((prev) => ({
@@ -139,11 +117,12 @@ export default function CheckinListTab() {
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-4 flex-wrap bg-slate-50 p-4 rounded-lg border border-slate-200">
+      <div className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3 sm:flex-row sm:flex-wrap sm:p-4">
         <BaseSelect
+          aria-label="Lọc lượt check-in theo trạng thái"
           allowClear
           placeholder="Trạng thái"
-          style={{ width: 150 }}
+          className="w-full sm:w-44"
           onChange={(val) => setParams(p => ({ ...p, status: val, page: 0 }))}
           options={[
             { label: "Hợp lệ", value: "valid" },
@@ -152,8 +131,10 @@ export default function CheckinListTab() {
           ]}
         />
         <RangePicker 
+          aria-label="Lọc lượt check-in theo khoảng thời gian"
+          className="w-full sm:w-auto"
           showTime
-          onChange={(dates, dateStrings) => {
+          onChange={(dates) => {
             setParams(p => ({
               ...p,
               from: dates ? dates[0]?.toISOString() : undefined,
@@ -166,13 +147,16 @@ export default function CheckinListTab() {
       </div>
 
       <DataTable
+        ariaLabel="Lịch sử check-in"
+        emptyTitle="Không có lượt check-in"
+        emptyDescription="Thử chọn khoảng thời gian hoặc trạng thái khác."
         columns={columns}
-        data={data}
+        data={pageData?.content || []}
         rowKey="id"
-        loading={loading}
+        loading={isLoading}
         currentPage={params.page || 0}
         pageSize={params.size || 20}
-        totalElements={total}
+        totalElements={pageData?.totalElements || 0}
         onChange={handleTableChange}
         scroll={{ x: 800 }}
       />

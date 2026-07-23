@@ -17,7 +17,7 @@ export const metadata: Metadata = {
  */
 export default function PhoneLoginPage() {
   return (
-    <main className="flex min-h-screen items-center justify-center">
+    <main className="w-full">
       <PhoneLoginForm />
     </main>
   );

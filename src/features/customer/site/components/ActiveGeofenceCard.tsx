@@ -62,7 +62,7 @@ export default function ActiveGeofenceCard({ site, siteId }: ActiveGeofenceCardP
         </div>
       </Card>
 
-      {site.latitude && site.longitude && (
+      {isGeofenceModalOpen && site.latitude && site.longitude && (
         <EditGeofenceModal
           isOpen={isGeofenceModalOpen}
           onClose={() => setIsGeofenceModalOpen(false)}

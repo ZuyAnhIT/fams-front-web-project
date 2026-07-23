@@ -1,6 +1,5 @@
 import { apiClient } from "@/services/api-client";
-import { PageResponse } from "@/types/common.type";
-import { ApiResponse } from "@/types/api";
+import { ApiResponse, PageResponse } from "@/types/api";
 import { CheckinDetailResponse, CheckinListParams, CheckinResponse } from "../types/checkin.type";
 
 export const checkinService = {

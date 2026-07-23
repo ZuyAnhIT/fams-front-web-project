@@ -266,7 +266,10 @@ export default function NotificationPage() {
 
   // Initial load + reload when filter changes
   useEffect(() => {
-    loadFirstPage();
+    const timeout = window.setTimeout(() => {
+      void loadFirstPage();
+    }, 0);
+    return () => window.clearTimeout(timeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter]);
 

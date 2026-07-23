@@ -25,9 +25,12 @@ export default function AttendancePage() {
 
   return (
     <RoleGuard allowedRoles={[SystemRole.TENANT_ADMIN, SystemRole.HR_MANAGER, SystemRole.SITE_SUPERVISOR, SystemRole.PLATFORM_ADMIN]}>
-      <div className="space-y-6 px-2 sm:px-4 pb-4">
-        <h1 className="text-2xl font-bold text-slate-800">Quản lý chấm công</h1>
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+      <div className="mx-auto w-full max-w-[1600px] space-y-6 pb-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Quản lý chấm công</h1>
+          <p className="mt-1 text-sm text-slate-600">Theo dõi lượt check-in, bảng công theo ngày và tổng hợp theo tháng.</p>
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
           <Tabs defaultActiveKey="1" items={items} />
         </div>
       </div>

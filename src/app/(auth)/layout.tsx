@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { GoogleOAuthProvider } from "@react-oauth/google";
+import { CalendarCheck2, MapPinned, ShieldCheck } from "lucide-react";
 
 /**
  * AuthLayout - Layout tối giản cho các trang xác thực (Login, Reset Password).
@@ -18,9 +19,10 @@ export default function AuthLayout({
           {/* Background Image / Pattern */}
           <div className="absolute inset-0 opacity-40">
             <Image
-              src="/BGR_LOGIN.png"
+              src="/BGR_LOGIN.jpg"
               alt="FAMS Background"
               fill
+              sizes="50vw"
               className="object-cover mix-blend-overlay"
               priority
             />
@@ -47,16 +49,18 @@ export default function AuthLayout({
               Tối ưu hóa quy trình chấm công, theo dõi vị trí và quản lý lịch trình làm việc. Đơn giản, minh bạch và hiệu quả cho doanh nghiệp của bạn.
             </p>
             
-            <div className="mt-12 flex items-center gap-4">
-              <div className="flex -space-x-3">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="h-10 w-10 rounded-full border-2 border-brand-800 bg-brand-200 overflow-hidden relative">
-                    <img src={`https://i.pravatar.cc/100?img=${i + 10}`} alt={`User ${i}`} className="h-full w-full object-cover" />
-                  </div>
-                ))}
+            <div className="mt-10 grid gap-3 text-sm text-slate-200">
+              <div className="flex items-center gap-3">
+                <CalendarCheck2 className="h-5 w-5 text-blue-300" aria-hidden="true" />
+                <span>Chấm công và theo dõi ca làm việc tập trung</span>
               </div>
-              <div className="text-sm font-medium text-brand-200">
-                Được tin dùng bởi <strong className="text-white">500+</strong> doanh nghiệp
+              <div className="flex items-center gap-3">
+                <MapPinned className="h-5 w-5 text-blue-300" aria-hidden="true" />
+                <span>Quản lý công trình và vùng chấm công minh bạch</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <ShieldCheck className="h-5 w-5 text-blue-300" aria-hidden="true" />
+                <span>Phân quyền theo vai trò và phạm vi công việc</span>
               </div>
             </div>
           </div>
@@ -70,7 +74,7 @@ export default function AuthLayout({
         </div>
 
         {/* Cột phải: Auth Form */}
-        <div className="flex w-full lg:w-1/2 flex-col justify-center px-6 py-12 lg:px-16 xl:px-24 bg-white relative">
+        <div className="flex min-h-dvh w-full flex-col justify-center overflow-y-auto bg-white px-5 py-10 sm:px-8 lg:w-1/2 lg:px-16 xl:px-24">
           <div className="mx-auto w-full max-w-[420px]">
             {/* Hiển thị logo trên mobile nếu cột trái bị ẩn */}
             <div className="mb-10 lg:hidden flex justify-center">

@@ -1,5 +1,5 @@
 "use client";
-import { getDashboardRoute } from "@/utils/route.util";
+import { resolvePostLoginRoute } from "@/utils/route.util";
 
 import { useSearchParams, useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
@@ -124,7 +124,7 @@ function AcceptInviteForm() {
 
         setAuth(authUser, result.accessToken, result.refreshToken || "");
         message.success("Chấp nhận lời mời thành công! Đang chuyển hướng...");
-        router.push(getDashboardRoute(authUser?.role));
+        router.push(resolvePostLoginRoute(authUser));
       } else {
         message.success("Chấp nhận lời mời thành công! Vui lòng đăng nhập.");
         router.push(ROUTES.LOGIN);
@@ -147,7 +147,7 @@ function AcceptInviteForm() {
     <div className="w-full max-w-md mx-auto bg-white/80 backdrop-blur-xl p-8 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/20 transition-all duration-300">
       <div className="text-center mb-8">
         <div className="mx-auto w-16 h-16 bg-brand-600 rounded-xl flex items-center justify-center mb-4 shadow-lg shadow-brand-500/30">
-          <span className="text-3xl font-black text-white select-none tracking-tighter">Q</span>
+          <span className="text-3xl font-black text-white select-none tracking-tighter">F</span>
         </div>
         <h1 className="text-2xl font-bold text-slate-800 mb-2">
           Gia nhập {validationData?.tenantName || APP_NAME}
@@ -200,7 +200,7 @@ function AcceptInviteForm() {
 
 export default function AcceptInvitePage() {
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-slate-50">
+    <div className="relative flex w-full items-center justify-center overflow-hidden py-6">
       {/* Background decoration */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-brand-400/20 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-400/20 blur-[120px] pointer-events-none" />

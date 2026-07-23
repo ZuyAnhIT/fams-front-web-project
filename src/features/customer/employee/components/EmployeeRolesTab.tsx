@@ -10,8 +10,7 @@ import { BaseButton, BaseConfirmModal } from "@/components/ui";
 import GlassCard from "@/components/ui/GlassCard";
 import { AssignRoleModal } from "@/features/admin/role-permission/components/AssignRoleModal";
 import { useRevokeRoleMutation } from "@/features/admin/role-permission/hooks/use-role-permission";
-import type { EmployeeDetailResponse } from "../types/employee.type";
-import type { UserRoleResponse } from "@/features/admin/role-permission/types";
+import type { EmployeeDetailResponse, EmployeeRoleAssignment } from "../types/employee.type";
 
 interface EmployeeRolesTabProps {
   employee: EmployeeDetailResponse;
@@ -50,21 +49,23 @@ export default function EmployeeRolesTab({ employee }: EmployeeRolesTabProps) {
       title: "Tên Role",
       dataIndex: "roleName",
       key: "roleName",
-      sorter: (a: UserRoleResponse, b: UserRoleResponse) => a.roleName.localeCompare(b.roleName),
-      render: (text: string) => <span className="font-semibold text-brand-900">{text}</span>,
+      sorter: (a: EmployeeRoleAssignment, b: EmployeeRoleAssignment) =>
+        (a.roleName ?? "").localeCompare(b.roleName ?? ""),
+      render: (text?: string) => <span className="font-semibold text-brand-900">{text || "—"}</span>,
     },
     {
       title: "Ngày gán",
-      dataIndex: "createdAt",
-      key: "createdAt",
-      sorter: (a: UserRoleResponse, b: UserRoleResponse) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-      render: (dateStr: string) => format(new Date(dateStr), "dd/MM/yyyy HH:mm"),
+      dataIndex: "assignedAt",
+      key: "assignedAt",
+      sorter: (a: EmployeeRoleAssignment, b: EmployeeRoleAssignment) =>
+        new Date(a.assignedAt ?? 0).getTime() - new Date(b.assignedAt ?? 0).getTime(),
+      render: (dateStr?: string) => dateStr ? format(new Date(dateStr), "dd/MM/yyyy HH:mm") : "—",
     },
     {
       title: "Thao tác",
       key: "actions",
       width: 120,
-      render: (_: any, record: UserRoleResponse) => (
+      render: (_: unknown, record: EmployeeRoleAssignment) => (
         <BaseButton
           size="small"
           danger
