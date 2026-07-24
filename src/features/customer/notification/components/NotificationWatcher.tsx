@@ -5,6 +5,7 @@ import { message } from "antd";
 import { Bell } from "lucide-react";
 import { notificationService } from "../services/notification.service";
 import { useNotificationStore } from "../stores/notification.store";
+import { useAuthStore } from "@/stores/auth.store";
 
 const POLL_INTERVAL_MS = 30000;
 
@@ -12,10 +13,19 @@ export default function NotificationWatcher() {
   const [api, contextHolder] = message.useMessage();
   const unreadCount = useNotificationStore((state) => state.unreadCount);
   const setUnreadCount = useNotificationStore((state) => state.setUnreadCount);
+  const tenantId = useAuthStore((state) => state.user?.tenantId);
   const lastSeenIdRef = useRef<string | null>(null);
   const initializedRef = useRef(false);
 
   useEffect(() => {
+    // Tài khoản mới chưa thuộc công ty sẽ ở /customer/select-company. Không poll
+    // endpoint tenant-scoped cho đến khi người dùng có active tenant.
+    if (!tenantId) {
+      initializedRef.current = false;
+      lastSeenIdRef.current = null;
+      return;
+    }
+
     const checkNewNotifications = async () => {
       try {
         const data = await notificationService.getNotifications({
@@ -79,7 +89,7 @@ export default function NotificationWatcher() {
     const interval = setInterval(checkNewNotifications, POLL_INTERVAL_MS);
 
     return () => clearInterval(interval);
-  }, [api, setUnreadCount, unreadCount]);
+  }, [api, setUnreadCount, tenantId, unreadCount]);
 
   return contextHolder;
 }

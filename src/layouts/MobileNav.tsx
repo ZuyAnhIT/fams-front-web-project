@@ -14,7 +14,7 @@ export default function MobileNav({ open, onClose }: MobileNavProps) {
       open={open}
       onClose={onClose}
       placement="left"
-      width="min(320px, 88vw)"
+      size="min(320px, 88vw)"
       closable={false}
       styles={{ body: { padding: 0 }, wrapper: { boxShadow: "none" } }}
       className="lg:hidden"

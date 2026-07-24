@@ -5,8 +5,6 @@ import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { message, Input } from "antd";
-import GlassCard from "@/components/ui/GlassCard";
-import FormInput from "@/components/forms/FormInput";
 import BaseButton from "@/components/ui/BaseButton";
 import { useSetupTotp, useVerifyTotp, useDisableTotp } from "@/features/customer/auth/hooks/use-auth";
 
@@ -59,7 +57,7 @@ export default function TotpSettingForm() {
       message.success("Bảo mật 2 lớp đã được bật thành công!");
       setSetupData(null); // Đóng form setup
       reset();
-    } catch (e: unknown) {
+    } catch {
       message.error("Mã xác thực không chính xác. Vui lòng thử lại.");
     }
   };
@@ -68,7 +66,7 @@ export default function TotpSettingForm() {
     try {
       await disableTotp();
       message.success("Đã tắt Bảo mật 2 lớp!");
-    } catch (e: unknown) {
+    } catch {
       message.error("Tắt thất bại hoặc TOTP chưa được bật.");
     }
   };

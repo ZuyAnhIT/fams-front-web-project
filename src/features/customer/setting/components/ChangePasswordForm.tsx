@@ -3,14 +3,19 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { App } from "antd";
-import GlassCard from "@/components/ui/GlassCard";
+import { useRouter } from "next/navigation";
+import { isAxiosError } from "axios";
 import FormInput from "@/components/forms/FormInput";
 import BaseButton from "@/components/ui/BaseButton";
 import { useChangePassword } from "@/features/customer/auth/hooks/use-auth";
 import { changePasswordSchema, type ChangePasswordFormData } from "../schemas/setting.schema";
+import { useAuthStore } from "@/stores/auth.store";
+import { ROUTES } from "@/constants/routes";
 
 export default function ChangePasswordForm() {
   const { message } = App.useApp();
+  const router = useRouter();
+  const logout = useAuthStore((state) => state.logout);
   const { mutateAsync: changePassword, isPending } = useChangePassword();
 
   const {
@@ -33,12 +38,15 @@ export default function ChangePasswordForm() {
       await changePassword({
         currentPassword: data.currentPassword,
         newPassword: data.newPassword,
-        confirmPassword: data.confirmPassword,
       });
-      message.success("Đổi mật khẩu thành công!");
+      message.success("Đổi mật khẩu thành công. Vui lòng đăng nhập lại.");
       reset();
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.message || "Đổi mật khẩu thất bại. Mật khẩu hiện tại có thể không đúng.";
+      logout();
+      router.replace(ROUTES.LOGIN);
+    } catch (error: unknown) {
+      const errorMessage = isAxiosError(error)
+        ? error.response?.data?.userMessage || error.response?.data?.message || "Đổi mật khẩu thất bại. Mật khẩu hiện tại có thể không đúng."
+        : "Đổi mật khẩu thất bại. Mật khẩu hiện tại có thể không đúng.";
       message.error(errorMessage);
     }
   };

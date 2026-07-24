@@ -72,7 +72,7 @@ export default function Header({ onOpenMenu }: HeaderProps) {
     const refreshToken = authTokenService.getRefreshToken();
     if (refreshToken) {
       try {
-        await logoutMutation.mutateAsync({ refreshToken, deviceId: "unknown" });
+        await logoutMutation.mutateAsync({ refreshToken });
       } catch {
         // Luôn xóa phiên cục bộ để người dùng không bị mắc kẹt khi backend lỗi.
       }

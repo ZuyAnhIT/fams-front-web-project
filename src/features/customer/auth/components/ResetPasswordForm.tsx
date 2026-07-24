@@ -4,9 +4,10 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { App } from "antd";
 import { CheckCircleOutlined, WarningOutlined } from "@ant-design/icons";
+import { isAxiosError } from "axios";
 import FormInput from "@/components/forms/FormInput";
 import BaseButton from "@/components/ui/BaseButton";
 import { resetPasswordSchema, type ResetPasswordFormData } from "@/features/customer/auth/schemas/auth.schema";
@@ -14,7 +15,6 @@ import { useResetPassword } from "@/features/customer/auth/hooks/use-auth";
 import { ROUTES } from "@/constants/routes";
 
 export default function ResetPasswordForm() {
-  const router = useRouter();
   const { message } = App.useApp();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
@@ -83,11 +83,12 @@ export default function ResetPasswordForm() {
       await resetPasswordMutation({
         token,
         newPassword: data.newPassword,
-        confirmPassword: data.confirmPassword,
       });
       setIsSuccess(true);
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.message || "Đã có lỗi xảy ra. Token có thể đã hết hạn.";
+    } catch (error: unknown) {
+      const errorMessage = isAxiosError(error)
+        ? error.response?.data?.userMessage || error.response?.data?.message || "Đã có lỗi xảy ra. Token có thể đã hết hạn."
+        : "Đã có lỗi xảy ra. Token có thể đã hết hạn.";
       message.error(errorMessage);
     }
   };

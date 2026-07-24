@@ -6,6 +6,8 @@ import {
   type VerifyOtpPayload,
   type LoginResponse,
   type RegisterResponse,
+  type SendRegistrationOtpPayload,
+  type ResendVerificationPayload,
   type ForgotPasswordPayload,
   type GoogleLoginPayload,
   type UserProfile,
@@ -16,7 +18,11 @@ import {
   type LoginTotpPayload,
   type ResetPasswordPayload,
   type LogoutPayload,
-  type SwitchTenantPayload
+  type SwitchTenantPayload,
+  type RequestEmailChangePayload,
+  type RequestPhoneChangePayload,
+  type ConfirmPhoneChangePayload,
+  type AuthSession,
 } from "../types/auth.type";
 
 export const useLogin = () => {
@@ -34,6 +40,18 @@ export const useLoginTotp = () => {
 export const useRegister = () => {
   return useMutation<RegisterResponse, Error, RegisterPayload>({
     mutationFn: (payload) => authService.register(payload),
+  });
+};
+
+export const useSendRegistrationOtp = () => {
+  return useMutation<void, Error, SendRegistrationOtpPayload>({
+    mutationFn: (payload) => authService.sendRegistrationOtp(payload),
+  });
+};
+
+export const useResendVerification = () => {
+  return useMutation<void, Error, ResendVerificationPayload>({
+    mutationFn: (payload) => authService.resendVerification(payload),
   });
 };
 
@@ -127,3 +145,39 @@ export const useUploadAvatar = () => {
   });
 };
 
+export const useDeleteAvatar = () => useMutation<UserProfile, Error, void>({
+  mutationFn: () => authService.deleteAvatar(),
+});
+
+export const useRequestEmailChange = () => useMutation<void, Error, RequestEmailChangePayload>({
+  mutationFn: (payload) => authService.requestEmailChange(payload),
+});
+
+export const useRequestPhoneChange = () => useMutation<void, Error, RequestPhoneChangePayload>({
+  mutationFn: (payload) => authService.requestPhoneChange(payload),
+});
+
+export const useConfirmPhoneChange = () => useMutation<UserProfile, Error, ConfirmPhoneChangePayload>({
+  mutationFn: (payload) => authService.confirmPhoneChange(payload),
+});
+
+export const useLinkGoogle = () => useMutation<void, Error, string>({
+  mutationFn: (idToken) => authService.linkGoogle(idToken),
+});
+
+export const useUnlinkGoogle = () => useMutation<void, Error, void>({
+  mutationFn: () => authService.unlinkGoogle(),
+});
+
+export const useSessions = () => useQuery<AuthSession[], Error>({
+  queryKey: ["auth", "sessions"],
+  queryFn: () => authService.getSessions(),
+});
+
+export const useLogoutSession = () => useMutation<void, Error, string>({
+  mutationFn: (sessionId) => authService.logoutSession(sessionId),
+});
+
+export const useLogoutOthers = () => useMutation<void, Error, void>({
+  mutationFn: () => authService.logoutOthers(),
+});

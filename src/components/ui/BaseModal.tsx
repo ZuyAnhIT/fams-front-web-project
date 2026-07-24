@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Modal, type ModalProps } from "antd";
-import BaseButton from "./BaseButton";
+import BaseButton, { type BaseButtonProps } from "./BaseButton";
 
 export interface BaseModalProps extends Omit<ModalProps, "onOk"> {
   title: React.ReactNode;
@@ -16,8 +16,8 @@ export interface BaseModalProps extends Omit<ModalProps, "onOk"> {
   confirmText?: string;
   cancelText?: string;
   confirmLoading?: boolean;
-  confirmButtonProps?: Record<string, any>;
-  cancelButtonProps?: Record<string, any>;
+  confirmButtonProps?: BaseButtonProps;
+  cancelButtonProps?: BaseButtonProps;
   hideFooter?: boolean;
 }
 
@@ -65,7 +65,7 @@ export default function BaseModal({
       open={isOpen}
       onCancel={onClose}
       footer={footer !== undefined ? footer : defaultFooter}
-      destroyOnClose
+      destroyOnHidden
       classNames={{
         header: "border-b border-slate-100 pb-3 mb-4",
         body: "overflow-y-auto max-h-[65vh] scrollbar-thin scrollbar-thumb-slate-200 pr-1",

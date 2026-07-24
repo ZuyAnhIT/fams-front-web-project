@@ -4,6 +4,8 @@ import {
   type LoginResponse,
   type RegisterPayload,
   type RegisterResponse,
+  type SendRegistrationOtpPayload,
+  type ResendVerificationPayload,
   type VerifyOtpPayload,
   type ForgotPasswordPayload,
   type ResetPasswordPayload,
@@ -15,7 +17,11 @@ import {
   type TotpVerifyPayload,
   type LoginTotpPayload,
   type LogoutPayload,
-  type SwitchTenantPayload
+  type SwitchTenantPayload,
+  type RequestEmailChangePayload,
+  type RequestPhoneChangePayload,
+  type ConfirmPhoneChangePayload,
+  type AuthSession,
 } from "../types/auth.type";
 import { type ApiResponse } from "@/types/api";
 
@@ -28,8 +34,18 @@ export const authService = {
     return response.data.data;
   },
 
+  /** Gửi OTP đăng ký do backend quản lý (không phải Firebase Phone Auth). */
+  async sendRegistrationOtp(payload: SendRegistrationOtpPayload): Promise<void> {
+    await apiClient.post("/auth/register/send-otp", payload);
+  },
+
+  /** Gửi lại email xác minh với response trung tính để chống dò tài khoản. */
+  async resendVerification(payload: ResendVerificationPayload): Promise<void> {
+    await apiClient.post("/auth/resend-verification", payload);
+  },
+
   /**
-   * Đăng nhập tài khoản bằng Email + Mật khẩu
+   * Đăng nhập bằng email hoặc số điện thoại + mật khẩu.
    */
   async login(payload: LoginPayload): Promise<LoginResponse> {
     const response = await apiClient.post<ApiResponse<LoginResponse>>("/auth/login", payload);
@@ -159,5 +175,44 @@ export const authService = {
       headers: { "Content-Type": "multipart/form-data" },
     });
     return response.data.data;
-  }
+  },
+
+  async deleteAvatar(): Promise<UserProfile> {
+    const response = await apiClient.delete<ApiResponse<UserProfile>>("/auth/profile/avatar");
+    return response.data.data;
+  },
+
+  async requestEmailChange(payload: RequestEmailChangePayload): Promise<void> {
+    await apiClient.post("/auth/profile/email/request-change", payload);
+  },
+
+  async requestPhoneChange(payload: RequestPhoneChangePayload): Promise<void> {
+    await apiClient.post("/auth/profile/phone/request-change", payload);
+  },
+
+  async confirmPhoneChange(payload: ConfirmPhoneChangePayload): Promise<UserProfile> {
+    const response = await apiClient.post<ApiResponse<UserProfile>>("/auth/profile/phone/confirm-change", payload);
+    return response.data.data;
+  },
+
+  async linkGoogle(idToken: string): Promise<void> {
+    await apiClient.post("/auth/link-google", { idToken });
+  },
+
+  async unlinkGoogle(): Promise<void> {
+    await apiClient.post("/auth/unlink-google");
+  },
+
+  async getSessions(): Promise<AuthSession[]> {
+    const response = await apiClient.get<ApiResponse<AuthSession[]>>("/auth/sessions");
+    return response.data.data;
+  },
+
+  async logoutSession(sessionId: string): Promise<void> {
+    await apiClient.delete(`/auth/sessions/${encodeURIComponent(sessionId)}`);
+  },
+
+  async logoutOthers(): Promise<void> {
+    await apiClient.post("/auth/logout/others");
+  },
 };
