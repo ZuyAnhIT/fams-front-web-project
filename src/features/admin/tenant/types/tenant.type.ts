@@ -8,13 +8,56 @@ export interface Tenant {
   countryCode?: string | null;
   timezone: string;
   locale: string;
-  currency: string;
+  currencyCode?: string | null;
   logoUrl?: string | null;
   ownerId?: string | null;
   ownerName?: string | null;
   ownerEmail?: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export type TenantStatus = "active" | "inactive" | "suspended" | "trial" | "cancelled";
+
+export type TenantSortField = "name" | "slug" | "status" | "createdAt" | "updatedAt";
+
+export interface TenantListParams {
+  page?: number;
+  size?: number;
+  search?: string;
+  status?: string;
+  industry?: string;
+  countryCode?: string;
+  sortBy?: TenantSortField;
+  sortDir?: "asc" | "desc";
+}
+
+export interface TenantOperationalDetail {
+  id: string;
+  name: string;
+  slug: string;
+  domain?: string | null;
+  logoUrl?: string | null;
+  industry?: string | null;
+  countryCode?: string | null;
+  timezone?: string | null;
+  locale?: string | null;
+  status: TenantStatus;
+  ownerId: string;
+  createdAt: string;
+  planName?: string | null;
+  planDisplayName?: string | null;
+  subscriptionStatus?: "TRIAL" | "ACTIVE" | "EXPIRED" | "CANCELLED" | null;
+  billingCycle?: "MONTHLY" | "YEARLY" | null;
+  subscriptionStartedAt?: string | null;
+  subscriptionExpiresAt?: string | null;
+  maxEmployees?: number | null;
+  maxSites?: number | null;
+  maxStorageGb?: number | null;
+  maxRandomChecksPerMonth?: number | null;
+  currentEmployeeCount: number;
+  currentSiteCount: number;
+  currentMonthRandomChecks: number;
 }
 
 export interface TenantSettingsResponse {
@@ -43,9 +86,10 @@ export interface CreateTenantPayload {
   countryCode?: string;
   timezone?: string;
   locale?: string;
-  /** Issue #12 (docs/issues/ISSUES.md): invite someone else to be TENANT_ADMIN of the new
-   *  company. The creator still keeps TENANT_ADMIN too — this never leaves a company unowned. */
+  /** Chỉ dùng ở chế độ platform provisioning. */
+  ownerUserId?: string;
   ownerEmail?: string;
+  planId?: string;
   currencyCode?: string;
 }
 

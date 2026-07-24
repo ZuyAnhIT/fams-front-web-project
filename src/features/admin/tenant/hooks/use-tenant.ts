@@ -6,14 +6,22 @@ import type {
   UpdateTenantSettingsPayload,
   CreateIpWhitelistPayload,
   UpdateIpWhitelistPayload,
+  TenantListParams,
 } from "../types/tenant.type";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const useTenants = (params: any, enabled: boolean = true) => {
+export const useTenants = (params: TenantListParams, enabled: boolean = true) => {
   return useQuery({
     queryKey: ["tenants", params],
     queryFn: () => tenantService.listTenants(params),
     enabled,
+  });
+};
+
+export const useTenantDetail = (id: string, enabled: boolean = true) => {
+  return useQuery({
+    queryKey: ["tenant-detail", id],
+    queryFn: () => tenantService.getTenantDetail(id),
+    enabled: enabled && Boolean(id),
   });
 };
 
@@ -23,6 +31,7 @@ export const useCreateTenant = () => {
     mutationFn: (payload: CreateTenantPayload) => tenantService.createTenant(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tenants"] });
+      queryClient.invalidateQueries({ queryKey: ["tenant-detail"] });
     },
   });
 };
@@ -34,6 +43,7 @@ export const useUpdateTenant = () => {
       tenantService.updateTenant(payload, id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tenants"] });
+      queryClient.invalidateQueries({ queryKey: ["tenant-detail"] });
     },
   });
 };
@@ -103,6 +113,7 @@ export const useSuspendTenant = () => {
     mutationFn: (id: string) => tenantService.suspendTenant(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tenants"] });
+      queryClient.invalidateQueries({ queryKey: ["tenant-detail"] });
     },
   });
 };

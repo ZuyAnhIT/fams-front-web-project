@@ -21,10 +21,15 @@ import { TENANT_STATUS } from "@/constants/status";
 
 import { useRouter } from "next/navigation";
 import { useTenantStore } from "@/stores/tenant.store";
+import { useAuthStore } from "@/stores/auth.store";
+import type { TenantListParams } from "../types/tenant.type";
 
 export default function TenantListPage() {
   const router = useRouter();
   const setActiveTenant = useTenantStore((state) => state.setActiveTenant);
+  const user = useAuthStore((authState) => authState.user);
+  const isPlatformAdmin = user?.role === SystemRole.PLATFORM_ADMIN;
+  const canCreate = isPlatformAdmin || user?.permissions?.includes("tenants:create");
   const { state, setPagination } = usePagination(20);
   const { mutate: suspendTenant, isPending: isSuspending } = useSuspendTenant();
   const { mutate: reactivateTenant, isPending: isReactivating } = useReactivateTenant();
@@ -43,7 +48,11 @@ export default function TenantListPage() {
   }, [debouncedSearch, state.search, setPagination]);
 
   // Handle API error gently (e.g. if user is not Platform Admin)
-  const { data: pageData, isLoading, error } = useTenants(state);
+  const listParams: TenantListParams = {
+    ...state,
+    sortBy: state.sortBy as TenantListParams["sortBy"],
+  };
+  const { data: pageData, isLoading, error } = useTenants(listParams);
 
   if (error && (error as { response?: { status?: number } }).response?.status === 403) {
     return (
@@ -53,7 +62,7 @@ export default function TenantListPage() {
         </div>
         <h2 className="text-2xl font-bold text-slate-900 mb-3 tracking-tight">Không có quyền truy cập</h2>
         <p className="text-slate-500 max-w-md leading-relaxed font-medium">
-          Chức năng Quản lý danh sách công ty (Tenants) chỉ dành cho Platform Admin.
+          Tài khoản cần quyền <code>tenants:list</code> để xem danh sách công ty.
           Vui lòng liên hệ quản trị viên hệ thống nếu bạn cần truy cập.
         </p>
       </div>
@@ -144,7 +153,7 @@ export default function TenantListPage() {
       }
     ];
 
-    if (record.status !== 'cancelled') {
+    if (isPlatformAdmin && record.status !== 'cancelled') {
       items.push({ type: 'divider' });
       if (record.status === 'suspended') {
         items.push({
@@ -258,7 +267,7 @@ export default function TenantListPage() {
   ];
 
   return (
-    <RoleGuard allowedRoles={[SystemRole.PLATFORM_ADMIN]}>
+    <RoleGuard allowedRoles={[SystemRole.PLATFORM_ADMIN]} allowedPermissions={["tenants:list"]}>
       <div className="space-y-6">
         <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           <div>
@@ -267,14 +276,16 @@ export default function TenantListPage() {
               Quản lý toàn bộ công ty (tenants) đang sử dụng hệ thống
             </p>
           </div>
-          <BaseButton
-            type="primary"
-            icon={<Plus className="h-4.5 w-4.5" />}
-            onClick={() => setIsCreateModalOpen(true)}
-            className="!bg-blue-600 !text-white hover:!bg-blue-700 !border-0 shadow-lg shadow-blue-500/25 h-10 px-5 rounded-xl font-bold hover:-translate-y-0.5 transition-all flex items-center gap-2"
-          >
-            Thêm mới
-          </BaseButton>
+          {canCreate && (
+            <BaseButton
+              type="primary"
+              icon={<Plus className="h-4.5 w-4.5" />}
+              onClick={() => setIsCreateModalOpen(true)}
+              className="!bg-blue-600 !text-white hover:!bg-blue-700 !border-0 shadow-lg shadow-blue-500/25 h-10 px-5 rounded-xl font-bold hover:-translate-y-0.5 transition-all flex items-center gap-2"
+            >
+              Cấp phát công ty
+            </BaseButton>
+          )}
         </div>
         {/* Data Table Wrapper */}
         <ContentCard noPadding>
@@ -285,7 +296,23 @@ export default function TenantListPage() {
             searchPlaceholder="Tìm kiếm theo tên công ty, đường dẫn, tên miền,..."
             searchAriaLabel="Tìm công ty theo tên, đường dẫn hoặc tên miền"
             filters={
-              <BaseSelect
+              <div className="flex flex-wrap gap-2">
+                <input
+                  aria-label="Lọc theo lĩnh vực"
+                  value={state.industry || ""}
+                  onChange={(event) => setPagination({ industry: event.target.value || undefined })}
+                  placeholder="Lĩnh vực"
+                  className="h-8 w-36 rounded-md border border-slate-300 px-3 text-sm"
+                />
+                <input
+                  aria-label="Lọc theo mã quốc gia"
+                  value={state.countryCode || ""}
+                  onChange={(event) => setPagination({ countryCode: event.target.value.toUpperCase() || undefined })}
+                  placeholder="Quốc gia (VN)"
+                  maxLength={2}
+                  className="h-8 w-36 rounded-md border border-slate-300 px-3 text-sm uppercase"
+                />
+                <BaseSelect
                 aria-label="Lọc công ty theo trạng thái"
                 placeholder="Trạng thái"
                 allowClear
@@ -299,7 +326,8 @@ export default function TenantListPage() {
                     value: key,
                   }))
                 ]}
-              />
+                />
+              </div>
             }
           />
           <div className="p-5">
@@ -315,9 +343,9 @@ export default function TenantListPage() {
               pageSize={state.size}
               onPageChange={(page, size) => setPagination({ page, size })}
               onChange={(_, __, sorter) => {
-                if (!Array.isArray(sorter) && sorter.field) {
+                if (!Array.isArray(sorter) && (sorter.field || sorter.columnKey)) {
                   setPagination({
-                    sortBy: sorter.field as string,
+                    sortBy: (sorter.field || sorter.columnKey) as string,
                     sortDir: sorter.order === "ascend" ? "asc" : sorter.order === "descend" ? "desc" : undefined,
                   });
                 } else {

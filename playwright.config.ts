@@ -1,5 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
 
+const port = process.env.PLAYWRIGHT_PORT || "3000";
+const baseURL = `http://localhost:${port}`;
+
 export default defineConfig({
   testDir: "./tests/e2e",
   fullyParallel: false,
@@ -8,7 +11,7 @@ export default defineConfig({
   reporter: [["line"]],
   outputDir: "/tmp/fams-playwright-results",
   use: {
-    baseURL: "http://localhost:3000",
+    baseURL,
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
   },
@@ -19,8 +22,8 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "npm run build -- --webpack && npm run start",
-    url: "http://localhost:3000/api/health",
+    command: `npm run build -- --webpack && npm run start -- -p ${port}`,
+    url: `${baseURL}/api/health`,
     reuseExistingServer: true,
     timeout: 120_000,
   },

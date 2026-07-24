@@ -50,7 +50,7 @@ export default function CreateCompanyForm({ onCreated }: CreateCompanyFormProps)
     formState: { errors },
   } = useForm<CreateCompanyFormData>({
     resolver: zodResolver(createCompanySchema),
-    defaultValues: { name: "", slug: "", industry: "", ownerEmail: "" },
+    defaultValues: { name: "", slug: "", industry: "" },
   });
 
   const nameValue = watch("name");
@@ -133,15 +133,6 @@ export default function CreateCompanyForm({ onCreated }: CreateCompanyFormProps)
         label="Lĩnh vực hoạt động"
         placeholder="Ví dụ: Xây dựng, Sản xuất, Logistics..."
         error={errors.industry}
-      />
-
-      <FormInput
-        control={control}
-        name="ownerEmail"
-        label="Mời người khác làm chủ công ty (tùy chọn)"
-        placeholder="Ví dụ: ceo@abc.com"
-        error={errors.ownerEmail}
-        helpText="Để trống nếu bạn là người quản lý công ty này. Nếu điền, người được mời sẽ nhận email lời mời; bạn vẫn giữ quyền quản trị."
       />
 
       <BaseButton htmlType="submit" loading={isPending} disabled={!nameValue} className="w-full" size="large">

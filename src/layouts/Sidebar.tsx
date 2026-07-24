@@ -18,6 +18,7 @@ interface SidebarProps {
 
 const ROLE_LABELS: Record<string, string> = {
   PLATFORM_ADMIN: "Quản trị nền tảng",
+  PLATFORM_STAFF: "Nhân viên nền tảng",
   TENANT_ADMIN: "Quản trị công ty",
   HR_MANAGER: "Quản lý nhân sự",
   SITE_SUPERVISOR: "Giám sát công trình",
@@ -122,9 +123,13 @@ export default function Sidebar({ variant = "desktop", onNavigate }: SidebarProp
       )}>
         {SIDEBAR_MENU.filter((item) => {
           // Nếu item không yêu cầu role cụ thể, ai cũng xem được
-          if (!item.allowedRoles || item.allowedRoles.length === 0) return true;
+          if (
+            (!item.allowedRoles || item.allowedRoles.length === 0)
+            && (!item.allowedPermissions || item.allowedPermissions.length === 0)
+          ) return true;
           // Nếu user hiện tại có role khớp với mảng allowedRoles
-          if (user?.role && item.allowedRoles.includes(user.role)) return true;
+          if (user?.role && item.allowedRoles?.includes(user.role)) return true;
+          if (user?.permissions?.some((permission) => item.allowedPermissions?.includes(permission))) return true;
           return false;
         }).map((item) => {
           const IconComponent = Icons[item.icon] as React.ComponentType<{ className?: string }>;

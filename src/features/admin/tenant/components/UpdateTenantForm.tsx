@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { message } from "antd";
-import { Save, Building2, Globe, Settings2, Image as ImageIcon } from "lucide-react";
+import { Save, Building2, Globe, Settings2 } from "lucide-react";
 import FormInput from "@/components/forms/FormInput";
 import BaseButton from "@/components/ui/BaseButton";
 import { useUpdateTenant } from "../hooks/use-tenant";
@@ -13,7 +13,15 @@ import type { Tenant } from "../types/tenant.type";
 import { useTenantStore } from "@/stores/tenant.store";
 import ContentCard from "@/components/shared/layout/ContentCard";
 
-export default function UpdateTenantForm({ tenant, tenantId }: { tenant?: Tenant | null, tenantId?: string }) {
+export default function UpdateTenantForm({
+  tenant,
+  tenantId,
+  tenantName,
+}: {
+  tenant?: Tenant | null;
+  tenantId?: string;
+  tenantName?: string;
+}) {
   const { mutateAsync: updateTenant, isPending } = useUpdateTenant();
   const setActiveTenant = useTenantStore((state) => state.setActiveTenant);
 
@@ -21,46 +29,49 @@ export default function UpdateTenantForm({ tenant, tenantId }: { tenant?: Tenant
     control,
     handleSubmit,
     reset,
-    formState: { errors, isDirty },
+    formState: { errors, isDirty, dirtyFields },
   } = useForm<UpdateTenantFormData>({
     resolver: zodResolver(updateTenantSchema),
     defaultValues: {
-      name: tenant?.name || "",
+      name: tenant?.name || tenantName || "",
       logoUrl: tenant?.logoUrl || "",
       domain: tenant?.domain || "",
       industry: tenant?.industry || "",
       countryCode: tenant?.countryCode || "",
       timezone: tenant?.timezone || "UTC",
       locale: tenant?.locale || "en",
-      currencyCode: tenant?.currency || "USD",
+      currencyCode: tenant?.currencyCode || "",
     },
   });
 
   useEffect(() => {
     reset({
-      name: tenant?.name || "",
+      name: tenant?.name || tenantName || "",
       logoUrl: tenant?.logoUrl || "",
       domain: tenant?.domain || "",
       industry: tenant?.industry || "",
       countryCode: tenant?.countryCode || "",
       timezone: tenant?.timezone || "UTC",
       locale: tenant?.locale || "en",
-      currencyCode: tenant?.currency || "USD",
+      currencyCode: tenant?.currencyCode || "",
     });
-  }, [tenant, reset]);
+  }, [tenant, tenantName, reset]);
 
   const onSubmit = async (data: UpdateTenantFormData) => {
     try {
-      // Remove empty string fields so they don't fail backend validation (like @Size for countryCode)
       const payload = Object.fromEntries(
-        Object.entries(data).filter(([_, v]) => v !== "")
+        Object.entries(data).filter(([key, value]) => {
+          if (!dirtyFields[key as keyof UpdateTenantFormData]) return false;
+          // Backend deliberately accepts an empty domain/logoUrl to clear those fields.
+          return value !== "" || key === "domain" || key === "logoUrl";
+        }),
       ) as UpdateTenantFormData;
 
       const targetId = tenant?.id || tenantId;
       const updatedTenant = await updateTenant({ payload, id: targetId });
       message.success("Cập nhật thông tin công ty thành công");
       // Cập nhật lại store để UI ở Header tự động ăn theo
-      setActiveTenant(updatedTenant);
+      if (tenant) setActiveTenant(updatedTenant);
       reset(data); // Đưa isDirty về false
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };

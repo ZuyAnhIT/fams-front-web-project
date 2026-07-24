@@ -11,14 +11,18 @@ import { forgotPasswordSchema, type ForgotPasswordFormData } from "@/features/cu
 import { useForgotPassword } from "@/features/customer/auth/hooks/use-auth";
 import { ROUTES } from "@/constants/routes";
 import { APP_NAME } from "@/constants/app";
+import { useSearchParams } from "next/navigation";
+import { useEffect } from "react";
 
 export default function ForgotPasswordForm() {
+  const searchParams = useSearchParams();
   const [isSuccess, setIsSuccess] = useState(false);
   const [submittedEmail, setSubmittedEmail] = useState("");
 
   const {
     control,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<ForgotPasswordFormData>({
     resolver: zodResolver(forgotPasswordSchema),
@@ -29,6 +33,11 @@ export default function ForgotPasswordForm() {
   });
 
   const { mutateAsync: forgotPasswordMutation } = useForgotPassword();
+
+  useEffect(() => {
+    const email = searchParams.get("email");
+    if (email) setValue("email", email);
+  }, [searchParams, setValue]);
 
   const onSubmit = async (data: ForgotPasswordFormData) => {
     try {
