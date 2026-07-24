@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { message, Avatar } from "antd";
-import { Camera } from "lucide-react";
+import { Camera, Trash2 } from "lucide-react";
 import dayjs from "dayjs";
 import FormInput from "@/components/forms/FormInput";
 import FormSelect from "@/components/forms/FormSelect";
@@ -12,7 +12,7 @@ import FormTextArea from "@/components/forms/FormTextArea";
 import FormDatePicker from "@/components/forms/FormDatePicker";
 import BaseButton from "@/components/ui/BaseButton";
 import { useAuthStore } from "@/stores/auth.store";
-import { useUpdateProfile, useUploadAvatar } from "@/features/customer/auth/hooks/use-auth";
+import { useDeleteAvatar, useUpdateProfile, useUploadAvatar } from "@/features/customer/auth/hooks/use-auth";
 import type { UserProfile } from "@/features/customer/auth/types/auth.type";
 import { profileSchema, type ProfileFormData } from "../schemas/setting.schema";
 
@@ -26,9 +26,10 @@ const AVATAR_ACCEPT = "image/jpeg,image/png,image/webp";
 const AVATAR_MAX_MB = 5;
 
 export default function ProfileSettingForm() {
-  const { user, setAuth, accessToken } = useAuthStore();
+  const { user, updateUser } = useAuthStore();
   const { mutateAsync: updateProfile, isPending } = useUpdateProfile();
   const { mutateAsync: uploadAvatar, isPending: isUploadingAvatar } = useUploadAvatar();
+  const { mutateAsync: deleteAvatar, isPending: isDeletingAvatar } = useDeleteAvatar();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
@@ -41,7 +42,6 @@ export default function ProfileSettingForm() {
     resolver: zodResolver(profileSchema),
     defaultValues: {
       displayName: "",
-      phone: "",
       dateOfBirth: null,
       hometown: "",
       gender: "",
@@ -53,7 +53,6 @@ export default function ProfileSettingForm() {
     if (user) {
       reset({
         displayName: user.displayName || user.email || "",
-        phone: user.phone || "",
         dateOfBirth: user.dateOfBirth ? dayjs(user.dateOfBirth) : null,
         hometown: user.hometown || "",
         gender: user.gender || "",
@@ -63,19 +62,13 @@ export default function ProfileSettingForm() {
   }, [user, reset]);
 
   const persistUser = (updatedUser: UserProfile) => {
-    const currentRefreshToken = localStorage.getItem("fams_refresh_token") || "";
-    setAuth(
-      { ...user, ...updatedUser, role: user?.role, tenantId: user?.tenantId },
-      accessToken as string,
-      currentRefreshToken
-    );
+    updateUser({ ...user, ...updatedUser, role: user?.role, tenantId: user?.tenantId });
   };
 
   const onSubmit = async (data: ProfileFormData) => {
     try {
       const payload = {
         displayName: data.displayName,
-        phone: data.phone || undefined,
         dateOfBirth: data.dateOfBirth ? dayjs(data.dateOfBirth).format("YYYY-MM-DD") : undefined,
         hometown: data.hometown || undefined,
         gender: data.gender || undefined,
@@ -87,6 +80,18 @@ export default function ProfileSettingForm() {
     } catch (error: unknown) {
       const err = error as { response?: { data?: { userMessage?: string; message?: string } } };
       message.error(err.response?.data?.userMessage || err.response?.data?.message || "Cập nhật thất bại.");
+    }
+  };
+
+  const handleDeleteAvatar = async () => {
+    try {
+      const updatedUser = await deleteAvatar();
+      setAvatarPreview(null);
+      persistUser(updatedUser);
+      message.success("Đã xóa ảnh đại diện.");
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { userMessage?: string; message?: string } } };
+      message.error(err.response?.data?.userMessage || err.response?.data?.message || "Xóa ảnh thất bại.");
     }
   };
 
@@ -140,11 +145,22 @@ export default function ProfileSettingForm() {
             type="button"
             aria-label="Đổi ảnh đại diện"
             onClick={() => fileInputRef.current?.click()}
-            disabled={isUploadingAvatar}
+            disabled={isUploadingAvatar || isDeletingAvatar}
             className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-blue-600 text-white shadow-md transition-colors hover:bg-blue-700 disabled:opacity-60"
           >
             <Camera className="h-3.5 w-3.5" aria-hidden="true" />
           </button>
+          {user?.avatarUrl && (
+            <button
+              type="button"
+              aria-label="Xóa ảnh đại diện"
+              onClick={() => void handleDeleteAvatar()}
+              disabled={isUploadingAvatar || isDeletingAvatar}
+              className="absolute -left-1 -bottom-1 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-red-600 text-white shadow-md transition-colors hover:bg-red-700 disabled:opacity-60"
+            >
+              <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+            </button>
+          )}
           <input
             ref={fileInputRef}
             type="file"
@@ -156,7 +172,7 @@ export default function ProfileSettingForm() {
         <div>
           <p className="font-semibold text-slate-800">{displayName}</p>
           <p className="text-xs text-slate-500">
-            {isUploadingAvatar ? "Đang tải ảnh lên..." : "JPEG, PNG hoặc WEBP, tối đa 5MB"}
+            {isUploadingAvatar ? "Đang tải ảnh lên..." : isDeletingAvatar ? "Đang xóa ảnh..." : "JPEG, PNG hoặc WEBP, tối đa 5MB"}
           </p>
         </div>
       </div>
@@ -170,15 +186,6 @@ export default function ProfileSettingForm() {
             placeholder="Nhập tên hiển thị"
             id="profile-display-name"
             error={errors.displayName}
-          />
-
-          <FormInput
-            control={control}
-            name="phone"
-            label="Số điện thoại"
-            placeholder="Nhập số điện thoại"
-            id="profile-phone"
-            error={errors.phone}
           />
 
           <FormDatePicker

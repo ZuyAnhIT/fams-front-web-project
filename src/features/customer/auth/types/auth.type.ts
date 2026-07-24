@@ -3,9 +3,9 @@
  */
 import type { UserRoleResponse } from "@/features/admin/role-permission/types";
 
-/** Dữ liệu gửi lên khi đăng nhập bằng email/password */
+/** Dữ liệu gửi lên khi đăng nhập bằng email hoặc số điện thoại + mật khẩu. */
 export interface LoginPayload {
-  email: string;
+  identifier: string;
   password: string;
   deviceId?: string;
 }
@@ -14,11 +14,18 @@ export interface LoginPayload {
 export interface RegisterPayload {
   email?: string;
   phone?: string;
-  /** Bắt buộc khi đăng ký chỉ bằng số điện thoại (không có email) — xem RegisterService trên backend */
-  firebaseIdToken?: string;
+  otpCode?: string;
   password: string;
   displayName: string;
   deviceId?: string;
+}
+
+export interface SendRegistrationOtpPayload {
+  phone: string;
+}
+
+export interface ResendVerificationPayload {
+  email: string;
 }
 
 /** Dữ liệu gửi lên để đăng nhập bằng số điện thoại — backend chỉ verify token Firebase đã có sẵn,
@@ -30,10 +37,11 @@ export interface VerifyOtpPayload {
 
 export interface LogoutPayload {
   refreshToken: string;
-  deviceId: string;
 }
 
 export interface LoginResponse {
+  userId?: string | null;
+  activeTenantId?: string | null;
   accessToken: string;
   refreshToken: string;
   tokenType: string;
@@ -44,19 +52,19 @@ export interface LoginResponse {
 
 /** Phản hồi từ API đăng ký */
 export interface RegisterResponse {
+  userId: string;
   emailVerificationRequired: boolean;
+  phoneVerified: boolean;
   message: string;
-  accessToken?: string;
-  refreshToken?: string;
-  expiresIn?: number;
-  user?: AuthUser;
 }
 
 /** Thông tin người dùng trả về từ API /me */
 export interface UserProfile {
   id: string;
   email: string | null;
+  emailVerified: boolean;
   phone: string | null;
+  phoneVerified: boolean;
   displayName: string;
   avatarUrl: string | null;
   /** Issue #4 (docs/issues/ISSUES.md) */
@@ -66,7 +74,7 @@ export interface UserProfile {
   address?: string | null;
   /** Issue #7 (docs/issues/ISSUES.md): whether a Google account is linked for one-click login. */
   googleLinked?: boolean;
-  isActive: boolean;
+  active: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -103,7 +111,6 @@ export interface ForgotPasswordPayload {
 export interface ResetPasswordPayload {
   token: string;
   newPassword: string;
-  confirmPassword: string;
 }
 
 /** Dữ liệu gửi lên khi đăng nhập bằng Google */
@@ -115,8 +122,6 @@ export interface GoogleLoginPayload {
 /** Dữ liệu gửi lên khi cập nhật hồ sơ */
 export interface UpdateProfilePayload {
   displayName?: string;
-  phone?: string;
-  avatarUrl?: string;
   /** Issue #4 (docs/issues/ISSUES.md) */
   dateOfBirth?: string;
   hometown?: string;
@@ -126,9 +131,31 @@ export interface UpdateProfilePayload {
 
 /** Dữ liệu gửi lên khi đổi mật khẩu */
 export interface ChangePasswordPayload {
-  currentPassword?: string; // Tùy chọn vì nếu login qua Google thì chưa chắc có password (tùy logic backend)
+  currentPassword: string;
   newPassword: string;
-  confirmPassword: string;
+}
+
+export interface RequestEmailChangePayload {
+  email: string;
+}
+
+export interface RequestPhoneChangePayload {
+  phone: string;
+}
+
+export interface ConfirmPhoneChangePayload extends RequestPhoneChangePayload {
+  otpCode: string;
+}
+
+export interface AuthSession {
+  id: string;
+  deviceId: string;
+  userAgent: string | null;
+  ipAddress: string | null;
+  createdAt: string;
+  lastUsedAt: string;
+  expiresAt: string;
+  current: boolean;
 }
 
 /** Phản hồi từ API khởi tạo TOTP */
@@ -148,7 +175,7 @@ export interface TotpVerifyPayload {
 /** Dữ liệu gửi lên khi xác nhận TOTP ở màn hình Login */
 export interface LoginTotpPayload {
   pendingToken: string;
-  code: string;
+  code?: string;
+  backupCode?: string;
   deviceId?: string;
 }
-

@@ -23,6 +23,7 @@ import { authMapper } from "@/features/customer/auth/utils/auth.mapper";
 import { authTokenService } from "@/services/auth-token.service";
 import { useAuthStore } from "@/stores/auth.store";
 import { rolePermissionService } from "@/features/admin/role-permission/services/role-permission.service";
+import { getOrCreateDeviceId } from "@/features/customer/auth/utils/auth-device.util";
 
 /**
  * PhoneLoginForm - Form đăng nhập bằng số điện thoại + OTP.
@@ -74,7 +75,7 @@ export default function PhoneLoginForm() {
 
   const { sendCode, confirmCode, isSending, isConfirming } = useFirebasePhoneAuth(RECAPTCHA_CONTAINER_ID);
   const { mutateAsync: verifyOtpMutation } = useVerifyOtp();
-  const setAuth = useAuthStore((state) => state.setAuth);
+  const { setAuth, setTotpPending } = useAuthStore();
 
   const handleSendOtp = async () => {
     try {
@@ -97,7 +98,14 @@ export default function PhoneLoginForm() {
 
     try {
       const firebaseIdToken = await confirmCode(otpValue);
-      const response = await verifyOtpMutation({ firebaseIdToken });
+      const response = await verifyOtpMutation({ firebaseIdToken, deviceId: getOrCreateDeviceId() });
+
+      if (response.totpRequired && response.pendingToken) {
+        setTotpPending(response.pendingToken);
+        message.info("Số điện thoại đã được xác minh. Vui lòng nhập mã bảo mật 2 lớp.");
+        router.push(ROUTES.LOGIN);
+        return;
+      }
 
       authTokenService.setAccessToken(response.accessToken);
       authTokenService.setRefreshToken(response.refreshToken);
@@ -121,7 +129,9 @@ export default function PhoneLoginForm() {
       if (error?.code?.startsWith?.("auth/")) {
         message.error(mapFirebasePhoneError(error));
       } else {
-        const errorMessage = error.response?.data?.message || "Đăng nhập thất bại. Vui lòng thử lại.";
+        const errorMessage = error.response?.data?.errorCode === "INVALID_OTP"
+          ? "OTP không hợp lệ hoặc số điện thoại chưa có tài khoản FAMS. Vui lòng thử lại hoặc đăng ký."
+          : error.response?.data?.message || "Đăng nhập thất bại. Vui lòng thử lại.";
         message.error(errorMessage);
       }
     }

@@ -1,7 +1,7 @@
 "use client";
 import { resolvePostLoginRoute } from "@/utils/route.util";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -10,23 +10,25 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { App, Input } from "antd";
 import { format } from "date-fns";
 import { PhoneOutlined } from "@ant-design/icons";
+import { isAxiosError } from "axios";
+import type { CredentialResponse } from "@react-oauth/google";
 import FormInput from "@/components/forms/FormInput";
 
 import BaseButton from "@/components/ui/BaseButton";
 import { loginSchema, type LoginFormData } from "@/features/customer/auth/schemas/auth.schema";
 import { useAuthStore } from "@/stores/auth.store";
-import { useLogin, useLoginTotp, useGoogleLogin as useGoogleLoginBackend } from "@/features/customer/auth/hooks/use-auth";
+import { useLogin, useLoginTotp, useGoogleLogin as useGoogleLoginBackend, useResendVerification } from "@/features/customer/auth/hooks/use-auth";
 import { authService } from "@/features/customer/auth/services/auth.service";
 import { authTokenService } from "@/services/auth-token.service";
 import { GoogleLogin } from "@react-oauth/google";
 import { ROUTES } from "@/constants/routes";
 import { authMapper } from "@/features/customer/auth/utils/auth.mapper";
 import { rolePermissionService } from "@/features/admin/role-permission/services/role-permission.service";
+import { getOrCreateDeviceId } from "@/features/customer/auth/utils/auth-device.util";
+import type { LoginResponse } from "@/features/customer/auth/types/auth.type";
 
 const totpSchema = z.object({
-  code: z.string()
-    .length(6, "Mã xác thực phải gồm 6 chữ số")
-    .regex(/^\d+$/, "Mã xác thực chỉ chứa số"),
+  code: z.string(),
 });
 
 /**
@@ -35,13 +37,16 @@ const totpSchema = z.object({
  * Sử dụng:
  * - react-hook-form + zod để validate
  * - Base UI Components (BaseButton, BaseInput, BaseInputPassword, BaseCheckbox)
- * - Hỗ trợ đăng nhập bằng email/password và social login (Facebook, Google, Microsoft)
+ * - Hỗ trợ đăng nhập email/số điện thoại + mật khẩu, TOTP và Google.
  */
 export default function LoginForm() {
   const { message } = App.useApp();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const emailQuery = searchParams.get("email");
+  const identifierQuery = searchParams.get("identifier") || searchParams.get("email") || searchParams.get("phone");
+  const [unverifiedEmail, setUnverifiedEmail] = useState("");
+  const [useBackupCode, setUseBackupCode] = useState(false);
+  const [backupCode, setBackupCode] = useState("");
   const { setAuth, isTotpPending, pendingToken, setTotpPending, clearTotpPending } = useAuthStore();
 
   const {
@@ -53,17 +58,17 @@ export default function LoginForm() {
     resolver: zodResolver(loginSchema),
     mode: "onBlur",
     defaultValues: {
-      email: "",
+      identifier: "",
       password: "",
     },
   });
 
-  // Tự động điền email vừa đăng ký thành công
+  // Tự động điền identifier vừa đăng ký thành công.
   useEffect(() => {
-    if (emailQuery) {
-      setValue("email", decodeURIComponent(emailQuery));
+    if (identifierQuery) {
+      setValue("identifier", identifierQuery);
     }
-  }, [emailQuery, setValue]);
+  }, [identifierQuery, setValue]);
 
   // Form phụ cho TOTP
   const {
@@ -77,12 +82,32 @@ export default function LoginForm() {
 
   const { mutateAsync: loginMutation } = useLogin();
   const { mutateAsync: loginTotpMutation } = useLoginTotp();
+  const { mutateAsync: resendVerification, isPending: isResendingVerification } = useResendVerification();
+
+  const completeSession = async (response: LoginResponse, successMessage: string) => {
+    authTokenService.setAccessToken(response.accessToken);
+    authTokenService.setRefreshToken(response.refreshToken);
+    const profile = await authService.getProfile();
+
+    let rolesResponse;
+    try {
+      rolesResponse = await rolePermissionService.getMyRoles();
+    } catch (error: unknown) {
+      console.warn("Could not fetch roles", error);
+    }
+
+    const authUser = authMapper.toAuthUser(profile, response.accessToken, rolesResponse?.data);
+    setAuth(authUser, response.accessToken, response.refreshToken);
+    message.success(successMessage);
+    router.push(resolvePostLoginRoute(authUser));
+  };
 
   const onSubmit = async (data: LoginFormData) => {
     try {
       const response = await loginMutation({
-        email: data.email,
+        identifier: data.identifier.trim(),
         password: data.password,
+        deviceId: getOrCreateDeviceId(),
       });
 
       if (response.totpRequired && response.pendingToken) {
@@ -91,32 +116,16 @@ export default function LoginForm() {
         return;
       }
 
-      // 1. Set tokens temporarily to allow API client to use them for /me
-      authTokenService.setAccessToken(response.accessToken);
-      authTokenService.setRefreshToken(response.refreshToken);
+      setUnverifiedEmail("");
+      await completeSession(response, "Đăng nhập thành công!");
+    } catch (error: unknown) {
+      const status = isAxiosError(error) ? error.response?.status : undefined;
+      const errorCode = isAxiosError(error) ? error.response?.data?.errorCode : undefined;
+      let errorMessage = isAxiosError(error)
+        ? error.response?.data?.userMessage || error.response?.data?.message || "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin."
+        : "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.";
 
-      // 2. Fetch actual profile
-      const profile = await authService.getProfile();
-
-      let rolesResponse = undefined;
-      try {
-        rolesResponse = await rolePermissionService.getMyRoles();
-      } catch (e) {
-        console.warn("Could not fetch roles", e);
-      }
-
-      const authUser = authMapper.toAuthUser(profile, response.accessToken, rolesResponse?.data);
-
-      // 3. Save to Zustand store
-      setAuth(authUser, response.accessToken, response.refreshToken);
-      message.success("Đăng nhập thành công!");
-      router.push(resolvePostLoginRoute(authUser));
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
-      // Backend error response format
-      let errorMessage = error.response?.data?.message || "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.";
-
-      if (error.response?.status === 423) {
+      if (status === 423) {
         // Backend embeds a raw ISO timestamp in the message (e.g. "...sau 2026-07-
         // 22T15:18:22.813563Z.") — reformat it into something readable instead of
         // showing that to the user verbatim.
@@ -124,10 +133,11 @@ export default function LoginForm() {
         errorMessage = isoMatch
           ? `Tài khoản tạm khóa do đăng nhập sai nhiều lần. Vui lòng thử lại sau ${format(new Date(isoMatch[1]), "HH:mm dd/MM/yyyy")}.`
           : "Tài khoản tạm khóa do đăng nhập sai nhiều lần. Vui lòng thử lại sau.";
-      } else if (error.response?.status === 401 || errorMessage.toLowerCase().includes("bad credentials")) {
+      } else if (status === 401 || errorCode === "INVALID_CREDENTIALS" || errorMessage.toLowerCase().includes("bad credentials")) {
         errorMessage = "Sai tài khoản hoặc mật khẩu.";
-      } else if (errorMessage.includes("has not been verified")) {
-        errorMessage = "Bạn chưa xác nhận email. Vui lòng kiểm tra hòm thư và bấm vào link xác thực!";
+      } else if (errorCode === "EMAIL_NOT_VERIFIED" || errorMessage.toLowerCase().includes("not verified")) {
+        errorMessage = "Email chưa được xác thực. Vui lòng kiểm tra hộp thư hoặc gửi lại email xác thực.";
+        if (data.identifier.includes("@")) setUnverifiedEmail(data.identifier.trim().toLowerCase());
       }
 
       message.error(errorMessage);
@@ -137,25 +147,21 @@ export default function LoginForm() {
   const onTotpSubmit = async (data: { code: string }) => {
     try {
       if (!pendingToken) return;
-      const response = await loginTotpMutation({ pendingToken, code: data.code });
-
-      authTokenService.setAccessToken(response.accessToken);
-      authTokenService.setRefreshToken(response.refreshToken);
-      const profile = await authService.getProfile();
-
-      let rolesResponse = undefined;
-      try {
-        rolesResponse = await rolePermissionService.getMyRoles();
-      } catch (e) {
-        console.warn("Could not fetch roles", e);
+      if (!useBackupCode && !/^\d{6}$/.test(data.code)) {
+        message.error("Mã Authenticator phải gồm đúng 6 chữ số.");
+        return;
       }
-
-      const authUser = authMapper.toAuthUser(profile, response.accessToken, rolesResponse?.data);
-
-      setAuth(authUser, response.accessToken, response.refreshToken);
+      if (useBackupCode && !backupCode.trim()) {
+        message.error("Vui lòng nhập mã dự phòng.");
+        return;
+      }
+      const response = await loginTotpMutation({
+        pendingToken,
+        ...(useBackupCode ? { backupCode: backupCode.trim() } : { code: data.code }),
+        deviceId: getOrCreateDeviceId(),
+      });
       clearTotpPending();
-      message.success("Đăng nhập thành công!");
-      router.push(resolvePostLoginRoute(authUser));
+      await completeSession(response, "Đăng nhập thành công!");
     } catch {
       message.error("Mã xác thực không chính xác hoặc đã hết hạn.");
     }
@@ -163,37 +169,27 @@ export default function LoginForm() {
 
   const { mutateAsync: googleLoginMutation } = useGoogleLoginBackend();
 
-  const handleGoogleSuccess = async (credentialResponse: any) => {
+  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
     try {
       const idToken = credentialResponse.credential;
       if (!idToken) throw new Error("Không nhận được token từ Google");
 
-      const response = await googleLoginMutation({ idToken });
-
-      // 1. Set tokens temporarily
-      authTokenService.setAccessToken(response.accessToken);
-      authTokenService.setRefreshToken(response.refreshToken);
-
-      // 2. Fetch actual profile
-      const profile = await authService.getProfile();
-
-      let rolesResponse = undefined;
-      try {
-        rolesResponse = await rolePermissionService.getMyRoles();
-      } catch (e) {
-        console.warn("Could not fetch roles", e);
-      }
-
-      const authUser = authMapper.toAuthUser(profile, response.accessToken, rolesResponse?.data);
-
-      // 3. Save to Zustand store
-      setAuth(authUser, response.accessToken, response.refreshToken);
-
-      message.success("Đăng nhập bằng Google thành công!");
-      router.push(resolvePostLoginRoute(authUser));
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.message || "Đăng nhập Google thất bại.";
+      const response = await googleLoginMutation({ idToken, deviceId: getOrCreateDeviceId() });
+      await completeSession(response, "Đăng nhập bằng Google thành công!");
+    } catch (error: unknown) {
+      const errorMessage = isAxiosError(error)
+        ? error.response?.data?.userMessage || error.response?.data?.message || "Đăng nhập Google thất bại."
+        : "Đăng nhập Google thất bại.";
       message.error(errorMessage);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    try {
+      await resendVerification({ email: unverifiedEmail });
+      message.success("Nếu tài khoản hợp lệ, email xác thực mới đã được gửi.");
+    } catch {
+      message.error("Không thể gửi lại email xác thực. Vui lòng thử lại.");
     }
   };
 
@@ -217,21 +213,31 @@ export default function LoginForm() {
               Vui lòng mở ứng dụng Authenticator và nhập mã 6 số.
             </p>
             <div className="flex flex-col space-y-2">
-              <label className="text-[15px] font-semibold tracking-wide text-slate-700">Mã xác thực</label>
-              <Controller
-                name="code"
-                control={totpControl}
-                render={({ field }) => (
-                  <Input.OTP
-                    {...field}
-                    length={6}
-                    size="large"
-                    status={totpErrors.code ? "error" : undefined}
-                    className="mt-2 flex w-full [&_input]:!bg-white [&_input]:!text-slate-900 [&_input]:!border-slate-300 [&_input:focus]:!border-brand-500 [&_input:hover]:!border-brand-400"
-                  />
-                )}
-              />
-              {totpErrors.code && (
+              <label className="text-[15px] font-semibold tracking-wide text-slate-700">{useBackupCode ? "Mã dự phòng" : "Mã xác thực"}</label>
+              {useBackupCode ? (
+                <Input
+                  value={backupCode}
+                  onChange={(event) => setBackupCode(event.target.value)}
+                  placeholder="Ví dụ: A1B2C3D4"
+                  size="large"
+                  autoComplete="one-time-code"
+                />
+              ) : (
+                <Controller
+                  name="code"
+                  control={totpControl}
+                  render={({ field }) => (
+                    <Input.OTP
+                      {...field}
+                      length={6}
+                      size="large"
+                      status={totpErrors.code ? "error" : undefined}
+                      className="mt-2 flex w-full [&_input]:!bg-white [&_input]:!text-slate-900 [&_input]:!border-slate-300 [&_input:focus]:!border-brand-500 [&_input:hover]:!border-brand-400"
+                    />
+                  )}
+                />
+              )}
+              {!useBackupCode && totpErrors.code && (
                 <p className="text-xs text-red-400 mt-1">{totpErrors.code.message}</p>
               )}
             </div>
@@ -248,6 +254,13 @@ export default function LoginForm() {
             <div className="text-center mt-4">
               <button
                 type="button"
+                onClick={() => setUseBackupCode((value) => !value)}
+                className="mb-3 block w-full text-sm font-medium text-blue-600 hover:text-blue-700"
+              >
+                {useBackupCode ? "Dùng mã Authenticator" : "Dùng mã dự phòng"}
+              </button>
+              <button
+                type="button"
                 onClick={clearTotpPending}
                 className="text-sm font-medium text-slate-500 hover:text-blue-600 transition-colors"
               >
@@ -257,14 +270,13 @@ export default function LoginForm() {
           </form>
         ) : (
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* Email */}
             <FormInput
               control={control}
-              name="email"
-              label="Email"
-              placeholder="Nhập địa chỉ email"
-              id="login-email"
-              error={errors.email}
+              name="identifier"
+              label="Email hoặc số điện thoại"
+              placeholder="email@example.com hoặc 0912345678"
+              id="login-identifier"
+              error={errors.identifier}
               required
             />
 
@@ -301,6 +313,17 @@ export default function LoginForm() {
             >
               Đăng nhập
             </BaseButton>
+            {unverifiedEmail && (
+              <BaseButton
+                type="link"
+                block
+                loading={isResendingVerification}
+                onClick={handleResendVerification}
+                className="!text-blue-600"
+              >
+                Gửi lại email xác thực
+              </BaseButton>
+            )}
           </form>
         )}
 
@@ -332,7 +355,7 @@ export default function LoginForm() {
             block
             onClick={() => router.push(ROUTES.LOGIN_PHONE)}
           >
-            Đăng nhập bằng Số điện thoại
+            Đăng nhập nhanh bằng OTP
           </BaseButton>
 
           <div className="flex justify-center w-full [&>div]:w-full [&>div>div]:!w-full [&_iframe]:!w-full">

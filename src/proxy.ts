@@ -9,9 +9,11 @@ export function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const redirectMap: Record<string, string> = {
-    "/api/v1/invitations/accept": "/accept-invite",
-    "/api/v1/auth/reset-password": "/reset-password",
+  const redirectMap: Record<string, { pathname: string; mode?: string }> = {
+    "/api/v1/invitations/accept": { pathname: "/accept-invite" },
+    "/api/v1/auth/reset-password": { pathname: "/reset-password" },
+    "/api/v1/auth/verify-email": { pathname: "/verify-email" },
+    "/api/v1/auth/profile/email/confirm-change": { pathname: "/verify-email", mode: "email-change" },
   };
 
   const destination = redirectMap[request.nextUrl.pathname];
@@ -20,7 +22,8 @@ export function proxy(request: NextRequest) {
   }
 
   const url = request.nextUrl.clone();
-  url.pathname = destination;
+  url.pathname = destination.pathname;
+  if (destination.mode) url.searchParams.set("mode", destination.mode);
   return NextResponse.redirect(url);
 }
 
@@ -28,5 +31,7 @@ export const config = {
   matcher: [
     "/api/v1/invitations/accept",
     "/api/v1/auth/reset-password",
+    "/api/v1/auth/verify-email",
+    "/api/v1/auth/profile/email/confirm-change",
   ],
 };

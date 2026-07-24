@@ -4,16 +4,21 @@ import { z } from "zod";
 const phoneRegex = /^(?:\+84|84|0)[35789]\d{8}$/;
 
 /**
- * Zod schema xác thực form đăng nhập bằng Email.
+ * Zod schema xác thực form đăng nhập bằng email hoặc số điện thoại.
  */
 export const loginSchema = z.object({
-  email: z
+  identifier: z
     .string()
-    .min(1, "Vui lòng nhập email")
-    .email("Email không hợp lệ"),
+    .trim()
+    .min(1, "Vui lòng nhập email hoặc số điện thoại")
+    .refine(
+      (value) => z.string().email().safeParse(value).success || phoneRegex.test(value),
+      "Email hoặc số điện thoại không hợp lệ",
+    ),
   password: z
     .string()
-    .min(1, "Vui lòng nhập mật khẩu"),
+    .min(1, "Vui lòng nhập mật khẩu")
+    .min(8, "Mật khẩu phải có ít nhất 8 ký tự"),
 });
 
 /** Kiểu dữ liệu infer từ schema */
@@ -102,4 +107,3 @@ export const resetPasswordSchema = z
   });
 
 export type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
-
