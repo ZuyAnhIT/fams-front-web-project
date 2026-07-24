@@ -20,6 +20,7 @@ import { formatVietnameseName } from "@/utils/name.util";
 
 const ROLE_LABELS: Record<SystemRole, string> = {
   [SystemRole.PLATFORM_ADMIN]: "Quản trị nền tảng",
+  [SystemRole.PLATFORM_STAFF]: "Nhân viên nền tảng",
   [SystemRole.TENANT_ADMIN]: "Quản trị công ty",
   [SystemRole.HR_MANAGER]: "Quản lý nhân sự",
   [SystemRole.SITE_SUPERVISOR]: "Giám sát công trình",

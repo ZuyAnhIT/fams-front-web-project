@@ -15,7 +15,6 @@ export const createCompanySchema = z.object({
     .max(100, "Slug tối đa 100 ký tự")
     .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "Slug chỉ được chứa chữ thường, số và dấu gạch ngang"),
   industry: z.string().max(100, "Lĩnh vực tối đa 100 ký tự").optional().or(z.literal("")),
-  ownerEmail: z.string().email("Vui lòng nhập Email hợp lệ").optional().or(z.literal("")),
 });
 
 export type CreateCompanyFormData = z.infer<typeof createCompanySchema>;

@@ -82,6 +82,7 @@ export interface UserProfile {
 /** 5 Role Hệ thống cố định từ Backend */
 export enum SystemRole {
   PLATFORM_ADMIN = "PLATFORM_ADMIN",
+  PLATFORM_STAFF = "PLATFORM_STAFF",
   TENANT_ADMIN = "TENANT_ADMIN",
   HR_MANAGER = "HR_MANAGER",
   SITE_SUPERVISOR = "SITE_SUPERVISOR",

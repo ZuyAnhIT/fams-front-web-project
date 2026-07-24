@@ -9,6 +9,8 @@ import type {
   UpdateTenantSettingsPayload,
   CreateIpWhitelistPayload,
   UpdateIpWhitelistPayload,
+  TenantListParams,
+  TenantOperationalDetail,
 } from "../types/tenant.type";
 import { useAuthStore } from "@/stores/auth.store";
 
@@ -24,14 +26,7 @@ export const tenantService = {
   /**
    * Lấy danh sách Tenant (Platform Admin)
    */
-  async listTenants(params: {
-    page?: number;
-    size?: number;
-    search?: string;
-    status?: string;
-    industry?: string;
-    countryCode?: string;
-  }): Promise<PageResponse<Tenant>> {
+  async listTenants(params: TenantListParams): Promise<PageResponse<Tenant>> {
     const response = await apiClient.get<ApiResponse<PageResponse<Tenant>>>("/tenants", {
       params,
     });
@@ -46,12 +41,10 @@ export const tenantService = {
     return response.data.data;
   },
 
-  /**
-   * Lấy chi tiết Tenant
-   */
-  // Note: Backend API hiện tại list qua GET /tenants nhưng không có GET /tenants/{id}. 
-  // Tuy nhiên Tenant Admin chỉ cần gọi GET /tenants/{id}/settings là có đủ UI settings.
-  // Nếu cần thông tin cơ bản của Tenant, ta có thể phải filter từ list hoặc chờ BE bổ sung.
+  async getTenantDetail(id: string): Promise<TenantOperationalDetail> {
+    const response = await apiClient.get<ApiResponse<TenantOperationalDetail>>(`/tenants/${id}/detail`);
+    return response.data.data;
+  },
 
   /**
    * Cập nhật thông tin cơ bản Tenant

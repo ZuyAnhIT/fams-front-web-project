@@ -11,6 +11,8 @@ export interface PaginationState {
   sortBy?: string;
   sortDir?: "asc" | "desc";
   status?: string;
+  industry?: string;
+  countryCode?: string;
 }
 
 export function usePagination(defaultSize = 20) {
@@ -35,6 +37,8 @@ export function usePagination(defaultSize = 20) {
     sortBy: getStringParam("sortBy", "createdAt"),
     sortDir: getStringParam("sortDir", "desc") as "asc" | "desc",
     status: getStringParam("status"),
+    industry: getStringParam("industry"),
+    countryCode: getStringParam("countryCode"),
   };
 
   const setPagination = useCallback(

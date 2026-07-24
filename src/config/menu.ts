@@ -7,6 +7,7 @@ export interface MenuItem {
   path: string;
   icon: keyof typeof Icons;
   allowedRoles?: SystemRole[]; // Các role được phép xem menu này
+  allowedPermissions?: string[];
 }
 
 export const SIDEBAR_MENU: MenuItem[] = [
@@ -29,7 +30,8 @@ export const SIDEBAR_MENU: MenuItem[] = [
     title: "Công ty",
     path: ADMIN_ROUTES.TENANTS,
     icon: "Building2",
-    allowedRoles: [SystemRole.PLATFORM_ADMIN]
+    allowedRoles: [SystemRole.PLATFORM_ADMIN],
+    allowedPermissions: ["tenants:list"],
   },
   {
     title: "Vai trò & Quyền",

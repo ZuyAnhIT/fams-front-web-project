@@ -18,16 +18,14 @@ export const createTenantSchema = z.object({
     .regex(/^[A-Z]{3}$/, "Mã tiền tệ phải là 3 chữ cái in hoa (VD: VND)")
     .optional()
     .or(z.literal("")),
-  adminEmail: z.string()
-    .email("Vui lòng nhập Email hợp lệ")
-    .optional()
-    .or(z.literal("")),
+  ownerEmail: z.string().min(1, "Email chủ sở hữu là bắt buộc").email("Vui lòng nhập Email hợp lệ"),
+  planId: z.string().optional().or(z.literal("")),
 });
 
 export type CreateTenantFormData = z.infer<typeof createTenantSchema>;
 
 export const updateTenantSchema = z.object({
-  name: z.string().min(2, "Tên công ty phải từ 2-255 ký tự").max(255, "Tên công ty tối đa 255 ký tự").optional(),
+  name: z.string().min(2, "Tên công ty phải từ 2-255 ký tự").max(255, "Tên công ty tối đa 255 ký tự").optional().or(z.literal("")),
   logoUrl: z.string().url("URL không hợp lệ").max(2048, "URL tối đa 2048 ký tự").optional().or(z.literal("")),
   domain: z.string().max(255, "Tên miền tối đa 255 ký tự").optional().or(z.literal("")),
   industry: z.string().max(100, "Lĩnh vực tối đa 100 ký tự").optional().or(z.literal("")),

@@ -10,7 +10,7 @@ export default async function TenantDetailRoute({ params }: { params: Promise<{ 
   const { id } = await params;
   return (
     <div className="max-w-[1600px] mx-auto py-2">
-      <RoleGuard allowedRoles={[SystemRole.PLATFORM_ADMIN]}>
+      <RoleGuard allowedRoles={[SystemRole.PLATFORM_ADMIN]} allowedPermissions={["tenants:read"]}>
         <TenantDetailPage id={id} />
       </RoleGuard>
     </div>

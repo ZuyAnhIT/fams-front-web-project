@@ -1,8 +1,16 @@
 import type { NextConfig } from "next";
 
 const backendApiUrl = process.env.FAMS_BACKEND_URL || "http://localhost:8080/api/v1";
+const allowedDevOrigins = (process.env.FAMS_DEV_ORIGINS || "192.168.1.7")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 
 const nextConfig: NextConfig = {
+  // Next 16 blocks dev-only assets/HMR requested through a hostname other than the
+  // hostname used to start the server. Without this, LAN URLs render the SSR fallback
+  // but never hydrate, so token pages appear to load forever.
+  allowedDevOrigins,
   async rewrites() {
     return [
       {

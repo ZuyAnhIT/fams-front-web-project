@@ -23,21 +23,28 @@ export async function GET(request: NextRequest) {
       : "/auth/verify-email";
     const backendResponse = await fetch(
       `${backendApiUrl}${endpoint}?token=${encodeURIComponent(token)}`,
-      { cache: "no-store", headers: { Accept: "application/json" } },
+      {
+        cache: "no-store",
+        headers: { Accept: "application/json" },
+        signal: AbortSignal.timeout(15_000),
+      },
     );
     const body = await backendResponse.text();
     return new NextResponse(body, {
       status: backendResponse.status,
       headers: { "Content-Type": backendResponse.headers.get("Content-Type") || "application/json" },
     });
-  } catch {
+  } catch (error: unknown) {
+    const timedOut = error instanceof Error && error.name === "TimeoutError";
     return NextResponse.json(
       {
         success: false,
-        errorCode: "BACKEND_UNAVAILABLE",
-        userMessage: "Không thể kết nối máy chủ xác thực. Vui lòng thử lại sau.",
+        errorCode: timedOut ? "BACKEND_TIMEOUT" : "BACKEND_UNAVAILABLE",
+        userMessage: timedOut
+          ? "Máy chủ xác thực phản hồi quá lâu. Vui lòng thử lại."
+          : "Không thể kết nối máy chủ xác thực. Vui lòng thử lại sau.",
       },
-      { status: 502 },
+      { status: timedOut ? 504 : 502 },
     );
   }
 }

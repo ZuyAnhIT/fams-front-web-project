@@ -4,9 +4,9 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { App } from "antd";
-import { CheckCircleOutlined, WarningOutlined } from "@ant-design/icons";
+import { ArrowLeftOutlined, CheckCircleOutlined, WarningOutlined } from "@ant-design/icons";
 import { isAxiosError } from "axios";
 import FormInput from "@/components/forms/FormInput";
 import BaseButton from "@/components/ui/BaseButton";
@@ -17,7 +17,9 @@ import { ROUTES } from "@/constants/routes";
 export default function ResetPasswordForm() {
   const { message } = App.useApp();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const token = searchParams.get("token");
+  const mobileAppScheme = process.env.NEXT_PUBLIC_MOBILE_APP_SCHEME || "famsfrontappproject";
 
   const [isSuccess, setIsSuccess] = useState(false);
 
@@ -73,6 +75,13 @@ export default function ResetPasswordForm() {
               Quay lại Đăng nhập
             </Link>
           </div>
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="mt-4 inline-flex w-full items-center justify-center gap-2 text-sm font-semibold text-slate-500 hover:text-brand-600"
+          >
+            <ArrowLeftOutlined /> Quay lại trang trước
+          </button>
         </div>
       </div>
     );
@@ -112,16 +121,25 @@ export default function ResetPasswordForm() {
             Mật khẩu của bạn đã được cập nhật. Toàn bộ phiên đăng nhập cũ đã được đăng xuất. Vui lòng đăng nhập lại bằng mật khẩu mới.
           </p>
 
-          <Link href={ROUTES.LOGIN} className="block w-full">
-            <BaseButton
-              type="primary"
-              block
-              size="large"
-              className="font-bold !bg-brand-600 !text-white hover:opacity-90 !border-0 shadow-lg shadow-brand-600/25 h-12 rounded-xl transition-all"
-            >
-              Đăng nhập ngay
-            </BaseButton>
+          <a
+            href={`${mobileAppScheme}://login`}
+            className="inline-flex h-12 w-full items-center justify-center rounded-xl bg-brand-600 px-4 font-bold !text-white shadow-lg shadow-brand-600/25 transition-all hover:opacity-90"
+          >
+            Mở ứng dụng FAMS
+          </a>
+          <Link
+            href={ROUTES.LOGIN}
+            className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-slate-300 px-4 text-sm font-semibold text-slate-600 hover:bg-slate-50"
+          >
+            Đăng nhập trên web
           </Link>
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="mt-4 inline-flex w-full items-center justify-center gap-2 text-sm font-semibold text-slate-500 hover:text-brand-600"
+          >
+            <ArrowLeftOutlined /> Quay lại trang trước
+          </button>
         </div>
       </div>
     );
@@ -173,6 +191,13 @@ export default function ResetPasswordForm() {
             Lưu mật khẩu mới
           </BaseButton>
         </form>
+        <button
+          type="button"
+          onClick={() => router.back()}
+          className="mt-6 inline-flex w-full items-center justify-center gap-2 text-sm font-semibold text-slate-500 hover:text-brand-600"
+        >
+          <ArrowLeftOutlined /> Quay lại trang trước
+        </button>
       </div>
     </div>
   );

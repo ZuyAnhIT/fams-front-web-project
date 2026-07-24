@@ -11,7 +11,20 @@ import { usePlans } from "../hooks/use-subscription";
 import { useTenantSubscription, useAssignSubscription, useUpdateSubscription } from "../hooks/use-tenant-subscription";
 import type { AssignSubscriptionPayload, UpdateSubscriptionPayload } from "../types/subscription.type";
 
-export default function SubscriptionManager({ tenantId }: { tenantId: string }) {
+interface SubscriptionFormData {
+  planId: string;
+  billingCycle: "MONTHLY" | "YEARLY";
+  status?: "TRIAL" | "ACTIVE" | "EXPIRED" | "CANCELLED";
+  expiresAt?: string;
+}
+
+export default function SubscriptionManager({
+  tenantId,
+  canManage = false,
+}: {
+  tenantId: string;
+  canManage?: boolean;
+}) {
   const { data: currentSub, isLoading: isLoadingSub } = useTenantSubscription(tenantId);
   const { data: plansData, isLoading: isLoadingPlans } = usePlans(true, { page: 0, size: 100 });
   const plans = Array.isArray(plansData) ? plansData : (plansData?.content || []);
@@ -22,12 +35,7 @@ export default function SubscriptionManager({ tenantId }: { tenantId: string }) 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [mode, setMode] = useState<"assign" | "update">("assign");
 
-  const { control, handleSubmit, reset } = useForm<{
-    planId: string;
-    billingCycle: "MONTHLY" | "YEARLY";
-    status?: "TRIAL" | "ACTIVE" | "EXPIRED" | "CANCELLED";
-    expiresAt?: string;
-  }>({
+  const { control, handleSubmit, reset } = useForm<SubscriptionFormData>({
     defaultValues: {
       planId: "",
       billingCycle: "MONTHLY",
@@ -53,13 +61,13 @@ export default function SubscriptionManager({ tenantId }: { tenantId: string }) 
     setIsModalOpen(true);
   };
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: SubscriptionFormData) => {
     try {
       if (mode === "assign") {
         await assignSub({ tenantId, payload: data as AssignSubscriptionPayload });
         message.success("Gán gói dịch vụ thành công");
       } else {
-        const payload = { ...data };
+        const payload: UpdateSubscriptionPayload = { ...data };
         if (payload.expiresAt) {
           payload.expiresAt = new Date(payload.expiresAt).toISOString();
         } else {
@@ -114,14 +122,16 @@ export default function SubscriptionManager({ tenantId }: { tenantId: string }) 
               <p className="text-slate-500 text-sm mb-6 text-center max-w-md">
                 Công ty này hiện chưa được gán bất kỳ gói dịch vụ nào. Hãy gán một gói để kích hoạt các tính năng trên hệ thống.
               </p>
-              <BaseButton
+              {canManage ? <BaseButton
                 type="primary"
                 icon={<Plus className="w-4 h-4" />}
                 onClick={openAssignModal}
                 className="!bg-brand-primary !text-white hover:opacity-90 !border-0 shadow-lg shadow-brand-primary/25 h-11 px-6 rounded-xl font-bold hover:-translate-y-0.5 transition-all"
               >
                 Gán gói dịch vụ
-              </BaseButton>
+              </BaseButton> : (
+                <p className="text-sm text-slate-500">Chỉ Platform Admin có thể gán gói dịch vụ.</p>
+              )}
             </div>
           ) : (
             <div className="space-y-6">
@@ -158,7 +168,7 @@ export default function SubscriptionManager({ tenantId }: { tenantId: string }) 
                 </div>
               </div>
 
-              <div className="flex justify-end pt-4">
+              {canManage && <div className="flex justify-end pt-4">
                 <BaseButton
                   icon={<Edit className="w-4 h-4" />}
                   onClick={openUpdateModal}
@@ -166,13 +176,13 @@ export default function SubscriptionManager({ tenantId }: { tenantId: string }) 
                 >
                   Thay đổi gói / Trạng thái
                 </BaseButton>
-              </div>
+              </div>}
             </div>
           )}
         </div>
       </div>
 
-      <Modal
+      {canManage && <Modal
         title={
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 bg-brand-primary/10 rounded-xl flex items-center justify-center">
@@ -292,7 +302,7 @@ export default function SubscriptionManager({ tenantId }: { tenantId: string }) 
             </BaseButton>
           </div>
         </form>
-      </Modal>
+      </Modal>}
     </div>
   );
 }

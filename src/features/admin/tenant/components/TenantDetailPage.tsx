@@ -1,97 +1,143 @@
 "use client";
 
-import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Tabs, Tag } from "antd";
-import { ArrowLeft, Building2, Settings, ShieldCheck, CreditCard } from "lucide-react";
-import { useTenantStore } from "@/stores/tenant.store";
+import { Alert, Descriptions, Progress, Spin, Tabs, Tag } from "antd";
+import { Building2, CreditCard, Gauge, Settings, ShieldCheck } from "lucide-react";
 import { ADMIN_ROUTES } from "@/constants/routes";
-import UpdateTenantForm from "./UpdateTenantForm";
+import { SystemRole } from "@/features/customer/auth/types/auth.type";
+import { useAuthStore } from "@/stores/auth.store";
+import { useTenantDetail } from "../hooks/use-tenant";
 import TenantSettingsPage from "./TenantSettingsPage";
 import IpWhitelistTable from "./IpWhitelistTable";
 import SubscriptionManager from "@/features/admin/subscription/components/SubscriptionManager";
 import DetailHeader from "@/components/shared/layout/DetailHeader";
 import ContentCard from "@/components/shared/layout/ContentCard";
 
+function Usage({
+  label,
+  current,
+  maximum,
+}: {
+  label: string;
+  current?: number | null;
+  maximum?: number | null;
+}) {
+  const percent = maximum && current != null ? Math.min(100, Math.round((current / maximum) * 100)) : 0;
+  return (
+    <div className="rounded-xl border border-slate-200 p-4">
+      <div className="mb-2 flex justify-between gap-3 text-sm">
+        <span className="font-semibold text-slate-700">{label}</span>
+        <span>
+          {current == null ? "API chưa có số đã dùng" : current.toLocaleString("vi-VN")}
+          {" / "}
+          {maximum == null ? "Không giới hạn" : maximum.toLocaleString("vi-VN")}
+        </span>
+      </div>
+      {maximum != null && current != null && <Progress percent={percent} status={percent >= 100 ? "exception" : "active"} />}
+    </div>
+  );
+}
+
 export default function TenantDetailPage({ id }: { id: string }) {
   const router = useRouter();
-  const activeTenant = useTenantStore((state) => state.activeTenant);
-  useEffect(() => {
-    // Nếu không có activeTenant trong store (do F5 lại trang), đẩy về list
-    if (!activeTenant) {
-      router.push(ADMIN_ROUTES.TENANTS);
-    }
-  }, [activeTenant, router]);
+  const user = useAuthStore((state) => state.user);
+  const isPlatformAdmin = user?.role === SystemRole.PLATFORM_ADMIN;
+  const { data: tenant, isLoading, error } = useTenantDetail(id);
 
-  if (!activeTenant) {
-    return null; // Tránh hydration mismatch và đợi redirect
+  if (isLoading) {
+    return <div className="flex min-h-96 items-center justify-center"><Spin size="large" /></div>;
   }
+
+  if (error || !tenant) {
+    const status = (error as { response?: { status?: number } } | undefined)?.response?.status;
+    return (
+      <Alert
+        showIcon
+        type="error"
+        message={status === 404 ? "Không tìm thấy công ty" : "Không tải được chi tiết công ty"}
+        description={status === 403 ? "Tài khoản cần quyền tenants:read." : "Vui lòng quay lại danh sách và thử lại."}
+        action={<button onClick={() => router.push(ADMIN_ROUTES.TENANTS)}>Quay lại</button>}
+      />
+    );
+  }
+
+  const overview = (
+    <div className="space-y-6">
+      <Alert
+        showIcon
+        type="info"
+        message="Hồ sơ công ty chỉ do chủ sở hữu chỉnh sửa"
+        description="Platform Admin và Platform Staff chỉ được xem hồ sơ tại đây. Các thao tác vòng đời và subscription được tách riêng theo đúng phân quyền backend."
+      />
+      <Descriptions bordered column={{ xs: 1, md: 2 }} size="small">
+        <Descriptions.Item label="Tên">{tenant.name}</Descriptions.Item>
+        <Descriptions.Item label="Slug">{tenant.slug}</Descriptions.Item>
+        <Descriptions.Item label="Tên miền">{tenant.domain || "—"}</Descriptions.Item>
+        <Descriptions.Item label="Lĩnh vực">{tenant.industry || "—"}</Descriptions.Item>
+        <Descriptions.Item label="Quốc gia">{tenant.countryCode || "—"}</Descriptions.Item>
+        <Descriptions.Item label="Múi giờ">{tenant.timezone || "—"}</Descriptions.Item>
+        <Descriptions.Item label="Ngôn ngữ">{tenant.locale || "—"}</Descriptions.Item>
+        <Descriptions.Item label="Owner ID">{tenant.ownerId}</Descriptions.Item>
+      </Descriptions>
+
+      <div>
+        <h3 className="mb-3 flex items-center gap-2 font-bold text-slate-800">
+          <Gauge className="h-5 w-5 text-blue-600" /> Mức sử dụng và giới hạn
+        </h3>
+        <div className="grid gap-3 md:grid-cols-2">
+          <Usage label="Nhân viên" current={tenant.currentEmployeeCount} maximum={tenant.maxEmployees} />
+          <Usage label="Công trình" current={tenant.currentSiteCount} maximum={tenant.maxSites} />
+          <Usage label="Kiểm tra ngẫu nhiên tháng này" current={tenant.currentMonthRandomChecks} maximum={tenant.maxRandomChecksPerMonth} />
+          <Usage label="Dung lượng lưu trữ (GB)" maximum={tenant.maxStorageGb} />
+        </div>
+      </div>
+
+      <Descriptions bordered column={{ xs: 1, md: 2 }} size="small" title="Subscription hiện tại">
+        <Descriptions.Item label="Gói">{tenant.planDisplayName || tenant.planName || "Chưa gán"}</Descriptions.Item>
+        <Descriptions.Item label="Trạng thái">{tenant.subscriptionStatus || "—"}</Descriptions.Item>
+        <Descriptions.Item label="Chu kỳ">{tenant.billingCycle || "—"}</Descriptions.Item>
+        <Descriptions.Item label="Hết hạn">{tenant.subscriptionExpiresAt ? new Date(tenant.subscriptionExpiresAt).toLocaleString("vi-VN") : "Không thời hạn"}</Descriptions.Item>
+      </Descriptions>
+    </div>
+  );
 
   const items = [
     {
-      key: "info",
-      label: (
-        <span className="flex items-center gap-2">
-          <Building2 className="w-4 h-4" />
-          Thông tin chung
-        </span>
-      ),
-      children: <UpdateTenantForm tenant={activeTenant} />,
+      key: "overview",
+      label: <span className="flex items-center gap-2"><Building2 className="h-4 w-4" /> Tổng quan vận hành</span>,
+      children: overview,
     },
-    {
-      key: "settings",
-      label: (
-        <span className="flex items-center gap-2">
-          <Settings className="w-4 h-4" />
-          Giao diện
-        </span>
-      ),
-      children: <TenantSettingsPage tenantId={id} />,
-    },
-    {
-      key: "security",
-      label: (
-        <span className="flex items-center gap-2">
-          <ShieldCheck className="w-4 h-4" />
-          Bảo mật IP
-        </span>
-      ),
-      children: <IpWhitelistTable tenantId={id} />,
-    },
-    {
-      key: "subscription",
-      label: (
-        <span className="flex items-center gap-2">
-          <CreditCard className="w-4 h-4" />
-          Gói dịch vụ
-        </span>
-      ),
-      children: <SubscriptionManager tenantId={id} />,
-    },
+    ...(isPlatformAdmin ? [
+      {
+        key: "settings",
+        label: <span className="flex items-center gap-2"><Settings className="h-4 w-4" /> Giao diện</span>,
+        children: <TenantSettingsPage tenantId={id} />,
+      },
+      {
+        key: "security",
+        label: <span className="flex items-center gap-2"><ShieldCheck className="h-4 w-4" /> Bảo mật IP</span>,
+        children: <IpWhitelistTable tenantId={id} />,
+      },
+      {
+        key: "subscription",
+        label: <span className="flex items-center gap-2"><CreditCard className="h-4 w-4" /> Gói dịch vụ</span>,
+        children: <SubscriptionManager tenantId={id} canManage />,
+      },
+    ] : []),
   ];
 
   return (
     <div className="space-y-6">
       <DetailHeader
         onBack={() => router.push(ADMIN_ROUTES.TENANTS)}
-        title={activeTenant.name}
-        subtitle={`${activeTenant.domain || activeTenant.slug} • ${activeTenant.industry || "Chưa cập nhật lĩnh vực"} • ${activeTenant.countryCode || "Global"}`}
-        avatarUrl={activeTenant.logoUrl}
-        avatarFallback={<Building2 className="w-6 h-6" />}
-        tags={
-          <Tag color={activeTenant.status === "active" ? "success" : activeTenant.status === "inactive" ? "warning" : activeTenant.status === "trial" ? "processing" : "error"}>
-            {activeTenant.status === "active" ? "Hoạt động" : activeTenant.status === "inactive" ? "Tạm dừng" : activeTenant.status === "trial" ? "Dùng thử" : "Đình chỉ"}
-          </Tag>
-        }
+        title={tenant.name}
+        subtitle={`${tenant.domain || tenant.slug} • ${tenant.industry || "Chưa cập nhật lĩnh vực"} • ${tenant.countryCode || "Global"}`}
+        avatarUrl={tenant.logoUrl}
+        avatarFallback={<Building2 className="h-6 w-6" />}
+        tags={<Tag color={tenant.status === "active" ? "success" : tenant.status === "trial" ? "processing" : "error"}>{tenant.status.toUpperCase()}</Tag>}
       />
-
-      {/* Tabs Wrapper */}
       <ContentCard className="p-6">
-        <Tabs
-          defaultActiveKey="info"
-          items={items}
-          className="[&_.ant-tabs-nav]:mb-6 [&_.ant-tabs-tab]:px-4 [&_.ant-tabs-tab]:py-3 [&_.ant-tabs-tab-active_.ant-tabs-tab-btn]:text-brand-600 [&_.ant-tabs-ink-bar]:bg-brand-600"
-        />
+        <Tabs defaultActiveKey="overview" items={items} />
       </ContentCard>
     </div>
   );

@@ -1,7 +1,7 @@
 "use client";
 import { resolvePostLoginRoute } from "@/utils/route.util";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -9,6 +9,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { App, Input } from "antd";
 import { format } from "date-fns";
+import { Clock3, LockKeyhole } from "lucide-react";
 import { PhoneOutlined } from "@ant-design/icons";
 import { isAxiosError } from "axios";
 import type { CredentialResponse } from "@react-oauth/google";
@@ -47,6 +48,11 @@ export default function LoginForm() {
   const [unverifiedEmail, setUnverifiedEmail] = useState("");
   const [useBackupCode, setUseBackupCode] = useState(false);
   const [backupCode, setBackupCode] = useState("");
+  const [lockedAccount, setLockedAccount] = useState<{
+    identifier: string;
+    unlockAt: Date | null;
+  } | null>(null);
+  const [clock, setClock] = useState(0);
   const { setAuth, isTotpPending, pendingToken, setTotpPending, clearTotpPending } = useAuthStore();
 
   const {
@@ -69,6 +75,21 @@ export default function LoginForm() {
       setValue("identifier", identifierQuery);
     }
   }, [identifierQuery, setValue]);
+
+  useEffect(() => {
+    if (!lockedAccount?.unlockAt) return;
+    const timer = window.setInterval(() => setClock(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [lockedAccount]);
+
+  const lockRemaining = useMemo(() => {
+    if (!lockedAccount?.unlockAt) return null;
+    const seconds = Math.max(0, Math.ceil((lockedAccount.unlockAt.getTime() - clock) / 1000));
+    return {
+      seconds,
+      label: `${String(Math.floor(seconds / 3600)).padStart(2, "0")}:${String(Math.floor((seconds % 3600) / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`,
+    };
+  }, [clock, lockedAccount]);
 
   // Form phụ cho TOTP
   const {
@@ -130,6 +151,9 @@ export default function LoginForm() {
         // 22T15:18:22.813563Z.") — reformat it into something readable instead of
         // showing that to the user verbatim.
         const isoMatch = errorMessage.match(/(\d{4}-\d{2}-\d{2}T[\d:.]+Z)/);
+        const unlockAt = isoMatch ? new Date(isoMatch[1]) : null;
+        setClock(unlockAt ? unlockAt.getTime() - 60 * 60 * 1000 : 0);
+        setLockedAccount({ identifier: data.identifier.trim(), unlockAt });
         errorMessage = isoMatch
           ? `Tài khoản tạm khóa do đăng nhập sai nhiều lần. Vui lòng thử lại sau ${format(new Date(isoMatch[1]), "HH:mm dd/MM/yyyy")}.`
           : "Tài khoản tạm khóa do đăng nhập sai nhiều lần. Vui lòng thử lại sau.";
@@ -207,7 +231,50 @@ export default function LoginForm() {
         </p>
 
         {/* Luồng đăng nhập hoặc nhập OTP */}
-        {isTotpPending ? (
+        {lockedAccount ? (
+          <div className="space-y-6 rounded-2xl border border-amber-200 bg-amber-50 p-6 text-center" role="alert">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-amber-100">
+              <LockKeyhole className="h-7 w-7 text-amber-700" aria-hidden="true" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-slate-900">Tài khoản đang tạm khóa</h2>
+              <p className="mt-2 text-sm text-slate-600">
+                Có quá nhiều lần nhập sai mật khẩu. Khóa tự hết sau tối đa 1 giờ.
+                {lockedAccount.identifier.includes("@") && " Email cảnh báo đã được gửi đến tài khoản của bạn."}
+              </p>
+            </div>
+            {lockedAccount.unlockAt && lockRemaining && (
+              <div>
+                <p className="flex items-center justify-center gap-2 text-sm text-slate-600">
+                  <Clock3 className="h-4 w-4" aria-hidden="true" /> Thời gian còn lại
+                </p>
+                <p className="mt-1 font-mono text-3xl font-bold text-amber-800">{lockRemaining.label}</p>
+                <p className="mt-1 text-xs text-slate-500">
+                  Mở lại lúc {format(lockedAccount.unlockAt, "HH:mm dd/MM/yyyy")}
+                </p>
+              </div>
+            )}
+            {lockedAccount.identifier.includes("@") ? (
+              <Link
+                href={`${ROUTES.FORGOT_PASSWORD}?email=${encodeURIComponent(lockedAccount.identifier)}`}
+                className="block rounded-xl bg-blue-600 px-4 py-3 font-semibold !text-white hover:bg-blue-700"
+              >
+                Đặt lại mật khẩu để mở khóa ngay
+              </Link>
+            ) : (
+              <p className="rounded-xl bg-white p-3 text-sm text-slate-600">
+                Tài khoản chỉ có số điện thoại chưa thể nhận link đặt lại mật khẩu. Vui lòng chờ hết thời gian khóa.
+              </p>
+            )}
+            <button
+              type="button"
+              onClick={() => setLockedAccount(null)}
+              className="text-sm font-semibold text-slate-600 hover:text-blue-600"
+            >
+              Dùng tài khoản khác
+            </button>
+          </div>
+        ) : isTotpPending ? (
           <form onSubmit={handleTotpSubmit(onTotpSubmit)} className="space-y-6 animate-fade-in">
             <p className="text-sm text-slate-500">
               Vui lòng mở ứng dụng Authenticator và nhập mã 6 số.

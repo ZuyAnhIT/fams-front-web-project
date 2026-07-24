@@ -8,7 +8,7 @@ export const metadata = {
 
 export default function TenantsPage() {
   return (
-    <RoleGuard allowedRoles={[SystemRole.PLATFORM_ADMIN]}>
+    <RoleGuard allowedRoles={[SystemRole.PLATFORM_ADMIN]} allowedPermissions={["tenants:list"]}>
       <div className="max-w-[1600px] mx-auto py-2">
 
       <TenantListPage />

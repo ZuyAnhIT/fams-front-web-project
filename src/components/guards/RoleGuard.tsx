@@ -9,17 +9,22 @@ import BaseButton from "@/components/ui/BaseButton";
 
 interface RoleGuardProps {
   children: React.ReactNode;
-  allowedRoles: SystemRole[];
+  allowedRoles?: SystemRole[];
+  allowedPermissions?: string[];
 }
 
 /**
  * Component bảo vệ các trang yêu cầu quyền hạn cụ thể.
  * Nếu user không có quyền, sẽ hiển thị lỗi 403.
  */
-export default function RoleGuard({ children, allowedRoles }: RoleGuardProps) {
+export default function RoleGuard({ children, allowedRoles = [], allowedPermissions = [] }: RoleGuardProps) {
   const router = useRouter();
   const { user, isInitialized } = useAuthStore();
-  const hasAccess = Boolean(user?.role && allowedRoles.includes(user.role));
+  const hasRole = Boolean(user?.role && allowedRoles.includes(user.role));
+  const hasPermission = Boolean(
+    user?.permissions?.some((permission) => allowedPermissions.includes(permission)),
+  );
+  const hasAccess = hasRole || hasPermission;
 
   if (!isInitialized) {
     return (
