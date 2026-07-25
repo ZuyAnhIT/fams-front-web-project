@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Alert, Avatar, Space, Switch, Tag } from "antd";
-import { ShieldPlus, Users } from "lucide-react";
+import { Alert, Avatar, Space, Switch, Tabs, Tag } from "antd";
+import { Mail, ShieldPlus, Users } from "lucide-react";
 import { format } from "date-fns";
 import ContentCard from "@/components/shared/layout/ContentCard";
 import ListHeader from "@/components/shared/layout/ListHeader";
@@ -12,13 +12,14 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { useUsersQuery } from "@/hooks/use-user";
 import type { UserProfile } from "@/features/customer/auth/types/auth.type";
 import { AssignPlatformRoleModal } from "@/features/admin/role-permission/components/AssignPlatformRoleModal";
+import { PlatformInvitationPanel } from "./PlatformInvitationPanel";
 
 export function UserDirectoryPage() {
   const [page, setPage] = useState(0);
   const [size, setSize] = useState(20);
   const [search, setSearch] = useState("");
   const [isActive, setIsActive] = useState<boolean | undefined>(undefined);
-  const [platformAdminsOnly, setPlatformAdminsOnly] = useState(true);
+  const [platformAdminsOnly, setPlatformAdminsOnly] = useState(false);
   const [sortBy, setSortBy] = useState<"email" | "displayName" | "createdAt" | "lastLoginAt">("lastLoginAt");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [selectedUser, setSelectedUser] = useState<UserProfile>();
@@ -108,6 +109,21 @@ export function UserDirectoryPage() {
       </div>
 
       <ContentCard noPadding>
+        <Tabs
+          className="px-5 pt-3"
+          items={[
+            {
+              key: "directory",
+              label: <span className="flex items-center gap-2"><Users className="h-4 w-4" />Danh mục tài khoản</span>,
+              children: (
+                <>
+        <Alert
+          type="info"
+          showIcon
+          message="Danh mục này gồm mọi tài khoản trên hệ thống"
+          description="Dùng tìm người và gán vai trò cấp nền tảng. Bộ lọc bên dưới chỉ dựa trên cờ Platform Admin, không đại diện cho role PLATFORM_STAFF."
+          className="m-5 mb-0"
+        />
         {isError && (
           <Alert
             type="error"
@@ -150,7 +166,7 @@ export function UserDirectoryPage() {
                     setPage(0);
                   }}
                 />
-                Chỉ Platform Admin
+                Chỉ tài khoản có cờ Platform Admin
               </label>
             </Space>
           }
@@ -180,6 +196,16 @@ export function UserDirectoryPage() {
             }}
           />
         </div>
+                </>
+              ),
+            },
+            {
+              key: "invitations",
+              label: <span className="flex items-center gap-2"><Mail className="h-4 w-4" />Lời mời nền tảng</span>,
+              children: <PlatformInvitationPanel />,
+            },
+          ]}
+        />
       </ContentCard>
 
       <AssignPlatformRoleModal

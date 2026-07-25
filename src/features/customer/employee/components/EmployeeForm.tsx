@@ -76,7 +76,7 @@ export default function EmployeeForm({ initialData, isEditMode = false }: Employ
       } else {
         await createEmployee(payload);
         message.success("Thêm mới nhân viên thành công");
-        router.push("/employees");
+        router.push("/customer/employees");
       }
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || "Đã xảy ra lỗi, vui lòng thử lại sau";

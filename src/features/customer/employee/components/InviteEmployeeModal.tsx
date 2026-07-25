@@ -10,6 +10,7 @@ import { useSendInvitation } from "../hooks/use-employee";
 import { inviteEmployeeSchema, type InviteEmployeeFormData } from "../schemas/employee.schema";
 import { useEffect } from "react";
 import { useRolesQuery } from "@/features/admin/role-permission/hooks/use-role-permission";
+import { useAuthStore } from "@/stores/auth.store";
 
 interface InviteEmployeeModalProps {
   open: boolean;
@@ -18,6 +19,7 @@ interface InviteEmployeeModalProps {
 
 export default function InviteEmployeeModal({ open, onClose }: InviteEmployeeModalProps) {
   const { mutateAsync: sendInvitation, isPending } = useSendInvitation();
+  const tenantId = useAuthStore((state) => state.user?.tenantId);
   const { data: rolesData, isLoading: isLoadingRoles } = useRolesQuery({ size: 100 });
 
   const {
@@ -29,6 +31,7 @@ export default function InviteEmployeeModal({ open, onClose }: InviteEmployeeMod
     resolver: zodResolver(inviteEmployeeSchema),
     defaultValues: {
       email: "",
+      phone: "",
       firstName: "",
       lastName: "",
       roleId: "",
@@ -45,7 +48,7 @@ export default function InviteEmployeeModal({ open, onClose }: InviteEmployeeMod
     try {
       // Remove empty strings to not send empty values
       const payload = Object.fromEntries(
-        Object.entries(data).filter(([_, v]) => v !== "")
+        Object.entries(data).filter(([, value]) => value !== "")
       ) as InviteEmployeeFormData;
 
       await sendInvitation({ payload });
@@ -58,7 +61,15 @@ export default function InviteEmployeeModal({ open, onClose }: InviteEmployeeMod
   };
 
   const roleOptions = rolesData?.data?.content
-    ?.filter((role) => role.name !== "PLATFORM_ADMIN")
+    ?.filter(
+      (role) =>
+        role.isActive &&
+        (role.tenantId === tenantId ||
+          (role.tenantId === null &&
+            ["TENANT_ADMIN", "HR_MANAGER", "SITE_SUPERVISOR", "EMPLOYEE"].includes(
+              role.name,
+            ))),
+    )
     ?.map((role) => ({
       label: role.name,
       value: role.id,
@@ -79,7 +90,9 @@ export default function InviteEmployeeModal({ open, onClose }: InviteEmployeeMod
     >
       <form id="invite-employee-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <p className="text-sm text-brand-700">
-          Hệ thống sẽ gửi một email chứa đường dẫn đặc biệt để nhân viên tự tạo tài khoản và điền thông tin cá nhân.
+          Hệ thống gửi email để người nhận chấp nhận tham gia. Người đã có tài khoản
+          chỉ cần xác nhận; người chưa có tài khoản sẽ đặt mật khẩu. Nếu HR đã tạo hồ
+          sơ thủ công cùng email, tài khoản sẽ được nối vào hồ sơ đó, không tạo bản ghi trùng.
         </p>
         
         <FormInput
@@ -90,6 +103,15 @@ export default function InviteEmployeeModal({ open, onClose }: InviteEmployeeMod
           id="invite-email"
           error={errors.email}
           required
+          className="text-brand-900 border-brand-300 focus:border-brand-500"
+        />
+
+        <FormInput
+          control={control}
+          name="phone"
+          label="Số điện thoại (Tùy chọn)"
+          placeholder="Ví dụ: 0912345678"
+          error={errors.phone}
           className="text-brand-900 border-brand-300 focus:border-brand-500"
         />
 
@@ -120,7 +142,6 @@ export default function InviteEmployeeModal({ open, onClose }: InviteEmployeeMod
           options={roleOptions}
           loading={isLoadingRoles}
           error={errors.roleId}
-          required
           allowClear
         />
 

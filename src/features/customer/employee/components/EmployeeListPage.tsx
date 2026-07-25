@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Mail, FileDown, FileUp, ChevronRight } from "lucide-react";
-import { Tag, Dropdown, MenuProps, App } from "antd";
+import { Tag, Dropdown, MenuProps, App, Alert, Input, Space } from "antd";
 import BaseSelect from "@/components/ui/BaseSelect";
 import DataTable from "@/components/tables/DataTable";
 import BaseButton from "@/components/ui/BaseButton";
@@ -23,7 +23,8 @@ import { formatVietnameseName } from "@/utils/name.util";
 
 export default function EmployeeListPage() {
   const hasPermission = useAuthStore((state) => state.hasPermission);
-  const { message } = App.useApp();
+  const user = useAuthStore((state) => state.user);
+  const { message, modal } = App.useApp();
   const router = useRouter();
   const { state, setPagination } = usePagination(20);
   const [searchInput, setSearchInput] = useState(state.search || "");
@@ -46,19 +47,50 @@ export default function EmployeeListPage() {
   const { mutate: changeStatus } = useChangeEmployeeStatus();
   const { mutateAsync: exportEmployees, isPending: isExporting } = useExportEmployees();
 
-  const handleStatusChange = (id: string, newStatus: "active" | "inactive" | "terminated") => {
-    changeStatus(
-      { id, payload: { status: newStatus } },
-      {
-        onSuccess: () => message.success("Cập nhật trạng thái thành công"),
-        onError: () => message.error("Lỗi khi cập nhật trạng thái"),
-      }
-    );
+  const handleStatusChange = (
+    record: Employee,
+    newStatus: "active" | "inactive" | "terminated",
+  ) => {
+    const label = {
+      active: "Hoạt động",
+      inactive: "Tạm nghỉ",
+      terminated: "Đã nghỉ việc",
+    }[newStatus];
+    modal.confirm({
+      title: `Chuyển sang “${label}”?`,
+      content:
+        newStatus === "active"
+          ? "Nhân viên sẽ được phép sử dụng các chức năng theo vai trò hiện có."
+          : "Nhân viên sẽ bị ngăn truy cập/chấm công trong tenant này. Dữ liệu lịch sử vẫn được giữ.",
+      okText: "Xác nhận",
+      cancelText: "Hủy",
+      okButtonProps: { danger: newStatus !== "active" },
+      onOk: () =>
+        new Promise<void>((resolve, reject) => {
+          changeStatus(
+            { id: record.id, payload: { status: newStatus } },
+            {
+              onSuccess: () => {
+                message.success("Cập nhật trạng thái thành công");
+                resolve();
+              },
+              onError: () => {
+                message.error("Lỗi khi cập nhật trạng thái");
+                reject();
+              },
+            },
+          );
+        }),
+    });
   };
 
   const handleExport = async () => {
     try {
-      const blob = await exportEmployees({ search: state.search });
+      const blob = await exportEmployees({
+        search: state.search,
+        status: state.status,
+        department: state.department,
+      });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -77,21 +109,27 @@ export default function EmployeeListPage() {
     if (!hasPermission("employees:update")) return [];
     const items: MenuProps["items"] = [];
     if (record.status !== "active") {
-      items.push({ key: "active", label: "Đánh dấu Hoạt động", onClick: () => handleStatusChange(record.id, "active") });
+      items.push({ key: "active", label: "Đánh dấu Hoạt động", onClick: () => handleStatusChange(record, "active") });
     }
     if (record.status !== "inactive") {
-      items.push({ key: "inactive", label: "Đánh dấu Tạm nghỉ", onClick: () => handleStatusChange(record.id, "inactive") });
+      items.push({ key: "inactive", label: "Đánh dấu Tạm nghỉ", onClick: () => handleStatusChange(record, "inactive") });
     }
     if (record.status !== "terminated") {
-      items.push({ key: "terminated", label: "Đánh dấu Đã nghỉ việc", danger: true, onClick: () => handleStatusChange(record.id, "terminated") });
+      items.push({ key: "terminated", label: "Đánh dấu Đã nghỉ việc", danger: true, onClick: () => handleStatusChange(record, "terminated") });
     }
     return items;
   };
 
+  const tenantMemberships =
+    user?.memberships?.filter((membership) => membership.tenantId === user.tenantId) ?? [];
+  const isSiteScoped =
+    tenantMemberships.length > 0 &&
+    tenantMemberships.every((membership) => (membership.siteIds?.length ?? 0) > 0);
+
   const columns = [
     {
       title: "Nhân viên",
-      key: "name",
+      key: "firstName",
       sorter: true,
       render: (_: any, record: Employee) => (
         <div className="flex items-center gap-3 py-1">
@@ -138,7 +176,10 @@ export default function EmployeeListPage() {
       render: (status: string, record: Employee) => {
         return (
           <Dropdown menu={{ items: getStatusActionMenu(record) }} trigger={["click"]} disabled={!hasPermission("employees:update")}>
-            <div className={`${hasPermission("employees:update") ? "cursor-pointer hover:opacity-70" : ""} transition-opacity`}>
+            <div
+              onClick={(event) => event.stopPropagation()}
+              className={`${hasPermission("employees:update") ? "cursor-pointer hover:opacity-70" : ""} transition-opacity`}
+            >
               <StatusBadge status={status} variant="dot" configMap={EMPLOYEE_STATUS} />
             </div>
           </Dropdown>
@@ -193,25 +234,45 @@ export default function EmployeeListPage() {
 
   return (
     <div className="space-y-6 px-2 sm:px-4 pb-4">
+      {isSiteScoped && (
+        <Alert
+          type="info"
+          showIcon
+          message="Bạn đang xem dữ liệu theo phạm vi công trường"
+          description="Danh sách, chi tiết và file xuất chỉ gồm nhân viên thuộc các site bạn được phân công."
+        />
+      )}
       <ListHeader
         searchValue={searchInput}
         onSearchChange={setSearchInput}
         searchPlaceholder="Tìm kiếm theo tên, mã NV, email..."
         searchAriaLabel="Tìm nhân viên theo tên, mã hoặc email"
         filters={
-          <BaseSelect
-            aria-label="Lọc nhân viên theo trạng thái"
-            placeholder="Tất cả trạng thái"
-            className="w-full sm:w-44"
-            allowClear
-            value={state.status}
-            onChange={(val) => setPagination({ status: val, page: 0 })}
-            options={[
-              { label: "Hoạt động", value: "active" },
-              { label: "Tạm nghỉ", value: "inactive" },
-              { label: "Đã nghỉ việc", value: "terminated" },
-            ]}
-          />
+          <Space wrap>
+            <BaseSelect
+              aria-label="Lọc nhân viên theo trạng thái"
+              placeholder="Tất cả trạng thái"
+              className="w-full sm:w-44"
+              allowClear
+              value={state.status}
+              onChange={(val) => setPagination({ status: val, page: 0 })}
+              options={[
+                { label: "Hoạt động", value: "active" },
+                { label: "Tạm nghỉ", value: "inactive" },
+                { label: "Đã nghỉ việc", value: "terminated" },
+              ]}
+            />
+            <Input
+              aria-label="Lọc nhân viên theo phòng ban"
+              allowClear
+              className="w-full sm:w-48"
+              placeholder="Phòng ban"
+              value={state.department}
+              onChange={(event) =>
+                setPagination({ department: event.target.value || undefined, page: 0 })
+              }
+            />
+          </Space>
         }
         actions={
           <>
@@ -240,7 +301,7 @@ export default function EmployeeListPage() {
                 onClick={() => setIsInviteOpen(true)}
                 className="!bg-emerald-600 !text-white hover:!bg-emerald-700 !border-0 shadow-lg shadow-emerald-500/25 font-bold hover:-translate-y-0.5 transition-all gap-2"
               >
-                Mời nhân viên
+                Mời tham gia (gửi email)
               </BaseButton>
             )}
             {hasPermission("employees:create") && (
@@ -253,7 +314,7 @@ export default function EmployeeListPage() {
                 }}
                 className="!bg-blue-600 !text-white hover:!bg-blue-700 !border-0 shadow-lg shadow-blue-500/25 font-bold hover:-translate-y-0.5 transition-all gap-2"
               >
-                Thêm mới
+                Thêm hồ sơ (chưa cần đăng nhập)
               </BaseButton>
             )}
           </>

@@ -59,7 +59,8 @@ export const SIDEBAR_MENU: MenuItem[] = [
     title: "Nhân viên",
     path: CUSTOMER_ROUTES.EMPLOYEES,
     icon: "Users",
-    allowedRoles: [SystemRole.TENANT_ADMIN, SystemRole.HR_MANAGER, SystemRole.SITE_SUPERVISOR]
+    allowedRoles: [SystemRole.TENANT_ADMIN, SystemRole.HR_MANAGER, SystemRole.SITE_SUPERVISOR],
+    allowedPermissions: ["employees:list", "employees:read"],
   },
   {
     title: "Phòng ban",

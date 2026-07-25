@@ -111,6 +111,13 @@ export default function EmployeeFormModal({ open, onClose, initialData }: Employ
       }}
     >
       <form id="employee-form" onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        {!isEditMode && (
+          <div className="rounded-lg border border-blue-100 bg-blue-50 p-3 text-sm text-blue-800">
+            Luồng này chỉ tạo hồ sơ nhân sự để HR quản lý, không tạo tài khoản đăng nhập.
+            Nếu nhập email và mời người này sau, hệ thống sẽ nối tài khoản vào đúng hồ sơ,
+            giữ nguyên dữ liệu đã khai báo.
+          </div>
+        )}
         {/* Thông tin cơ bản */}
         <div className="space-y-4">
           <div className="flex items-center gap-2 mb-2">

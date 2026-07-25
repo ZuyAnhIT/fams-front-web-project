@@ -15,6 +15,11 @@ export type EmployeeFormData = z.infer<typeof employeeSchema>;
 
 export const inviteEmployeeSchema = z.object({
   email: z.string().email("Vui lòng nhập email hợp lệ"),
+  phone: z
+    .string()
+    .regex(/^\+?[0-9]{7,15}$/, "Số điện thoại phải có 7–15 chữ số")
+    .optional()
+    .or(z.literal("")),
   firstName: z.string().optional().or(z.literal("")),
   lastName: z.string().optional().or(z.literal("")),
   roleId: z.string().optional().or(z.literal("")),
