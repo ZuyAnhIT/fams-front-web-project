@@ -269,12 +269,14 @@ test("Platform Admin duyệt user directory với filter/sort và mở gán role
   await page.goto("/admin/users");
   await expect(page.getByText("Platform Operator")).toBeVisible();
   await expect.poll(() => capturedParams).toMatchObject({
-    isPlatformAdmin: "true",
     sortBy: "lastLoginAt",
     sortDir: "desc",
     page: "0",
     size: "20",
   });
+  expect(capturedParams).not.toHaveProperty("isPlatformAdmin");
+  await page.getByText("Chỉ tài khoản có cờ Platform Admin").click();
+  await expect.poll(() => capturedParams).toMatchObject({ isPlatformAdmin: "true" });
   await page.getByRole("button", { name: "Gán vai trò" }).click();
   await expect(page.getByRole("dialog", { name: "Gán role cấp nền tảng" })).toBeVisible();
   await expect(page.getByText(/Platform Operator — platform@fams.com/)).toBeVisible();
@@ -325,7 +327,7 @@ test("Supervisor site-scoped phải chọn site trước khi tải lịch random
   });
 
   await page.goto("/customer/random-checks");
-  await expect(page.getByText("Bạn được giới hạn theo công trình")).toBeVisible();
+  await expect(page.getByText("Bạn được giới hạn theo công trình", { exact: true })).toBeVisible();
   expect(listCalls).toBe(0);
   const siteFilter = page.getByLabel("Lọc theo công trình");
   await siteFilter.click();

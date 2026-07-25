@@ -11,6 +11,9 @@ import type {
   EmployeeListParams,
   InvitationListParams,
   InvitationResponse,
+  InvitationType,
+  PlatformInvitationListParams,
+  SendPlatformInvitationPayload,
 } from "../types/employee.type";
 
 type EmployeeQueryOptions = Omit<
@@ -105,9 +108,9 @@ export const useSendInvitation = () => {
   });
 };
 
-export const useAcceptInvitation = () => {
+export const useAcceptInvitation = (type: InvitationType = "tenant") => {
   return useMutation({
-    mutationFn: (payload: AcceptInvitationPayload) => employeeService.acceptInvitation(payload),
+    mutationFn: (payload: AcceptInvitationPayload) => employeeService.acceptInvitation(payload, type),
   });
 };
 
@@ -131,15 +134,41 @@ export const useCancelInvitation = () => {
   });
 };
 
-export const useValidateInvitation = (token: string | null) => {
+export const useValidateInvitation = (
+  token: string | null,
+  type: InvitationType = "tenant",
+) => {
   return useQuery({
-    queryKey: ["validate-invitation", token],
+    queryKey: ["validate-invitation", type, token],
     queryFn: () => {
       if (!token) throw new Error("No token provided");
-      return employeeService.validateInvitation(token);
+      return employeeService.validateInvitation(token, type);
     },
     enabled: !!token,
     retry: false,
+  });
+};
+
+export const usePlatformInvitations = (params: PlatformInvitationListParams) =>
+  useQuery({
+    queryKey: ["platform-invitations", params],
+    queryFn: () => employeeService.listPlatformInvitations(params),
+  });
+
+export const useSendPlatformInvitation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: SendPlatformInvitationPayload) =>
+      employeeService.sendPlatformInvitation(payload),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["platform-invitations"] }),
+  });
+};
+
+export const useCancelPlatformInvitation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => employeeService.cancelPlatformInvitation(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["platform-invitations"] }),
   });
 };
 

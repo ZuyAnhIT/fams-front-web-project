@@ -53,10 +53,36 @@ export interface EmployeeRoleAssignment {
 
 export interface EmployeeDetailResponse extends EmployeeResponse {
   roles?: EmployeeRoleAssignment[];
+  workspaces?: EmployeeWorkspaceMembership[];
+  assignments?: EmployeeAssignment[];
+}
+
+export interface EmployeeWorkspaceMembership {
+  id: string;
+  workspaceId: string;
+  workspaceName: string;
+  role: string;
+  assignedAt: string;
+}
+
+export interface EmployeeAssignment {
+  id: string;
+  tenantId: string;
+  siteId: string;
+  employeeId: string;
+  shiftId?: string | null;
+  startDate: string;
+  endDate?: string | null;
+  daysOfWeek?: string[] | null;
+  role: string;
+  status: "active" | "cancelled";
+  notes?: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface CreateEmployeePayload {
-  email: string;
+  email?: string;
   firstName: string;
   lastName: string;
   phone?: string;
@@ -74,6 +100,7 @@ export interface ChangeEmployeeStatusPayload {
 
 export interface InviteEmployeePayload {
   email: string;
+  phone?: string;
   firstName?: string;
   lastName?: string;
   roleId?: string;
@@ -84,7 +111,8 @@ export interface InvitationResponse {
   email: string;
   tenantId: string;
   status: string;
-  token: string;
+  /** Bearer credential: only present on the POST response, never on list/cancel. */
+  token?: string | null;
   firstName?: string;
   lastName?: string;
   createdAt: string;
@@ -93,9 +121,11 @@ export interface InvitationResponse {
 
 export interface ValidateInvitationResponse {
   email: string;
+  phone?: string;
   isExistingUser?: boolean;
   existingUser?: boolean;
-  tenantName: string;
+  isExistingPhoneUser?: boolean;
+  tenantName?: string;
 }
 
 export interface InvitationListParams {
@@ -109,4 +139,51 @@ export interface InvitationListParams {
 export interface AcceptInvitationPayload {
   token: string;
   password?: string;
+  displayName?: string;
+  deviceId?: string;
+  existingPhone?: string;
+  existingPassword?: string;
+}
+
+export interface EmployeeImportError {
+  row: number;
+  field?: string | null;
+  message: string;
+}
+
+export interface EmployeeImportResult {
+  totalRows: number;
+  successCount: number;
+  failedCount: number;
+  errors: EmployeeImportError[];
+}
+
+export type InvitationType = "tenant" | "platform";
+
+export interface PlatformInvitationResponse {
+  id: string;
+  email: string;
+  status: string;
+  invitedBy: string;
+  roleId: string;
+  firstName?: string;
+  lastName?: string;
+  expiresAt: string;
+  createdAt: string;
+  updatedAt: string;
+  token?: string | null;
+}
+
+export interface PlatformInvitationListParams {
+  email?: string;
+  status?: string;
+  page?: number;
+  size?: number;
+}
+
+export interface SendPlatformInvitationPayload {
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  roleId?: string;
 }

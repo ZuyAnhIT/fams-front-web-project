@@ -2,10 +2,11 @@
 
 import { use } from "react";
 import { Tabs, Tag } from "antd";
-import { User, ShieldCheck, ArrowLeft, ScanFace } from "lucide-react";
+import { User, ShieldCheck, ScanFace, BriefcaseBusiness } from "lucide-react";
 import EmployeeForm from "@/features/customer/employee/components/EmployeeForm";
 import EmployeeRolesTab from "@/features/customer/employee/components/EmployeeRolesTab";
 import EmployeeFaceIdTab from "@/features/customer/employee/components/EmployeeFaceIdTab";
+import EmployeeWorkTab from "@/features/customer/employee/components/EmployeeWorkTab";
 import { useEmployeeDetail } from "@/features/customer/employee/hooks/use-employee";
 import { useRouter } from "next/navigation";
 import DetailHeader from "@/components/shared/layout/DetailHeader";
@@ -58,6 +59,16 @@ export default function EditEmployeePage({ params }: { params: Promise<{ id: str
       ),
       children: <EmployeeRolesTab employee={data} />,
     }] : []),
+    {
+      key: "work",
+      label: (
+        <span className="flex items-center gap-2">
+          <BriefcaseBusiness className="h-4 w-4" />
+          Workspace & Phân công
+        </span>
+      ),
+      children: <EmployeeWorkTab employee={data} />,
+    },
     {
       key: "faceid",
       label: (

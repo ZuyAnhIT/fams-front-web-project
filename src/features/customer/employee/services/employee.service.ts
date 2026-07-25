@@ -1,4 +1,3 @@
-import axios from "axios";
 import { apiClient } from "@/services/api-client";
 import { type ApiResponse, type PageResponse } from "@/types/api";
 import type {
@@ -12,7 +11,13 @@ import type {
   AcceptInvitationPayload,
   InvitationListParams,
   ValidateInvitationResponse,
+  InvitationType,
+  PlatformInvitationListParams,
+  PlatformInvitationResponse,
+  SendPlatformInvitationPayload,
+  EmployeeImportResult,
 } from "../types/employee.type";
+import type { LoginResponse } from "@/features/customer/auth/types/auth.type";
 
 import { useAuthStore } from "@/stores/auth.store";
 
@@ -138,28 +143,33 @@ export const employeeService = {
   /**
    * Chấp nhận lời mời (Public API)
    */
-  async acceptInvitation(payload: AcceptInvitationPayload) {
-    const response = await apiClient.post<ApiResponse<any>>(`/invitations/accept`, payload);
+  async acceptInvitation(
+    payload: AcceptInvitationPayload,
+    type: InvitationType = "tenant",
+  ): Promise<LoginResponse> {
+    const path = type === "platform" ? "/platform-invitations/accept" : "/invitations/accept";
+    const response = await apiClient.post<ApiResponse<LoginResponse>>(path, payload);
     return response.data.data;
   },
 
   /**
    * Kiểm tra token lời mời hợp lệ (Public API)
    */
-  async validateInvitation(token: string): Promise<ValidateInvitationResponse> {
-    const response = await apiClient.get<ApiResponse<ValidateInvitationResponse>>(`/invitations/validate?token=${token}`);
+  async validateInvitation(token: string, type: InvitationType = "tenant"): Promise<ValidateInvitationResponse> {
+    const path = type === "platform" ? "/platform-invitations/validate" : "/invitations/validate";
+    const response = await apiClient.get<ApiResponse<ValidateInvitationResponse>>(path, { params: { token } });
     return response.data.data;
   },
 
   /**
    * Import danh sách nhân viên từ file Excel
    */
-  async importEmployees(file: File) {
+  async importEmployees(file: File): Promise<EmployeeImportResult> {
     const tenantId = getTenantId();
     const formData = new FormData();
     formData.append("file", file);
 
-    const response = await apiClient.post<ApiResponse<any>>(
+    const response = await apiClient.post<ApiResponse<EmployeeImportResult>>(
       `/tenants/${tenantId}/employees/import`,
       formData,
       {
@@ -189,6 +199,33 @@ export const employeeService = {
     const tenantId = getTenantId();
     const response = await apiClient.delete<ApiResponse<any>>(
       `/tenants/${tenantId}/employees/${employeeId}/face-id`
+    );
+    return response.data.data;
+  },
+
+  async listPlatformInvitations(
+    params: PlatformInvitationListParams,
+  ): Promise<PageResponse<PlatformInvitationResponse>> {
+    const response = await apiClient.get<ApiResponse<PageResponse<PlatformInvitationResponse>>>(
+      "/platform/invitations",
+      { params },
+    );
+    return response.data.data;
+  },
+
+  async sendPlatformInvitation(
+    payload: SendPlatformInvitationPayload,
+  ): Promise<PlatformInvitationResponse> {
+    const response = await apiClient.post<ApiResponse<PlatformInvitationResponse>>(
+      "/platform/invitations",
+      payload,
+    );
+    return response.data.data;
+  },
+
+  async cancelPlatformInvitation(id: string): Promise<PlatformInvitationResponse> {
+    const response = await apiClient.delete<ApiResponse<PlatformInvitationResponse>>(
+      `/platform/invitations/${id}`,
     );
     return response.data.data;
   },

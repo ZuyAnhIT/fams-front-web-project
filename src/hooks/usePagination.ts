@@ -11,6 +11,7 @@ export interface PaginationState {
   sortBy?: string;
   sortDir?: "asc" | "desc";
   status?: string;
+  department?: string;
   industry?: string;
   countryCode?: string;
 }
@@ -37,6 +38,7 @@ export function usePagination(defaultSize = 20) {
     sortBy: getStringParam("sortBy", "createdAt"),
     sortDir: getStringParam("sortDir", "desc") as "asc" | "desc",
     status: getStringParam("status"),
+    department: getStringParam("department"),
     industry: getStringParam("industry"),
     countryCode: getStringParam("countryCode"),
   };
