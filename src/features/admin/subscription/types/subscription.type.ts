@@ -32,7 +32,9 @@ export interface CreatePlanPayload {
   stripeProductId?: string;
 }
 
-export type UpdatePlanPayload = Partial<CreatePlanPayload>;
+export type UpdatePlanPayload = Partial<CreatePlanPayload> & {
+  migrateToPlanId?: string;
+};
 
 export interface UpdatePlanLimitsPayload {
   maxEmployees?: number | null;

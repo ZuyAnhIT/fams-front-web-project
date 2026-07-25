@@ -4,6 +4,10 @@ import { UserProfile } from "@/features/customer/auth/types/auth.type";
 
 export interface UserSearchParams {
   search?: string;
+  isActive?: boolean;
+  isPlatformAdmin?: boolean;
+  sortBy?: "email" | "displayName" | "createdAt" | "lastLoginAt";
+  sortDir?: "asc" | "desc";
   page?: number;
   size?: number;
 }

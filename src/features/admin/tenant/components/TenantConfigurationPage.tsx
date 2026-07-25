@@ -1,17 +1,18 @@
 "use client";
 
-import { Alert, Tabs } from "antd";
+import { Alert, Result, Spin, Tabs } from "antd";
 import { Building2, CreditCard, Palette, ShieldCheck } from "lucide-react";
 import { useAuthStore } from "@/stores/auth.store";
 import IpWhitelistTable from "./IpWhitelistTable";
 import TenantSettingsPage from "./TenantSettingsPage";
+import TenantUsagePanel from "./TenantUsagePanel";
 import UpdateTenantForm from "./UpdateTenantForm";
-import SubscriptionManager from "@/features/admin/subscription/components/SubscriptionManager";
+import { useTenantDetail } from "../hooks/use-tenant";
 
 export default function TenantConfigurationPage() {
   const tenantId = useAuthStore((state) => state.user?.tenantId);
-  const user = useAuthStore((state) => state.user);
-  const membership = user?.memberships?.find((item) => item.tenantId === tenantId);
+  const userId = useAuthStore((state) => state.user?.id);
+  const { data: tenant, isLoading, error } = useTenantDetail(tenantId || "", Boolean(tenantId));
 
   if (!tenantId) {
     return (
@@ -19,7 +20,26 @@ export default function TenantConfigurationPage() {
         type="error"
         showIcon
         message="Không xác định được công ty"
-        description="Phiên đăng nhập hiện tại chưa có thông tin công ty. Vui lòng đăng nhập lại hoặc liên hệ quản trị viên nền tảng."
+        description="Phiên đăng nhập hiện tại chưa có công ty đang hoạt động. Vui lòng chọn công ty hoặc đăng nhập lại."
+      />
+    );
+  }
+
+  if (isLoading) {
+    return <div className="flex min-h-96 items-center justify-center"><Spin size="large" /></div>;
+  }
+
+  const status = (error as { response?: { status?: number } } | undefined)?.response?.status;
+  const isOwner = Boolean(tenant && userId && tenant.ownerId === userId);
+
+  if (error || !tenant || !isOwner) {
+    return (
+      <Result
+        status="403"
+        title="Chỉ chủ sở hữu được quản trị công ty"
+        subTitle={status === 403
+          ? "Bạn là thành viên hoặc quản trị viên được gán, nhưng không phải chủ sở hữu của công ty này."
+          : "Không thể xác minh quyền chủ sở hữu. Vui lòng tải lại trang hoặc liên hệ hỗ trợ."}
       />
     );
   }
@@ -31,54 +51,34 @@ export default function TenantConfigurationPage() {
         items={[
           {
             key: "profile",
-            label: (
-              <span className="flex items-center gap-2">
-                <Building2 className="h-4 w-4" aria-hidden="true" />
-                Hồ sơ công ty
-              </span>
-            ),
+            label: <span className="flex items-center gap-2"><Building2 className="h-4 w-4" /> Hồ sơ công ty</span>,
             children: (
               <div>
                 <Alert
-                  type="info"
+                  type="success"
                   showIcon
                   className="mb-5"
-                  message="Chỉ chủ sở hữu được lưu thay đổi"
-                  description="Frontend chỉ hiển thị màn này cho TENANT_ADMIN; backend tiếp tục xác minh userId đúng ownerId và trả 403 cho quản trị viên được gán nhưng không phải chủ sở hữu."
+                  message="Bạn là chủ sở hữu công ty"
+                  description="Chỉ các trường thực sự thay đổi được gửi lên backend."
                 />
-                <UpdateTenantForm tenantId={tenantId} tenantName={membership?.tenantName} />
+                <UpdateTenantForm tenant={tenant} tenantId={tenantId} />
               </div>
             ),
           },
           {
             key: "display",
-            label: (
-              <span className="flex items-center gap-2">
-                <Palette className="h-4 w-4" aria-hidden="true" />
-                Hiển thị
-              </span>
-            ),
-            children: <TenantSettingsPage tenantId={tenantId} />,
+            label: <span className="flex items-center gap-2"><Palette className="h-4 w-4" /> Giao diện & định dạng</span>,
+            children: <TenantSettingsPage tenantId={tenantId} canEdit />,
           },
           {
             key: "security",
-            label: (
-              <span className="flex items-center gap-2">
-                <ShieldCheck className="h-4 w-4" aria-hidden="true" />
-                Danh sách IP an toàn
-              </span>
-            ),
-            children: <IpWhitelistTable tenantId={tenantId} />,
+            label: <span className="flex items-center gap-2"><ShieldCheck className="h-4 w-4" /> Bảo mật IP</span>,
+            children: <IpWhitelistTable tenantId={tenantId} canManage />,
           },
           {
             key: "subscription",
-            label: (
-              <span className="flex items-center gap-2">
-                <CreditCard className="h-4 w-4" aria-hidden="true" />
-                Gói dịch vụ
-              </span>
-            ),
-            children: <SubscriptionManager tenantId={tenantId} canManage={false} />,
+            label: <span className="flex items-center gap-2"><CreditCard className="h-4 w-4" /> Gói & mức sử dụng</span>,
+            children: <TenantUsagePanel tenant={tenant} />,
           },
         ]}
       />

@@ -1,17 +1,18 @@
 "use client";
 
-import { useEffect } from "react";
-import { Alert, App } from "antd";
+import { useEffect, useState } from "react";
+import { Alert, App, Form } from "antd";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Building2 } from "lucide-react";
 import FormInput from "@/components/forms/FormInput";
 import BaseModal from "@/components/ui/BaseModal";
-import BaseSelect from "@/components/ui/BaseSelect";
-import { usePlans } from "@/features/admin/subscription/hooks/use-subscription";
 import { useCreateTenant } from "../hooks/use-tenant";
 import { createTenantSchema, type CreateTenantFormData } from "../schemas/tenant.schema";
 import type { CreateTenantPayload } from "../types/tenant.type";
+import BaseSelect from "@/components/ui/BaseSelect";
+import { useSearchUsers } from "@/hooks/use-user";
+import { useDebounce } from "@/hooks/useDebounce";
 
 interface CreateTenantModalProps {
   open: boolean;
@@ -25,14 +26,17 @@ const optionalFields = [
   "timezone",
   "locale",
   "currencyCode",
-  "planId",
 ] as const;
 
 export default function CreateTenantModal({ open, onClose }: CreateTenantModalProps) {
   const { message } = App.useApp();
   const { mutateAsync: createTenant, isPending } = useCreateTenant();
-  const { data: plansData, isLoading: isLoadingPlans } = usePlans(true, { page: 0, size: 100 });
-  const plans = plansData?.content ?? [];
+  const [ownerSearch, setOwnerSearch] = useState("");
+  const debouncedOwnerSearch = useDebounce(ownerSearch, 300);
+  const { data: ownerResults, isFetching: isSearchingOwners } = useSearchUsers(
+    { search: debouncedOwnerSearch, size: 8, sortBy: "displayName", sortDir: "asc" },
+    open,
+  );
 
   const {
     control,
@@ -50,8 +54,7 @@ export default function CreateTenantModal({ open, onClose }: CreateTenantModalPr
       timezone: "Asia/Ho_Chi_Minh",
       locale: "vi-VN",
       currencyCode: "VND",
-      ownerEmail: "",
-      planId: "",
+      ownerUserId: "",
     },
   });
 
@@ -66,8 +69,7 @@ export default function CreateTenantModal({ open, onClose }: CreateTenantModalPr
         timezone: "Asia/Ho_Chi_Minh",
         locale: "vi-VN",
         currencyCode: "VND",
-        ownerEmail: "",
-        planId: "",
+        ownerUserId: "",
       });
     }
   }, [open, reset]);
@@ -80,7 +82,8 @@ export default function CreateTenantModal({ open, onClose }: CreateTenantModalPr
 
     try {
       await createTenant(payload);
-      message.success(`Đã cấp phát công ty "${data.name}" cho ${data.ownerEmail}.`);
+      const selectedOwner = ownerResults?.content.find((user) => user.id === data.ownerUserId);
+      message.success(`Đã cấp phát công ty "${data.name}" cho ${selectedOwner?.email || "tài khoản đã chọn"}.`);
       onClose();
     } catch (error: unknown) {
       const response = (error as {
@@ -124,19 +127,43 @@ export default function CreateTenantModal({ open, onClose }: CreateTenantModalPr
           showIcon
           type="info"
           message="Chế độ platform provisioning"
-          description="Chủ sở hữu phải là tài khoản FAMS đã tồn tại. Hệ thống gán trực tiếp TENANT_ADMIN; không gửi lời mời và người cấp phát không trở thành thành viên."
+          description="Chủ sở hữu phải là tài khoản FAMS đã tồn tại. Công ty được tạo với gói trial; đổi gói là thao tác riêng tại trang chi tiết. Người cấp phát không trở thành thành viên."
         />
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <FormInput control={control} name="name" label="Tên công ty" error={errors.name} required />
           <FormInput control={control} name="slug" label="Slug" error={errors.slug} required />
-          <FormInput
+          <Controller
             control={control}
-            name="ownerEmail"
-            label="Email chủ sở hữu đã đăng ký"
-            error={errors.ownerEmail}
-            required
-            className="md:col-span-2"
+            name="ownerUserId"
+            render={({ field, fieldState }) => (
+              <Form.Item
+                className="md:col-span-2 !mb-0"
+                label="Chủ sở hữu đã đăng ký"
+                required
+                validateStatus={fieldState.error ? "error" : ""}
+                help={fieldState.error?.message}
+              >
+                <BaseSelect
+                  {...field}
+                  aria-label="Chủ sở hữu đã đăng ký"
+                  showSearch
+                  filterOption={false}
+                  onSearch={setOwnerSearch}
+                  loading={isSearchingOwners}
+                  placeholder="Nhập ít nhất 2 ký tự tên hoặc email"
+                  notFoundContent={
+                    debouncedOwnerSearch.length < 2
+                      ? "Nhập ít nhất 2 ký tự để tìm"
+                      : "Không tìm thấy tài khoản — người này cần đăng ký FAMS trước"
+                  }
+                  options={(ownerResults?.content || []).map((user) => ({
+                    value: user.id,
+                    label: `${user.displayName || "Chưa đặt tên"} — ${user.email || "không có email"}`,
+                  }))}
+                />
+              </Form.Item>
+            )}
           />
           <FormInput control={control} name="domain" label="Tên miền" error={errors.domain} />
           <FormInput control={control} name="industry" label="Lĩnh vực" error={errors.industry} />
@@ -146,29 +173,6 @@ export default function CreateTenantModal({ open, onClose }: CreateTenantModalPr
           <FormInput control={control} name="currencyCode" label="Tiền tệ" error={errors.currencyCode} />
         </div>
 
-        <div>
-          <label className="mb-2 block text-sm font-semibold text-slate-700" htmlFor="provision-plan">
-            Gói dịch vụ
-          </label>
-          <Controller
-            name="planId"
-            control={control}
-            render={({ field }) => (
-              <BaseSelect
-                {...field}
-                id="provision-plan"
-                allowClear
-                loading={isLoadingPlans}
-                className="w-full"
-                placeholder="Mặc định: gói active có thứ tự thấp nhất"
-                options={plans.map((plan) => ({
-                  value: plan.id,
-                  label: `${plan.displayName || plan.name} — ${plan.priceMonthly.toLocaleString("vi-VN")}/tháng`,
-                }))}
-              />
-            )}
-          />
-        </div>
       </form>
     </BaseModal>
   );

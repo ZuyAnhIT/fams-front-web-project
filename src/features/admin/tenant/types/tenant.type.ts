@@ -61,11 +61,16 @@ export interface TenantOperationalDetail {
 }
 
 export interface TenantSettingsResponse {
+  id?: string;
+  tenantId?: string;
   dateFormat: string;
   timeFormat: string;
   brandPrimaryColor?: string | null;
   brandSecondaryColor?: string | null;
-  customCss?: string | null;
+  brandAccentColor?: string | null;
+  employeeCodePrefix?: string | null;
+  employeeCodePadding?: number | null;
+  updatedAt?: string;
 }
 
 export interface IpWhitelistResponse {
@@ -109,7 +114,9 @@ export interface UpdateTenantSettingsPayload {
   timeFormat?: string;
   brandPrimaryColor?: string;
   brandSecondaryColor?: string;
-  customCss?: string;
+  brandAccentColor?: string;
+  employeeCodePrefix?: string;
+  employeeCodePadding?: number;
 }
 
 export interface CreateIpWhitelistPayload {

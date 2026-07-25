@@ -76,9 +76,12 @@ export const tenantService = {
   /**
    * Lấy danh sách IP Whitelist
    */
-  async listIpWhitelists(id?: string): Promise<PageResponse<IpWhitelistResponse>> {
+  async listIpWhitelists(id?: string, page = 0, size = 20): Promise<PageResponse<IpWhitelistResponse>> {
     const tenantId = id || getTenantId();
-    const response = await apiClient.get<ApiResponse<PageResponse<IpWhitelistResponse>>>(`/tenants/${tenantId}/ip-whitelists`);
+    const response = await apiClient.get<ApiResponse<PageResponse<IpWhitelistResponse>>>(
+      `/tenants/${tenantId}/ip-whitelists`,
+      { params: { page, size } },
+    );
     return response.data.data;
   },
 

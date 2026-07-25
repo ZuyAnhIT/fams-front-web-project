@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Form, Checkbox, Spin, message, Row, Col, Card } from "antd";
+import { Alert, Form, Checkbox, Spin, message, Row, Col, Card } from "antd";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -9,8 +9,6 @@ import { Shield } from "lucide-react";
 import { BaseButton, BaseInput, BaseTextArea, BaseSelect, BaseModal } from "@/components/ui";
 import { usePermissionsGroupedQuery, useCreateRoleMutation, useUpdateRoleMutation } from "../hooks/use-role-permission";
 import { RoleDetailResponse } from "../types";
-import { useQuery } from "@tanstack/react-query";
-import { tenantService } from "@/features/admin/tenant/services/tenant.service";
 import { formatResource, formatAction, formatDescription } from "../utils/permission.mapper";
 import { useAuthStore } from "@/stores/auth.store";
 import { SystemRole } from "@/features/customer/auth/types/auth.type";
@@ -20,7 +18,6 @@ const roleSchema = z.object({
   name: z.string().min(1, "Role name is required").max(100, "Role name must be between 1 and 100 characters"),
   description: z.string().max(500, "Description must be at most 500 characters").optional(),
   permissionIds: z.array(z.string()).optional(),
-  selectedTenantId: z.string().optional(),
 });
 
 type RoleFormValues = z.infer<typeof roleSchema>;
@@ -28,11 +25,12 @@ type RoleFormValues = z.infer<typeof roleSchema>;
 interface RoleFormModalProps {
   open: boolean;
   onClose: () => void;
-  tenantId: string;
+  tenantId?: string;
+  scope: "tenant" | "platform";
   initialData?: RoleDetailResponse;
 }
 
-export const RoleFormModal: React.FC<RoleFormModalProps> = ({ open, onClose, tenantId, initialData }) => {
+export const RoleFormModal: React.FC<RoleFormModalProps> = ({ open, onClose, tenantId, scope, initialData }) => {
   const [messageApi, contextHolder] = message.useMessage();
   const user = useAuthStore((state) => state.user);
   const { data: permissionsResponse, isLoading: isLoadingPermissions, isError: isErrorPermissions, error: permissionsError } = usePermissionsGroupedQuery();
@@ -41,23 +39,15 @@ export const RoleFormModal: React.FC<RoleFormModalProps> = ({ open, onClose, ten
 
   const isEdit = !!initialData;
   const isSystemRole = isEdit && (initialData?.isSystem || (initialData as any)?.system);
-  const showTenantSelector = !tenantId && !isEdit;
 
   const [filterResources, setFilterResources] = useState<string[]>([]);
 
-  const { data: tenantsData, isLoading: isLoadingTenants } = useQuery({
-    queryKey: ["tenants", "all"],
-    queryFn: () => tenantService.listTenants({ size: 100 }),
-    enabled: showTenantSelector && open,
-  });
-
-  const { control, handleSubmit, reset, setValue, watch, setError } = useForm<RoleFormValues>({
+  const { control, handleSubmit, reset, setValue, watch } = useForm<RoleFormValues>({
     resolver: zodResolver(roleSchema),
     defaultValues: {
       name: "",
       description: "",
       permissionIds: [],
-      selectedTenantId: undefined,
     },
   });
 
@@ -70,14 +60,12 @@ export const RoleFormModal: React.FC<RoleFormModalProps> = ({ open, onClose, ten
           name: initialData.name,
           description: initialData.description || "",
           permissionIds: initialData.permissions?.map((p) => p.id) || [],
-          selectedTenantId: initialData.tenantId || undefined,
         });
       } else {
         reset({
           name: "",
           description: "",
           permissionIds: [],
-          selectedTenantId: undefined,
         });
       }
     }
@@ -96,14 +84,8 @@ export const RoleFormModal: React.FC<RoleFormModalProps> = ({ open, onClose, ten
         });
         messageApi.success("Role updated successfully");
       } else {
-        const finalTenantId = tenantId || values.selectedTenantId;
-        if (!finalTenantId) {
-          setError("selectedTenantId", { type: "manual", message: "Vui lòng chọn công ty" });
-          return;
-        }
-
         await createRole.mutateAsync({
-          tenantId: finalTenantId,
+          ...(scope === "tenant" && tenantId ? { tenantId } : {}),
           name: values.name,
           description: values.description,
           permissionIds: values.permissionIds || [],
@@ -127,7 +109,7 @@ export const RoleFormModal: React.FC<RoleFormModalProps> = ({ open, onClose, ten
     setValue("permissionIds", current, { shouldDirty: true });
   };
 
-  const handleSelectAllGroup = (permissions: any[], checked: boolean) => {
+  const handleSelectAllGroup = (permissions: { id: string }[], checked: boolean) => {
     let current = [...selectedPermissionIds];
     const groupPermIds = permissions.map((p) => p.id);
     
@@ -156,8 +138,6 @@ export const RoleFormModal: React.FC<RoleFormModalProps> = ({ open, onClose, ten
     ? permissionGroups.filter((g: any) => filterResources.includes(g.resource))
     : permissionGroups;
 
-  const tenantOptions = tenantsData?.content?.map((t) => ({ label: t.name, value: t.id })) || [];
-
   return (
     <>
       {contextHolder}
@@ -172,7 +152,9 @@ export const RoleFormModal: React.FC<RoleFormModalProps> = ({ open, onClose, ten
                 {isSystemRole ? "Chi tiết Role Hệ thống" : (isEdit ? "Sửa Role" : "Tạo Role Tùy Chỉnh")}
               </div>
               <p className="text-sm text-slate-500 font-normal mt-0.5">
-                Thiết lập quyền hạn cho nhóm người dùng
+                {scope === "platform"
+                  ? "Vai trò nội bộ FAMS, áp dụng trên toàn nền tảng"
+                  : "Thiết lập quyền hạn trong công ty hiện tại"}
               </p>
             </div>
           </div>
@@ -197,27 +179,13 @@ export const RoleFormModal: React.FC<RoleFormModalProps> = ({ open, onClose, ten
         }
       >
         <Form id="role-form" layout="vertical" onFinish={handleSubmit(onSubmit)} requiredMark={(label, info) => info.required ? <>{label} <span className="text-red-500 ml-1">*</span></> : label}>
-          {showTenantSelector && (
-            <Controller
-              name="selectedTenantId"
-              control={control}
-              render={({ field, fieldState }) => (
-                <Form.Item
-                  label="Chọn Công ty (Tenant)"
-                  validateStatus={fieldState.error ? "error" : ""}
-                  help={fieldState.error?.message}
-                  required
-                >
-                  <BaseSelect
-                    {...field}
-                    placeholder="-- Chọn công ty --"
-                    options={tenantOptions}
-                    loading={isLoadingTenants}
-                    showSearch
-                    optionFilterProp="label"
-                  />
-                </Form.Item>
-              )}
+          {scope === "platform" && !isSystemRole && (
+            <Alert
+              className="mb-5"
+              type="warning"
+              showIcon
+              message="Vai trò cấp nền tảng"
+              description="Role này không thuộc công ty nào và chỉ Platform Admin được tạo, sửa hoặc gán cho nhân sự FAMS."
             />
           )}
 
@@ -277,16 +245,11 @@ export const RoleFormModal: React.FC<RoleFormModalProps> = ({ open, onClose, ten
             ) : isErrorPermissions ? (
               <div className="text-red-500 p-4 border border-red-200 rounded-md bg-red-50">
                 <p>Lỗi khi tải danh sách phân quyền.</p>
-                <pre className="text-xs mt-2 overflow-auto max-w-full">
-                  {JSON.stringify(permissionsError, null, 2)}
-                </pre>
+                <p className="text-xs mt-1">{permissionsError instanceof Error ? permissionsError.message : "Vui lòng thử lại."}</p>
               </div>
             ) : permissionGroups.length === 0 ? (
               <div className="text-gray-500 p-4 border border-gray-200 rounded-md bg-gray-50">
-                <p>Không có dữ liệu phân quyền. (Debug info:)</p>
-                <pre className="text-xs mt-2 overflow-auto max-w-full">
-                  {JSON.stringify(permissionsResponse, null, 2)}
-                </pre>
+                <p>Không có dữ liệu phân quyền.</p>
               </div>
             ) : filteredPermissionGroups.length === 0 ? (
               <div className="text-gray-500 p-4 border border-gray-200 rounded-md bg-gray-50 text-center">
@@ -304,6 +267,10 @@ export const RoleFormModal: React.FC<RoleFormModalProps> = ({ open, onClose, ten
                       <Checkbox
                         disabled={isSystemRole}
                         checked={group.permissions.length > 0 && group.permissions.every((p: any) => selectedPermissionIds.includes(p.id))}
+                        indeterminate={
+                          group.permissions.some((p: any) => selectedPermissionIds.includes(p.id))
+                          && !group.permissions.every((p: any) => selectedPermissionIds.includes(p.id))
+                        }
                         onChange={(e) => handleSelectAllGroup(group.permissions, e.target.checked)}
                       >
                         <span className="font-medium !text-gray-700">Chọn tất cả</span>

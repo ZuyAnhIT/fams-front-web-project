@@ -34,9 +34,15 @@ export const SIDEBAR_MENU: MenuItem[] = [
     allowedPermissions: ["tenants:list"],
   },
   {
-    title: "Vai trò & Quyền",
+    title: "Vai trò nền tảng",
     path: ADMIN_ROUTES.ROLES,
     icon: "ShieldCheck",
+    allowedRoles: [SystemRole.PLATFORM_ADMIN]
+  },
+  {
+    title: "Nhân sự FAMS",
+    path: ADMIN_ROUTES.USERS,
+    icon: "Users",
     allowedRoles: [SystemRole.PLATFORM_ADMIN]
   },
 
@@ -79,6 +85,12 @@ export const SIDEBAR_MENU: MenuItem[] = [
     icon: "ScanFace",
     allowedRoles: [SystemRole.TENANT_ADMIN, SystemRole.HR_MANAGER]
   },
+  {
+    title: "Kiểm tra ngẫu nhiên",
+    path: CUSTOMER_ROUTES.RANDOM_CHECKS,
+    icon: "RadioTower",
+    allowedPermissions: ["randomchecks:list", "randomchecks:configure"]
+  },
 
   // -- CẤU HÌNH HỆ THỐNG (CUSTOMER) --
   {
@@ -86,6 +98,12 @@ export const SIDEBAR_MENU: MenuItem[] = [
     path: CUSTOMER_ROUTES.TENANT_SETTINGS,
     icon: "Building",
     allowedRoles: [SystemRole.TENANT_ADMIN]
+  },
+  {
+    title: "Vai trò & Phân quyền",
+    path: CUSTOMER_ROUTES.ROLES,
+    icon: "ShieldCheck",
+    allowedPermissions: ["roles:read", "roles:create", "roles:update", "roles:delete"]
   },
 
 ];

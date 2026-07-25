@@ -1,16 +1,27 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { Form, message } from "antd";
+import { Alert, Form, message, Radio } from "antd";
 import BaseModal from "@/components/ui/BaseModal";
 import BaseSelect from "@/components/ui/BaseSelect";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useRolesQuery, useAssignRoleMutation } from "../hooks/use-role-permission";
+import { useSitesQuery } from "@/features/customer/site/hooks/use-site";
 
 const assignRoleSchema = z.object({
   roleId: z.string().min(1, "Vui lòng chọn một role"),
+  scope: z.enum(["tenant", "sites"]),
+  siteIds: z.array(z.string()),
+}).superRefine((values, context) => {
+  if (values.scope === "sites" && values.siteIds.length === 0) {
+    context.addIssue({
+      code: "custom",
+      path: ["siteIds"],
+      message: "Vui lòng chọn ít nhất một công trình",
+    });
+  }
 });
 
 type AssignRoleValues = z.infer<typeof assignRoleSchema>;
@@ -36,19 +47,27 @@ export const AssignRoleModal: React.FC<AssignRoleModalProps> = ({
   // Fetch roles for the dropdown (no pagination, large size to get all for simplicity, or implement search/scroll)
   const { data: rolesData, isLoading: isLoadingRoles } = useRolesQuery({
     tenantId,
-    size: 100, // Assuming 100 is enough for roles dropdown, adjust if needed
+    isActive: true,
+    size: 100,
+  });
+  const { data: sitesData, isLoading: isLoadingSites } = useSitesQuery({
+    tenantId,
+    status: "active",
+    size: 100,
   });
 
-  const { control, handleSubmit, reset } = useForm<AssignRoleValues>({
+  const { control, handleSubmit, reset, watch, setValue } = useForm<AssignRoleValues>({
     resolver: zodResolver(assignRoleSchema),
     defaultValues: {
       roleId: "",
+      scope: "tenant",
+      siteIds: [],
     },
   });
 
   useEffect(() => {
     if (open) {
-      reset({ roleId: "" });
+      reset({ roleId: "", scope: "tenant", siteIds: [] });
     }
   }, [open, reset]);
 
@@ -58,6 +77,7 @@ export const AssignRoleModal: React.FC<AssignRoleModalProps> = ({
         userId,
         roleId: values.roleId,
         tenantId,
+        siteIds: values.scope === "sites" ? values.siteIds : [],
       });
       messageApi.success("Đã gán role thành công");
       if (onSuccess) onSuccess();
@@ -67,9 +87,21 @@ export const AssignRoleModal: React.FC<AssignRoleModalProps> = ({
     }
   };
 
-  const roleOptions = rolesData?.data?.content.map((role) => ({
+  const assignableRoles = rolesData?.data?.content.filter(
+    (role) => role.isActive !== false && !["PLATFORM_ADMIN", "PLATFORM_STAFF"].includes(role.name),
+  ) || [];
+  const roleOptions = assignableRoles.map((role) => ({
     label: role.name + (role.isSystem ? " (Hệ thống)" : ""),
     value: role.id,
+  })) || [];
+  const selectedRole = assignableRoles.find((role) => role.id === watch("roleId"));
+  const supportsSiteScope = Boolean(
+    selectedRole && (selectedRole.name === "SITE_SUPERVISOR" || !selectedRole.isSystem),
+  );
+  const selectedScope = watch("scope");
+  const siteOptions = sitesData?.data?.content.map((site) => ({
+    label: `${site.name}${site.code ? ` (${site.code})` : ""}`,
+    value: site.id,
   })) || [];
 
   return (
@@ -113,10 +145,61 @@ export const AssignRoleModal: React.FC<AssignRoleModalProps> = ({
                   showSearch
                   optionFilterProp="label"
                   size="large"
+                  onChange={(value) => {
+                    field.onChange(value);
+                    setValue("scope", "tenant");
+                    setValue("siteIds", []);
+                  }}
                 />
               </Form.Item>
             )}
           />
+          {supportsSiteScope && (
+            <>
+              <Controller
+                name="scope"
+                control={control}
+                render={({ field }) => (
+                  <Form.Item label={<span className="text-sm font-semibold text-slate-700">Phạm vi áp dụng</span>}>
+                    <Radio.Group {...field}>
+                      <Radio value="tenant">Toàn công ty</Radio>
+                      <Radio value="sites">Công trình cụ thể</Radio>
+                    </Radio.Group>
+                  </Form.Item>
+                )}
+              />
+              {selectedScope === "sites" && (
+                <Controller
+                  name="siteIds"
+                  control={control}
+                  render={({ field, fieldState }) => (
+                    <Form.Item
+                      label="Chọn công trình"
+                      required
+                      validateStatus={fieldState.error ? "error" : ""}
+                      help={fieldState.error?.message}
+                    >
+                      <BaseSelect
+                        {...field}
+                        mode="multiple"
+                        options={siteOptions}
+                        loading={isLoadingSites}
+                        placeholder="Chọn một hoặc nhiều công trình"
+                        optionFilterProp="label"
+                        showSearch
+                      />
+                    </Form.Item>
+                  )}
+                />
+              )}
+              <Alert
+                type="info"
+                showIcon
+                message="Quy tắc phạm vi"
+                description="Nếu người dùng có một role khác áp dụng toàn công ty, phạm vi không giới hạn sẽ được ưu tiên."
+              />
+            </>
+          )}
         </Form>
       </BaseModal>
     </>

@@ -9,3 +9,12 @@ export const useSearchUsers = (params: UserSearchParams, enabled: boolean = true
     staleTime: 60 * 1000, // 1 phút
   });
 };
+
+export const useUsersQuery = (params: UserSearchParams, enabled: boolean = true) => {
+  return useQuery({
+    queryKey: ["users", "directory", params],
+    queryFn: () => userService.searchUsers(params),
+    enabled,
+    staleTime: 30 * 1000,
+  });
+};

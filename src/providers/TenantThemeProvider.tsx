@@ -13,13 +13,18 @@ export function TenantThemeProvider({ children }: { children: React.ReactNode })
   
   // Lấy màu từ settings, nếu không có thì dùng màu mặc định của hệ thống
   const primaryColor = settings?.brandPrimaryColor || COLORS.blue[600];
+  const secondaryColor = settings?.brandSecondaryColor || COLORS.green[500];
+  const accentColor = settings?.brandAccentColor || COLORS.yellow[500];
 
   useEffect(() => {
-    // Inject CSS variable `--brand-primary` vào thẻ html
     if (typeof document !== "undefined") {
       document.documentElement.style.setProperty("--brand-primary", primaryColor);
+      document.documentElement.style.setProperty("--brand-secondary", secondaryColor);
+      document.documentElement.style.setProperty("--brand-accent", accentColor);
+      document.documentElement.dataset.dateFormat = settings?.dateFormat || "DD/MM/YYYY";
+      document.documentElement.dataset.timeFormat = settings?.timeFormat || "HH:mm";
     }
-  }, [primaryColor]);
+  }, [accentColor, primaryColor, secondaryColor, settings?.dateFormat, settings?.timeFormat]);
 
   return (
     <ConfigProvider

@@ -1,18 +1,20 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { rolePermissionService } from "../services/role-permission.service";
-import { AssignRoleRequest, CreateRoleRequest, UpdateRoleRequest } from "../types";
+import { AssignPlatformRoleRequest, AssignRoleRequest, CreateRoleRequest, UpdateRoleRequest } from "../types";
 
 export const rolePermissionKeys = {
   all: ["roles"] as const,
   lists: () => [...rolePermissionKeys.all, "list"] as const,
   list: (filters: string) => [...rolePermissionKeys.lists(), { filters }] as const,
   permissions: () => ["permissions"] as const,
+  myRoles: () => [...rolePermissionKeys.all, "me"] as const,
 };
 
 export const useRolesQuery = (params: {
   tenantId?: string;
   search?: string;
   isSystem?: boolean;
+  isActive?: boolean;
   sortBy?: string;
   sortDir?: "asc" | "desc";
   page?: number;
@@ -68,8 +70,22 @@ export const useAssignRoleMutation = () => {
   });
 };
 
+export const useAssignPlatformRoleMutation = () => {
+  return useMutation({
+    mutationFn: (data: AssignPlatformRoleRequest) =>
+      rolePermissionService.assignPlatformRole(data),
+  });
+};
+
 export const useRevokeRoleMutation = () => {
   return useMutation({
     mutationFn: (id: string) => rolePermissionService.revokeRole(id),
+  });
+};
+
+export const useMyRolesQuery = () => {
+  return useQuery({
+    queryKey: rolePermissionKeys.myRoles(),
+    queryFn: () => rolePermissionService.getMyRoles(),
   });
 };

@@ -9,7 +9,7 @@ import FormInput from "@/components/forms/FormInput";
 import BaseButton from "@/components/ui/BaseButton";
 import { useUpdateTenant } from "../hooks/use-tenant";
 import { updateTenantSchema, type UpdateTenantFormData } from "../schemas/tenant.schema";
-import type { Tenant } from "../types/tenant.type";
+import type { Tenant, TenantOperationalDetail } from "../types/tenant.type";
 import { useTenantStore } from "@/stores/tenant.store";
 import ContentCard from "@/components/shared/layout/ContentCard";
 
@@ -18,7 +18,7 @@ export default function UpdateTenantForm({
   tenantId,
   tenantName,
 }: {
-  tenant?: Tenant | null;
+  tenant?: Tenant | TenantOperationalDetail | null;
   tenantId?: string;
   tenantName?: string;
 }) {
@@ -40,7 +40,7 @@ export default function UpdateTenantForm({
       countryCode: tenant?.countryCode || "",
       timezone: tenant?.timezone || "UTC",
       locale: tenant?.locale || "en",
-      currencyCode: tenant?.currencyCode || "",
+      currencyCode: tenant && "currencyCode" in tenant ? tenant.currencyCode || "" : "",
     },
   });
 
@@ -53,7 +53,7 @@ export default function UpdateTenantForm({
       countryCode: tenant?.countryCode || "",
       timezone: tenant?.timezone || "UTC",
       locale: tenant?.locale || "en",
-      currencyCode: tenant?.currencyCode || "",
+      currencyCode: tenant && "currencyCode" in tenant ? tenant.currencyCode || "" : "",
     });
   }, [tenant, tenantName, reset]);
 

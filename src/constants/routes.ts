@@ -18,6 +18,7 @@ export const ADMIN_ROUTES = {
   TENANTS: "/admin/tenants",
   REPORTS: "/admin/reports",
   ROLES: "/admin/settings/roles",
+  USERS: "/admin/users",
 };
 
 export const CUSTOMER_ROUTES = {
@@ -30,6 +31,8 @@ export const CUSTOMER_ROUTES = {
   FACE_ID_REPORT: "/customer/reports/face-id-enrollment",
   SETTINGS: "/customer/settings",
   TENANT_SETTINGS: "/customer/settings/tenant",
+  ROLES: "/customer/settings/roles",
+  MY_PERMISSIONS: "/customer/settings/permissions",
   WORKSPACES: "/customer/workspaces",
   SELECT_COMPANY: "/customer/select-company",
   NOTIFICATIONS: "/customer/notifications",
