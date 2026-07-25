@@ -1,15 +1,14 @@
 "use client";
 
 import React, { useState } from "react";
-import { Space, Tag, message, Tooltip, App } from "antd";
+import { Alert, Space, Tag, message, Tooltip, App } from "antd";
 import { useAuthStore } from "@/stores/auth.store";
-import { EditOutlined, DeleteOutlined, EyeOutlined } from "@ant-design/icons";
-import { useRolesQuery, useDeleteRoleMutation } from "../hooks/use-role-permission";
+import { EditOutlined, DeleteOutlined, EyeOutlined, PauseCircleOutlined, PlayCircleOutlined } from "@ant-design/icons";
+import { useRolesQuery, useDeleteRoleMutation, useUpdateRoleMutation } from "../hooks/use-role-permission";
 import { RoleFormModal } from "./RoleFormModal";
+import { AssignPlatformRoleModal } from "./AssignPlatformRoleModal";
 import { RoleResponse, RoleDetailResponse } from "../types";
 import { format } from "date-fns";
-import { useQuery } from "@tanstack/react-query";
-import { tenantService } from "@/features/admin/tenant/services/tenant.service";
 import { rolePermissionService } from "../services/role-permission.service";
 import ListHeader from "@/components/shared/layout/ListHeader";
 import ContentCard from "@/components/shared/layout/ContentCard";
@@ -22,7 +21,11 @@ import { useDebounce } from "@/hooks/useDebounce";
 
 
 
-export const RoleManagementPage: React.FC = () => {
+interface RoleManagementPageProps {
+  scope: "tenant" | "platform";
+}
+
+export const RoleManagementPage: React.FC<RoleManagementPageProps> = ({ scope }) => {
   const user = useAuthStore((state) => state.user);
   const hasPermission = useAuthStore((state) => state.hasPermission);
   const tenantId = user?.tenantId;
@@ -34,40 +37,36 @@ export const RoleManagementPage: React.FC = () => {
   const [searchInput, setSearchInput] = useState("");
   const debouncedSearch = useDebounce(searchInput, 500);
   const [isSystemFilter, setIsSystemFilter] = useState<boolean | undefined>(undefined);
-  const [selectedFilterTenantId, setSelectedFilterTenantId] = useState<string | undefined>(undefined);
+  const [isActiveFilter, setIsActiveFilter] = useState<boolean | undefined>(undefined);
   const [sortBy, setSortBy] = useState<string | undefined>(undefined);
   const [sortDir, setSortDir] = useState<"asc" | "desc" | undefined>(undefined);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isPlatformAssignOpen, setIsPlatformAssignOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState<RoleDetailResponse | undefined>(undefined);
   const [isFetchingRole, setIsFetchingRole] = useState(false);
 
   const { data: rolesResponse, isLoading, isFetching } = useRolesQuery({
-    tenantId: user?.role === "PLATFORM_ADMIN" ? selectedFilterTenantId : (tenantId || undefined),
+    tenantId: scope === "tenant" ? (tenantId || undefined) : undefined,
     search: debouncedSearch,
     isSystem: isSystemFilter,
+    isActive: isActiveFilter,
     sortBy,
     sortDir,
     page,
     size,
   });
 
-  const { data: tenantsData, isLoading: isLoadingTenants } = useQuery({
-    queryKey: ["tenants", "all"],
-    queryFn: () => tenantService.listTenants({ size: 100 }),
-    enabled: user?.role === "PLATFORM_ADMIN",
-  });
-  const tenantOptions = tenantsData?.content?.map((t) => ({ label: t.name, value: t.id })) || [];
-
   const deleteRole = useDeleteRoleMutation();
+  const updateRole = useUpdateRoleMutation();
 
   const handleFilterChange = (value: string | undefined) => {
     setIsSystemFilter(value === undefined ? undefined : value === "system");
     setPage(0);
   };
 
-  const handleTenantFilterChange = (value: string | undefined) => {
-    setSelectedFilterTenantId(value);
+  const handleActiveFilterChange = (value: string | undefined) => {
+    setIsActiveFilter(value === undefined ? undefined : value === "active");
     setPage(0);
   };
 
@@ -94,7 +93,7 @@ export const RoleManagementPage: React.FC = () => {
   const handleDelete = (id: string, name: string) => {
     modal.confirm({
       title: 'Xóa Role',
-      content: `Bạn có chắc chắn muốn xóa role "${name}" không? Hành động này không thể hoàn tác.`,
+      content: `Chỉ có thể xóa role "${name}" khi không còn người đang giữ role. Nên vô hiệu hóa và thu hồi các lượt gán trước khi xóa.`,
       okText: 'Xóa',
       okType: 'danger',
       cancelText: 'Hủy',
@@ -109,7 +108,36 @@ export const RoleManagementPage: React.FC = () => {
     });
   };
 
+  const handleToggleActive = async (role: RoleResponse) => {
+    try {
+      setIsFetchingRole(true);
+      const detail = (await rolePermissionService.getRoleById(role.id)).data;
+      await updateRole.mutateAsync({
+        id: role.id,
+        data: {
+          name: detail.name,
+          description: detail.description,
+          permissionIds: detail.permissions.map((permission) => permission.id),
+          isActive: !role.isActive,
+        },
+      });
+      messageApi.success(role.isActive ? "Đã vô hiệu hóa role" : "Đã kích hoạt lại role");
+    } catch (error: any) {
+      messageApi.error(error?.response?.data?.message || "Không thể cập nhật trạng thái role");
+    } finally {
+      setIsFetchingRole(false);
+    }
+  };
+
   const columns = [
+    {
+      title: "Trạng thái",
+      dataIndex: "isActive",
+      key: "isActive",
+      render: (active: boolean) => (
+        <Tag color={active ? "success" : "default"}>{active ? "Hoạt động" : "Đã vô hiệu hóa"}</Tag>
+      ),
+    },
     {
       title: "Tên Quyền",
       dataIndex: "name",
@@ -136,6 +164,14 @@ export const RoleManagementPage: React.FC = () => {
       ),
     },
     {
+      title: "Người đang giữ",
+      dataIndex: "assignmentCount",
+      key: "assignmentCount",
+      render: (count: number = 0) => (
+        <Tag color={count > 0 ? "gold" : "default"}>{count} người</Tag>
+      ),
+    },
+    {
       title: "Ngày cập nhật",
       dataIndex: "updatedAt",
       key: "updatedAt",
@@ -153,6 +189,7 @@ export const RoleManagementPage: React.FC = () => {
               <Tooltip title="Xem chi tiết">
                 <BaseButton
                   type="text"
+                  aria-label={`Xem ${record.name}`}
                   icon={<EyeOutlined />}
                   onClick={() => openEditModal(record)}
                   loading={isFetchingRole}
@@ -162,25 +199,46 @@ export const RoleManagementPage: React.FC = () => {
             ) : (
               <>
                 {hasPermission("roles:update") && (
-                  <Tooltip title="Sửa">
-                    <BaseButton
-                      type="text"
-                      icon={<EditOutlined />}
-                      onClick={() => openEditModal(record)}
-                      disabled={isFetchingRole}
-                      loading={isFetchingRole}
-                      className="text-blue-600 hover:text-blue-800"
-                    />
-                  </Tooltip>
+                  <>
+                    <Tooltip title="Sửa">
+                      <BaseButton
+                        type="text"
+                        aria-label={`Sửa ${record.name}`}
+                        icon={<EditOutlined />}
+                        onClick={() => openEditModal(record)}
+                        disabled={isFetchingRole}
+                        className="text-blue-600 hover:text-blue-800"
+                      />
+                    </Tooltip>
+                    <Tooltip title={record.isActive ? "Vô hiệu hóa" : "Kích hoạt lại"}>
+                      <BaseButton
+                        type="text"
+                        aria-label={`${record.isActive ? "Vô hiệu hóa" : "Kích hoạt"} ${record.name}`}
+                        icon={record.isActive ? <PauseCircleOutlined /> : <PlayCircleOutlined />}
+                        onClick={() => handleToggleActive(record)}
+                        disabled={isFetchingRole}
+                      />
+                    </Tooltip>
+                  </>
                 )}
                 {hasPermission("roles:delete") && (
-                  <Tooltip title="Xóa">
-                    <BaseButton
-                      type="text"
-                      danger
-                      icon={<DeleteOutlined />}
-                      onClick={() => handleDelete(record.id, record.name)}
-                    />
+                  <Tooltip
+                    title={
+                      record.assignmentCount > 0
+                        ? `Còn ${record.assignmentCount} người đang giữ role — cần thu hồi hết trước khi xóa`
+                        : "Xóa"
+                    }
+                  >
+                    <span>
+                      <BaseButton
+                        type="text"
+                        aria-label={`Xóa ${record.name}`}
+                        danger
+                        disabled={record.assignmentCount > 0}
+                        icon={<DeleteOutlined />}
+                        onClick={() => handleDelete(record.id, record.name)}
+                      />
+                    </span>
                   </Tooltip>
                 )}
               </>
@@ -198,23 +256,40 @@ export const RoleManagementPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-            Vai trò & Phân quyền
+            {scope === "platform" ? "Vai trò cấp nền tảng" : "Vai trò & Phân quyền"}
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Quản lý các vai trò và thiết lập quyền hạn truy cập hệ thống
+            {scope === "platform"
+              ? "Quản trị vai trò nội bộ FAMS, tách biệt hoàn toàn với vai trò của từng công ty"
+              : "Quản lý vai trò tùy chỉnh và quyền truy cập trong công ty hiện tại"}
           </p>
         </div>
-        {hasPermission("roles:create") && (
-          <BaseButton
-            type="primary"
-            icon={<Plus className="h-4.5 w-4.5" />}
-            onClick={openCreateModal}
-            className="!bg-blue-600 !text-white hover:!bg-blue-700 !border-0 shadow-lg shadow-blue-500/25 h-10 px-5 rounded-xl font-bold hover:-translate-y-0.5 transition-all flex items-center gap-2"
-          >
-            Tạo Role
-          </BaseButton>
-        )}
+        <Space wrap>
+          {scope === "platform" && (
+            <BaseButton onClick={() => setIsPlatformAssignOpen(true)}>Gán role nền tảng</BaseButton>
+          )}
+          {(scope === "platform" ? user?.role === "PLATFORM_ADMIN" : hasPermission("roles:create")) && (
+            <BaseButton
+              type="primary"
+              icon={<Plus className="h-4.5 w-4.5" />}
+              onClick={openCreateModal}
+              className="!bg-blue-600 !text-white hover:!bg-blue-700 !border-0 shadow-lg shadow-blue-500/25 h-10 px-5 rounded-xl font-bold hover:-translate-y-0.5 transition-all flex items-center gap-2"
+            >
+              Tạo Role
+            </BaseButton>
+          )}
+        </Space>
       </div>
+
+      <Alert
+        showIcon
+        type="info"
+        message={
+          scope === "platform"
+            ? "Role hệ thống là bất biến; role tùy chỉnh ở đây có tenantId = null và chỉ Platform Admin nhìn thấy."
+            : "Role hệ thống chỉ được xem. Vô hiệu hóa role không thu hồi quyền của người đang giữ, nhưng ngăn các lượt gán mới."
+        }
+      />
 
       <ContentCard noPadding>
         <ListHeader
@@ -239,19 +314,17 @@ export const RoleManagementPage: React.FC = () => {
                   { value: "custom", label: "Role Tùy chỉnh" },
                 ]}
               />
-              {user?.role === "PLATFORM_ADMIN" && (
-                <BaseSelect
-                  aria-label="Lọc vai trò theo công ty"
-                  placeholder="Lọc theo Công ty"
-                  allowClear
-                  showSearch
-                  optionFilterProp="label"
-                  className="w-full sm:w-56"
-                  onChange={handleTenantFilterChange}
-                  options={tenantOptions}
-                  loading={isLoadingTenants}
-                />
-              )}
+              <BaseSelect
+                aria-label="Lọc theo trạng thái vai trò"
+                placeholder="Lọc trạng thái"
+                allowClear
+                className="w-full sm:w-48"
+                onChange={handleActiveFilterChange}
+                options={[
+                  { value: "active", label: "Đang hoạt động" },
+                  { value: "inactive", label: "Đã vô hiệu hóa" },
+                ]}
+              />
             </div>
           }
         />
@@ -286,9 +359,16 @@ export const RoleManagementPage: React.FC = () => {
       <RoleFormModal
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        tenantId={tenantId || ""}
+        tenantId={scope === "tenant" ? (tenantId || undefined) : undefined}
+        scope={scope}
         initialData={selectedRole}
       />
+      {scope === "platform" && (
+        <AssignPlatformRoleModal
+          open={isPlatformAssignOpen}
+          onClose={() => setIsPlatformAssignOpen(false)}
+        />
+      )}
     </div>
   );
 };

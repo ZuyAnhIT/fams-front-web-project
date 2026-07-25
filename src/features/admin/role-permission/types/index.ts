@@ -9,6 +9,7 @@ export interface PermissionResponse {
 export interface PermissionGroupResponse {
   resource: string;
   permissionCount: number;
+  assignmentCount: number;
   permissions: PermissionResponse[];
 }
 
@@ -17,8 +18,10 @@ export interface RoleResponse {
   name: string;
   description: string;
   isSystem: boolean;
+  isActive: boolean;
   tenantId: string | null;
   permissionCount: number;
+  assignmentCount: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -28,6 +31,7 @@ export interface RoleDetailResponse {
   name: string;
   description: string;
   isSystem: boolean;
+  isActive: boolean;
   tenantId: string | null;
   permissions: PermissionResponse[];
   permissionCount: number;
@@ -36,7 +40,7 @@ export interface RoleDetailResponse {
 }
 
 export interface CreateRoleRequest {
-  tenantId: string;
+  tenantId?: string;
   name: string;
   description?: string;
   permissionIds?: string[];
@@ -46,12 +50,19 @@ export interface UpdateRoleRequest {
   name: string;
   description?: string;
   permissionIds: string[];
+  isActive?: boolean;
 }
 
 export interface AssignRoleRequest {
   userId: string;
   roleId: string;
   tenantId: string;
+  siteIds?: string[];
+}
+
+export interface AssignPlatformRoleRequest {
+  userId: string;
+  roleId: string;
 }
 
 export interface UserRoleResponse {
@@ -65,4 +76,6 @@ export interface UserRoleResponse {
   assignedAt?: string;
   roleName?: string;
   permissions?: string[];
+  siteIds?: string[];
+  sites?: Array<{ id: string; name: string }>;
 }

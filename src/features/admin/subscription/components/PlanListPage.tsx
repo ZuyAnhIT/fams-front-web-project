@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { Plus, Edit2, Settings2, ShieldAlert, Star } from "lucide-react";
-import { Switch, App, Tag } from "antd";
+import { Switch, App, Tag, Modal, Alert } from "antd";
 import BaseButton from "@/components/ui/BaseButton";
+import BaseSelect from "@/components/ui/BaseSelect";
 import { usePagination } from "@/hooks/usePagination";
 import { usePlans, useUpdatePlan } from "../hooks/use-subscription";
 import type { PlanResponse } from "../types/subscription.type";
@@ -15,11 +16,13 @@ export default function PlanListPage() {
   const { message } = App.useApp();
   const { data: plansData, isLoading, error } = usePlans(false, state);
   const plans = Array.isArray(plansData) ? plansData : (plansData?.content || []);
-  const { mutate: updatePlan } = useUpdatePlan();
+  const { mutateAsync: updatePlan, isPending: isUpdatingPlan } = useUpdatePlan();
 
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isLimitsDrawerOpen, setIsLimitsDrawerOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<PlanResponse | null>(null);
+  const [planToDeactivate, setPlanToDeactivate] = useState<PlanResponse | null>(null);
+  const [migrateToPlanId, setMigrateToPlanId] = useState<string>();
 
   const handleEditPlan = (plan: PlanResponse) => {
     setSelectedPlan(plan);
@@ -36,14 +39,37 @@ export default function PlanListPage() {
     setIsFormModalOpen(true);
   };
 
-  const handleToggleActive = (plan: PlanResponse, checked: boolean) => {
-    updatePlan(
-      { id: plan.id, payload: { isActive: checked } },
-      {
-        onSuccess: () => message.success(`Đã ${checked ? 'bật' : 'tắt'} gói ${plan.name}`),
-        onError: () => message.error("Cập nhật thất bại"),
-      }
-    );
+  const handleToggleActive = async (plan: PlanResponse, checked: boolean) => {
+    if (!checked) {
+      setPlanToDeactivate(plan);
+      setMigrateToPlanId(undefined);
+      return;
+    }
+    try {
+      await updatePlan({ id: plan.id, payload: { isActive: true } });
+      message.success(`Đã bật gói ${plan.name}`);
+    } catch (updateError: unknown) {
+      const response = (updateError as { response?: { data?: { userMessage?: string; message?: string } } }).response;
+      message.error(response?.data?.userMessage || response?.data?.message || "Không thể bật gói.");
+    }
+  };
+
+  const confirmDeactivate = async () => {
+    if (!planToDeactivate) return;
+    try {
+      await updatePlan({
+        id: planToDeactivate.id,
+        payload: {
+          isActive: false,
+          ...(migrateToPlanId ? { migrateToPlanId } : {}),
+        },
+      });
+      message.success(`Đã tắt gói ${planToDeactivate.name}`);
+      setPlanToDeactivate(null);
+    } catch (updateError: unknown) {
+      const response = (updateError as { response?: { data?: { userMessage?: string; message?: string } } }).response;
+      message.error(response?.data?.userMessage || response?.data?.message || "Không thể tắt gói.");
+    }
   };
 
   if (error && (error as { response?: { status?: number } }).response?.status === 403) {
@@ -131,8 +157,10 @@ export default function PlanListPage() {
                   <div className="flex items-center justify-between px-2">
                     <span className="text-sm font-bold text-slate-600">Trạng thái (Bật/Tắt)</span>
                     <Switch
+                      aria-label={`Bật hoặc tắt gói ${plan.displayName}`}
                       checked={plan.isActive}
-                      onChange={(checked) => handleToggleActive(plan, checked)}
+                      loading={isUpdatingPlan}
+                      onChange={(checked) => void handleToggleActive(plan, checked)}
                       className={plan.isActive ? "!bg-green-500" : "bg-slate-300"}
                     />
                   </div>
@@ -188,6 +216,42 @@ export default function PlanListPage() {
         onClose={() => setIsLimitsDrawerOpen(false)}
         plan={selectedPlan}
       />
+
+      <Modal
+        title={`Tắt gói ${planToDeactivate?.displayName || ""}`}
+        open={Boolean(planToDeactivate)}
+        onCancel={() => setPlanToDeactivate(null)}
+        onOk={() => void confirmDeactivate()}
+        okText="Xác nhận tắt gói"
+        cancelText="Hủy"
+        confirmLoading={isUpdatingPlan}
+        okButtonProps={{ danger: true }}
+      >
+        <div className="space-y-4 py-2">
+          <Alert
+            showIcon
+            type="warning"
+            message="Kiểm tra tenant đang sử dụng gói"
+            description="Nếu còn tenant đang dùng gói này, backend yêu cầu chọn gói đích để chuyển an toàn. Việc chuyển có thể bị chặn nếu tenant vượt giới hạn của gói đích."
+          />
+          <div>
+            <label htmlFor="migration-plan" className="mb-2 block text-sm font-semibold text-slate-700">
+              Chuyển tenant sang gói khác (nếu cần)
+            </label>
+            <BaseSelect
+              id="migration-plan"
+              aria-label="Gói đích để chuyển tenant"
+              allowClear
+              value={migrateToPlanId}
+              onChange={(value) => setMigrateToPlanId(value)}
+              placeholder="Không chuyển — chỉ hợp lệ khi chưa có tenant sử dụng"
+              options={plans
+                .filter((plan) => plan.isActive && plan.id !== planToDeactivate?.id)
+                .map((plan) => ({ value: plan.id, label: plan.displayName || plan.name }))}
+            />
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

@@ -218,6 +218,7 @@ export default function SubscriptionManager({
                 render={({ field }) => (
                   <BaseSelect
                     {...field}
+                    aria-label="Chọn gói dịch vụ"
                     className="w-full h-11"
                     options={plans.map(p => ({ label: p.displayName || p.name, value: p.id }))}
                     loading={isLoadingPlans}
@@ -236,6 +237,7 @@ export default function SubscriptionManager({
                 render={({ field }) => (
                   <BaseSelect
                     {...field}
+                    aria-label="Chọn chu kỳ thanh toán"
                     className="w-full h-11"
                     options={[
                       { label: "Hàng tháng (Monthly)", value: "MONTHLY" },
@@ -256,6 +258,7 @@ export default function SubscriptionManager({
                     render={({ field }) => (
                       <BaseSelect
                         {...field}
+                        aria-label="Chọn trạng thái subscription"
                         className="w-full h-11"
                         options={[
                           { label: "Active (Đang hoạt động)", value: "ACTIVE" },

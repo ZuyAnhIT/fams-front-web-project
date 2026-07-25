@@ -47,6 +47,8 @@ export interface EmployeeRoleAssignment {
   assignedAt?: string;
   roleName?: string;
   permissions?: string[];
+  siteIds?: string[];
+  sites?: Array<{ id: string; name: string }>;
 }
 
 export interface EmployeeDetailResponse extends EmployeeResponse {

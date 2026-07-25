@@ -8,9 +8,9 @@ export const metadata = {
 
 export default function RolesPage() {
   return (
-    <RoleGuard allowedRoles={[SystemRole.TENANT_ADMIN, SystemRole.PLATFORM_ADMIN]}>
+    <RoleGuard allowedRoles={[SystemRole.PLATFORM_ADMIN]}>
       <div className="max-w-[1600px] mx-auto py-2">
-        <RoleManagementPage />
+        <RoleManagementPage scope="platform" />
       </div>
     </RoleGuard>
   );

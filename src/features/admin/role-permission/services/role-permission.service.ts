@@ -2,6 +2,7 @@ import { apiClient } from "@/services/api-client";
 import { ApiResponse, PageResponse } from "@/types/api";
 import {
   AssignRoleRequest,
+  AssignPlatformRoleRequest,
   CreateRoleRequest,
   PermissionGroupResponse,
   RoleDetailResponse,
@@ -16,6 +17,7 @@ export const rolePermissionService = {
     tenantId?: string;
     search?: string;
     isSystem?: boolean;
+    isActive?: boolean;
     sortBy?: string;
     sortDir?: "asc" | "desc";
     page?: number;
@@ -78,6 +80,16 @@ export const rolePermissionService = {
   ): Promise<ApiResponse<UserRoleResponse>> => {
     const response = await apiClient.post<ApiResponse<UserRoleResponse>>(
       "/user-roles",
+      data
+    );
+    return response.data;
+  },
+
+  assignPlatformRole: async (
+    data: AssignPlatformRoleRequest
+  ): Promise<ApiResponse<UserRoleResponse>> => {
+    const response = await apiClient.post<ApiResponse<UserRoleResponse>>(
+      "/user-roles/platform",
       data
     );
     return response.data;

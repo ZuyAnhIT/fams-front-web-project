@@ -10,6 +10,8 @@ import { APP_NAME } from "@/constants/app";
 import { SIDEBAR_MENU } from "@/config/menu";
 import { useAuthStore } from "@/stores/auth.store";
 import { CUSTOMER_ROUTES } from "@/constants/routes";
+import { SystemRole } from "@/features/customer/auth/types/auth.type";
+import { useTenantDetail } from "@/features/admin/tenant/hooks/use-tenant";
 
 interface SidebarProps {
   variant?: "desktop" | "mobile";
@@ -29,6 +31,11 @@ export default function Sidebar({ variant = "desktop", onNavigate }: SidebarProp
   const pathname = usePathname();
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
+  const shouldCheckOwner = user?.role === SystemRole.TENANT_ADMIN && Boolean(user.tenantId);
+  const { data: activeTenantDetail } = useTenantDetail(user?.tenantId || "", shouldCheckOwner);
+  const isActiveTenantOwner = Boolean(
+    activeTenantDetail && user?.id && activeTenantDetail.ownerId === user.id,
+  );
   const isMobile = variant === "mobile";
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
@@ -122,6 +129,9 @@ export default function Sidebar({ variant = "desktop", onNavigate }: SidebarProp
         !isMobile && isCollapsed ? "px-2" : "px-4"
       )}>
         {SIDEBAR_MENU.filter((item) => {
+          if (item.path === CUSTOMER_ROUTES.TENANT_SETTINGS && !isActiveTenantOwner) {
+            return false;
+          }
           // Nếu item không yêu cầu role cụ thể, ai cũng xem được
           if (
             (!item.allowedRoles || item.allowedRoles.length === 0)

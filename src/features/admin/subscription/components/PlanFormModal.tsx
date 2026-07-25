@@ -73,7 +73,8 @@ export default function PlanFormModal({ open, onClose, initialData }: PlanFormMo
   const onSubmit = async (data: PlanFormData) => {
     try {
       if (isEditMode && initialData) {
-        await updatePlan({ id: initialData.id, payload: data });
+        const { name: _immutableName, ...payload } = data;
+        await updatePlan({ id: initialData.id, payload });
         message.success("Cập nhật gói dịch vụ thành công!");
       } else {
         await createPlan(data);
@@ -118,6 +119,8 @@ export default function PlanFormModal({ open, onClose, initialData }: PlanFormMo
             placeholder="VD: basic-plan, pro_tier"
             error={errors.name}
             required
+            disabled={isEditMode}
+            helpText={isEditMode ? "Mã hệ thống không thể thay đổi sau khi tạo" : undefined}
             labelClassName="!text-slate-800"
           />
           <FormInput

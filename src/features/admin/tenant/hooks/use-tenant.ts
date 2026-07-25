@@ -22,6 +22,10 @@ export const useTenantDetail = (id: string, enabled: boolean = true) => {
     queryKey: ["tenant-detail", id],
     queryFn: () => tenantService.getTenantDetail(id),
     enabled: enabled && Boolean(id),
+    retry: (failureCount, error) => {
+      const status = (error as { response?: { status?: number } }).response?.status;
+      return status !== 403 && status !== 404 && failureCount < 2;
+    },
   });
 };
 
@@ -67,10 +71,11 @@ export const useUpdateTenantSettings = () => {
   });
 };
 
-export const useIpWhitelists = (id?: string) => {
+export const useIpWhitelists = (id?: string, page = 0, size = 20) => {
   return useQuery({
-    queryKey: ["ipWhitelists", id],
-    queryFn: () => tenantService.listIpWhitelists(id),
+    queryKey: ["ipWhitelists", id, page, size],
+    queryFn: () => tenantService.listIpWhitelists(id, page, size),
+    enabled: Boolean(id),
   });
 };
 

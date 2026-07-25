@@ -128,6 +128,20 @@ test("Platform Admin truyền đủ filter/sort/pagination và provisioning đú
       page: 0, size: 100, totalElements: 1, totalPages: 1, first: true, last: true,
     }),
   }));
+  await page.route("**/api/v1/users?*", (route) => route.fulfill({
+    json: api({
+      content: [{
+        id: ownerId,
+        email: "new-owner@example.com",
+        displayName: "New Owner",
+        active: true,
+        platformAdmin: false,
+        createdAt: tenant.createdAt,
+        updatedAt: tenant.updatedAt,
+      }],
+      page: 0, size: 8, totalElements: 1, totalPages: 1, first: true, last: true,
+    }),
+  }));
   await page.route("**/api/v1/tenants", async (route) => {
     if (route.request().method() !== "POST") return route.fallback();
     createBody = route.request().postDataJSON() as Record<string, unknown>;
@@ -139,15 +153,17 @@ test("Platform Admin truyền đủ filter/sort/pagination và provisioning đú
   await page.getByRole("button", { name: "Cấp phát công ty" }).click();
   await page.getByLabel("Tên công ty").fill("Công ty Mới");
   await page.getByLabel("Slug").fill("cong-ty-moi");
-  await page.getByLabel("Email chủ sở hữu đã đăng ký").fill("new-owner@example.com");
+  const ownerSelect = page.getByLabel("Chủ sở hữu đã đăng ký");
+  await ownerSelect.fill("new-owner");
+  await page.getByText("New Owner — new-owner@example.com", { exact: true }).click();
   await page.getByRole("button", { name: "Tạo và gán chủ sở hữu" }).click();
   await expect.poll(() => createBody).toMatchObject({
     name: "Công ty Mới",
     slug: "cong-ty-moi",
-    ownerEmail: "new-owner@example.com",
+    ownerUserId: ownerId,
     countryCode: "VN",
   });
-  expect(createBody).not.toHaveProperty("adminEmail");
+  expect(createBody).not.toHaveProperty("ownerEmail");
   await page.screenshot({ path: `${evidenceDir}/01-admin-list-provisioning.png`, fullPage: true });
 });
 
@@ -231,43 +247,54 @@ test("self-service không gửi owner/plan và chuyển thẳng vào tenant vừ
   expect(createBody).not.toHaveProperty("planId");
 });
 
-test("owner xem subscription nhưng không có nút quản trị, và PATCH chỉ gửi field đã sửa", async ({ page }) => {
+test("owner xem gói + usage từ detail, không gọi subscription write, và PATCH chỉ gửi field đã sửa", async ({ page }) => {
   await seedUser(page, "TENANT_ADMIN", [], tenantId);
   let updateBody: Record<string, unknown> = {};
+  let subscriptionWriteCalls = 0;
+  await page.route(`**/api/v1/tenants/${tenantId}/detail`, (route) => route.fulfill({
+    json: api({
+      ...tenant,
+      planName: "starter",
+      planDisplayName: "Starter",
+      subscriptionStatus: "ACTIVE",
+      billingCycle: "MONTHLY",
+      subscriptionExpiresAt: null,
+      maxEmployees: 10,
+      maxSites: null,
+      maxStorageGb: 5,
+      maxRandomChecksPerMonth: 100,
+      currentEmployeeCount: 4,
+      currentSiteCount: 2,
+      currentMonthRandomChecks: 20,
+    }),
+  }));
   await page.route(`**/api/v1/tenants/${tenantId}`, async (route) => {
     updateBody = route.request().postDataJSON() as Record<string, unknown>;
     await route.fulfill({ json: api({ ...tenant, ...updateBody }) });
   });
   await page.route(`**/api/v1/tenants/${tenantId}/subscription`, (route) => route.fulfill({
-    json: api({
-      id: "subscription-1",
-      tenantId,
-      planId,
-      planName: "starter",
-      planDisplayName: "Starter",
-      status: "ACTIVE",
-      billingCycle: "MONTHLY",
-      startedAt: tenant.createdAt,
-      expiresAt: null,
-      cancelledAt: null,
-      createdAt: tenant.createdAt,
-      updatedAt: tenant.updatedAt,
-    }),
+    status: 403,
+    json: { success: false, message: "Owner cannot write subscription", errorCode: "ACCESS_DENIED" },
   }));
-  await page.route("**/api/v1/plans?*", (route) => route.fulfill({
-    json: api({ content: [], page: 0, size: 100, totalElements: 0, totalPages: 0, first: true, last: true }),
-  }));
+  page.on("request", (request) => {
+    if (
+      request.url().includes(`/tenants/${tenantId}/subscription`)
+      && ["POST", "PATCH"].includes(request.method())
+    ) subscriptionWriteCalls += 1;
+  });
 
   await page.goto("/customer/settings/tenant");
-  await expect(page.getByText("Chỉ chủ sở hữu được lưu thay đổi")).toBeVisible();
+  await expect(page.getByText("Bạn là chủ sở hữu công ty")).toBeVisible();
   await page.getByLabel("Tên miền riêng").fill("owner-new.example.com");
   await page.getByRole("button", { name: "Lưu thay đổi" }).click();
   await expect.poll(() => updateBody).toEqual({ domain: "owner-new.example.com" });
 
-  await page.getByRole("tab", { name: /Gói dịch vụ/ }).click();
+  await page.getByRole("tab", { name: /Gói & mức sử dụng/ }).click();
   await expect(page.getByText("Starter")).toBeVisible();
-  await expect(page.getByRole("button", { name: /Thay đổi gói/ })).toHaveCount(0);
-  await page.waitForTimeout(4000);
+  await expect(page.getByText("4 / 10")).toBeVisible();
+  await expect(page.getByText("2 / Không giới hạn")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Liên hệ nâng cấp" })).toBeVisible();
+  expect(subscriptionWriteCalls).toBe(0);
   await page.screenshot({ path: `${evidenceDir}/03-owner-profile-subscription.png`, fullPage: true });
 });
 

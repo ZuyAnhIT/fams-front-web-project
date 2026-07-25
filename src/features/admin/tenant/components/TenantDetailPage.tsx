@@ -110,13 +110,13 @@ export default function TenantDetailPage({ id }: { id: string }) {
     ...(isPlatformAdmin ? [
       {
         key: "settings",
-        label: <span className="flex items-center gap-2"><Settings className="h-4 w-4" /> Giao diện</span>,
-        children: <TenantSettingsPage tenantId={id} />,
+        label: <span className="flex items-center gap-2"><Settings className="h-4 w-4" /> Giao diện (chỉ xem)</span>,
+        children: <TenantSettingsPage tenantId={id} canEdit={false} />,
       },
       {
         key: "security",
-        label: <span className="flex items-center gap-2"><ShieldCheck className="h-4 w-4" /> Bảo mật IP</span>,
-        children: <IpWhitelistTable tenantId={id} />,
+        label: <span className="flex items-center gap-2"><ShieldCheck className="h-4 w-4" /> Hỗ trợ: IP whitelist</span>,
+        children: <IpWhitelistTable tenantId={id} canManage />,
       },
       {
         key: "subscription",

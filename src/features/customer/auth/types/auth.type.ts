@@ -75,6 +75,9 @@ export interface UserProfile {
   /** Issue #7 (docs/issues/ISSUES.md): whether a Google account is linked for one-click login. */
   googleLinked?: boolean;
   active: boolean;
+  /** Directory-only fields returned by GET /users. */
+  platformAdmin?: boolean;
+  lastLoginAt?: string | null;
   createdAt: string;
   updatedAt: string;
 }

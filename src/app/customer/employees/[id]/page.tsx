@@ -11,11 +11,15 @@ import { useRouter } from "next/navigation";
 import DetailHeader from "@/components/shared/layout/DetailHeader";
 import ContentCard from "@/components/shared/layout/ContentCard";
 import { formatVietnameseName } from "@/utils/name.util";
+import { useAuthStore } from "@/stores/auth.store";
 
 export default function EditEmployeePage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const resolvedParams = use(params);
   const { data, isLoading } = useEmployeeDetail(resolvedParams.id);
+  const canReadRoles = useAuthStore((state) =>
+    state.hasPermission("roles:read") || state.hasPermission("roles:update"),
+  );
 
   if (isLoading) {
     return (
@@ -44,7 +48,7 @@ export default function EditEmployeePage({ params }: { params: Promise<{ id: str
       ),
       children: <EmployeeForm isEditMode={true} initialData={data} />,
     },
-    {
+    ...(canReadRoles ? [{
       key: "roles",
       label: (
         <span className="flex items-center gap-2">
@@ -53,7 +57,7 @@ export default function EditEmployeePage({ params }: { params: Promise<{ id: str
         </span>
       ),
       children: <EmployeeRolesTab employee={data} />,
-    },
+    }] : []),
     {
       key: "faceid",
       label: (
