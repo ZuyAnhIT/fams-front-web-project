@@ -1,88 +1,243 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
-import { Empty, Spin, Tree, Tag } from "antd";
-import { Search, Plus, Building2, Users, Edit3 } from "lucide-react";
+import React, { useMemo, useState } from "react";
+import {
+  Alert,
+  App,
+  Empty,
+  Segmented,
+  Space,
+  Spin,
+  Tag,
+  Tooltip,
+  Tree,
+} from "antd";
+import { DownOutlined } from "@ant-design/icons";
+import {
+  ArrowRightLeft,
+  Building2,
+  Edit3,
+  ListTree,
+  Plus,
+  Search,
+  Table2,
+  Trash2,
+  UserMinus,
+  Users,
+} from "lucide-react";
+import BaseButton from "@/components/ui/BaseButton";
 import BaseInput from "@/components/ui/BaseInput";
 import BaseSelect from "@/components/ui/BaseSelect";
-import BaseButton from "@/components/ui/BaseButton";
 import DataTable from "@/components/tables/DataTable";
-import CreateWorkspaceModal from "./CreateWorkspaceModal";
-import UpdateWorkspaceModal from "./UpdateWorkspaceModal";
-import AddMemberModal from "./AddMemberModal";
-import TransferMemberModal from "./TransferMemberModal";
-import { useWorkspaceTreeQuery, useWorkspaceMembersQuery } from "../hooks/use-workspace";
-import { useAuthStore } from "@/stores/auth.store";
-import { WorkspaceResponse, WorkspaceTreeResponse } from "../types";
-import { DownOutlined } from "@ant-design/icons";
-import { formatVietnameseName } from "@/utils/name.util";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { EMPLOYEE_STATUS } from "@/constants/status";
+import { useAuthStore } from "@/stores/auth.store";
+import { formatVietnameseName } from "@/utils/name.util";
+import {
+  useDeleteWorkspaceMutation,
+  useRemoveMemberMutation,
+  useWorkspaceMembersQuery,
+  useWorkspacesQuery,
+  useWorkspaceTreeQuery,
+} from "../hooks/use-workspace";
+import type {
+  WorkspaceMemberResponse,
+  WorkspaceResponse,
+  WorkspaceTreeResponse,
+} from "../types";
+import AddMemberModal from "./AddMemberModal";
+import CreateWorkspaceModal from "./CreateWorkspaceModal";
+import TransferMemberModal from "./TransferMemberModal";
+import UpdateWorkspaceModal from "./UpdateWorkspaceModal";
 
-function findNodeById(nodes: WorkspaceTreeResponse[], id: string): WorkspaceTreeResponse | null {
+type ViewMode = "tree" | "list";
+
+const roleLabels: Record<WorkspaceMemberResponse["role"], string> = {
+  member: "Nhân viên",
+  lead: "Trưởng nhóm",
+  manager: "Quản lý",
+};
+
+function findNodeById(
+  nodes: WorkspaceTreeResponse[],
+  id: string,
+): WorkspaceTreeResponse | null {
   for (const node of nodes) {
     if (node.id === id) return node;
-    if (node.children) {
-      const found = findNodeById(node.children, id);
-      if (found) return found;
-    }
+    const found = findNodeById(node.children ?? [], id);
+    if (found) return found;
+  }
+  return null;
+}
+
+function employeeName(member: WorkspaceMemberResponse) {
+  return (
+    member.employee?.fullName ||
+    formatVietnameseName(
+      member.employee?.firstName ?? "",
+      member.employee?.lastName ?? "",
+    ) ||
+    "Không xác định"
+  );
+}
+
+function deleteBlockReason(workspace: WorkspaceResponse) {
+  const memberCount = workspace.activeMemberCount ?? 0;
+  const childCount = workspace.childWorkspaceCount ?? 0;
+  if (memberCount > 0 && childCount > 0) {
+    return `Không thể xóa: còn ${memberCount} nhân viên và ${childCount} đơn vị con. Hãy chuyển hết dữ liệu liên quan trước.`;
+  }
+  if (memberCount > 0) {
+    return `Không thể xóa: còn ${memberCount} nhân viên. Hãy chuyển hoặc gỡ hết nhân viên trước.`;
+  }
+  if (childCount > 0) {
+    return `Không thể xóa: còn ${childCount} đơn vị con. Hãy đổi đơn vị cha hoặc xóa các đơn vị con trước.`;
   }
   return null;
 }
 
 export default function WorkspacePage() {
+  const { message, modal } = App.useApp();
   const user = useAuthStore((state) => state.user);
   const hasPermission = useAuthStore((state) => state.hasPermission);
-  const tenantId = user?.tenantId;
+  const tenantId = user?.tenantId ?? undefined;
 
+  const [viewMode, setViewMode] = useState<ViewMode>("tree");
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
-  // Simple debounce for search
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
-  const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([]);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>();
+  const [typeFilter, setTypeFilter] = useState<string>();
+  const [listPage, setListPage] = useState(0);
+  const [listSize, setListSize] = useState(20);
   const [memberPage, setMemberPage] = useState(0);
   const [memberSize, setMemberSize] = useState(10);
+  const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([]);
+  const [selectedWorkspaceSnapshot, setSelectedWorkspace] =
+    useState<WorkspaceResponse | null>(null);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
+  const [editingWorkspace, setEditingWorkspace] =
+    useState<WorkspaceResponse | null>(null);
+  const [transferMember, setTransferMember] =
+    useState<WorkspaceMemberResponse | null>(null);
 
   React.useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm);
-    }, 500);
-    return () => clearTimeout(handler);
+    const timer = window.setTimeout(() => {
+      setDebouncedSearch(searchTerm.trim());
+      setListPage(0);
+    }, 400);
+    return () => window.clearTimeout(timer);
   }, [searchTerm]);
 
-  const { data: treeResponse, isLoading } = useWorkspaceTreeQuery({
-    tenantId: tenantId || undefined,
-    search: debouncedSearchTerm,
+  const treeQuery = useWorkspaceTreeQuery({
+    tenantId,
+    search: debouncedSearch || undefined,
     status: statusFilter,
   });
+  const listQuery = useWorkspacesQuery({
+    tenantId,
+    search: debouncedSearch || undefined,
+    status: statusFilter,
+    type: typeFilter,
+    sortBy: "name",
+    sortDir: "asc",
+    page: listPage,
+    size: listSize,
+  });
+  const treeNodes = useMemo(() => treeQuery.data?.data ?? [], [treeQuery.data]);
+  const listData = listQuery.data?.data;
+  const selectedWorkspace = useMemo(() => {
+    if (!selectedWorkspaceSnapshot) return null;
+    return (
+      findNodeById(treeNodes, selectedWorkspaceSnapshot.id) ??
+      selectedWorkspaceSnapshot
+    );
+  }, [selectedWorkspaceSnapshot, treeNodes]);
 
-  const treeDataRaw = useMemo(() => treeResponse?.data || [], [treeResponse?.data]);
-
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
-  const [editingWorkspace, setEditingWorkspace] = useState<WorkspaceResponse | null>(null);
-
-  // Transfer modal state
-  const [transferMemberId, setTransferMemberId] = useState<string | null>(null);
-  const [transferEmployeeName, setTransferEmployeeName] = useState<string>("");
-  const [transferRole, setTransferRole] = useState<string>("");
-
-  const selectedWorkspaceData = useMemo(() => {
-    if (!selectedKeys.length) return null;
-    return findNodeById(treeDataRaw, selectedKeys[0] as string);
-  }, [selectedKeys, treeDataRaw]);
-
-  const { data: membersResponse, isLoading: isLoadingMembers } = useWorkspaceMembersQuery(
-    tenantId || undefined,
-    selectedWorkspaceData?.id,
+  const membersQuery = useWorkspaceMembersQuery(
+    tenantId,
+    selectedWorkspace?.id,
     memberPage,
-    memberSize
+    memberSize,
   );
+  const members = membersQuery.data?.data?.content ?? [];
 
-  const memberData = membersResponse?.data?.content || [];
+  const deleteWorkspace = useDeleteWorkspaceMutation();
+  const removeMember = useRemoveMemberMutation();
 
-  const formatTreeData = (nodes: WorkspaceTreeResponse[]): any[] => {
-    return nodes.map((node) => ({
+  const canTransfer =
+    hasPermission("workspace_members:create") &&
+    hasPermission("workspace_members:delete");
+  const canRemove = hasPermission("workspace_members:delete");
+  const canDeleteWorkspace = hasPermission("workspaces:delete");
+
+  const selectWorkspace = (workspace: WorkspaceResponse) => {
+    setSelectedWorkspace(workspace);
+    setSelectedKeys([workspace.id]);
+    setMemberPage(0);
+  };
+
+  const confirmDeleteWorkspace = (workspace: WorkspaceResponse) => {
+    const blockedReason = deleteBlockReason(workspace);
+    if (blockedReason || !tenantId) return;
+    modal.confirm({
+      title: `Xóa “${workspace.name}”?`,
+      content:
+        "Workspace sẽ được xóa mềm và không còn xuất hiện trong cơ cấu tổ chức. Hành động này chỉ dành cho quản trị công ty.",
+      okText: "Xóa workspace",
+      okButtonProps: { danger: true },
+      cancelText: "Hủy",
+      onOk: async () => {
+        try {
+          await deleteWorkspace.mutateAsync({
+            tenantId,
+            workspaceId: workspace.id,
+          });
+          if (selectedWorkspace?.id === workspace.id) {
+            setSelectedWorkspace(null);
+            setSelectedKeys([]);
+          }
+          message.success("Đã xóa workspace");
+        } catch (error: any) {
+          message.error(
+            error.response?.data?.message || "Không thể xóa workspace",
+          );
+          throw error;
+        }
+      },
+    });
+  };
+
+  const confirmRemoveMember = (member: WorkspaceMemberResponse) => {
+    if (!tenantId || !selectedWorkspace) return;
+    modal.confirm({
+      title: `Gỡ ${employeeName(member)} khỏi workspace?`,
+      content:
+        "Thao tác chỉ gỡ quan hệ với workspace này, không xóa hồ sơ nhân viên.",
+      okText: "Gỡ nhân sự",
+      okButtonProps: { danger: true },
+      cancelText: "Hủy",
+      onOk: async () => {
+        try {
+          await removeMember.mutateAsync({
+            tenantId,
+            workspaceId: selectedWorkspace.id,
+            memberId: member.id,
+          });
+          message.success("Đã gỡ nhân sự khỏi workspace");
+        } catch (error: any) {
+          message.error(
+            error.response?.data?.message || "Không thể gỡ nhân sự",
+          );
+          throw error;
+        }
+      },
+    });
+  };
+
+  const formatTreeData = (nodes: WorkspaceTreeResponse[]): any[] =>
+    nodes.map((node) => ({
+      key: node.id,
       title: (
         <div className="flex items-center gap-2 py-0.5">
           {node.type === "team" ? (
@@ -93,239 +248,447 @@ export default function WorkspacePage() {
           <span
             className={
               node.status === "inactive"
-                ? "text-slate-400 line-through"
-                : "text-slate-700 font-medium"
+                ? "font-medium text-slate-400"
+                : "font-medium text-slate-700"
             }
           >
             {node.name}
           </span>
+          <span className="text-xs text-slate-400">
+            {node.activeMemberCount ?? 0} người
+          </span>
         </div>
       ),
-      key: node.id,
-      children: node.children ? formatTreeData(node.children) : [],
+      children: formatTreeData(node.children ?? []),
     }));
+
+  const workspaceActions = (workspace: WorkspaceResponse) => {
+    const blockedReason = deleteBlockReason(workspace);
+    return (
+      <Space size={4} onClick={(event) => event.stopPropagation()}>
+        {hasPermission("workspaces:update") && (
+          <Tooltip title="Chỉnh sửa">
+            <BaseButton
+              aria-label={`Chỉnh sửa ${workspace.name}`}
+              type="text"
+              size="small"
+              icon={<Edit3 className="h-4 w-4" />}
+              onClick={() => setEditingWorkspace(workspace)}
+            />
+          </Tooltip>
+        )}
+        {canDeleteWorkspace && (
+          <Tooltip title={blockedReason || "Xóa workspace"}>
+            <span>
+              <BaseButton
+                aria-label={`Xóa ${workspace.name}`}
+                type="text"
+                danger
+                size="small"
+                disabled={Boolean(blockedReason)}
+                icon={<Trash2 className="h-4 w-4" />}
+                onClick={() => confirmDeleteWorkspace(workspace)}
+              />
+            </span>
+          </Tooltip>
+        )}
+      </Space>
+    );
   };
 
-
-
   return (
-    <div className="mx-auto flex h-full w-full max-w-[1600px] flex-col py-1">
-      {/* HEADER TRANG */}
-      <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+    <div className="mx-auto w-full max-w-[1600px] space-y-5 pb-5">
+      <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Cơ cấu tổ chức</h1>
-          <p className="text-sm text-brand-600 mt-1">
-            Quản lý sơ đồ phòng ban, đội nhóm và nhân sự trực thuộc
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+            Cơ cấu tổ chức
+          </h1>
+          <p className="mt-1 text-sm text-brand-600">
+            Quản lý phòng ban, đội nhóm và nhân sự trực thuộc trong toàn công ty
           </p>
         </div>
         {hasPermission("workspaces:create") && (
           <BaseButton
             type="primary"
-            icon={<Plus className="h-4.5 w-4.5" />}
-            onClick={() => setIsCreateModalOpen(true)}
-            className="!bg-blue-600 !text-white hover:!bg-blue-700 !border-0 shadow-lg shadow-blue-500/25 font-bold hover:-translate-y-0.5"
+            icon={<Plus className="h-4 w-4" />}
+            onClick={() => setIsCreateOpen(true)}
+            className="!border-0 !bg-blue-600 !text-white hover:!bg-blue-700"
           >
-            Thêm mới
+            Tạo workspace
           </BaseButton>
         )}
       </div>
 
-      <div className="flex flex-col lg:flex-row flex-1 gap-6 min-h-0">
-        {/* CỘT TRÁI: SƠ ĐỒ TỔ CHỨC */}
-        <div className="flex min-h-[420px] w-full flex-col rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5 lg:h-[calc(100dvh-10.5rem)] lg:min-w-[320px] lg:max-w-[400px] lg:basis-1/3">
-
-
-          <div className="mb-4 flex flex-col gap-2 sm:flex-row lg:flex-col xl:flex-row">
+      <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="flex flex-col justify-between gap-3 xl:flex-row">
+          <div className="flex flex-1 flex-col gap-3 sm:flex-row">
             <BaseInput
-              aria-label="Tìm phòng ban hoặc đội nhóm"
-              placeholder="Tìm kiếm..."
+              aria-label="Tìm workspace"
+              placeholder="Tìm theo tên workspace..."
               prefix={<Search className="h-4 w-4 text-slate-400" />}
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="flex-1 border-slate-200 hover:border-brand-400 focus:border-brand-500"
+              onChange={(event) => setSearchTerm(event.target.value)}
               allowClear
+              className="sm:max-w-sm"
             />
             <BaseSelect
-              aria-label="Lọc cơ cấu theo trạng thái"
-              placeholder="Trạng thái"
+              aria-label="Lọc workspace theo trạng thái"
+              placeholder="Tất cả trạng thái"
+              allowClear
               value={statusFilter}
-              onChange={(val) => setStatusFilter(val === "all" ? undefined : val)}
-              className="w-full sm:w-36 lg:w-full xl:w-36"
+              onChange={(value) => {
+                setStatusFilter(value);
+                setListPage(0);
+              }}
+              className="w-full sm:w-48"
               options={[
-                { value: "all", label: "Tất cả" },
-                { value: "active", label: "Đang HĐ" },
-                { value: "inactive", label: "Tạm dừng" },
+                { value: "active", label: "Đang hoạt động" },
+                { value: "inactive", label: "Ngừng hoạt động" },
               ]}
-              defaultValue="all"
             />
-          </div>
-
-          <div className="flex-1 overflow-auto custom-scrollbar pr-2">
-            {isLoading ? (
-              <div className="flex h-32 items-center justify-center">
-                <Spin />
-              </div>
-            ) : treeDataRaw.length === 0 ? (
-              <Empty
-                image={Empty.PRESENTED_IMAGE_SIMPLE}
-                description="Chưa có phòng ban nào"
-              />
-            ) : (
-              <Tree
-                showLine={{ showLeafIcon: false }}
-                switcherIcon={({ expanded }: any) => (
-                  <DownOutlined
-                    className={`transition-transform duration-200 ${
-                      expanded ? "" : "-rotate-90"
-                    }`}
-                  />
-                )}
-                defaultExpandAll
-                treeData={formatTreeData(treeDataRaw)}
-                selectedKeys={selectedKeys}
-                onSelect={(keys) => {
-                  setSelectedKeys(keys);
-                  setMemberPage(0);
+            {viewMode === "list" && (
+              <BaseSelect
+                aria-label="Lọc workspace theo loại"
+                placeholder="Tất cả loại"
+                allowClear
+                value={typeFilter}
+                onChange={(value) => {
+                  setTypeFilter(value);
+                  setListPage(0);
                 }}
-                className="text-sm [&_.ant-tree-indent-unit::before]:!border-r-[2px] [&_.ant-tree-indent-unit::before]:!border-slate-400 [&_.ant-tree-switcher-leaf-line::before]:!border-r-[2px] [&_.ant-tree-switcher-leaf-line::before]:!border-slate-400 [&_.ant-tree-switcher-leaf-line::after]:!border-b-[2px] [&_.ant-tree-switcher-leaf-line::after]:!border-slate-400 [&_.ant-tree-switcher-line-icon_svg]:!stroke-[2px] [&_.ant-tree-switcher-line-icon_svg]:!stroke-slate-400"
+                className="w-full sm:w-44"
+                options={[
+                  { value: "department", label: "Phòng ban" },
+                  { value: "team", label: "Đội nhóm" },
+                ]}
               />
             )}
           </div>
+          <Segmented
+            aria-label="Chọn kiểu hiển thị workspace"
+            value={viewMode}
+            onChange={(value) => setViewMode(value as ViewMode)}
+            options={[
+              {
+                value: "tree",
+                label: "Cây tổ chức",
+                icon: <ListTree className="h-4 w-4" />,
+              },
+              {
+                value: "list",
+                label: "Danh sách",
+                icon: <Table2 className="h-4 w-4" />,
+              },
+            ]}
+          />
         </div>
+      </div>
 
-        {/* CỘT PHẢI: CHI TIẾT & NHÂN SỰ */}
-        <div className="flex min-h-[420px] flex-1 flex-col overflow-auto rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6 lg:h-[calc(100dvh-10.5rem)] custom-scrollbar">
-          {selectedWorkspaceData ? (
-            <div className="flex flex-col h-full animate-fade-in">
-              {/* Header Chi tiết */}
-              <div className="mb-5 flex flex-col items-start justify-between gap-4 border-b border-slate-100 pb-5 sm:flex-row">
-                <div className="min-w-0">
-                  <div className="mb-1 flex flex-wrap items-center gap-3">
-                    <h2 className="text-lg font-bold text-slate-800">
-                      {selectedWorkspaceData.name}
-                    </h2>
-                    {selectedWorkspaceData.status === "active" ? (
-                      <Tag color="success" className="m-0 rounded-md">Hoạt động</Tag>
-                    ) : (
-                      <Tag color="default" className="m-0 rounded-md">Tạm dừng</Tag>
-                    )}
+      {viewMode === "list" ? (
+        <DataTable
+          ariaLabel="Danh sách workspace"
+          emptyTitle="Không có workspace phù hợp"
+          emptyDescription="Thử thay đổi bộ lọc hoặc tạo workspace đầu tiên."
+          columns={[
+            {
+              title: "Workspace",
+              key: "name",
+              render: (_, workspace: WorkspaceResponse) => (
+                <div>
+                  <div className="font-semibold text-slate-800">
+                    {workspace.name}
                   </div>
-                  <p className="flex flex-wrap items-center gap-2 text-sm text-slate-500">
-                    {selectedWorkspaceData.type === "team" ? (
-                      <><Users className="w-4 h-4" /> Đội nhóm</>
-                    ) : (
-                      <><Building2 className="w-4 h-4" /> Phòng ban</>
+                  <div className="max-w-md truncate text-xs text-slate-500">
+                    {workspace.description || "Chưa có mô tả"}
+                  </div>
+                </div>
+              ),
+            },
+            {
+              title: "Loại",
+              dataIndex: "type",
+              key: "type",
+              render: (type: WorkspaceResponse["type"]) => (
+                <Tag color={type === "team" ? "purple" : "blue"}>
+                  {type === "team" ? "Đội nhóm" : "Phòng ban"}
+                </Tag>
+              ),
+            },
+            {
+              title: "Nhân sự",
+              dataIndex: "activeMemberCount",
+              key: "activeMemberCount",
+              align: "right",
+              render: (count: number) => count ?? 0,
+            },
+            {
+              title: "Đơn vị con",
+              dataIndex: "childWorkspaceCount",
+              key: "childWorkspaceCount",
+              align: "right",
+              render: (count: number) => count ?? 0,
+            },
+            {
+              title: "Trạng thái",
+              key: "status",
+              render: (_, workspace: WorkspaceResponse) => (
+                <div>
+                  <Tag color={workspace.status === "active" ? "success" : "default"}>
+                    {workspace.status === "active"
+                      ? "Hoạt động"
+                      : "Ngừng hoạt động"}
+                  </Tag>
+                  {workspace.status === "inactive" &&
+                    (workspace.activeMemberCount ?? 0) > 0 && (
+                      <div className="mt-1 max-w-xs text-xs text-amber-700">
+                        Vẫn còn {workspace.activeMemberCount} nhân viên cần cân nhắc
+                        điều chuyển.
+                      </div>
                     )}
-                    {selectedWorkspaceData.description && (
-                      <>
-                        <span className="text-slate-300">•</span>
-                        <span>{selectedWorkspaceData.description}</span>
-                      </>
-                    )}
-                  </p>
+                </div>
+              ),
+            },
+            {
+              title: "Thao tác",
+              key: "actions",
+              width: 110,
+              render: (_, workspace: WorkspaceResponse) =>
+                workspaceActions(workspace),
+            },
+          ]}
+          data={listData?.content ?? []}
+          loading={listQuery.isLoading}
+          totalElements={listData?.totalElements ?? 0}
+          currentPage={listPage}
+          pageSize={listSize}
+          onPageChange={(page, size) => {
+            setListPage(page);
+            setListSize(size);
+          }}
+          onRow={(workspace) => ({
+            className: "cursor-pointer",
+            onClick: () => {
+              selectWorkspace(workspace);
+              setViewMode("tree");
+            },
+          })}
+        />
+      ) : (
+        <div className="grid min-h-[520px] gap-5 lg:grid-cols-[minmax(300px,380px)_1fr]">
+          <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+            <h2 className="mb-4 font-semibold text-slate-800">Cây đơn vị</h2>
+            <div className="max-h-[650px] overflow-auto pr-1">
+              {treeQuery.isLoading ? (
+                <div className="flex h-40 items-center justify-center">
+                  <Spin />
+                </div>
+              ) : treeNodes.length === 0 ? (
+                <Empty
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                  description="Chưa có workspace phù hợp"
+                />
+              ) : (
+                <Tree
+                  showLine={{ showLeafIcon: false }}
+                  switcherIcon={({ expanded }: any) => (
+                    <DownOutlined
+                      className={expanded ? "" : "-rotate-90"}
+                    />
+                  )}
+                  defaultExpandAll
+                  treeData={formatTreeData(treeNodes)}
+                  selectedKeys={selectedKeys}
+                  onSelect={(keys: React.Key[]) => {
+                    setSelectedKeys(keys);
+                    const selected = keys[0]
+                      ? findNodeById(treeNodes, String(keys[0]))
+                      : null;
+                    setSelectedWorkspace(selected);
+                    setMemberPage(0);
+                  }}
+                />
+              )}
+            </div>
+          </section>
+
+          <section className="min-w-0 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+            {!selectedWorkspace ? (
+              <div className="flex h-full min-h-[420px] flex-col items-center justify-center text-slate-400">
+                <Building2 className="mb-4 h-16 w-16 text-slate-200" />
+                <p className="text-base font-medium text-slate-500">
+                  Chọn một workspace để xem và quản lý nhân sự
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-5">
+                <div className="flex flex-col justify-between gap-4 border-b border-slate-100 pb-5 sm:flex-row">
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h2 className="text-xl font-bold text-slate-800">
+                        {selectedWorkspace.name}
+                      </h2>
+                      <Tag
+                        color={
+                          selectedWorkspace.status === "active"
+                            ? "success"
+                            : "default"
+                        }
+                      >
+                        {selectedWorkspace.status === "active"
+                          ? "Hoạt động"
+                          : "Ngừng hoạt động"}
+                      </Tag>
+                      <Tag
+                        color={
+                          selectedWorkspace.type === "team" ? "purple" : "blue"
+                        }
+                      >
+                        {selectedWorkspace.type === "team"
+                          ? "Đội nhóm"
+                          : "Phòng ban"}
+                      </Tag>
+                    </div>
+                    <p className="mt-2 text-sm text-slate-500">
+                      {selectedWorkspace.description || "Chưa có mô tả"}
+                    </p>
+                    <div className="mt-2 flex gap-4 text-xs text-slate-500">
+                      <span>
+                        {selectedWorkspace.activeMemberCount ?? 0} nhân sự hoạt động
+                      </span>
+                      <span>
+                        {selectedWorkspace.childWorkspaceCount ?? 0} đơn vị con
+                      </span>
+                    </div>
+                  </div>
+                  {workspaceActions(selectedWorkspace)}
                 </div>
 
-                {hasPermission("workspaces:update") && (
-                  <BaseButton
-                    type="default"
-                    icon={<Edit3 className="h-4 w-4" />}
-                    onClick={() => setEditingWorkspace(selectedWorkspaceData)}
-                    className="font-medium text-slate-600 hover:!text-brand-600 !border-slate-400 hover:!border-brand-400"
-                  >
-                    Chỉnh sửa
-                  </BaseButton>
+                {selectedWorkspace.status === "inactive" && (
+                  <Alert
+                    type="warning"
+                    showIcon
+                    message="Workspace đã ngừng hoạt động"
+                    description={
+                      (selectedWorkspace.activeMemberCount ?? 0) > 0
+                        ? `Không thể thêm hoặc chuyển nhân sự vào đây. Workspace vẫn còn ${selectedWorkspace.activeMemberCount} nhân viên; bạn có thể chuyển họ sang đơn vị đang hoạt động.`
+                        : "Không thể thêm hoặc chuyển nhân sự vào workspace này."
+                    }
+                  />
                 )}
-              </div>
 
-              {/* Bảng Nhân sự */}
-              <div className="flex-1">
-                <div className="mb-4 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
-                  <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider">
-                    Danh sách Nhân sự
+                <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+                  <h3 className="text-sm font-bold uppercase tracking-wider text-slate-700">
+                    Danh sách nhân sự
                   </h3>
                   {hasPermission("workspace_members:create") && (
-                    <BaseButton
-                      type="primary"
-                      icon={<Plus className="h-4 w-4" />}
-                      onClick={() => setIsAddMemberModalOpen(true)}
-                      className="!bg-emerald-600 !text-white hover:!bg-emerald-700 !border-0 shadow-lg shadow-emerald-500/25 font-semibold"
+                    <Tooltip
+                      title={
+                        selectedWorkspace.status === "inactive"
+                          ? "Workspace ngừng hoạt động không thể nhận thêm nhân sự"
+                          : undefined
+                      }
                     >
-                      Thêm nhân sự
-                    </BaseButton>
+                      <span>
+                        <BaseButton
+                          type="primary"
+                          icon={<Plus className="h-4 w-4" />}
+                          disabled={selectedWorkspace.status === "inactive"}
+                          onClick={() => setIsAddMemberOpen(true)}
+                          className="!border-0 !bg-emerald-600 !text-white hover:!bg-emerald-700"
+                        >
+                          Thêm nhân sự
+                        </BaseButton>
+                      </span>
+                    </Tooltip>
                   )}
                 </div>
+
                 <DataTable
-                  ariaLabel="Danh sách nhân sự thuộc phòng ban"
-                  emptyTitle="Chưa có nhân sự trong đơn vị này"
-                  emptyDescription="Thêm nhân sự để bắt đầu quản lý cơ cấu tổ chức."
+                  ariaLabel={`Nhân sự thuộc ${selectedWorkspace.name}`}
+                  emptyTitle="Workspace chưa có nhân sự"
+                  emptyDescription="Thêm nhân sự để hoàn thiện cơ cấu tổ chức."
                   columns={[
                     {
                       title: "Mã NV",
                       dataIndex: ["employee", "employeeCode"],
                       key: "code",
-                      render: (text) => text || "-"
+                      render: (value) => value || "-",
                     },
                     {
-                      title: "Họ và tên",
-                      dataIndex: ["employee", "fullName"],
-                      key: "name",
-                      sorter: (a: any, b: any) => {
-                        const nameA = a.employee?.fullName || formatVietnameseName(a.employee?.firstName, a.employee?.lastName);
-                        const nameB = b.employee?.fullName || formatVietnameseName(b.employee?.firstName, b.employee?.lastName);
-                        return nameA.localeCompare(nameB);
-                      },
-                      render: (_, record: any) => record.employee?.fullName || formatVietnameseName(record.employee?.firstName, record.employee?.lastName)
+                      title: "Nhân viên",
+                      key: "employee",
+                      render: (_, member: WorkspaceMemberResponse) => (
+                        <div>
+                          <div className="font-medium text-slate-800">
+                            {employeeName(member)}
+                          </div>
+                          <div className="text-xs text-slate-500">
+                            {member.employee?.email || member.employee?.position || "-"}
+                          </div>
+                        </div>
+                      ),
                     },
                     {
-                      title: "Chức vụ",
-                      dataIndex: ["employee", "position"],
-                      key: "position",
-                      render: (text) => text || "-"
-                    },
-                    {
-                      title: "Quyền trong PB",
+                      title: "Vai trò",
                       dataIndex: "role",
                       key: "role",
-                      render: (role: string) => (
-                        <Tag color={role === "manager" ? "blue" : "default"}>
-                          {role === "manager" ? "Quản lý" : "Nhân viên"}
+                      render: (role: WorkspaceMemberResponse["role"]) => (
+                        <Tag color={role === "manager" ? "blue" : role === "lead" ? "purple" : "default"}>
+                          {roleLabels[role]}
                         </Tag>
-                      )
+                      ),
                     },
                     {
                       title: "Trạng thái",
                       dataIndex: ["employee", "status"],
                       key: "status",
-                      render: (status: string) => (
-                        <StatusBadge status={status} variant="dot" configMap={EMPLOYEE_STATUS} />
-                      )
+                      render: (status: string) =>
+                        status ? (
+                          <StatusBadge
+                            status={status}
+                            variant="dot"
+                            configMap={EMPLOYEE_STATUS}
+                          />
+                        ) : (
+                          "-"
+                        ),
                     },
                     {
                       title: "Thao tác",
                       key: "actions",
-                      width: 100,
-                      render: (_, record: any) => {
-                        if (!hasPermission("workspaces:update")) return null;
-                        return (
-                          <BaseButton
-                            type="text"
-                            size="small"
-                            className="text-brand-600 hover:text-brand-700 hover:bg-brand-50"
-                            onClick={() => {
-                              setTransferMemberId(record.id);
-                              setTransferEmployeeName(record.employee?.fullName || formatVietnameseName(record.employee?.firstName, record.employee?.lastName) || 'Không xác định');
-                              setTransferRole(record.role);
-                            }}
-                          >
-                            Chuyển
-                          </BaseButton>
-                        );
-                      }
-                    }
+                      width: 120,
+                      render: (_, member: WorkspaceMemberResponse) => (
+                        <Space size={2}>
+                          {canTransfer && (
+                            <Tooltip title="Chuyển sang workspace khác">
+                              <BaseButton
+                                aria-label={`Chuyển ${employeeName(member)}`}
+                                type="text"
+                                size="small"
+                                icon={<ArrowRightLeft className="h-4 w-4" />}
+                                onClick={() => setTransferMember(member)}
+                              />
+                            </Tooltip>
+                          )}
+                          {canRemove && (
+                            <Tooltip title="Gỡ khỏi workspace">
+                              <BaseButton
+                                aria-label={`Gỡ ${employeeName(member)}`}
+                                type="text"
+                                danger
+                                size="small"
+                                icon={<UserMinus className="h-4 w-4" />}
+                                onClick={() => confirmRemoveMember(member)}
+                              />
+                            </Tooltip>
+                          )}
+                        </Space>
+                      ),
+                    },
                   ]}
-                  data={memberData}
-                  loading={isLoadingMembers}
-                  totalElements={membersResponse?.data?.totalElements || 0}
+                  data={members}
+                  loading={membersQuery.isLoading}
+                  totalElements={membersQuery.data?.data?.totalElements ?? 0}
                   currentPage={memberPage}
                   pageSize={memberSize}
                   onPageChange={(page, size) => {
@@ -334,51 +697,37 @@ export default function WorkspacePage() {
                   }}
                 />
               </div>
-            </div>
-          ) : (
-            <div className="flex h-full flex-col items-center justify-center text-slate-400">
-              <Building2 className="h-16 w-16 mb-4 text-slate-200" />
-              <p className="text-lg font-medium text-slate-500">
-                Chọn một phòng ban bên trái để xem chi tiết
-              </p>
-            </div>
-          )}
+            )}
+          </section>
         </div>
+      )}
 
-        <CreateWorkspaceModal
-          isOpen={isCreateModalOpen}
-          onClose={() => setIsCreateModalOpen(false)}
+      <CreateWorkspaceModal
+        isOpen={isCreateOpen}
+        onClose={() => setIsCreateOpen(false)}
+      />
+      <UpdateWorkspaceModal
+        workspace={editingWorkspace}
+        isOpen={Boolean(editingWorkspace)}
+        onClose={() => setEditingWorkspace(null)}
+      />
+      {selectedWorkspace && (
+        <AddMemberModal
+          isOpen={isAddMemberOpen}
+          onClose={() => setIsAddMemberOpen(false)}
+          workspaceId={selectedWorkspace.id}
         />
-
-        <UpdateWorkspaceModal
-          workspace={editingWorkspace}
-          isOpen={!!editingWorkspace}
-          onClose={() => setEditingWorkspace(null)}
+      )}
+      {selectedWorkspace && transferMember && (
+        <TransferMemberModal
+          isOpen
+          onClose={() => setTransferMember(null)}
+          sourceWorkspaceId={selectedWorkspace.id}
+          memberId={transferMember.id}
+          employeeName={employeeName(transferMember)}
+          currentRole={transferMember.role}
         />
-
-        {selectedWorkspaceData && (
-          <AddMemberModal
-            isOpen={isAddMemberModalOpen}
-            onClose={() => setIsAddMemberModalOpen(false)}
-            workspaceId={selectedWorkspaceData.id}
-          />
-        )}
-
-        {selectedWorkspaceData && (
-          <TransferMemberModal
-            isOpen={!!transferMemberId}
-            onClose={() => {
-              setTransferMemberId(null);
-              setTransferEmployeeName("");
-              setTransferRole("");
-            }}
-            sourceWorkspaceId={selectedWorkspaceData.id}
-            memberId={transferMemberId!}
-            employeeName={transferEmployeeName}
-            currentRole={transferRole}
-          />
-        )}
-      </div>
+      )}
     </div>
   );
 }

@@ -6,10 +6,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { App } from "antd";
 import { UserPlus } from "lucide-react";
 import FormInput from "@/components/forms/FormInput";
+import FormSelect from "@/components/forms/FormSelect";
 import BaseModal from "@/components/ui/BaseModal";
 import { useCreateEmployee, useUpdateEmployee } from "../hooks/use-employee";
 import { employeeSchema, type EmployeeFormData } from "../schemas/employee.schema";
 import type { EmployeeDetailResponse } from "../types/employee.type";
+import { useWorkspacesQuery } from "@/features/customer/workspace/hooks/use-workspace";
+import { useAuthStore } from "@/stores/auth.store";
 
 interface EmployeeFormModalProps {
   open: boolean;
@@ -21,6 +24,15 @@ export default function EmployeeFormModal({ open, onClose, initialData }: Employ
   const { message } = App.useApp();
   const { mutateAsync: createEmployee, isPending: isCreating } = useCreateEmployee();
   const { mutateAsync: updateEmployee, isPending: isUpdating } = useUpdateEmployee();
+  const tenantId = useAuthStore((state) => state.user?.tenantId ?? undefined);
+  const { data: departments, isLoading: isLoadingDepartments } = useWorkspacesQuery({
+    tenantId,
+    type: "department",
+    status: "active",
+    sortBy: "name",
+    sortDir: "asc",
+    size: 100,
+  });
 
   const isEditMode = !!initialData;
   const isPending = isCreating || isUpdating;
@@ -40,6 +52,7 @@ export default function EmployeeFormModal({ open, onClose, initialData }: Employ
       employeeCode: "",
       position: "",
       department: "",
+      departmentId: "",
       hiredDate: "",
     },
   });
@@ -55,6 +68,7 @@ export default function EmployeeFormModal({ open, onClose, initialData }: Employ
           employeeCode: initialData.employeeCode || "",
           position: initialData.position || "",
           department: initialData.department || "",
+          departmentId: initialData.departmentId || "",
           hiredDate: initialData.hiredDate || "",
         });
       } else {
@@ -66,6 +80,7 @@ export default function EmployeeFormModal({ open, onClose, initialData }: Employ
           employeeCode: "",
           position: "",
           department: "",
+          departmentId: "",
           hiredDate: "",
         });
       }
@@ -190,13 +205,21 @@ export default function EmployeeFormModal({ open, onClose, initialData }: Employ
               labelClassName="!text-slate-700 !font-semibold !text-sm"
             />
 
-            <FormInput
+            <FormSelect
               control={control}
-              name="department"
+              name="departmentId"
               label="Phòng ban"
-              placeholder="Ví dụ: Kỹ thuật"
-              error={errors.department}
-              labelClassName="!text-slate-700 !font-semibold !text-sm"
+              placeholder="Chọn phòng ban đang hoạt động"
+              allowClear
+              showSearch
+              optionFilterProp="label"
+              loading={isLoadingDepartments}
+              error={errors.departmentId}
+              options={(departments?.data?.content ?? []).map((workspace) => ({
+                value: workspace.id,
+                label: workspace.name,
+              }))}
+              helperText="Danh sách được đồng bộ từ Cơ cấu tổ chức."
             />
 
             <FormInput

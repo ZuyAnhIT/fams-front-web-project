@@ -8,6 +8,7 @@ export const employeeSchema = z.object({
   employeeCode: z.string().optional().or(z.literal("")),
   position: z.string().optional().or(z.literal("")),
   department: z.string().optional().or(z.literal("")),
+  departmentId: z.string().optional().or(z.literal("")),
   hiredDate: z.string().optional().or(z.literal("")),
 });
 

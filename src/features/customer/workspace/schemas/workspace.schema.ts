@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const createWorkspaceSchema = z.object({
-  name: z.string().min(1, "Tên phòng ban/đội nhóm không được để trống").max(255, "Tên quá dài"),
+  name: z.string().trim().min(1, "Tên phòng ban/đội nhóm không được để trống").max(100, "Tên tối đa 100 ký tự"),
   description: z.string().optional(),
   type: z.enum(["department", "team"]).optional(),
   parentId: z.string().optional(),
@@ -10,7 +10,7 @@ export const createWorkspaceSchema = z.object({
 export type CreateWorkspaceFormData = z.infer<typeof createWorkspaceSchema>;
 
 export const updateWorkspaceSchema = z.object({
-  name: z.string().min(1, "Tên phòng ban/đội nhóm không được để trống").max(255, "Tên quá dài").optional(),
+  name: z.string().trim().min(1, "Tên phòng ban/đội nhóm không được để trống").max(100, "Tên tối đa 100 ký tự").optional(),
   description: z.string().optional(),
   type: z.enum(["department", "team"]).optional(),
   status: z.enum(["active", "inactive"]).optional(),

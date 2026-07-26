@@ -31,6 +31,7 @@ export default function TransferMemberModal({
   // Fetch all workspaces to populate target workspace dropdown
   const { data: workspacesData, isLoading: isLoadingWorkspaces } = useWorkspacesQuery({
     tenantId: user?.tenantId || undefined,
+    status: "active",
     size: 100,
   });
 
@@ -65,7 +66,7 @@ export default function TransferMemberModal({
 
   // Filter out the source workspace from target choices
   const workspaceOptions = workspacesData?.data?.content
-    ?.filter((ws) => ws.id !== sourceWorkspaceId)
+    ?.filter((ws) => ws.id !== sourceWorkspaceId && ws.status === "active")
     .map((ws) => ({
       value: ws.id,
       label: ws.name,

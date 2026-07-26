@@ -10,6 +10,7 @@ export interface EmployeeResponse {
   employeeCode?: string;
   position?: string;
   department?: string;
+  departmentId?: string;
   hiredDate?: string;
   avatarUrl?: string;
   status: string; // 'active' | 'inactive' | 'terminated'
@@ -89,6 +90,7 @@ export interface CreateEmployeePayload {
   employeeCode?: string;
   position?: string;
   department?: string;
+  departmentId?: string;
   hiredDate?: string;
 }
 
