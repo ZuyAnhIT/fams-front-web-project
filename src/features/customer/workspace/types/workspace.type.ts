@@ -3,9 +3,11 @@ export interface WorkspaceResponse {
   tenantId: string;
   name: string;
   description: string | null;
-  type: string; // 'department' | 'team'
+  type: "department" | "team";
   parentId: string | null;
-  status: string; // 'active' | 'inactive'
+  status: "active" | "inactive";
+  activeMemberCount: number;
+  childWorkspaceCount: number;
   createdBy: string;
   createdAt: string;
   updatedAt: string;
@@ -18,15 +20,15 @@ export interface WorkspaceTreeResponse extends WorkspaceResponse {
 export interface CreateWorkspaceRequest {
   name: string;
   description?: string;
-  type?: string;
+  type?: "department" | "team";
   parentId?: string;
 }
 
 export interface UpdateWorkspaceRequest {
   name?: string;
   description?: string;
-  type?: string;
-  status?: string;
+  type?: "department" | "team";
+  status?: "active" | "inactive";
   parentId?: string;
   clearParent?: boolean;
 }
@@ -48,6 +50,7 @@ export interface WorkspaceMemberResponse {
     fullName: string;
     employeeCode?: string;
     position?: string;
+    email?: string;
     status?: string;
   };
 }

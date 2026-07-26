@@ -26,6 +26,7 @@ export default function AddMemberModal({
   const { data: employeesData, isLoading: isLoadingEmployees } = useEmployees({
     size: 100, // Fetch up to 100 for dropdown (could be paginated/searched in real app)
     search: searchTerm,
+    status: "active",
   });
 
   const { mutateAsync: assignMember, isPending } = useAssignMemberMutation();

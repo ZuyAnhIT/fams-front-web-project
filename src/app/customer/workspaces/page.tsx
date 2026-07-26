@@ -1,6 +1,7 @@
 import React from "react";
 import WorkspacePage from "@/features/customer/workspace/components/WorkspacePage";
 import { Metadata } from "next";
+import RoleGuard from "@/components/guards/RoleGuard";
 
 export const metadata: Metadata = {
   title: "Quản lý Phòng ban - FAMS",
@@ -8,5 +9,9 @@ export const metadata: Metadata = {
 };
 
 export default function WorkspacesRoute() {
-  return <WorkspacePage />;
+  return (
+    <RoleGuard allowedPermissions={["workspaces:list", "workspaces:read"]}>
+      <WorkspacePage />
+    </RoleGuard>
+  );
 }

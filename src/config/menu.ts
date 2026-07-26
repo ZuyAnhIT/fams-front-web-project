@@ -66,7 +66,7 @@ export const SIDEBAR_MENU: MenuItem[] = [
     title: "Phòng ban",
     path: CUSTOMER_ROUTES.WORKSPACES,
     icon: "Network",
-    allowedRoles: [SystemRole.TENANT_ADMIN, SystemRole.HR_MANAGER]
+    allowedPermissions: ["workspaces:list", "workspaces:read"],
   },
   {
     title: "Chấm công",

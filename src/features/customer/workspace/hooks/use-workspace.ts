@@ -1,6 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { workspaceService } from "../services/workspace.service";
-import { CreateWorkspaceRequest, UpdateWorkspaceRequest } from "../types";
+import {
+  AssignWorkspaceMemberRequest,
+  CreateWorkspaceRequest,
+  TransferWorkspaceMemberRequest,
+  UpdateWorkspaceRequest,
+} from "../types";
 
 export const workspaceKeys = {
   all: ["workspaces"] as const,
@@ -79,6 +84,15 @@ export const useUpdateWorkspaceMutation = () => {
   });
 };
 
+export const useDeleteWorkspaceMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ tenantId, workspaceId }: { tenantId: string; workspaceId: string }) =>
+      workspaceService.deleteWorkspace(tenantId, workspaceId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: workspaceKeys.all }),
+  });
+};
+
 export const useWorkspaceMembersQuery = (
   tenantId: string | undefined,
   workspaceId: string | undefined,
@@ -102,10 +116,10 @@ export const useAssignMemberMutation = () => {
     }: {
       tenantId: string;
       workspaceId: string;
-      data: any;
+      data: AssignWorkspaceMemberRequest;
     }) => workspaceService.assignWorkspaceMember(tenantId, workspaceId, data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: workspaceKeys.detail(variables.workspaceId) });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: workspaceKeys.all });
     },
   });
 };
@@ -122,13 +136,27 @@ export const useTransferMemberMutation = () => {
       tenantId: string;
       workspaceId: string;
       memberId: string;
-      data: any;
+      data: TransferWorkspaceMemberRequest;
     }) => workspaceService.transferWorkspaceMember(tenantId, workspaceId, memberId, data),
-    onSuccess: (_, variables) => {
+    onSuccess: () => {
       // Invalidate source workspace to remove the member from list
-      queryClient.invalidateQueries({ queryKey: workspaceKeys.detail(variables.workspaceId) });
-      // Invalidate target workspace if it was previously fetched
-      queryClient.invalidateQueries({ queryKey: workspaceKeys.detail(variables.data.targetWorkspaceId) });
+      queryClient.invalidateQueries({ queryKey: workspaceKeys.all });
     },
+  });
+};
+
+export const useRemoveMemberMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      tenantId,
+      workspaceId,
+      memberId,
+    }: {
+      tenantId: string;
+      workspaceId: string;
+      memberId: string;
+    }) => workspaceService.removeWorkspaceMember(tenantId, workspaceId, memberId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: workspaceKeys.all }),
   });
 };

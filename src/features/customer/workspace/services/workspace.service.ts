@@ -5,6 +5,9 @@ import {
   WorkspaceTreeResponse,
   CreateWorkspaceRequest,
   UpdateWorkspaceRequest,
+  AssignWorkspaceMemberRequest,
+  TransferWorkspaceMemberRequest,
+  WorkspaceMemberResponse,
 } from "../types";
 
 export const workspaceService = {
@@ -69,13 +72,17 @@ export const workspaceService = {
     return response.data;
   },
 
+  deleteWorkspace: async (tenantId: string, workspaceId: string): Promise<void> => {
+    await apiClient.delete(`/tenants/${tenantId}/workspaces/${workspaceId}`);
+  },
+
   getWorkspaceMembers: async (
     tenantId: string,
     workspaceId: string,
     page: number = 0,
     size: number = 20
-  ): Promise<ApiResponse<PageResponse<any>>> => {
-    const response = await apiClient.get<ApiResponse<PageResponse<any>>>(
+  ): Promise<ApiResponse<PageResponse<WorkspaceMemberResponse>>> => {
+    const response = await apiClient.get<ApiResponse<PageResponse<WorkspaceMemberResponse>>>(
       `/tenants/${tenantId}/workspaces/${workspaceId}/members`,
       { params: { page, size } }
     );
@@ -85,9 +92,9 @@ export const workspaceService = {
   assignWorkspaceMember: async (
     tenantId: string,
     workspaceId: string,
-    data: any
-  ): Promise<ApiResponse<any>> => {
-    const response = await apiClient.post<ApiResponse<any>>(
+    data: AssignWorkspaceMemberRequest
+  ): Promise<ApiResponse<WorkspaceMemberResponse>> => {
+    const response = await apiClient.post<ApiResponse<WorkspaceMemberResponse>>(
       `/tenants/${tenantId}/workspaces/${workspaceId}/members`,
       data
     );
@@ -98,9 +105,9 @@ export const workspaceService = {
     tenantId: string,
     workspaceId: string,
     memberId: string,
-    data: { targetWorkspaceId: string; role?: "member" | "lead" | "manager" }
-  ): Promise<ApiResponse<any>> => {
-    const response = await apiClient.post<ApiResponse<any>>(
+    data: TransferWorkspaceMemberRequest
+  ): Promise<ApiResponse<WorkspaceMemberResponse>> => {
+    const response = await apiClient.post<ApiResponse<WorkspaceMemberResponse>>(
       `/tenants/${tenantId}/workspaces/${workspaceId}/members/${memberId}/transfer`,
       data
     );
