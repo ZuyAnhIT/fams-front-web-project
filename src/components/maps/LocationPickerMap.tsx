@@ -86,7 +86,10 @@ export default function LocationPickerMap({
   onChange,
   className = "h-[400px] w-full z-0",
 }: LocationPickerMapProps) {
-  const center = latitude && longitude ? { lat: latitude, lng: longitude } : DEFAULT_CENTER;
+  const center =
+    latitude != null && longitude != null
+      ? { lat: latitude, lng: longitude }
+      : DEFAULT_CENTER;
 
   const [options, setOptions] = useState<any[]>([]);
   const [fetching, setFetching] = useState(false);
@@ -142,7 +145,7 @@ export default function LocationPickerMap({
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        {(latitude && longitude) && (
+        {latitude != null && longitude != null && (
           <Marker position={{ lat: latitude, lng: longitude }} icon={customIcon} />
         )}
         <MapUpdater center={center} />

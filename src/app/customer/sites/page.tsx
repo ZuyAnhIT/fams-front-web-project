@@ -4,7 +4,10 @@ import { SystemRole } from "@/features/customer/auth/types/auth.type";
 
 export default function SitesPage() {
   return (
-    <RoleGuard allowedRoles={[SystemRole.TENANT_ADMIN, SystemRole.SITE_SUPERVISOR, SystemRole.PLATFORM_ADMIN]}>
+    <RoleGuard
+      allowedRoles={[SystemRole.PLATFORM_ADMIN]}
+      allowedPermissions={["sites:list", "sites:read"]}
+    >
       <SitePage />
     </RoleGuard>
   );

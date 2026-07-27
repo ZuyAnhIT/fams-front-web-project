@@ -10,7 +10,16 @@ export const geofenceKeys = {
   active: (siteId: string) => [...geofenceKeys.all, "active", siteId] as const,
 };
 
-export const useGeofenceHistoryQuery = (tenantId: string | undefined, siteId: string, params: { page: number; size: number; sortBy?: string; sortDir?: string }) => {
+export const useGeofenceHistoryQuery = (
+  tenantId: string | undefined,
+  siteId: string,
+  params: {
+    page: number;
+    size: number;
+    sortBy?: string;
+    sortDir?: "asc" | "desc";
+  },
+) => {
   return useQuery({
     queryKey: geofenceKeys.list(siteId, params),
     queryFn: () => geofenceService.listGeofenceHistory(tenantId!, siteId, params),

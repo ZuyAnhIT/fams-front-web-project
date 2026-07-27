@@ -18,7 +18,7 @@ import DataTable from "@/components/tables/DataTable";
 export default function SitePage() {
   const user = useAuthStore((state) => state.user);
   const hasPermission = useAuthStore((state) => state.hasPermission);
-  const tenantId = user?.tenantId;
+  const tenantId = user?.tenantId ?? undefined;
 
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
@@ -40,7 +40,7 @@ export default function SitePage() {
   }, [searchTerm]);
 
   const { data: pageResponse, isLoading } = useSitesQuery({
-    tenantId: tenantId as any,
+    tenantId,
     search: debouncedSearchTerm || undefined,
     status: statusFilter,
     page,
@@ -125,7 +125,7 @@ export default function SitePage() {
     },
   ];
 
-  if (hasPermission("sites:update") || hasPermission("sites:read") || true) {
+  if (hasPermission("sites:update") || hasPermission("sites:read")) {
     columns!.push({
       title: "Thao tác",
       dataIndex: "actions",
@@ -137,6 +137,7 @@ export default function SitePage() {
           <Link href={`/customer/sites/${record.id}`}>
             <Tooltip title="Chi tiết">
               <BaseButton
+                aria-label={`Xem chi tiết ${record.name}`}
                 type="text"
                 icon={<Eye className="h-4 w-4 text-brand-600" />}
                 className="hover:bg-brand-50 text-brand-600 rounded-lg flex items-center justify-center w-8 h-8 p-0"
@@ -146,6 +147,7 @@ export default function SitePage() {
           {hasPermission("sites:update") && (
             <Tooltip title="Sửa">
               <BaseButton
+                aria-label={`Sửa ${record.name}`}
                 type="text"
                 icon={<Edit3 className="h-4 w-4 text-slate-500" />}
                 onClick={() => setEditingSite(record)}

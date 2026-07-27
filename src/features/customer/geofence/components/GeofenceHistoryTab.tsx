@@ -45,6 +45,14 @@ export default function GeofenceHistoryTab({ tenantId, siteId, siteLatitude, sit
       render: (val: number) => `${val}m`,
     },
     {
+      title: "Người thay đổi",
+      dataIndex: "createdBy",
+      key: "createdBy",
+      render: (value: string) => (
+        <span className="font-mono text-xs text-slate-600">{value || "—"}</span>
+      ),
+    },
+    {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
@@ -70,6 +78,9 @@ export default function GeofenceHistoryTab({ tenantId, siteId, siteLatitude, sit
   return (
     <>
       <DataTable 
+        ariaLabel="Lịch sử thay đổi geofence"
+        emptyTitle="Chưa có lịch sử geofence"
+        emptyDescription="Phiên bản đầu tiên sẽ xuất hiện sau khi geofence được cấu hình."
         data={history} 
         columns={historyColumns as any} 
         loading={isHistoryLoading}

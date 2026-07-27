@@ -1,8 +1,27 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import RoleGuard from "@/components/guards/RoleGuard";
+import { SystemRole } from "@/features/customer/auth/types/auth.type";
+import CreateSiteModal from "@/features/customer/site/components/CreateSiteModal";
+
+function CreateSiteRouteContent() {
+  const router = useRouter();
+  return (
+    <CreateSiteModal
+      isOpen
+      onClose={() => router.push("/customer/sites")}
+    />
+  );
+}
+
 export default function CreateSitePage() {
   return (
-    <div className="p-6 bg-slate-900/40 rounded-2xl border border-white/10">
-      <h1 className="text-xl font-bold text-white mb-2">Thêm mới công trình</h1>
-      <p className="text-slate-400 text-sm">Trang cấu hình và tạo mới công trình chấm công đang được phát triển.</p>
-    </div>
+    <RoleGuard
+      allowedRoles={[SystemRole.PLATFORM_ADMIN]}
+      allowedPermissions={["sites:create"]}
+    >
+      <CreateSiteRouteContent />
+    </RoleGuard>
   );
 }

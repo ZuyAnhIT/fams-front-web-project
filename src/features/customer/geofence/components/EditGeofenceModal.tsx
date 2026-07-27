@@ -9,6 +9,10 @@ import { useAuthStore } from "@/stores/auth.store";
 import { GeofenceEditorMap } from "./GeofenceEditorMap";
 import { useCreateGeofenceMutation, useUpdateGeofenceMutation } from "../hooks/use-geofence";
 import { GeofenceResponse } from "../../site/types/site.type";
+import type {
+  CreateGeofenceRequest,
+  UpdateGeofenceRequest,
+} from "../types/geofence.type";
 
 interface EditGeofenceModalProps {
   isOpen: boolean;
@@ -33,10 +37,23 @@ export default function EditGeofenceModal({
   // The coordinates are stored as [lng, lat] in backend. 
   // Map uses [lat, lng]. We need to convert back and forth.
   const initialMapCoords: [number, number][] = activeGeofence?.coordinates
-    ? activeGeofence.coordinates.map(c => [c[1], c[0]])
+    ? activeGeofence.coordinates
+        .slice(
+          0,
+          activeGeofence.coordinates.length > 1 &&
+            activeGeofence.coordinates[0][0] ===
+              activeGeofence.coordinates[activeGeofence.coordinates.length - 1][0] &&
+            activeGeofence.coordinates[0][1] ===
+              activeGeofence.coordinates[activeGeofence.coordinates.length - 1][1]
+            ? -1
+            : undefined,
+        )
+        .map((coordinate) => [coordinate[1], coordinate[0]])
     : [];
 
-  const [bufferMeters, setBufferMeters] = useState<number>(activeGeofence?.bufferMeters || 50);
+  const [bufferMeters, setBufferMeters] = useState<number>(
+    activeGeofence?.bufferMeters ?? 0,
+  );
   const [coordinates, setCoordinates] = useState<[number, number][]>(initialMapCoords);
 
   const createMutation = useCreateGeofenceMutation();
@@ -45,7 +62,10 @@ export default function EditGeofenceModal({
   const handleSave = () => {
     if (!tenantId) return;
 
-    if (coordinates.length < 3) {
+    const distinctPoints = new Set(
+      coordinates.map(([lat, lng]) => `${lat.toFixed(8)},${lng.toFixed(8)}`),
+    );
+    if (coordinates.length < 3 || distinctPoints.size < 3) {
       message.error("Vui lòng vẽ ít nhất 3 điểm trên bản đồ để tạo vùng.");
       return;
     }
@@ -61,26 +81,60 @@ export default function EditGeofenceModal({
     // Convert [lat, lng] to [lng, lat]
     const backendCoords = submitCoords.map(c => [c[1], c[0]]);
 
-    const data = {
+    const createData: CreateGeofenceRequest = {
       coordinates: backendCoords,
-      bufferMeters: bufferMeters,
+      bufferMeters,
     };
 
     const isUpdate = !!activeGeofence;
-    const mutation = isUpdate ? updateMutation : createMutation;
-
-    mutation.mutate(
-      { tenantId, siteId, data } as any,
-      {
-        onSuccess: () => {
-          message.success("Lưu cấu hình vùng chấm công thành công!");
-          onClose();
-        },
-        onError: (err: any) => {
-          message.error(err.response?.data?.message || "Có lỗi xảy ra khi lưu cấu hình.");
-        },
+    let data: CreateGeofenceRequest | UpdateGeofenceRequest = createData;
+    if (isUpdate) {
+      const currentCoordinates = [...activeGeofence.coordinates];
+      const currentFirst = currentCoordinates[0];
+      const currentLast = currentCoordinates[currentCoordinates.length - 1];
+      if (
+        currentFirst &&
+        currentLast &&
+        (currentFirst[0] !== currentLast[0] ||
+          currentFirst[1] !== currentLast[1])
+      ) {
+        currentCoordinates.push([...currentFirst]);
       }
-    );
+      const coordinatesChanged =
+        JSON.stringify(currentCoordinates) !== JSON.stringify(backendCoords);
+      const bufferChanged = activeGeofence.bufferMeters !== bufferMeters;
+      if (!coordinatesChanged && !bufferChanged) {
+        message.info("Chưa có thay đổi để lưu.");
+        return;
+      }
+      data = {
+        ...(coordinatesChanged ? { coordinates: backendCoords } : {}),
+        ...(bufferChanged ? { bufferMeters } : {}),
+      };
+    }
+
+    const mutationOptions = {
+      onSuccess: () => {
+        message.success("Lưu cấu hình vùng chấm công thành công!");
+        onClose();
+      },
+      onError: (err: any) => {
+        message.error(
+          err.response?.data?.message || "Có lỗi xảy ra khi lưu cấu hình.",
+        );
+      },
+    };
+    if (isUpdate) {
+      updateMutation.mutate(
+        { tenantId, siteId, data: data as UpdateGeofenceRequest },
+        mutationOptions,
+      );
+    } else {
+      createMutation.mutate(
+        { tenantId, siteId, data: data as CreateGeofenceRequest },
+        mutationOptions,
+      );
+    }
   };
 
   const isLoading = createMutation.isPending || updateMutation.isPending;
@@ -124,10 +178,10 @@ export default function EditGeofenceModal({
         <div className="flex items-center gap-4 pt-2">
           <div className="font-medium text-slate-700">Bán kính sai số cho phép (Buffer Meters):</div>
           <InputNumber
+            aria-label="Khoảng sai số GPS"
             min={0}
-            max={500}
             value={bufferMeters}
-            onChange={(val) => setBufferMeters(val || 0)}
+            onChange={(val) => setBufferMeters(val ?? 0)}
             className="w-32"
             addonAfter="mét"
           />
@@ -182,6 +236,9 @@ export default function EditGeofenceModal({
                           size="small"
                           className="w-full text-xs"
                           value={coord[0]}
+                          aria-label={`Vĩ độ điểm ${index + 1}`}
+                          min={-90}
+                          max={90}
                           onChange={(val) => {
                             if (val === null) return;
                             const newC = [...coordinates];
@@ -198,6 +255,9 @@ export default function EditGeofenceModal({
                           size="small"
                           className="w-full text-xs"
                           value={coord[1]}
+                          aria-label={`Kinh độ điểm ${index + 1}`}
+                          min={-180}
+                          max={180}
                           onChange={(val) => {
                             if (val === null) return;
                             const newC = [...coordinates];

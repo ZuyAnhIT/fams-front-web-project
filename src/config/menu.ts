@@ -78,7 +78,7 @@ export const SIDEBAR_MENU: MenuItem[] = [
     title: "Công trình",
     path: CUSTOMER_ROUTES.SITES,
     icon: "MapPin",
-    allowedRoles: [SystemRole.TENANT_ADMIN, SystemRole.SITE_SUPERVISOR]
+    allowedPermissions: ["sites:list", "sites:read"],
   },
   {
     title: "Báo cáo Face ID",

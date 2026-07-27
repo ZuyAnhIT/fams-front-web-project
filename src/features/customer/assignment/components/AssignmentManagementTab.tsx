@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Badge, Tag, message } from "antd";
-import { EditOutlined, DeleteOutlined, SearchOutlined, PlusOutlined } from "@ant-design/icons";
-import { BaseButton, BaseInput, BaseSelect, BaseModal } from "@/components/ui";
+import { EditOutlined, DeleteOutlined, PlusOutlined } from "@ant-design/icons";
+import { BaseButton, BaseSelect, BaseModal } from "@/components/ui";
 import DataTable from "@/components/tables/DataTable";
 import { useAssignments } from "../hooks/use-assignments";
 import { useCancelAssignmentMutation } from "../hooks/use-assignment";
@@ -10,6 +10,7 @@ import AssignmentFormModal from "./AssignmentFormModal";
 import { ShiftResponse } from "@/features/customer/shift/types/shift.type";
 import { useEmployees } from "@/features/customer/employee/hooks/use-employee";
 import { formatVietnameseName } from "@/utils/name.util";
+import { useAuthStore } from "@/stores/auth.store";
 
 interface AssignmentManagementTabProps {
   tenantId?: string;
@@ -18,6 +19,11 @@ interface AssignmentManagementTabProps {
 }
 
 export default function AssignmentManagementTab({ tenantId, siteId, shifts }: AssignmentManagementTabProps) {
+  const hasPermission = useAuthStore((state) => state.hasPermission);
+  const canCreate = hasPermission("assignments:create");
+  const canUpdate = hasPermission("assignments:update");
+  const canDelete = hasPermission("assignments:delete");
+  const canListEmployees = hasPermission("employees:list");
   const [assignmentPage, setAssignmentPage] = useState(0);
   const [assignmentSort, setAssignmentSort] = useState({
     sortBy: "startDate",
@@ -47,7 +53,10 @@ export default function AssignmentManagementTab({ tenantId, siteId, shifts }: As
   const assignments = assignmentsRes?.data?.content || [];
   const totalAssignments = assignmentsRes?.data?.totalElements || 0;
 
-  const { data: employeesRes } = useEmployees({ size: 100 });
+  const { data: employeesRes } = useEmployees(
+    { size: 100 },
+    { enabled: canListEmployees },
+  );
   const employees = employeesRes?.content || [];
 
   const getEmployeeName = (id: string) => {
@@ -128,23 +137,25 @@ export default function AssignmentManagementTab({ tenantId, siteId, shifts }: As
         />
       ),
     },
-    {
+    ...((canUpdate || canDelete) ? [{
       title: "Thao tác",
       key: "action",
       width: 120,
       render: (_: any, record: AssignmentResponse) => (
         <div className="flex gap-2">
-          <BaseButton
-            type="text"
-            size="small"
-            icon={<EditOutlined className="text-blue-500" />}
-            onClick={() => {
-              setActiveAssignment(record);
-              setIsAssignmentModalOpen(true);
-            }}
-            title="Sửa phân công"
-          />
-          {record.status === "active" && (
+          {canUpdate && (
+            <BaseButton
+              type="text"
+              size="small"
+              icon={<EditOutlined className="text-blue-500" />}
+              onClick={() => {
+                setActiveAssignment(record);
+                setIsAssignmentModalOpen(true);
+              }}
+              title="Sửa phân công"
+            />
+          )}
+          {canDelete && record.status === "active" && (
             <BaseButton
               type="text"
               size="small"
@@ -158,12 +169,12 @@ export default function AssignmentManagementTab({ tenantId, siteId, shifts }: As
           )}
         </div>
       ),
-    },
+    }] : []),
   ];
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
+      {canCreate && <div className="flex justify-end">
         <BaseButton 
           type="primary" 
           icon={<PlusOutlined />}
@@ -175,24 +186,9 @@ export default function AssignmentManagementTab({ tenantId, siteId, shifts }: As
         >
           Tạo phân công
         </BaseButton>
-      </div>
+      </div>}
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-        {/* Search Input */}
-        <div className="flex flex-col gap-1 lg:col-span-2">
-          <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tìm kiếm</label>
-          <BaseInput
-            placeholder="Tìm kiếm theo tên, mã..."
-            prefix={<SearchOutlined className="text-slate-400" />}
-            allowClear
-            className="w-full h-10"
-            onPressEnter={() => message.info("Chức năng tìm kiếm (search) đang chờ Backend cập nhật API")}
-          />
-        </div>
-        
-        {/* Empty space to force next row on desktop */}
-        <div className="hidden lg:block lg:col-span-2"></div>
-
         {/* Filters */}
         <div className="flex flex-col gap-1">
           <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Nhân viên</label>

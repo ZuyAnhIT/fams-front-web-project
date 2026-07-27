@@ -23,6 +23,10 @@ export const useSiteDetailQuery = (tenantId: string | undefined, siteId: string)
     queryKey: siteKeys.detail(siteId),
     queryFn: () => siteService.getSiteDetail(tenantId!, siteId),
     enabled: !!tenantId && !!siteId,
+    retry: (failureCount, error) => {
+      const status = (error as { response?: { status?: number } }).response?.status;
+      return status !== 403 && status !== 404 && failureCount < 2;
+    },
   });
 };
 
@@ -57,6 +61,17 @@ export const useUpdateSiteMutation = () => {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: siteKeys.lists() });
       queryClient.invalidateQueries({ queryKey: siteKeys.detail(variables.siteId) });
+    },
+  });
+};
+
+export const useDeleteSiteMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ tenantId, siteId }: { tenantId: string; siteId: string }) =>
+      siteService.deleteSite(tenantId, siteId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: siteKeys.all });
     },
   });
 };
