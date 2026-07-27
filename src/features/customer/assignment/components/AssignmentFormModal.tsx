@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { message } from "antd";
+import { Alert, App, Checkbox } from "antd";
 import { BaseModal } from "@/components/ui";
 import { FormSelect, FormDatePicker, FormTextArea } from "@/components/forms";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { isAxiosError } from "axios";
 import { useAuthStore } from "@/stores/auth.store";
 import { useEmployees } from "@/features/customer/employee/hooks/use-employee";
 import { useShiftsQuery } from "@/features/customer/shift/hooks/use-shift";
@@ -13,7 +14,11 @@ import {
   useCreateAssignmentMutation,
   useUpdateAssignmentMutation,
 } from "../hooks/use-assignment";
-import { AssignmentResponse } from "../types/assignment.type";
+import {
+  type AssignmentDayOfWeek,
+  type AssignmentResponse,
+  type UpdateAssignmentRequest,
+} from "../types/assignment.type";
 import { formatVietnameseName } from "@/utils/name.util";
 import dayjs from "dayjs";
 import { assignmentSchema, type AssignmentFormData } from "../schemas/assignment.schema";
@@ -25,12 +30,33 @@ interface AssignmentFormModalProps {
   activeAssignment?: AssignmentResponse | null;
 }
 
+const DAY_OPTIONS: Array<{ label: string; value: AssignmentDayOfWeek }> = [
+  { label: "T2", value: "MONDAY" },
+  { label: "T3", value: "TUESDAY" },
+  { label: "T4", value: "WEDNESDAY" },
+  { label: "T5", value: "THURSDAY" },
+  { label: "T6", value: "FRIDAY" },
+  { label: "T7", value: "SATURDAY" },
+  { label: "CN", value: "SUNDAY" },
+];
+
+function assignmentErrorMessage(error: unknown, fallback: string): string {
+  if (!isAxiosError(error)) return fallback;
+  const backendMessage =
+    (error.response?.data as { message?: string } | undefined)?.message;
+  if (error.response?.status === 409) {
+    return `${backendMessage || fallback}. Kiểm tra lịch phân công hiện tại của nhân viên trước khi thử lại.`;
+  }
+  return backendMessage || fallback;
+}
+
 export default function AssignmentFormModal({
   isOpen,
   onClose,
   siteId,
   activeAssignment,
 }: AssignmentFormModalProps) {
+  const { message } = App.useApp();
   const user = useAuthStore((state) => state.user);
   const tenantId = user?.tenantId || undefined;
 
@@ -40,16 +66,28 @@ export default function AssignmentFormModal({
   const isUpdate = !!activeAssignment;
 
   // Lấy danh sách nhân viên để chọn
-  const { data: employeesRes, isLoading: isEmployeesLoading } = useEmployees({ size: 100 });
+  const { data: employeesRes, isLoading: isEmployeesLoading } = useEmployees(
+    { size: 100 },
+    { enabled: isOpen },
+  );
   const employees = employeesRes?.content || [];
+  const assignableEmployees = employees.filter(
+    (employee) =>
+      employee.status !== "terminated" ||
+      employee.id === activeAssignment?.employeeId,
+  );
 
   // Lấy danh sách ca làm việc của site này
   const { data: shiftsRes, isLoading: isShiftsLoading } = useShiftsQuery(
     tenantId,
     siteId,
-    { page: 0, size: 100 }
+    { page: 0, size: 100 },
   );
   const shifts = shiftsRes?.content || [];
+  const selectableShifts = shifts.filter(
+    (shift) =>
+      shift.status === "active" || shift.id === activeAssignment?.shiftId,
+  );
 
   const {
     control,
@@ -64,6 +102,7 @@ export default function AssignmentFormModal({
       role: "worker",
       startDate: null,
       endDate: null,
+      daysOfWeek: [],
       notes: "",
     },
   });
@@ -77,6 +116,7 @@ export default function AssignmentFormModal({
           role: activeAssignment.role,
           startDate: dayjs(activeAssignment.startDate),
           endDate: activeAssignment.endDate ? dayjs(activeAssignment.endDate) : null,
+          daysOfWeek: activeAssignment.daysOfWeek ?? [],
           notes: activeAssignment.notes || "",
         });
       } else {
@@ -86,6 +126,7 @@ export default function AssignmentFormModal({
           role: "worker",
           startDate: null,
           endDate: null,
+          daysOfWeek: [],
           notes: "",
         });
       }
@@ -96,29 +137,54 @@ export default function AssignmentFormModal({
     if (!tenantId) return;
 
     const startDate = data.startDate.format("YYYY-MM-DD");
-    const endDate = data.endDate ? data.endDate.format("YYYY-MM-DD") : null;
+    const endDate = data.endDate
+      ? data.endDate.format("YYYY-MM-DD")
+      : undefined;
+    const daysOfWeek = data.daysOfWeek?.length
+      ? data.daysOfWeek
+      : undefined;
+    const notes = data.notes?.trim() ?? "";
 
     if (isUpdate && activeAssignment) {
-      // Xây dựng payload cập nhật (partial update)
-      const updateData: any = {};
+      const updateData: UpdateAssignmentRequest = {};
 
-      // Xử lý shiftId: nếu xóa ca → gửi clearShift=true
       if (!data.shiftId && activeAssignment.shiftId) {
         updateData.clearShift = true;
       } else if (data.shiftId && data.shiftId !== activeAssignment.shiftId) {
         updateData.shiftId = data.shiftId;
       }
 
-      // Xử lý endDate: nếu xóa ngày kết thúc → gửi clearEndDate=true
       if (!endDate && activeAssignment.endDate) {
         updateData.clearEndDate = true;
-      } else if (endDate) {
+      } else if (endDate && endDate !== activeAssignment.endDate) {
         updateData.endDate = endDate;
       }
 
-      updateData.startDate = startDate;
-      updateData.role = data.role;
-      updateData.notes = data.notes || null;
+      const previousDays = activeAssignment.daysOfWeek ?? [];
+      if (!daysOfWeek && previousDays.length > 0) {
+        updateData.clearDaysOfWeek = true;
+      } else if (
+        daysOfWeek &&
+        daysOfWeek.join(",") !== previousDays.join(",")
+      ) {
+        updateData.daysOfWeek = daysOfWeek;
+      }
+
+      if (startDate !== activeAssignment.startDate) {
+        updateData.startDate = startDate;
+      }
+      if (data.role !== activeAssignment.role) {
+        updateData.role = data.role;
+      }
+      if (notes !== (activeAssignment.notes ?? "")) {
+        updateData.notes = notes;
+      }
+
+      if (Object.keys(updateData).length === 0) {
+        message.info("Phân công không có thay đổi");
+        onClose();
+        return;
+      }
 
       updateMutation.mutate(
         {
@@ -132,10 +198,14 @@ export default function AssignmentFormModal({
             message.success("Cập nhật phân công thành công!");
             onClose();
           },
-          onError: (err: any) => {
-            message.error(
-              err.response?.data?.message || "Có lỗi xảy ra khi cập nhật phân công."
-            );
+          onError: (error: unknown) => {
+            message.error({
+              content: assignmentErrorMessage(
+                error,
+                "Có lỗi xảy ra khi cập nhật phân công",
+              ),
+              duration: 7,
+            });
           },
         }
       );
@@ -146,11 +216,12 @@ export default function AssignmentFormModal({
           siteId,
           data: {
             employeeId: data.employeeId,
-            shiftId: data.shiftId || null,
+            ...(data.shiftId ? { shiftId: data.shiftId } : {}),
             startDate,
-            endDate,
+            ...(endDate ? { endDate } : {}),
+            ...(daysOfWeek ? { daysOfWeek } : {}),
             role: data.role,
-            notes: data.notes || undefined,
+            ...(notes ? { notes } : {}),
           },
         },
         {
@@ -158,10 +229,14 @@ export default function AssignmentFormModal({
             message.success("Tạo phân công thành công!");
             onClose();
           },
-          onError: (err: any) => {
-            message.error(
-              err.response?.data?.message || "Có lỗi xảy ra khi tạo phân công."
-            );
+          onError: (error: unknown) => {
+            message.error({
+              content: assignmentErrorMessage(
+                error,
+                "Có lỗi xảy ra khi tạo phân công",
+              ),
+              duration: 7,
+            });
           },
         }
       );
@@ -185,7 +260,7 @@ export default function AssignmentFormModal({
       isOpen={isOpen}
       onClose={onClose}
       destroyOnClose
-      width={560}
+      width={640}
       confirmText={isUpdate ? "Lưu thay đổi" : "Tạo phân công"}
       cancelText="Hủy bỏ"
       confirmLoading={isLoading}
@@ -214,10 +289,17 @@ export default function AssignmentFormModal({
           loading={isEmployeesLoading}
           disabled={isUpdate}
           optionFilterProp="label"
-          options={employees.map((emp: any) => ({
-            value: emp.id,
-            label: `${formatVietnameseName(emp.firstName, emp.lastName)} (${emp.employeeCode || emp.email})`,
+          options={assignableEmployees.map((employee) => ({
+            value: employee.id,
+            label: `${formatVietnameseName(employee.firstName, employee.lastName)} (${employee.employeeCode || employee.email})${
+              employee.status === "inactive"
+                ? " — Tạm ngừng"
+                : employee.status === "terminated"
+                  ? " — Đã nghỉ việc"
+                  : ""
+            }`,
           }))}
+          helperText="Nhân viên đã nghỉ việc không thể nhận phân công mới."
           error={errors.employeeId}
         />
 
@@ -241,12 +323,11 @@ export default function AssignmentFormModal({
             placeholder="Không cố định"
             allowClear
             loading={isShiftsLoading}
-            options={shifts
-              .filter((s: any) => s.status === "active")
-              .map((s: any) => ({
-                value: s.id,
-                label: `${s.name} (${s.startTime} - ${s.endTime})`,
+            options={selectableShifts.map((shift) => ({
+                value: shift.id,
+                label: `${shift.name} (${shift.startTime} - ${shift.endTime})${shift.status === "inactive" ? " — Đã ngừng dùng" : ""}`,
               }))}
+            helperText="Để trống nếu nhân viên làm việc không theo ca cố định."
             error={errors.shiftId}
           />
         </div>
@@ -274,6 +355,34 @@ export default function AssignmentFormModal({
             error={errors.endDate}
           />
         </div>
+
+        <div>
+          <div className="mb-2 text-[13px] font-semibold text-slate-700">
+            Ngày làm việc trong tuần
+          </div>
+          <Controller
+            control={control}
+            name="daysOfWeek"
+            render={({ field }) => (
+              <Checkbox.Group
+                options={DAY_OPTIONS}
+                value={field.value ?? []}
+                onChange={field.onChange}
+                className="grid grid-cols-4 gap-x-4 gap-y-3 sm:grid-cols-7"
+              />
+            )}
+          />
+          <p className="mt-2 text-xs text-slate-500">
+            Không chọn ngày nào nghĩa là phân công áp dụng mọi ngày trong khoảng.
+          </p>
+        </div>
+
+        <Alert
+          type="info"
+          showIcon
+          message="Hệ thống sẽ chặn lịch bị chồng chéo với site khác"
+          description="Nếu nhân viên làm ở nhiều công trình, hãy bảo đảm khoảng ngày hoặc ngày trong tuần không giao nhau."
+        />
 
         <FormTextArea
           control={control}

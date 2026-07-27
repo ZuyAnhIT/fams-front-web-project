@@ -4,6 +4,7 @@ import {
   CreateShiftRequest,
   UpdateShiftRequest,
   ConfigureShiftOtRequest,
+  ShiftListParams,
   ShiftResponse,
 } from "../types/shift.type";
 
@@ -23,7 +24,7 @@ export const shiftService = {
   listShifts: async (
     tenantId: string,
     siteId: string,
-    params: { status?: string; page?: number; size?: number }
+    params: ShiftListParams,
   ): Promise<PageResponse<ShiftResponse>> => {
     const response = await apiClient.get<ApiResponse<PageResponse<ShiftResponse>>>(
       `/tenants/${tenantId}/sites/${siteId}/shifts`,
@@ -56,5 +57,15 @@ export const shiftService = {
       data
     );
     return response.data.data;
+  },
+
+  deleteShift: async (
+    tenantId: string,
+    siteId: string,
+    shiftId: string,
+  ): Promise<void> => {
+    await apiClient.delete(
+      `/tenants/${tenantId}/sites/${siteId}/shifts/${shiftId}`,
+    );
   },
 };

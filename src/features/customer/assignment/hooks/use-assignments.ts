@@ -5,7 +5,10 @@ import { AssignmentListParams } from "../types/assignment.type";
 export const assignmentKeys = {
   all: ["assignments"] as const,
   lists: () => [...assignmentKeys.all, "list"] as const,
-  list: (siteId: string, params: any) => [...assignmentKeys.lists(), siteId, params] as const,
+  list: (
+    siteId: string,
+    params: Omit<AssignmentListParams, "tenantId" | "siteId">,
+  ) => [...assignmentKeys.lists(), siteId, params] as const,
 };
 
 export const useAssignments = (

@@ -13,6 +13,8 @@ export interface ShiftResponse {
   createdBy: string;
   createdAt: string;
   updatedAt: string;
+  assignmentHistoryCount: number;
+  canDelete: boolean;
 }
 
 export interface CreateShiftRequest {
@@ -34,4 +36,10 @@ export interface ConfigureShiftOtRequest {
   allowOvertime?: boolean;
   earlyCheckinMinutes?: number;
   lateCheckoutMinutes?: number;
+}
+
+export interface ShiftListParams {
+  status?: "active" | "inactive";
+  page?: number;
+  size?: number;
 }
