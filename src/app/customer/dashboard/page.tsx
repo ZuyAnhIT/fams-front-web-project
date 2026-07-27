@@ -29,6 +29,7 @@ const ROLE_LABELS: Record<SystemRole, string> = {
 
 export default function CustomerDashboardPage() {
   const user = useAuthStore((state) => state.user);
+  const hasPermission = useAuthStore((state) => state.hasPermission);
   const role = user?.role;
   const canViewEmployees = Boolean(role && [
     SystemRole.TENANT_ADMIN,
@@ -61,7 +62,7 @@ export default function CustomerDashboardPage() {
       href: CUSTOMER_ROUTES.ATTENDANCE,
       icon: CalendarCheck,
     },
-    role && [SystemRole.TENANT_ADMIN, SystemRole.SITE_SUPERVISOR].includes(role) && {
+    (hasPermission("sites:list") || hasPermission("sites:read")) && {
       title: "Công trình",
       description: "Theo dõi địa điểm và vùng chấm công",
       href: CUSTOMER_ROUTES.SITES,

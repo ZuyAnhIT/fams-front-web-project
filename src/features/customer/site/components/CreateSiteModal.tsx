@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Form, message, Tooltip } from "antd";
+import { Form, message } from "antd";
 import { useAuthStore } from "@/stores/auth.store";
 import { useCreateSiteMutation } from "../hooks/use-site";
 import { CreateSiteRequest } from "../types/site.type";
@@ -52,8 +52,14 @@ export default function CreateSiteModal({ isOpen, onClose }: CreateSiteModalProp
         code: values.code || undefined,
         description: values.description || undefined,
         address: values.address || undefined,
-        latitude: values.latitude ? Number(values.latitude) : undefined,
-        longitude: values.longitude ? Number(values.longitude) : undefined,
+        latitude:
+          values.latitude !== undefined && values.latitude !== null
+            ? Number(values.latitude)
+            : undefined,
+        longitude:
+          values.longitude !== undefined && values.longitude !== null
+            ? Number(values.longitude)
+            : undefined,
         timezone: values.timezone || "Asia/Ho_Chi_Minh",
       };
 
@@ -206,8 +212,8 @@ export default function CreateSiteModal({ isOpen, onClose }: CreateSiteModalProp
             </div>
             {/* Display selected coordinates nicely */}
             <div className="mt-4 flex gap-6 text-sm">
-              <div className="flex-1"><span className="text-slate-500 mr-2">Vĩ độ (Lat):</span><span className="font-semibold text-slate-700">{lat ? lat.toFixed(6) : "---"}</span></div>
-              <div className="flex-1"><span className="text-slate-500 mr-2">Kinh độ (Lng):</span><span className="font-semibold text-slate-700">{lng ? lng.toFixed(6) : "---"}</span></div>
+              <div className="flex-1"><span className="text-slate-500 mr-2">Vĩ độ (Lat):</span><span className="font-semibold text-slate-700">{lat != null ? lat.toFixed(6) : "---"}</span></div>
+              <div className="flex-1"><span className="text-slate-500 mr-2">Kinh độ (Lng):</span><span className="font-semibold text-slate-700">{lng != null ? lng.toFixed(6) : "---"}</span></div>
             </div>
           </div>
         </div>

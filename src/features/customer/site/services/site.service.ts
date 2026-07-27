@@ -12,9 +12,10 @@ export const siteService = {
   getSites: async (
     params: SiteListParams
   ): Promise<ApiResponse<PageResponse<SiteResponse>>> => {
+    const { tenantId, ...queryParams } = params;
     const response = await apiClient.get<ApiResponse<PageResponse<SiteResponse>>>(
-      `/tenants/${params.tenantId}/sites`,
-      { params }
+      `/tenants/${tenantId}/sites`,
+      { params: queryParams }
     );
     return response.data;
   },
@@ -50,5 +51,9 @@ export const siteService = {
       data
     );
     return response.data;
+  },
+
+  deleteSite: async (tenantId: string, siteId: string): Promise<void> => {
+    await apiClient.delete(`/tenants/${tenantId}/sites/${siteId}`);
   },
 };

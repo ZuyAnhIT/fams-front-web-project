@@ -7,6 +7,7 @@ import { ShiftResponse } from "../types/shift.type";
 import { useShiftsQuery } from "../hooks/use-shift";
 import ShiftFormModal from "./ShiftFormModal";
 import ShiftOtConfigModal from "./ShiftOtConfigModal";
+import { useAuthStore } from "@/stores/auth.store";
 
 interface ShiftManagementTabProps {
   tenantId?: string;
@@ -14,6 +15,9 @@ interface ShiftManagementTabProps {
 }
 
 export default function ShiftManagementTab({ tenantId, siteId }: ShiftManagementTabProps) {
+  const hasPermission = useAuthStore((state) => state.hasPermission);
+  const canCreate = hasPermission("shifts:create");
+  const canUpdate = hasPermission("shifts:update");
   const [shiftPage, setShiftPage] = useState(0);
   const [shiftSort, setShiftSort] = useState({ sortBy: "name", sortDir: "asc" as "asc" | "desc" | undefined });
 
@@ -67,7 +71,7 @@ export default function ShiftManagementTab({ tenantId, siteId }: ShiftManagement
         <Badge status={val === "active" ? "success" : "default"} text={val === "active" ? "Đang áp dụng" : "Ngừng áp dụng"} className="text-slate-600" />
       ),
     },
-    {
+    ...(canUpdate ? [{
       title: "Thao tác",
       key: "action",
       width: 120,
@@ -95,24 +99,26 @@ export default function ShiftManagementTab({ tenantId, siteId }: ShiftManagement
           />
         </div>
       ),
-    },
+    }] : []),
   ];
 
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <p className="text-slate-500 m-0">Quản lý các ca làm việc tiêu chuẩn áp dụng tại công trình này.</p>
-        <BaseButton 
-          type="primary" 
-          icon={<PlusOutlined />}
-          onClick={() => {
-            setActiveShift(null);
-            setIsShiftModalOpen(true);
-          }}
-          className="!bg-blue-600 !text-white hover:!bg-blue-700 !border-0 shadow-md shadow-blue-500/20 h-9 px-4 rounded-lg font-semibold transition-all flex items-center gap-2"
-        >
-          Tạo ca làm việc
-        </BaseButton>
+        {canCreate && (
+          <BaseButton
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => {
+              setActiveShift(null);
+              setIsShiftModalOpen(true);
+            }}
+            className="!bg-blue-600 !text-white hover:!bg-blue-700 !border-0 shadow-md shadow-blue-500/20 h-9 px-4 rounded-lg font-semibold transition-all flex items-center gap-2"
+          >
+            Tạo ca làm việc
+          </BaseButton>
+        )}
       </div>
       <DataTable 
         data={shifts} 

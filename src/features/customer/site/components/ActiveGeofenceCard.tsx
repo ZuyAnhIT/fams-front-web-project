@@ -1,10 +1,11 @@
 import React, { useState } from "react";
-import { Card } from "antd";
+import { Alert, Card, Tag, Tooltip } from "antd";
 import BaseButton from "@/components/ui/BaseButton";
 import { EditOutlined, EnvironmentOutlined, GlobalOutlined, ClockCircleOutlined } from "@ant-design/icons";
 import { SiteDetailResponse } from "../types/site.type";
 import { GeofenceMap } from "./GeofenceMap";
 import EditGeofenceModal from "../../geofence/components/EditGeofenceModal";
+import { useAuthStore } from "@/stores/auth.store";
 
 interface ActiveGeofenceCardProps {
   site: SiteDetailResponse;
@@ -13,22 +14,37 @@ interface ActiveGeofenceCardProps {
 
 export default function ActiveGeofenceCard({ site, siteId }: ActiveGeofenceCardProps) {
   const [isGeofenceModalOpen, setIsGeofenceModalOpen] = useState(false);
+  const hasPermission = useAuthStore((state) => state.hasPermission);
+  const canConfigure = site.geofence
+    ? hasPermission("geofences:update")
+    : hasPermission("geofences:create");
+  const hasCenter = site.latitude != null && site.longitude != null;
 
   return (
     <>
       <Card 
         className="bg-white border-slate-200 shadow-sm" 
-        title={<span className="text-slate-800 font-semibold">Bản đồ khu vực chấm công</span>}
-        extra={
-          <BaseButton type="link" icon={<EditOutlined />} onClick={() => setIsGeofenceModalOpen(true)}>
-            Cập nhật
-          </BaseButton>
-        }
+        title={<span className="text-slate-800 font-semibold">Vùng chấm công</span>}
+        extra={canConfigure ? (
+          <Tooltip title={!hasCenter ? "Hãy cập nhật tọa độ trung tâm của công trình trước" : undefined}>
+            <span>
+              <BaseButton
+                aria-label={site.geofence ? "Cập nhật geofence" : "Tạo geofence"}
+                type="link"
+                icon={<EditOutlined />}
+                disabled={!hasCenter}
+                onClick={() => setIsGeofenceModalOpen(true)}
+              >
+                {site.geofence ? "Cập nhật" : "Tạo geofence"}
+              </BaseButton>
+            </span>
+          </Tooltip>
+        ) : null}
       >
-        {site.latitude && site.longitude ? (
+        {hasCenter ? (
           <GeofenceMap 
-            latitude={site.latitude} 
-            longitude={site.longitude} 
+            latitude={site.latitude!}
+            longitude={site.longitude!}
             polygonCoordinates={site.geofence?.coordinates} 
           />
         ) : (
@@ -36,8 +52,26 @@ export default function ActiveGeofenceCard({ site, siteId }: ActiveGeofenceCardP
             <span className="text-slate-400">Chưa cấu hình tọa độ</span>
           </div>
         )}
+
+        {!site.geofence && (
+          <Alert
+            className="mt-4"
+            type="warning"
+            showIcon
+            message="Công trình chưa có geofence"
+            description="Chưa có polygon active để backend đối chiếu vị trí check-in. Hãy cấu hình vùng chấm công trước khi vận hành chính thức."
+          />
+        )}
         
         <div className="mt-4 space-y-3">
+          {site.geofence && (
+            <div className="flex items-center justify-between rounded-lg bg-blue-50 px-3 py-2 text-sm">
+              <span className="font-medium text-blue-800">
+                Sai số GPS cho phép: {site.geofence.bufferMeters} mét
+              </span>
+              <Tag color="success" className="m-0">Đang áp dụng</Tag>
+            </div>
+          )}
           <div className="flex items-start gap-3 text-slate-600">
             <EnvironmentOutlined className="mt-1 text-blue-500" />
             <div>
@@ -62,13 +96,13 @@ export default function ActiveGeofenceCard({ site, siteId }: ActiveGeofenceCardP
         </div>
       </Card>
 
-      {isGeofenceModalOpen && site.latitude && site.longitude && (
+      {isGeofenceModalOpen && hasCenter && (
         <EditGeofenceModal
           isOpen={isGeofenceModalOpen}
           onClose={() => setIsGeofenceModalOpen(false)}
           siteId={siteId}
-          latitude={site.latitude}
-          longitude={site.longitude}
+          latitude={site.latitude!}
+          longitude={site.longitude!}
           activeGeofence={site.geofence}
         />
       )}

@@ -20,7 +20,16 @@ export const geofenceService = {
     return response.data.data;
   },
 
-  listGeofenceHistory: async (tenantId: string, siteId: string, params: { page?: number; size?: number }): Promise<PageResponse<GeofenceResponse>> => {
+  listGeofenceHistory: async (
+    tenantId: string,
+    siteId: string,
+    params: {
+      page?: number;
+      size?: number;
+      sortBy?: string;
+      sortDir?: "asc" | "desc";
+    },
+  ): Promise<PageResponse<GeofenceResponse>> => {
     const response = await apiClient.get<ApiResponse<PageResponse<GeofenceResponse>>>(
       `/tenants/${tenantId}/sites/${siteId}/geofences`,
       { params }
