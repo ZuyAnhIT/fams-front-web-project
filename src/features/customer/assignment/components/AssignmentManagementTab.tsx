@@ -1,16 +1,21 @@
 import React, { useState } from "react";
-import { Badge, Tag, message } from "antd";
+import { App, Badge, Tag, type TableColumnsType, type TableProps } from "antd";
+import { isAxiosError } from "axios";
 import { EditOutlined, DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import { BaseButton, BaseSelect, BaseModal } from "@/components/ui";
 import DataTable from "@/components/tables/DataTable";
 import { useAssignments } from "../hooks/use-assignments";
 import { useCancelAssignmentMutation } from "../hooks/use-assignment";
-import { AssignmentResponse } from "../types/assignment.type";
+import {
+  type AssignmentListParams,
+  type AssignmentResponse,
+} from "../types/assignment.type";
 import AssignmentFormModal from "./AssignmentFormModal";
 import { ShiftResponse } from "@/features/customer/shift/types/shift.type";
 import { useEmployees } from "@/features/customer/employee/hooks/use-employee";
 import { formatVietnameseName } from "@/utils/name.util";
 import { useAuthStore } from "@/stores/auth.store";
+import type { AssignmentDayOfWeek } from "../types/assignment.type";
 
 interface AssignmentManagementTabProps {
   tenantId?: string;
@@ -18,20 +23,35 @@ interface AssignmentManagementTabProps {
   shifts: ShiftResponse[];
 }
 
+const DAY_LABELS: Record<AssignmentDayOfWeek, string> = {
+  MONDAY: "T2",
+  TUESDAY: "T3",
+  WEDNESDAY: "T4",
+  THURSDAY: "T5",
+  FRIDAY: "T6",
+  SATURDAY: "T7",
+  SUNDAY: "CN",
+};
+
 export default function AssignmentManagementTab({ tenantId, siteId, shifts }: AssignmentManagementTabProps) {
+  const { message } = App.useApp();
   const hasPermission = useAuthStore((state) => state.hasPermission);
   const canCreate = hasPermission("assignments:create");
   const canUpdate = hasPermission("assignments:update");
   const canDelete = hasPermission("assignments:delete");
   const canListEmployees = hasPermission("employees:list");
   const [assignmentPage, setAssignmentPage] = useState(0);
-  const [assignmentSort, setAssignmentSort] = useState({
+  const [assignmentPageSize, setAssignmentPageSize] = useState(10);
+  const [assignmentSort, setAssignmentSort] = useState<{
+    sortBy: NonNullable<AssignmentListParams["sortBy"]>;
+    sortDir: "asc" | "desc" | undefined;
+  }>({
     sortBy: "startDate",
     sortDir: "desc" as "asc" | "desc" | undefined,
   });
   const [assignmentFilters, setAssignmentFilters] = useState({
-    status: undefined as string | undefined,
-    role: undefined as string | undefined,
+    status: undefined as "active" | "cancelled" | undefined,
+    role: undefined as "worker" | "supervisor" | undefined,
     shiftId: undefined as string | undefined,
     employeeId: undefined as string | undefined,
   });
@@ -47,7 +67,7 @@ export default function AssignmentManagementTab({ tenantId, siteId, shifts }: As
   const { data: assignmentsRes, isLoading: isAssignmentsLoading } = useAssignments(
     tenantId || "",
     siteId,
-    { page: assignmentPage, size: 10, ...assignmentFilters, sortBy: assignmentSort.sortBy, sortDir: assignmentSort.sortDir }
+    { page: assignmentPage, size: assignmentPageSize, ...assignmentFilters, sortBy: assignmentSort.sortBy, sortDir: assignmentSort.sortDir }
   );
   
   const assignments = assignmentsRes?.data?.content || [];
@@ -58,16 +78,55 @@ export default function AssignmentManagementTab({ tenantId, siteId, shifts }: As
     { enabled: canListEmployees },
   );
   const employees = employeesRes?.content || [];
+  const employeeFilterOptions = Array.from(
+    new Map<string, string>([
+      ...employees.map(
+        (employee) =>
+          [
+            employee.id,
+            `${formatVietnameseName(employee.firstName, employee.lastName)} ${
+              employee.employeeCode ? `(${employee.employeeCode})` : ""
+            }`,
+          ] as const,
+      ),
+      ...assignments.flatMap((record) =>
+        record.employeeSummary
+          ? [
+              [
+                record.employeeSummary.id,
+                `${record.employeeSummary.fullName}${
+                  record.employeeSummary.employeeCode
+                    ? ` (${record.employeeSummary.employeeCode})`
+                    : ""
+                }`,
+              ] as const,
+            ]
+          : [],
+      ),
+    ]),
+  ).map(([value, label]) => ({ value, label }));
 
-  const getEmployeeName = (id: string) => {
-    const emp = employees.find((e: any) => e.id === id);
-    return emp ? formatVietnameseName(emp.firstName, emp.lastName) : id;
+  const getEmployeeName = (record: AssignmentResponse) => {
+    if (record.employeeSummary?.fullName) {
+      return record.employeeSummary.fullName;
+    }
+    const employee = employees.find(
+      (candidate) => candidate.id === record.employeeId,
+    );
+    return employee
+      ? formatVietnameseName(employee.firstName, employee.lastName)
+      : "Nhân viên không còn tồn tại";
   };
 
-  const getShiftName = (id: string | null) => {
-    if (!id) return "Không cố định";
-    const shift = shifts.find((s) => s.id === id);
-    return shift ? shift.name : id;
+  const getShiftLabel = (record: AssignmentResponse) => {
+    if (!record.shiftId) return "Không cố định";
+    if (record.shiftSummary) {
+      return `${record.shiftSummary.name} (${record.shiftSummary.startTime}–${record.shiftSummary.endTime})`;
+    }
+    const shift = shifts.find((candidate) => candidate.id === record.shiftId);
+    return shift
+      ? `${shift.name} (${shift.startTime}–${shift.endTime})`
+      : "Ca không còn tồn tại";
   };
 
   const handleCancelAssignment = (record: AssignmentResponse) => {
@@ -80,18 +139,44 @@ export default function AssignmentManagementTab({ tenantId, siteId, shifts }: As
           setIsCancelModalOpen(false);
           setAssignmentToCancel(null);
         },
-        onError: (err: any) => message.error(err.response?.data?.message || "Có lỗi xảy ra khi hủy phân công."),
+        onError: (error: unknown) => {
+          const backendMessage = isAxiosError(error)
+            ? (error.response?.data as { message?: string } | undefined)?.message
+            : undefined;
+          message.error(backendMessage || "Có lỗi xảy ra khi hủy phân công.");
+        },
       }
     );
   };
 
-  const assignmentColumns = [
+  const assignmentColumns: TableColumnsType<AssignmentResponse> = [
     {
       title: "Nhân viên",
-      dataIndex: "employeeId",
       key: "employeeId",
-      sorter: true,
-      render: (val: string) => <span className="font-medium text-slate-700">{getEmployeeName(val)}</span>,
+      render: (_, record) => (
+        <div>
+          <div className="font-medium text-slate-700">
+            {getEmployeeName(record)}
+          </div>
+          {record.employeeSummary?.employeeCode && (
+            <div className="text-xs text-slate-500">
+              {record.employeeSummary.employeeCode}
+            </div>
+          )}
+        </div>
+      ),
+    },
+    {
+      title: "Lịch tuần",
+      dataIndex: "daysOfWeek",
+      key: "daysOfWeek",
+      render: (days: AssignmentDayOfWeek[] | null) => (
+        <span className="text-slate-600">
+          {days?.length
+            ? days.map((day) => DAY_LABELS[day]).join(", ")
+            : "Mọi ngày"}
+        </span>
+      ),
     },
     {
       title: "Vai trò",
@@ -106,9 +191,15 @@ export default function AssignmentManagementTab({ tenantId, siteId, shifts }: As
     },
     {
       title: "Ca làm việc",
-      dataIndex: "shiftId",
       key: "shiftId",
-      render: (val: string | null) => <span className="text-slate-600">{getShiftName(val)}</span>,
+      render: (_, record) => (
+        <div>
+          <span className="text-slate-600">{getShiftLabel(record)}</span>
+          {record.shiftSummary?.status === "inactive" && (
+            <Tag className="ml-2">Đã ngừng dùng</Tag>
+          )}
+        </div>
+      ),
     },
     {
       title: "Ngày bắt đầu",
@@ -141,10 +232,11 @@ export default function AssignmentManagementTab({ tenantId, siteId, shifts }: As
       title: "Thao tác",
       key: "action",
       width: 120,
-      render: (_: any, record: AssignmentResponse) => (
+      render: (_: unknown, record: AssignmentResponse) => (
         <div className="flex gap-2">
           {canUpdate && (
             <BaseButton
+              aria-label={`Sửa phân công của ${getEmployeeName(record)}`}
               type="text"
               size="small"
               icon={<EditOutlined className="text-blue-500" />}
@@ -157,6 +249,7 @@ export default function AssignmentManagementTab({ tenantId, siteId, shifts }: As
           )}
           {canDelete && record.status === "active" && (
             <BaseButton
+              aria-label={`Hủy phân công của ${getEmployeeName(record)}`}
               type="text"
               size="small"
               icon={<DeleteOutlined className="text-red-500" />}
@@ -171,6 +264,25 @@ export default function AssignmentManagementTab({ tenantId, siteId, shifts }: As
       ),
     }] : []),
   ];
+
+  const handleTableChange: NonNullable<
+    TableProps<AssignmentResponse>["onChange"]
+  > = (_, __, sorter) => {
+    if (
+      !Array.isArray(sorter) &&
+      sorter.columnKey &&
+      ["startDate", "endDate", "role", "status", "createdAt"].includes(
+        String(sorter.columnKey),
+      )
+    ) {
+      setAssignmentSort({
+        sortBy: sorter.columnKey as typeof assignmentSort.sortBy,
+        sortDir: sorter.order === "ascend" ? "asc" : "desc",
+      });
+    } else {
+      setAssignmentSort({ sortBy: "startDate", sortDir: "desc" });
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -191,8 +303,9 @@ export default function AssignmentManagementTab({ tenantId, siteId, shifts }: As
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
         {/* Filters */}
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Nhân viên</label>
+          <label htmlFor="assignment-employee-filter" className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Nhân viên</label>
           <BaseSelect
+            id="assignment-employee-filter"
             showSearch
             placeholder="Lọc theo nhân viên..."
             allowClear
@@ -205,16 +318,14 @@ export default function AssignmentManagementTab({ tenantId, siteId, shifts }: As
             filterOption={(input, option) =>
               (option?.label as string ?? "").toLowerCase().includes(input.toLowerCase())
             }
-            options={employees.map((emp: any) => ({
-              label: `${formatVietnameseName(emp.firstName, emp.lastName)} ${emp.employeeCode ? `(${emp.employeeCode})` : ''}`,
-              value: emp.id
-            }))}
+            options={employeeFilterOptions}
           />
         </div>
         
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Trạng thái</label>
+          <label htmlFor="assignment-status-filter" className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Trạng thái</label>
           <BaseSelect
+            id="assignment-status-filter"
             placeholder="Tất cả trạng thái"
             allowClear
             className="w-full"
@@ -231,8 +342,9 @@ export default function AssignmentManagementTab({ tenantId, siteId, shifts }: As
         </div>
         
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Vai trò</label>
+          <label htmlFor="assignment-role-filter" className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Vai trò</label>
           <BaseSelect
+            id="assignment-role-filter"
             placeholder="Tất cả vai trò"
             allowClear
             className="w-full"
@@ -249,8 +361,9 @@ export default function AssignmentManagementTab({ tenantId, siteId, shifts }: As
         </div>
         
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Ca làm việc</label>
+          <label htmlFor="assignment-shift-filter" className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Ca làm việc</label>
           <BaseSelect
+            id="assignment-shift-filter"
             placeholder="Tất cả ca làm việc"
             allowClear
             className="w-full"
@@ -271,22 +384,19 @@ export default function AssignmentManagementTab({ tenantId, siteId, shifts }: As
       
       <DataTable 
         data={assignments} 
-        columns={assignmentColumns as any} 
+        columns={assignmentColumns}
         loading={isAssignmentsLoading}
         totalElements={totalAssignments}
         currentPage={assignmentPage}
-        pageSize={10}
-        onPageChange={(p) => setAssignmentPage(p)}
-        onChange={(pagination, filters, sorter: any) => {
-          if (sorter && sorter.columnKey) {
-            setAssignmentSort({
-              sortBy: sorter.columnKey,
-              sortDir: sorter.order === 'ascend' ? 'asc' : 'desc'
-            });
-          } else {
-            setAssignmentSort({ sortBy: "startDate", sortDir: "desc" });
-          }
+        pageSize={assignmentPageSize}
+        onPageChange={(page, size) => {
+          setAssignmentPage(page);
+          setAssignmentPageSize(size);
         }}
+        ariaLabel="Danh sách phân công nhân viên tại công trình"
+        emptyTitle="Không tìm thấy phân công"
+        emptyDescription="Thử thay đổi nhân viên, trạng thái, vai trò hoặc ca làm việc."
+        onChange={handleTableChange}
       />
 
       <AssignmentFormModal
@@ -329,7 +439,7 @@ export default function AssignmentManagementTab({ tenantId, siteId, shifts }: As
         }}
       >
         <div className="py-2 text-slate-600">
-          Nhân viên <span className="font-bold text-slate-800">{assignmentToCancel ? getEmployeeName(assignmentToCancel.employeeId) : ""}</span> sẽ không thể chấm công tại công trình này nữa. Bạn có chắc chắn muốn hủy phân công này?
+          Nhân viên <span className="font-bold text-slate-800">{assignmentToCancel ? getEmployeeName(assignmentToCancel) : ""}</span> sẽ không thể chấm công tại công trình này nữa. Bạn có chắc chắn muốn hủy phân công này?
         </div>
       </BaseModal>
     </div>

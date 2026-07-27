@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { Form, message } from "antd";
+import { App, Form } from "antd";
+import { isAxiosError } from "axios";
 import { BaseSwitch, BaseInput, BaseTimePicker } from "@/components/ui";
 import BaseModal from "@/components/ui/BaseModal";
-import BaseButton from "@/components/ui/BaseButton";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import { useAuthStore } from "@/stores/auth.store";
@@ -13,6 +13,14 @@ import { ShiftResponse } from "../types/shift.type";
 
 dayjs.extend(customParseFormat);
 const format = "HH:mm";
+
+function errorMessage(error: unknown, fallback: string): string {
+  if (!isAxiosError(error)) return fallback;
+  return (
+    (error.response?.data as { message?: string } | undefined)?.message ||
+    fallback
+  );
+}
 
 interface ShiftFormModalProps {
   isOpen: boolean;
@@ -27,6 +35,7 @@ export default function ShiftFormModal({
   siteId,
   activeShift,
 }: ShiftFormModalProps) {
+  const { message } = App.useApp();
   const [form] = Form.useForm();
   const user = useAuthStore((state) => state.user);
   const tenantId = user?.tenantId;
@@ -56,11 +65,33 @@ export default function ShiftFormModal({
     }
   }, [isOpen, activeShift, form]);
 
-  const handleFinish = (values: any) => {
+  const handleFinish = (values: {
+    name: string;
+    startTime: dayjs.Dayjs;
+    endTime: dayjs.Dayjs;
+    allowOvernight: boolean;
+    status?: boolean;
+  }) => {
     if (!tenantId) return;
 
     const startTime = values.startTime.format(format);
     const endTime = values.endTime.format(format);
+    if (startTime === endTime) {
+      message.error("Giờ bắt đầu và giờ kết thúc không được trùng nhau");
+      return;
+    }
+    if (!values.allowOvernight && endTime < startTime) {
+      message.error(
+        "Giờ kết thúc trước giờ bắt đầu. Hãy bật “Làm xuyên đêm” nếu ca kết thúc vào ngày hôm sau.",
+      );
+      return;
+    }
+    if (values.allowOvernight && endTime > startTime) {
+      message.error(
+        "Ca xuyên đêm phải có giờ kết thúc ở ngày hôm sau, nhỏ hơn giờ bắt đầu.",
+      );
+      return;
+    }
 
     if (isUpdate) {
       updateMutation.mutate(
@@ -81,8 +112,10 @@ export default function ShiftFormModal({
             message.success("Cập nhật ca làm việc thành công!");
             onClose();
           },
-          onError: (err: any) => {
-            message.error(err.response?.data?.message || "Có lỗi xảy ra khi cập nhật ca.");
+          onError: (error: unknown) => {
+            message.error(
+              errorMessage(error, "Có lỗi xảy ra khi cập nhật ca."),
+            );
           },
         }
       );
@@ -103,8 +136,8 @@ export default function ShiftFormModal({
             message.success("Tạo mới ca làm việc thành công!");
             onClose();
           },
-          onError: (err: any) => {
-            message.error(err.response?.data?.message || "Có lỗi xảy ra khi tạo ca.");
+          onError: (error: unknown) => {
+            message.error(errorMessage(error, "Có lỗi xảy ra khi tạo ca."));
           },
         }
       );
@@ -112,6 +145,21 @@ export default function ShiftFormModal({
   };
 
   const isLoading = createMutation.isPending || updateMutation.isPending;
+
+  const validateTimeRange = () => ({
+    validator(_: unknown, endTime: dayjs.Dayjs | null) {
+      const startTime = form.getFieldValue("startTime") as dayjs.Dayjs | null;
+      const allowOvernight = form.getFieldValue("allowOvernight") as boolean;
+      if (!startTime || !endTime) return Promise.resolve();
+      if (startTime.format(format) === endTime.format(format)) {
+        return Promise.reject(new Error("Giờ bắt đầu và kết thúc không được trùng nhau"));
+      }
+      if (!allowOvernight && endTime.isBefore(startTime)) {
+        return Promise.reject(new Error("Bật “Làm xuyên đêm” nếu ca kết thúc vào ngày hôm sau"));
+      }
+      return Promise.resolve();
+    },
+  });
 
   return (
     <BaseModal
@@ -168,7 +216,11 @@ export default function ShiftFormModal({
           <Form.Item
             name="endTime"
             label={<span className="font-semibold text-slate-700 text-sm">Giờ kết thúc</span>}
-            rules={[{ required: true, message: "Chọn giờ kết thúc" }]}
+            dependencies={["startTime", "allowOvernight"]}
+            rules={[
+              { required: true, message: "Chọn giờ kết thúc" },
+              validateTimeRange,
+            ]}
           >
             <BaseTimePicker format={format} className="w-full" minuteStep={5} />
           </Form.Item>

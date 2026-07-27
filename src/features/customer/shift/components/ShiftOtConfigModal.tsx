@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { Form, InputNumber, message } from "antd";
+import { App, Form, InputNumber } from "antd";
+import { isAxiosError } from "axios";
 import { BaseSwitch } from "@/components/ui";
 import BaseModal from "@/components/ui/BaseModal";
-import BaseButton from "@/components/ui/BaseButton";
 import { useAuthStore } from "@/stores/auth.store";
 import { useConfigureOtMutation } from "../hooks/use-shift";
 import { ShiftResponse } from "../types/shift.type";
@@ -17,12 +17,21 @@ interface ShiftOtConfigModalProps {
   activeShift: ShiftResponse | null;
 }
 
+function errorMessage(error: unknown): string {
+  if (!isAxiosError(error)) return "Có lỗi xảy ra khi cập nhật cấu hình.";
+  return (
+    (error.response?.data as { message?: string } | undefined)?.message ||
+    "Có lỗi xảy ra khi cập nhật cấu hình."
+  );
+}
+
 export default function ShiftOtConfigModal({
   isOpen,
   onClose,
   siteId,
   activeShift,
 }: ShiftOtConfigModalProps) {
+  const { message } = App.useApp();
   const [form] = Form.useForm();
   const user = useAuthStore((state) => state.user);
   const tenantId = user?.tenantId;
@@ -39,7 +48,11 @@ export default function ShiftOtConfigModal({
     }
   }, [isOpen, activeShift, form]);
 
-  const handleFinish = (values: any) => {
+  const handleFinish = (values: {
+    allowOvertime?: boolean;
+    earlyCheckinMinutes?: number | null;
+    lateCheckoutMinutes?: number | null;
+  }) => {
     if (!tenantId || !activeShift) return;
 
     configureOtMutation.mutate(
@@ -49,8 +62,8 @@ export default function ShiftOtConfigModal({
         shiftId: activeShift.id,
         data: {
           allowOvertime: values.allowOvertime,
-          earlyCheckinMinutes: values.earlyCheckinMinutes || 0,
-          lateCheckoutMinutes: values.lateCheckoutMinutes || 0,
+          earlyCheckinMinutes: values.earlyCheckinMinutes ?? 0,
+          lateCheckoutMinutes: values.lateCheckoutMinutes ?? 0,
         },
       },
       {
@@ -58,8 +71,8 @@ export default function ShiftOtConfigModal({
           message.success("Cập nhật cấu hình OT thành công!");
           onClose();
         },
-        onError: (err: any) => {
-          message.error(err.response?.data?.message || "Có lỗi xảy ra khi cập nhật cấu hình.");
+        onError: (error: unknown) => {
+          message.error(errorMessage(error));
         },
       }
     );
@@ -135,7 +148,6 @@ export default function ShiftOtConfigModal({
               className="w-full"
               addonAfter="phút"
               min={0}
-              max={300}
               placeholder="VD: 15"
             />
           </Form.Item>
@@ -153,7 +165,6 @@ export default function ShiftOtConfigModal({
               className="w-full"
               addonAfter="phút"
               min={0}
-              max={300}
               placeholder="VD: 15"
             />
           </Form.Item>

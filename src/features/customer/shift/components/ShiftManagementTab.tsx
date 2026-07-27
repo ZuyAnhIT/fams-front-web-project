@@ -1,10 +1,28 @@
 import React, { useState } from "react";
-import { Badge, Tag } from "antd";
-import { EditOutlined, SettingOutlined, PlusOutlined } from "@ant-design/icons";
-import { BaseButton } from "@/components/ui";
+import {
+  App,
+  Badge,
+  Tag,
+  Tooltip,
+  type TableColumnsType,
+} from "antd";
+import {
+  DeleteOutlined,
+  EditOutlined,
+  PauseCircleOutlined,
+  PlusOutlined,
+  ReloadOutlined,
+  SettingOutlined,
+} from "@ant-design/icons";
+import { isAxiosError } from "axios";
+import { BaseButton, BaseSelect } from "@/components/ui";
 import DataTable from "@/components/tables/DataTable";
-import { ShiftResponse } from "../types/shift.type";
-import { useShiftsQuery } from "../hooks/use-shift";
+import {
+  useDeleteShiftMutation,
+  useShiftsQuery,
+  useUpdateShiftMutation,
+} from "../hooks/use-shift";
+import type { ShiftResponse } from "../types/shift.type";
 import ShiftFormModal from "./ShiftFormModal";
 import ShiftOtConfigModal from "./ShiftOtConfigModal";
 import { useAuthStore } from "@/stores/auth.store";
@@ -14,40 +32,119 @@ interface ShiftManagementTabProps {
   siteId: string;
 }
 
-export default function ShiftManagementTab({ tenantId, siteId }: ShiftManagementTabProps) {
+function backendErrorMessage(error: unknown, fallback: string): string {
+  if (!isAxiosError(error)) return fallback;
+  return (
+    (error.response?.data as { message?: string } | undefined)?.message ||
+    fallback
+  );
+}
+
+export default function ShiftManagementTab({
+  tenantId,
+  siteId,
+}: ShiftManagementTabProps) {
+  const { message, modal } = App.useApp();
   const hasPermission = useAuthStore((state) => state.hasPermission);
   const canCreate = hasPermission("shifts:create");
   const canUpdate = hasPermission("shifts:update");
-  const [shiftPage, setShiftPage] = useState(0);
-  const [shiftSort, setShiftSort] = useState({ sortBy: "name", sortDir: "asc" as "asc" | "desc" | undefined });
-
+  const canDelete = hasPermission("shifts:delete");
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
+  const [status, setStatus] = useState<"active" | "inactive" | undefined>();
   const [isShiftModalOpen, setIsShiftModalOpen] = useState(false);
   const [isOtModalOpen, setIsOtModalOpen] = useState(false);
   const [activeShift, setActiveShift] = useState<ShiftResponse | null>(null);
 
-  const { data: shiftsRes, isLoading: isShiftsLoading } = useShiftsQuery(
-    tenantId,
-    siteId,
-    { page: shiftPage, size: 10, sortBy: shiftSort.sortBy, sortDir: shiftSort.sortDir }
-  );
-  
-  const shifts = shiftsRes?.content || [];
-  const totalShifts = shiftsRes?.totalElements || 0;
+  const updateShift = useUpdateShiftMutation();
+  const deleteShift = useDeleteShiftMutation();
+  const { data, isLoading } = useShiftsQuery(tenantId, siteId, {
+    page,
+    size: pageSize,
+    status,
+  });
 
-  const shiftColumns = [
+  const shifts = data?.content ?? [];
+  const totalShifts = data?.totalElements ?? 0;
+
+  const toggleStatus = (shift: ShiftResponse) => {
+    if (!tenantId) return;
+    const nextStatus = shift.status === "active" ? "inactive" : "active";
+    const deactivate = nextStatus === "inactive";
+    modal.confirm({
+      title: deactivate
+        ? `Ngừng dùng ca “${shift.name}”?`
+        : `Kích hoạt lại ca “${shift.name}”?`,
+      content: deactivate
+        ? "Ca sẽ không còn xuất hiện khi tạo phân công mới. Các phân công và lịch sử cũ vẫn được giữ nguyên."
+        : "Ca sẽ xuất hiện lại trong danh sách lựa chọn khi tạo hoặc sửa phân công.",
+      okText: deactivate ? "Ngừng dùng" : "Kích hoạt",
+      cancelText: "Hủy",
+      onOk: async () => {
+        try {
+          await updateShift.mutateAsync({
+            tenantId,
+            siteId,
+            shiftId: shift.id,
+            data: { status: nextStatus },
+          });
+          message.success(
+            deactivate ? "Đã ngừng dùng ca" : "Đã kích hoạt lại ca",
+          );
+        } catch (error) {
+          message.error(
+            backendErrorMessage(error, "Không thể cập nhật trạng thái ca"),
+          );
+          throw error;
+        }
+      },
+    });
+  };
+
+  const removeShift = (shift: ShiftResponse) => {
+    if (!tenantId || !shift.canDelete) return;
+    modal.confirm({
+      title: `Xóa ca “${shift.name}”?`,
+      content:
+        "Chỉ ca chưa từng được dùng trong bất kỳ phân công nào mới có thể xóa. Nếu đã có lịch sử, hãy dùng “Ngừng dùng”.",
+      okText: "Xóa ca",
+      okButtonProps: { danger: true },
+      cancelText: "Hủy",
+      onOk: async () => {
+        try {
+          await deleteShift.mutateAsync({
+            tenantId,
+            siteId,
+            shiftId: shift.id,
+          });
+          message.success("Đã xóa ca chưa sử dụng");
+        } catch (error) {
+          message.error({
+            content: backendErrorMessage(
+              error,
+              "Không thể xóa ca. Nếu ca đã có lịch sử phân công, hãy ngừng dùng ca thay vì xóa.",
+            ),
+            duration: 7,
+          });
+          throw error;
+        }
+      },
+    });
+  };
+
+  const columns: TableColumnsType<ShiftResponse> = [
     {
       title: "Tên ca",
       dataIndex: "name",
       key: "name",
-      sorter: true,
       className: "font-medium text-slate-700",
     },
     {
       title: "Thời gian",
       key: "time",
-      render: (_: any, record: any) => (
+      render: (_, shift) => (
         <span className="text-slate-600">
-          {record.startTime} - {record.endTime}
+          {shift.startTime} – {shift.endTime}
         </span>
       ),
     },
@@ -55,89 +152,181 @@ export default function ShiftManagementTab({ tenantId, siteId }: ShiftManagement
       title: "Qua đêm",
       dataIndex: "allowOvernight",
       key: "allowOvernight",
-      render: (val: boolean) => (val ? <Tag color="blue">Có</Tag> : <Tag color="default">Không</Tag>),
+      render: (value: boolean) =>
+        value ? <Tag color="blue">Có</Tag> : <Tag>Không</Tag>,
     },
     {
-      title: "Tăng ca",
-      dataIndex: "allowOvertime",
-      key: "allowOvertime",
-      render: (val: boolean) => (val ? <Tag color="green">Có</Tag> : <Tag color="default">Không</Tag>),
+      title: "Chính sách chấm công",
+      key: "attendancePolicy",
+      render: (_, shift) => (
+        <div className="space-y-1 text-xs text-slate-600">
+          <div>
+            OT:{" "}
+            <Tag color={shift.allowOvertime ? "green" : "default"}>
+              {shift.allowOvertime ? "Cho phép" : "Không"}
+            </Tag>
+          </div>
+          <div>
+            Sớm {shift.earlyCheckinMinutes} phút · muộn{" "}
+            {shift.lateCheckoutMinutes} phút
+          </div>
+        </div>
+      ),
     },
     {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
-      render: (val: string) => (
-        <Badge status={val === "active" ? "success" : "default"} text={val === "active" ? "Đang áp dụng" : "Ngừng áp dụng"} className="text-slate-600" />
+      render: (value: ShiftResponse["status"]) => (
+        <Badge
+          status={value === "active" ? "success" : "default"}
+          text={value === "active" ? "Đang áp dụng" : "Ngừng áp dụng"}
+        />
       ),
     },
-    ...(canUpdate ? [{
-      title: "Thao tác",
-      key: "action",
-      width: 120,
-      render: (_: any, record: ShiftResponse) => (
-        <div className="flex gap-2">
-          <BaseButton 
-            type="text" 
-            size="small"
-            icon={<EditOutlined className="text-blue-500" />} 
-            onClick={() => {
-              setActiveShift(record);
-              setIsShiftModalOpen(true);
-            }}
-            title="Sửa ca làm việc"
-          />
-          <BaseButton 
-            type="text" 
-            size="small"
-            icon={<SettingOutlined className="text-purple-500" />} 
-            onClick={() => {
-              setActiveShift(record);
-              setIsOtModalOpen(true);
-            }}
-            title="Cấu hình OT"
-          />
-        </div>
-      ),
-    }] : []),
+    ...((canUpdate || canDelete)
+      ? [
+          {
+            title: "Thao tác",
+            key: "action",
+            width: 190,
+            render: (_: unknown, shift: ShiftResponse) => (
+              <div className="flex gap-1">
+                {canUpdate && (
+                  <>
+                    <BaseButton
+                      aria-label={`Sửa ca ${shift.name}`}
+                      type="text"
+                      size="small"
+                      icon={<EditOutlined className="text-blue-500" />}
+                      onClick={() => {
+                        setActiveShift(shift);
+                        setIsShiftModalOpen(true);
+                      }}
+                      title="Sửa ca làm việc"
+                    />
+                    <BaseButton
+                      aria-label={`Cấu hình OT ca ${shift.name}`}
+                      type="text"
+                      size="small"
+                      icon={<SettingOutlined className="text-purple-500" />}
+                      onClick={() => {
+                        setActiveShift(shift);
+                        setIsOtModalOpen(true);
+                      }}
+                      title="Cấu hình OT và giới hạn giờ"
+                    />
+                    <BaseButton
+                      aria-label={
+                        shift.status === "active"
+                          ? `Ngừng dùng ca ${shift.name}`
+                          : `Kích hoạt lại ca ${shift.name}`
+                      }
+                      type="text"
+                      size="small"
+                      icon={
+                        shift.status === "active" ? (
+                          <PauseCircleOutlined className="text-amber-500" />
+                        ) : (
+                          <ReloadOutlined className="text-emerald-500" />
+                        )
+                      }
+                      onClick={() => toggleStatus(shift)}
+                      title={
+                        shift.status === "active"
+                          ? "Ngừng dùng nhưng giữ lịch sử"
+                          : "Kích hoạt lại ca"
+                      }
+                    />
+                  </>
+                )}
+                {canDelete && (
+                  <Tooltip
+                    title={
+                      shift.canDelete
+                        ? "Xóa ca tạo nhầm và chưa từng sử dụng"
+                        : `Không thể xóa: ca này đã có ${shift.assignmentHistoryCount} lượt phân công. Dùng “Ngừng dùng” để giữ lại lịch sử.`
+                    }
+                  >
+                    <span>
+                      <BaseButton
+                        aria-label={`Xóa ca ${shift.name}`}
+                        type="text"
+                        size="small"
+                        danger
+                        disabled={!shift.canDelete}
+                        icon={<DeleteOutlined />}
+                        onClick={() => removeShift(shift)}
+                      />
+                    </span>
+                  </Tooltip>
+                )}
+              </div>
+            ),
+          },
+        ]
+      : []),
   ];
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <p className="text-slate-500 m-0">Quản lý các ca làm việc tiêu chuẩn áp dụng tại công trình này.</p>
-        {canCreate && (
-          <BaseButton
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => {
-              setActiveShift(null);
-              setIsShiftModalOpen(true);
+      <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
+        <div>
+          <p className="m-0 text-slate-600">
+            Ca là mẫu giờ làm theo công trình; phân công mới chỉ sử dụng ca đang
+            áp dụng.
+          </p>
+          <p className="m-0 mt-1 text-xs text-slate-500">
+            Ngừng dùng giữ nguyên lịch sử. Xóa chỉ dành cho ca tạo nhầm và chưa
+            từng được phân công.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <BaseSelect
+            id="shift-status-filter"
+            aria-label="Lọc ca theo trạng thái"
+            className="min-w-44"
+            allowClear
+            placeholder="Tất cả trạng thái"
+            value={status}
+            onChange={(value) => {
+              setStatus(value);
+              setPage(0);
             }}
-            className="!bg-blue-600 !text-white hover:!bg-blue-700 !border-0 shadow-md shadow-blue-500/20 h-9 px-4 rounded-lg font-semibold transition-all flex items-center gap-2"
-          >
-            Tạo ca làm việc
-          </BaseButton>
-        )}
+            options={[
+              { label: "Đang áp dụng", value: "active" },
+              { label: "Ngừng áp dụng", value: "inactive" },
+            ]}
+          />
+          {canCreate && (
+            <BaseButton
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => {
+                setActiveShift(null);
+                setIsShiftModalOpen(true);
+              }}
+            >
+              Tạo ca làm việc
+            </BaseButton>
+          )}
+        </div>
       </div>
-      <DataTable 
-        data={shifts} 
-        columns={shiftColumns as any} 
-        loading={isShiftsLoading}
+
+      <DataTable
+        data={shifts}
+        columns={columns}
+        loading={isLoading}
         totalElements={totalShifts}
-        currentPage={shiftPage}
-        pageSize={10}
-        onPageChange={(p) => setShiftPage(p)}
-        onChange={(pagination, filters, sorter: any) => {
-          if (sorter && (sorter.columnKey || sorter.field)) {
-            setShiftSort({
-              sortBy: sorter.columnKey || sorter.field,
-              sortDir: sorter.order === 'ascend' ? 'asc' : 'desc'
-            });
-          } else {
-            setShiftSort({ sortBy: "name", sortDir: "asc" });
-          }
+        currentPage={page}
+        pageSize={pageSize}
+        onPageChange={(nextPage, nextPageSize) => {
+          setPage(nextPage);
+          setPageSize(nextPageSize);
         }}
+        ariaLabel="Danh sách ca làm việc của công trình"
+        emptyTitle="Chưa có ca làm việc"
+        emptyDescription="Tạo ca đầu tiên hoặc thay đổi bộ lọc trạng thái."
       />
 
       <ShiftFormModal
