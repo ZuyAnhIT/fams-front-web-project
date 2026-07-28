@@ -10,6 +10,7 @@ export interface SiteResponse {
   latitude?: number;
   longitude?: number;
   timezone: string;
+  requireFaceIdCheckin: boolean;
   status: "active" | "inactive";
   createdAt: string;
   updatedAt: string;
@@ -43,6 +44,7 @@ export interface CreateSiteRequest {
   latitude?: number;
   longitude?: number;
   timezone?: string;
+  requireFaceIdCheckin?: boolean;
 }
 
 export interface UpdateSiteRequest {
@@ -54,6 +56,7 @@ export interface UpdateSiteRequest {
   latitude?: number;
   longitude?: number;
   timezone?: string;
+  requireFaceIdCheckin?: boolean;
   status?: "active" | "inactive";
 }
 

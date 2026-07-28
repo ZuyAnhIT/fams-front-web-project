@@ -10,6 +10,7 @@ export default function FaceIdReportRoutePage() {
         SystemRole.HR_MANAGER,
         SystemRole.PLATFORM_ADMIN,
       ]}
+      allowedPermissions={["reports:list", "face_id:manage"]}
     >
       <FaceIdEnrollmentReportPage />
     </RoleGuard>

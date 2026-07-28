@@ -1,7 +1,13 @@
 import React, { useState } from "react";
 import { Alert, Card, Tag, Tooltip } from "antd";
 import BaseButton from "@/components/ui/BaseButton";
-import { EditOutlined, EnvironmentOutlined, GlobalOutlined, ClockCircleOutlined } from "@ant-design/icons";
+import {
+  EditOutlined,
+  EnvironmentOutlined,
+  GlobalOutlined,
+  ClockCircleOutlined,
+  SafetyCertificateOutlined,
+} from "@ant-design/icons";
 import { SiteDetailResponse } from "../types/site.type";
 import { GeofenceMap } from "./GeofenceMap";
 import EditGeofenceModal from "../../geofence/components/EditGeofenceModal";
@@ -91,6 +97,20 @@ export default function ActiveGeofenceCard({ site, siteId }: ActiveGeofenceCardP
             <div>
               <div className="font-medium text-slate-700">Tọa độ trung tâm</div>
               <div className="text-sm">{site.latitude}, {site.longitude}</div>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 text-slate-600">
+            <SafetyCertificateOutlined className="text-cyan-600" />
+            <div>
+              <div className="font-medium text-slate-700">Xác thực Face ID</div>
+              <Tag
+                color={site.requireFaceIdCheckin ? "processing" : "default"}
+                className="mt-1"
+              >
+                {site.requireFaceIdCheckin
+                  ? "Bắt buộc khi chấm công"
+                  : "Không bắt buộc"}
+              </Tag>
             </div>
           </div>
         </div>

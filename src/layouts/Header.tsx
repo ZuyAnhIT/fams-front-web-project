@@ -45,7 +45,7 @@ const PAGE_TITLES: Array<{ match: (path: string) => boolean; title: string; area
   { match: (path) => path === "/customer/sites", title: "Quản lý công trình", area: "Vận hành" },
   { match: (path) => path === "/customer/attendance", title: "Quản lý chấm công", area: "Vận hành" },
   { match: (path) => path === "/customer/notifications", title: "Thông báo", area: "Tài khoản" },
-  { match: (path) => path.startsWith("/customer/reports"), title: "Báo cáo Face ID", area: "Báo cáo" },
+  { match: (path) => path.startsWith("/customer/reports"), title: "Quản lý Face ID", area: "Báo cáo" },
   { match: (path) => path.includes("tenant-settings") || path === "/customer/settings/tenant", title: "Cấu hình công ty", area: "Cài đặt" },
   { match: (path) => path.startsWith("/customer/settings"), title: "Cài đặt tài khoản", area: "Tài khoản" },
 ];

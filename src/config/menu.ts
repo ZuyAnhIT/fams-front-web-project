@@ -81,10 +81,11 @@ export const SIDEBAR_MENU: MenuItem[] = [
     allowedPermissions: ["sites:list", "sites:read"],
   },
   {
-    title: "Báo cáo Face ID",
+    title: "Quản lý Face ID",
     path: CUSTOMER_ROUTES.FACE_ID_REPORT,
     icon: "ScanFace",
-    allowedRoles: [SystemRole.TENANT_ADMIN, SystemRole.HR_MANAGER]
+    allowedRoles: [SystemRole.TENANT_ADMIN, SystemRole.HR_MANAGER],
+    allowedPermissions: ["reports:list", "face_id:manage"],
   },
   {
     title: "Kiểm tra ngẫu nhiên",
