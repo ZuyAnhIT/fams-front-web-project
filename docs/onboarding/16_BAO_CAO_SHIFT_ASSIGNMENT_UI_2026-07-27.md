@@ -1,4 +1,4 @@
-# Báo cáo hoàn thiện UI Ca làm việc & Phân công — 27/07/2026
+# Báo cáo hoàn thiện UI Ca làm việc & Phân công — 27–28/07/2026
 
 ## 1. Phân chia nền tảng
 
@@ -8,9 +8,10 @@
   App dùng duy nhất `GET /checkin/available-sites`; không tự ghép Site, Shift và
   Geofence ở client.
 
-Đã kiểm tra trực tiếp `fams-front-app-project`: hook, service, type và màn
-check-in hiện đã dùng đúng endpoint gộp; có đủ loading, lỗi 403, lỗi mạng, danh
-sách rỗng, một site và nhiều site. Không cần thay đổi mã nguồn App trong đợt này.
+Đợt 27/07 đã kiểm tra `fams-front-app-project` dùng đúng endpoint gộp. Contract
+28/07 bổ sung `availabilityStatus`/cửa sổ chấm công và các error code mới nên
+App cần một đợt tích hợp riêng. Phạm vi yêu cầu hiện tại là Web, vì vậy không sửa
+mã nguồn App trong đợt này.
 
 ## 2. Luồng dữ liệu chuẩn
 
@@ -44,8 +45,14 @@ không theo ca cố định; trống `daysOfWeek` là áp dụng mọi ngày tro
   ưu tiên `employeeSummary`/`shiftSummary`, nên Supervisor vẫn thấy tên và ca
   mà không cần quyền gọi danh bạ nhân viên.
 - Form ca chặn giờ bắt đầu bằng giờ kết thúc và yêu cầu bật “Làm xuyên đêm” khi
-  giờ kết thúc thuộc ngày hôm sau.
+  giờ kết thúc thuộc ngày hôm sau. Khi đã bật xuyên đêm, UI chỉ yêu cầu hai giờ
+  khác nhau, khớp validation backend mới.
 - Nút tạo/sửa/xóa/hủy ẩn theo permission; supervisor vẫn xem được dữ liệu.
+- Site `inactive` khóa tạo và sửa phân công ngay trên UI, nhưng vẫn cho xem và
+  hủy phân công còn hiệu lực để HR dọn lịch cũ trước khi xóa Site.
+- Form Site chỉ cho chọn timezone IANA hợp lệ (`Asia/Ho_Chi_Minh` hoặc `UTC`)
+  và vẫn hiển thị nguyên message `400` từ backend nếu dữ liệu cũ/ngoài UI không
+  hợp lệ.
 
 | Nhóm quyền | Ca làm việc | Phân công |
 |---|---|---|
@@ -61,7 +68,7 @@ Backend đã snapshot giờ và chính sách ca vào Checkin tại thời điể
 Frontend dùng `shiftSummary` để hiển thị lịch hiện tại; màn payroll/audit phải
 dùng snapshot trên Checkin, không diễn giải lịch sử từ Shift đang sống.
 
-**Khoảng trống API còn lại khi kiểm tra code backend**:
+**Khoảng trống API còn lại khi kiểm tra trực tiếp code backend ngày 28/07**:
 `CheckinRecord` đã có `shiftStartTime`/`shiftEndTime` và policy snapshot, nhưng
 `CheckinDetailResponse` chưa trả các field này; object `shift` trong response
 detail vẫn được dựng từ Shift hiện tại. Phép tính payroll đã được bảo vệ, nhưng
@@ -76,6 +83,19 @@ Backend đã so sánh interval theo timezone và ca qua đêm. Frontend không t
 nhiều site cùng ngày: ca sáng Site A và ca tối Site B được phép; chỉ hiển thị
 `409` khi backend xác định giờ thực sự chồng nhau. Phân công không có ca được
 coi là chiếm cả ngày.
+
+### P0/P1 — bản vá check-in và Site inactive ngày 28/07
+
+- Web không tự dựng logic `serverNow`/timezone/ca qua đêm; đây là dữ liệu dành
+  cho màn chấm công nhân viên trên App.
+- Các lỗi `EMPLOYEE_NOT_ACTIVE`, `SITE_INACTIVE`, `CHECKIN_TOO_LATE` và
+  `DUPLICATE_RESOURCE` thuộc thao tác submit check-in trên App, không có màn
+  tương ứng trên Company Portal.
+- Tác động trực tiếp lên Web đã được xử lý: khóa tạo/sửa Assignment khi Site
+  inactive; vẫn giữ nút hủy để kết thúc phân công cũ.
+- Validation Shift trên Web đã đồng bộ với backend P1-1. Validation timezone
+  Site đã được phòng ngừa bằng dropdown giá trị IANA hợp lệ và fallback message
+  backend.
 
 ### P1 — response phục vụ danh sách: đã hoàn thành
 
@@ -122,10 +142,10 @@ Nguồn chính thức:
 - Web typecheck: pass.
 - Web lint: pass, 0 error; còn 150 warning kỹ thuật trên toàn dự án.
 - Web production build Next.js 16.2.9/Webpack: pass.
-- Web E2E Shift/Assignment: **4/4 pass**.
-- Hồi quy chung Site/Geofence + Shift/Assignment: **8/8 pass**.
-- App typecheck: pass.
-- App lint: pass.
+- Web E2E Shift/Assignment: **5/5 pass**.
+- Hồi quy chung Site/Geofence + Shift/Assignment: **9/9 pass**.
+- App typecheck/lint: pass ở đợt 27/07; chưa triển khai contract App mới trong
+  thay đổi Web ngày 28/07.
 
 Các contract đã được xác minh:
 
@@ -140,6 +160,7 @@ Các contract đã được xác minh:
 7. cập nhật xóa field gửi đúng `clearShift`, `clearEndDate`,
    `clearDaysOfWeek`;
 8. Supervisor không có thao tác ghi.
+9. Site inactive khóa tạo/sửa Assignment nhưng vẫn cho hủy bản ghi active.
 
 Bằng chứng:
 
@@ -147,6 +168,7 @@ Bằng chứng:
 - `docs/test-evidence/shift-assignment-management/02-hr-assignment-conflict.png`
 - `docs/test-evidence/shift-assignment-management/03-assignment-clear-fields.png`
 - `docs/test-evidence/shift-assignment-management/04-supervisor-read-only.png`
+- `docs/test-evidence/shift-assignment-management/05-inactive-site-assignment-guard.png`
 
 E2E dùng mock API để kiểm tra giao diện, permission và request contract. Happy
 path tích hợp backend thật cần tenant test có đủ employee/site/shift và dịch vụ

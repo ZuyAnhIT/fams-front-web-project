@@ -27,6 +27,7 @@ interface AssignmentFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   siteId: string;
+  siteStatus: "active" | "inactive";
   activeAssignment?: AssignmentResponse | null;
 }
 
@@ -54,6 +55,7 @@ export default function AssignmentFormModal({
   isOpen,
   onClose,
   siteId,
+  siteStatus,
   activeAssignment,
 }: AssignmentFormModalProps) {
   const { message } = App.useApp();
@@ -135,6 +137,12 @@ export default function AssignmentFormModal({
 
   const onSubmit = (data: AssignmentFormData) => {
     if (!tenantId) return;
+    if (siteStatus !== "active") {
+      message.error(
+        "Công trình đã ngừng hoạt động. Hãy kích hoạt lại trước khi tạo hoặc sửa phân công.",
+      );
+      return;
+    }
 
     const startDate = data.startDate.format("YYYY-MM-DD");
     const endDate = data.endDate
@@ -267,6 +275,7 @@ export default function AssignmentFormModal({
       confirmButtonProps={{
         htmlType: "submit",
         form: "assignment-form",
+        disabled: siteStatus !== "active",
         className: "!bg-blue-600 hover:!bg-blue-700 !border-0 text-white font-bold shadow-lg shadow-blue-500/25 transition-all h-10 px-6 rounded-lg"
       }}
       cancelButtonProps={{
@@ -279,6 +288,15 @@ export default function AssignmentFormModal({
         onSubmit={handleSubmit(onSubmit)}
         className="mt-4 space-y-4"
       >
+        {siteStatus !== "active" && (
+          <Alert
+            type="warning"
+            showIcon
+            message="Không thể lưu phân công"
+            description="Công trình đã ngừng hoạt động. Hãy đóng biểu mẫu và kích hoạt lại công trình trước."
+          />
+        )}
+
         <FormSelect
           control={control}
           name="employeeId"

@@ -173,11 +173,15 @@ async function seedUser(
   );
 }
 
-async function mockSiteDetail(page: Page) {
+async function mockSiteDetail(
+  page: Page,
+  siteOverrides: Partial<typeof site> = {},
+) {
   await page.route(`**/api/v1/tenants/${tenantId}/sites/${siteId}`, (route) =>
     route.fulfill({
       json: api({
         ...site,
+        ...siteOverrides,
         geofence: null,
         shifts: [activeShift, inactiveShift],
         activeAssignmentCount: 1,
@@ -307,12 +311,11 @@ test("Admin quản lý vòng đời ca, OT và không gửi sort ngoài contract
   await page.getByRole("dialog").getByRole("button", { name: "Ngừng dùng" }).click();
   await expect.poll(() => updateBody).toEqual({ status: "inactive" });
 
-  await expect(
-    page.getByRole("button", { name: "Xóa ca Ca hành chính" }),
-  ).toBeDisabled();
-  await page
-    .getByRole("button", { name: "Xóa ca Ca hành chính" })
-    .hover({ force: true });
+  const blockedDeleteButton = page.getByRole("button", {
+    name: "Xóa ca Ca hành chính",
+  });
+  await expect(blockedDeleteButton).toBeDisabled();
+  await blockedDeleteButton.locator("xpath=..").hover();
   await expect(page.getByText(/ca này đã có 1 lượt phân công/)).toBeVisible();
   await page.getByRole("button", { name: "Xóa ca Ca cũ" }).click();
   await page.getByRole("dialog").getByRole("button", { name: "Xóa ca" }).click();
@@ -439,6 +442,58 @@ test("HR cập nhật phân công dùng đúng clearShift/clearEndDate/clearDays
 
   await page.screenshot({
     path: `${evidenceDir}/03-assignment-clear-fields.png`,
+    fullPage: true,
+  });
+});
+
+test("Site inactive khóa tạo/sửa nhưng vẫn cho hủy phân công hiện hữu", async ({
+  page,
+}) => {
+  await seedUser(page, "HR_MANAGER", managementPermissions);
+  await mockSiteDetail(page, { status: "inactive" });
+  let cancelRequested = false;
+
+  await page.route(
+    `**/api/v1/tenants/${tenantId}/sites/${siteId}/shifts?*`,
+    (route) => route.fulfill({ json: api(pageData([activeShift, inactiveShift])) }),
+  );
+  await page.route(
+    `**/api/v1/tenants/${tenantId}/sites/${siteId}/assignments?*`,
+    (route) => route.fulfill({ json: api(pageData([assignment])) }),
+  );
+  await page.route(
+    `**/api/v1/tenants/${tenantId}/sites/${siteId}/assignments/${assignmentId}`,
+    (route) => {
+      cancelRequested = route.request().method() === "DELETE";
+      return route.fulfill({ json: api(null) });
+    },
+  );
+
+  await page.goto(`/customer/sites/${siteId}`);
+  await page.getByRole("tab", { name: /Nhân sự phân công/ }).click();
+
+  await expect(
+    page.getByText("Công trình không nhận phân công mới"),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Tạo phân công" }),
+  ).toBeDisabled();
+  await expect(
+    page.getByRole("button", { name: "Sửa phân công của Nguyễn An" }),
+  ).toBeDisabled();
+
+  await page
+    .getByRole("button", { name: "Hủy phân công của Nguyễn An" })
+    .click();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Xác nhận hủy" })
+    .click();
+  await expect.poll(() => cancelRequested).toBe(true);
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+
+  await page.screenshot({
+    path: `${evidenceDir}/05-inactive-site-assignment-guard.png`,
     fullPage: true,
   });
 });
