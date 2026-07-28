@@ -22,6 +22,7 @@ import {
   Trash2,
   Users,
 } from "lucide-react";
+import { isAxiosError } from "axios";
 import RoleGuard from "@/components/guards/RoleGuard";
 import BaseButton from "@/components/ui/BaseButton";
 import { SystemRole } from "@/features/customer/auth/types/auth.type";
@@ -116,9 +117,13 @@ function SiteDetailsContent() {
           await deleteSite.mutateAsync({ tenantId, siteId });
           message.success("Đã xóa công trình");
           router.push("/customer/sites");
-        } catch (deleteError: any) {
+        } catch (deleteError: unknown) {
+          const backendMessage = isAxiosError(deleteError)
+            ? (deleteError.response?.data as { message?: string } | undefined)
+                ?.message
+            : undefined;
           message.error(
-            deleteError.response?.data?.message || "Không thể xóa công trình",
+            backendMessage || "Không thể xóa công trình",
           );
           throw deleteError;
         }
@@ -147,6 +152,7 @@ function SiteDetailsContent() {
               <AssignmentManagementTab
                 tenantId={tenantId}
                 siteId={siteId}
+                siteStatus={site.status}
                 shifts={site.shifts ?? []}
               />
             ),

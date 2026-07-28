@@ -86,13 +86,6 @@ export default function ShiftFormModal({
       );
       return;
     }
-    if (values.allowOvernight && endTime > startTime) {
-      message.error(
-        "Ca xuyên đêm phải có giờ kết thúc ở ngày hôm sau, nhỏ hơn giờ bắt đầu.",
-      );
-      return;
-    }
-
     if (isUpdate) {
       updateMutation.mutate(
         {

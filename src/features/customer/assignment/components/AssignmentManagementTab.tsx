@@ -1,5 +1,13 @@
 import React, { useState } from "react";
-import { App, Badge, Tag, type TableColumnsType, type TableProps } from "antd";
+import {
+  Alert,
+  App,
+  Badge,
+  Tag,
+  Tooltip,
+  type TableColumnsType,
+  type TableProps,
+} from "antd";
 import { isAxiosError } from "axios";
 import { EditOutlined, DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import { BaseButton, BaseSelect, BaseModal } from "@/components/ui";
@@ -20,6 +28,7 @@ import type { AssignmentDayOfWeek } from "../types/assignment.type";
 interface AssignmentManagementTabProps {
   tenantId?: string;
   siteId: string;
+  siteStatus: "active" | "inactive";
   shifts: ShiftResponse[];
 }
 
@@ -33,13 +42,19 @@ const DAY_LABELS: Record<AssignmentDayOfWeek, string> = {
   SUNDAY: "CN",
 };
 
-export default function AssignmentManagementTab({ tenantId, siteId, shifts }: AssignmentManagementTabProps) {
+export default function AssignmentManagementTab({
+  tenantId,
+  siteId,
+  siteStatus,
+  shifts,
+}: AssignmentManagementTabProps) {
   const { message } = App.useApp();
   const hasPermission = useAuthStore((state) => state.hasPermission);
   const canCreate = hasPermission("assignments:create");
   const canUpdate = hasPermission("assignments:update");
   const canDelete = hasPermission("assignments:delete");
   const canListEmployees = hasPermission("employees:list");
+  const siteAcceptsAssignments = siteStatus === "active";
   const [assignmentPage, setAssignmentPage] = useState(0);
   const [assignmentPageSize, setAssignmentPageSize] = useState(10);
   const [assignmentSort, setAssignmentSort] = useState<{
@@ -235,17 +250,27 @@ export default function AssignmentManagementTab({ tenantId, siteId, shifts }: As
       render: (_: unknown, record: AssignmentResponse) => (
         <div className="flex gap-2">
           {canUpdate && (
-            <BaseButton
-              aria-label={`Sửa phân công của ${getEmployeeName(record)}`}
-              type="text"
-              size="small"
-              icon={<EditOutlined className="text-blue-500" />}
-              onClick={() => {
-                setActiveAssignment(record);
-                setIsAssignmentModalOpen(true);
-              }}
-              title="Sửa phân công"
-            />
+            <Tooltip
+              title={
+                siteAcceptsAssignments
+                  ? "Sửa phân công"
+                  : "Không thể sửa phân công khi công trình đã ngừng hoạt động"
+              }
+            >
+              <span>
+                <BaseButton
+                  aria-label={`Sửa phân công của ${getEmployeeName(record)}`}
+                  type="text"
+                  size="small"
+                  icon={<EditOutlined className="text-blue-500" />}
+                  disabled={!siteAcceptsAssignments}
+                  onClick={() => {
+                    setActiveAssignment(record);
+                    setIsAssignmentModalOpen(true);
+                  }}
+                />
+              </span>
+            </Tooltip>
           )}
           {canDelete && record.status === "active" && (
             <BaseButton
@@ -286,19 +311,45 @@ export default function AssignmentManagementTab({ tenantId, siteId, shifts }: As
 
   return (
     <div className="space-y-4">
-      {canCreate && <div className="flex justify-end">
-        <BaseButton 
-          type="primary" 
-          icon={<PlusOutlined />}
-          onClick={() => {
-            setActiveAssignment(null);
-            setIsAssignmentModalOpen(true);
-          }}
-          className="!bg-blue-600 !text-white hover:!bg-blue-700 !border-0 shadow-md shadow-blue-500/20 h-9 px-4 rounded-lg font-semibold transition-all flex items-center gap-2"
-        >
-          Tạo phân công
-        </BaseButton>
-      </div>}
+      {!siteAcceptsAssignments && (
+        <Alert
+          type="warning"
+          showIcon
+          message="Công trình không nhận phân công mới"
+          description="Công trình đã ngừng hoạt động nên không thể tạo hoặc sửa phân công. Bạn vẫn có thể xem lịch sử và hủy các phân công còn hiệu lực."
+        />
+      )}
+
+      {canCreate && (
+        <div className="flex justify-end">
+          <Tooltip
+            title={
+              siteAcceptsAssignments
+                ? undefined
+                : "Kích hoạt lại công trình trước khi tạo phân công"
+            }
+          >
+            <span>
+              <BaseButton
+                type="primary"
+                icon={<PlusOutlined />}
+                disabled={!siteAcceptsAssignments}
+                onClick={() => {
+                  setActiveAssignment(null);
+                  setIsAssignmentModalOpen(true);
+                }}
+                className={
+                  siteAcceptsAssignments
+                    ? "!bg-blue-600 !text-white hover:!bg-blue-700 !border-0 shadow-md shadow-blue-500/20 h-9 px-4 rounded-lg font-semibold transition-all flex items-center gap-2"
+                    : "!bg-slate-100 !text-slate-400 !border-slate-200 h-9 px-4 rounded-lg font-semibold flex items-center gap-2"
+                }
+              >
+                Tạo phân công
+              </BaseButton>
+            </span>
+          </Tooltip>
+        </div>
+      )}
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
         {/* Filters */}
@@ -403,6 +454,7 @@ export default function AssignmentManagementTab({ tenantId, siteId, shifts }: As
         isOpen={isAssignmentModalOpen}
         onClose={() => setIsAssignmentModalOpen(false)}
         siteId={siteId}
+        siteStatus={siteStatus}
         activeAssignment={activeAssignment}
       />
 
