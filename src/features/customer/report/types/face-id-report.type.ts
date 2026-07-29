@@ -1,4 +1,6 @@
-export type FaceIdStatus = "not_enrolled" | "pending" | "enrolled" | "revoked";
+export type FaceIdStatus = "not_enrolled" | "enrolled" | "revoked";
+export type FaceIdReviewStatus = "none" | "pending" | "rejected";
+export type FaceIdStatusFilter = FaceIdStatus | "pending";
 
 export interface FaceIdReportRow {
   employeeId: string;
@@ -12,6 +14,9 @@ export interface FaceIdReportRow {
   consentGivenAt: string | null;
   enrolledAt: string | null;
   revokedAt: string | null;
+  reviewStatus: FaceIdReviewStatus;
+  submittedAt: string | null;
+  rejectionReason: string | null;
 }
 
 export interface FaceIdReportResponse {
@@ -20,7 +25,7 @@ export interface FaceIdReportResponse {
   pendingCount: number;
   notEnrolledCount: number;
   revokedCount: number;
-  statusFilter: FaceIdStatus | null;
+  statusFilter: FaceIdStatusFilter | null;
   records: {
     content: FaceIdReportRow[];
     page: number;
@@ -31,7 +36,23 @@ export interface FaceIdReportResponse {
 }
 
 export interface FaceIdReportParams {
-  status?: FaceIdStatus;
+  status?: FaceIdStatusFilter;
   page?: number;
   size?: number;
+}
+
+export interface FaceIdReviewItem {
+  employeeId: string;
+  employeeCode: string | null;
+  employeeName: string;
+  status: FaceIdStatus;
+  consentGiven: boolean;
+  consentGivenAt: string | null;
+  enrolledAt: string | null;
+  revokedAt: string | null;
+  reviewStatus: FaceIdReviewStatus;
+  pendingPhotoCount: number | null;
+  submittedAt: string | null;
+  reviewedAt: string | null;
+  rejectionReason: string | null;
 }

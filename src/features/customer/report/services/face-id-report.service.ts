@@ -3,6 +3,7 @@ import { type ApiResponse } from "@/types/api";
 import type {
   FaceIdReportParams,
   FaceIdReportResponse,
+  FaceIdReviewItem,
 } from "../types/face-id-report.type";
 import { useAuthStore } from "@/stores/auth.store";
 
@@ -25,6 +26,43 @@ export const faceIdReportService = {
     const response = await apiClient.get<ApiResponse<FaceIdReportResponse>>(
       `/tenants/${tenantId}/reports/face-id/enrollment`,
       { params }
+    );
+    return response.data.data;
+  },
+
+  async getPendingReviews(): Promise<FaceIdReviewItem[]> {
+    const tenantId = getTenantId();
+    const response = await apiClient.get<ApiResponse<FaceIdReviewItem[]>>(
+      `/tenants/${tenantId}/face-id/pending-review`,
+    );
+    return response.data.data;
+  },
+
+  async getPendingReviewPhoto(employeeId: string): Promise<Blob> {
+    const tenantId = getTenantId();
+    const response = await apiClient.get<Blob>(
+      `/tenants/${tenantId}/employees/${employeeId}/face-id/pending-review/photo`,
+      { responseType: "blob" },
+    );
+    return response.data;
+  },
+
+  async approveEnrollment(employeeId: string): Promise<FaceIdReviewItem> {
+    const tenantId = getTenantId();
+    const response = await apiClient.post<ApiResponse<FaceIdReviewItem>>(
+      `/tenants/${tenantId}/employees/${employeeId}/face-id/approve`,
+    );
+    return response.data.data;
+  },
+
+  async rejectEnrollment(
+    employeeId: string,
+    reason: string,
+  ): Promise<FaceIdReviewItem> {
+    const tenantId = getTenantId();
+    const response = await apiClient.post<ApiResponse<FaceIdReviewItem>>(
+      `/tenants/${tenantId}/employees/${employeeId}/face-id/reject`,
+      { reason },
     );
     return response.data.data;
   },

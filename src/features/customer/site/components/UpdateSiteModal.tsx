@@ -64,6 +64,7 @@ export default function UpdateSiteModal({ isOpen, onClose, site }: UpdateSiteMod
             ? Number(values.longitude)
             : undefined,
         timezone: values.timezone,
+        requireFaceIdCheckin: Boolean(values.requireFaceIdCheckin),
         status: values.status ? "active" : "inactive",
       };
 
@@ -133,6 +134,7 @@ export default function UpdateSiteModal({ isOpen, onClose, site }: UpdateSiteMod
           latitude: site.latitude,
           longitude: site.longitude,
           timezone: site.timezone,
+          requireFaceIdCheckin: site.requireFaceIdCheckin,
           status: site.status === "active",
         } : undefined}
         layout="vertical"
@@ -184,6 +186,25 @@ export default function UpdateSiteModal({ isOpen, onClose, site }: UpdateSiteMod
             >
               <BaseSwitch />
             </Form.Item>
+
+            <div className="flex items-start justify-between gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <div>
+                <div className="font-semibold text-slate-800">
+                  Bắt buộc Face ID khi chấm công
+                </div>
+                <p className="mt-1 text-xs leading-5 text-slate-500">
+                  Trước khi bật, hãy kiểm tra nhân viên tại công trình đã có
+                  Face ID được duyệt để tránh gián đoạn chấm công.
+                </p>
+              </div>
+              <Form.Item
+                name="requireFaceIdCheckin"
+                valuePropName="checked"
+                noStyle
+              >
+                <BaseSwitch aria-label="Bắt buộc Face ID khi chấm công" />
+              </Form.Item>
+            </div>
 
             <Form.Item
               name="address"

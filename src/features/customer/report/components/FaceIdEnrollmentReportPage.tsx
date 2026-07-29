@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Tag } from "antd";
+import { Alert, Tag } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
   ScanFace,
@@ -26,11 +26,15 @@ import { useFaceIdEnrollmentReport } from "../hooks/use-face-id-report";
 import type {
   FaceIdReportRow,
   FaceIdStatus,
+  FaceIdStatusFilter,
 } from "../types/face-id-report.type";
 import { CUSTOMER_ROUTES } from "@/constants/routes";
 import { formatVietnameseName } from "@/utils/name.util";
+import { useAuthStore } from "@/stores/auth.store";
+import FaceIdPendingReviewTab from "./FaceIdPendingReviewTab";
 
-type StatusFilter = FaceIdStatus | "all";
+type StatusFilter = FaceIdStatusFilter | "all";
+type ViewMode = "overview" | "pending";
 
 const STATUS_OPTIONS: { value: StatusFilter; label: string }[] = [
   { value: "all", label: "Tất cả trạng thái" },
@@ -48,11 +52,6 @@ const STATUS_TAG_MAP: Record<
     color: "success",
     label: "Đã đăng ký",
     icon: <CheckCircle2 className="w-3.5 h-3.5" />,
-  },
-  pending: {
-    color: "processing",
-    label: "Đang chờ",
-    icon: <Clock className="w-3.5 h-3.5" />,
   },
   not_enrolled: {
     color: "default",
@@ -130,7 +129,13 @@ function StatCard({ title, value, total, icon, tone }: StatCardProps) {
 
 export default function FaceIdEnrollmentReportPage() {
   const router = useRouter();
+  const hasPermission = useAuthStore((state) => state.hasPermission);
+  const canViewReport = hasPermission("reports:list");
+  const canManageFaceId = hasPermission("face_id:manage");
   const { state, setPagination } = usePagination(20);
+  const [viewMode, setViewMode] = useState<ViewMode>(
+    canViewReport ? "overview" : "pending",
+  );
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [searchInput, setSearchInput] = useState(state.search || "");
   const debouncedSearch = useDebounce(searchInput, 500);
@@ -142,13 +147,15 @@ export default function FaceIdEnrollmentReportPage() {
     }
   }, [debouncedSearch, state.search, setPagination]);
 
-  const apiStatus: FaceIdStatus | undefined =
+  const apiStatus: FaceIdStatusFilter | undefined =
     statusFilter === "all" ? undefined : statusFilter;
 
   const { data, isLoading, isFetching, refetch } = useFaceIdEnrollmentReport({
     status: apiStatus,
     page: state.page,
     size: state.size,
+  }, {
+    enabled: canViewReport && viewMode === "overview",
   });
 
   const rows = data?.records?.content ?? [];
@@ -240,6 +247,32 @@ export default function FaceIdEnrollmentReportPage() {
       },
     },
     {
+      title: "Xét duyệt",
+      key: "reviewStatus",
+      width: 170,
+      render: (_: unknown, record) => {
+        if (record.reviewStatus === "pending") {
+          return <Tag color="processing">Chờ HR duyệt</Tag>;
+        }
+        if (record.reviewStatus === "rejected") {
+          return (
+            <div className="space-y-1">
+              <Tag color="error">Bị từ chối</Tag>
+              {record.rejectionReason && (
+                <div
+                  className="max-w-48 truncate text-xs text-slate-500"
+                  title={record.rejectionReason}
+                >
+                  {record.rejectionReason}
+                </div>
+              )}
+            </div>
+          );
+        }
+        return <span className="text-slate-400">—</span>;
+      },
+    },
+    {
       title: "Consent",
       key: "consent",
       width: 140,
@@ -298,25 +331,57 @@ export default function FaceIdEnrollmentReportPage() {
           </div>
           <div>
             <h1 className="text-2xl font-black text-slate-800 tracking-tight">
-              Báo cáo đăng ký Face ID
+              Quản lý Face ID
             </h1>
             <p className="text-sm text-slate-500 font-medium mt-0.5">
-              Theo dõi tiến độ onboarding sinh trắc học của nhân viên.
+              Theo dõi đăng ký, consent và xét duyệt hồ sơ sinh trắc học.
             </p>
           </div>
         </div>
-        <BaseButton
-          icon={<RefreshCcw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />}
-          onClick={() => refetch()}
-          loading={isFetching}
-          className="!bg-white !text-slate-700 !border-slate-200 hover:!bg-slate-50 font-semibold shadow-sm"
-        >
-          Tải lại
-        </BaseButton>
+        <div className="flex flex-wrap gap-2">
+          {canViewReport && (
+            <BaseButton
+              type={viewMode === "overview" ? "primary" : "default"}
+              onClick={() => setViewMode("overview")}
+            >
+              Tổng quan
+            </BaseButton>
+          )}
+          {canManageFaceId && (
+            <BaseButton
+              type={viewMode === "pending" ? "primary" : "default"}
+              onClick={() => setViewMode("pending")}
+            >
+              Chờ duyệt ({data?.pendingCount ?? "—"})
+            </BaseButton>
+          )}
+          {viewMode === "overview" && (
+            <BaseButton
+              icon={<RefreshCcw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />}
+              onClick={() => refetch()}
+              loading={isFetching}
+              className="!bg-white !text-slate-700 !border-slate-200 hover:!bg-slate-50 font-semibold shadow-sm"
+            >
+              Tải lại
+            </BaseButton>
+          )}
+        </div>
       </div>
 
+      {viewMode === "pending" ? (
+        <ContentCard>
+          <FaceIdPendingReviewTab enabled={canManageFaceId} />
+        </ContentCard>
+      ) : !canViewReport ? (
+        <Alert
+          type="warning"
+          showIcon
+          message="Bạn không có quyền xem báo cáo Face ID"
+        />
+      ) : (
+      <>
       {/* Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
         <StatCard
           title="Tổng nhân viên"
           value={data?.totalEmployees ?? 0}
@@ -330,6 +395,13 @@ export default function FaceIdEnrollmentReportPage() {
           total={data?.totalEmployees ?? 0}
           icon={<CheckCircle2 className="h-5 w-5" />}
           tone="emerald"
+        />
+        <StatCard
+          title="Chờ duyệt"
+          value={data?.pendingCount ?? 0}
+          total={data?.totalEmployees ?? 0}
+          icon={<Clock className="h-5 w-5" />}
+          tone="amber"
         />
         <StatCard
           title="Chưa đăng ký"
@@ -410,6 +482,8 @@ export default function FaceIdEnrollmentReportPage() {
           )}
         </div>
       </ContentCard>
+      </>
+      )}
     </div>
   );
 }

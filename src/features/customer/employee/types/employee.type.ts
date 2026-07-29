@@ -22,9 +22,14 @@ export interface EmployeeResponse {
 export interface FaceIdStatus {
   status: "not_enrolled" | "enrolled" | "revoked";
   consentGiven: boolean;
-  consentGivenAt?: string;
-  enrolledAt?: string;
-  revokedAt?: string;
+  consentGivenAt?: string | null;
+  enrolledAt?: string | null;
+  revokedAt?: string | null;
+  reviewStatus: "none" | "pending" | "rejected";
+  pendingPhotoCount?: number | null;
+  submittedAt?: string | null;
+  reviewedAt?: string | null;
+  rejectionReason?: string | null;
 }
 
 export interface EmployeeListParams {

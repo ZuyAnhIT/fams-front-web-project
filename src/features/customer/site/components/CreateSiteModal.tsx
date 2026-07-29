@@ -9,6 +9,7 @@ import BaseModal from "@/components/ui/BaseModal";
 import BaseButton from "@/components/ui/BaseButton";
 import BaseInput from "@/components/ui/BaseInput";
 import BaseSelect from "@/components/ui/BaseSelect";
+import BaseSwitch from "@/components/ui/BaseSwitch";
 import BaseTextArea from "@/components/ui/BaseTextArea";
 
 interface CreateSiteModalProps {
@@ -61,6 +62,7 @@ export default function CreateSiteModal({ isOpen, onClose }: CreateSiteModalProp
             ? Number(values.longitude)
             : undefined,
         timezone: values.timezone || "Asia/Ho_Chi_Minh",
+        requireFaceIdCheckin: Boolean(values.requireFaceIdCheckin),
       };
 
       await createSite({
@@ -130,6 +132,7 @@ export default function CreateSiteModal({ isOpen, onClose }: CreateSiteModalProp
         onFinish={handleFinish}
         initialValues={{
           timezone: "Asia/Ho_Chi_Minh",
+          requireFaceIdCheckin: false,
         }}
         id="create-site-form"
         className="max-h-[65vh] overflow-y-auto overflow-x-hidden pr-2"
@@ -173,6 +176,25 @@ export default function CreateSiteModal({ isOpen, onClose }: CreateSiteModalProp
                   ]}
                 />
               </Form.Item>
+
+              <div className="flex items-start justify-between gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <div>
+                  <div className="font-semibold text-slate-800">
+                    Bắt buộc Face ID khi chấm công
+                  </div>
+                  <p className="mt-1 text-xs leading-5 text-slate-500">
+                    Nhân viên phải có Face ID đã được duyệt và hoàn thành
+                    active liveness trước khi chấm công tại công trình.
+                  </p>
+                </div>
+                <Form.Item
+                  name="requireFaceIdCheckin"
+                  valuePropName="checked"
+                  noStyle
+                >
+                  <BaseSwitch aria-label="Bắt buộc Face ID khi chấm công" />
+                </Form.Item>
+              </div>
 
               <Form.Item
                 name="address"
