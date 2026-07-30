@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Form, message } from "antd";
+import { Alert, Form, message } from "antd";
 import { useAuthStore } from "@/stores/auth.store";
 import { useCreateSiteMutation } from "../hooks/use-site";
 import { CreateSiteRequest } from "../types/site.type";
@@ -9,8 +9,12 @@ import BaseModal from "@/components/ui/BaseModal";
 import BaseButton from "@/components/ui/BaseButton";
 import BaseInput from "@/components/ui/BaseInput";
 import BaseSelect from "@/components/ui/BaseSelect";
-import BaseSwitch from "@/components/ui/BaseSwitch";
 import BaseTextArea from "@/components/ui/BaseTextArea";
+import {
+  CHECKIN_POLICY_META,
+  CHECKIN_POLICY_OPTIONS,
+  type CheckinPolicy,
+} from "../../checkin/constants/checkin-policy";
 
 interface CreateSiteModalProps {
   isOpen: boolean;
@@ -19,6 +23,9 @@ interface CreateSiteModalProps {
 
 export default function CreateSiteModal({ isOpen, onClose }: CreateSiteModalProps) {
   const [form] = Form.useForm();
+  const checkinPolicy = Form.useWatch("checkinPolicy", form) as
+    | CheckinPolicy
+    | undefined;
   const user = useAuthStore((state) => state.user);
   const { mutateAsync: createSite, isPending } = useCreateSiteMutation();
   
@@ -62,7 +69,7 @@ export default function CreateSiteModal({ isOpen, onClose }: CreateSiteModalProp
             ? Number(values.longitude)
             : undefined,
         timezone: values.timezone || "Asia/Ho_Chi_Minh",
-        requireFaceIdCheckin: Boolean(values.requireFaceIdCheckin),
+        checkinPolicy: values.checkinPolicy || "gps_only",
       };
 
       await createSite({
@@ -132,7 +139,7 @@ export default function CreateSiteModal({ isOpen, onClose }: CreateSiteModalProp
         onFinish={handleFinish}
         initialValues={{
           timezone: "Asia/Ho_Chi_Minh",
-          requireFaceIdCheckin: false,
+          checkinPolicy: "gps_only",
         }}
         id="create-site-form"
         className="max-h-[65vh] overflow-y-auto overflow-x-hidden pr-2"
@@ -177,24 +184,34 @@ export default function CreateSiteModal({ isOpen, onClose }: CreateSiteModalProp
                 />
               </Form.Item>
 
-              <div className="flex items-start justify-between gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
-                <div>
-                  <div className="font-semibold text-slate-800">
-                    Bắt buộc Face ID khi chấm công
-                  </div>
-                  <p className="mt-1 text-xs leading-5 text-slate-500">
-                    Nhân viên phải có Face ID đã được duyệt và hoàn thành
-                    active liveness trước khi chấm công tại công trình.
-                  </p>
-                </div>
-                <Form.Item
-                  name="requireFaceIdCheckin"
-                  valuePropName="checked"
-                  noStyle
-                >
-                  <BaseSwitch aria-label="Bắt buộc Face ID khi chấm công" />
-                </Form.Item>
-              </div>
+              <Form.Item
+                name="checkinPolicy"
+                label={
+                  <span className="font-medium text-slate-700">
+                    Chính sách xác thực chấm công
+                  </span>
+                }
+                className="mb-0"
+                extra={
+                  checkinPolicy
+                    ? CHECKIN_POLICY_META[checkinPolicy].description
+                    : undefined
+                }
+              >
+                <BaseSelect
+                  aria-label="Chính sách xác thực chấm công"
+                  options={CHECKIN_POLICY_OPTIONS}
+                />
+              </Form.Item>
+
+              {checkinPolicy && checkinPolicy !== "gps_only" && (
+                <Alert
+                  type="warning"
+                  showIcon
+                  title="Kiểm tra Face ID trước khi áp dụng"
+                  description="Nhân viên được phân công vào công trình phải đăng ký và được HR duyệt Face ID; nếu không họ sẽ không thể chấm công online."
+                />
+              )}
 
               <Form.Item
                 name="address"

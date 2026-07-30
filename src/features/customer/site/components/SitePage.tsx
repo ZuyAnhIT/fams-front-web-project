@@ -14,6 +14,10 @@ import CreateSiteModal from "./CreateSiteModal";
 import UpdateSiteModal from "./UpdateSiteModal";
 import { SiteResponse } from "../types/site.type";
 import DataTable from "@/components/tables/DataTable";
+import {
+  CHECKIN_POLICY_META,
+  normalizeCheckinPolicy,
+} from "../../checkin/constants/checkin-policy";
 
 export default function SitePage() {
   const user = useAuthStore((state) => state.user);
@@ -101,6 +105,20 @@ export default function SitePage() {
               {text}
             </div>
           </Tooltip>
+        );
+      },
+    },
+    {
+      title: "Xác thực chấm công",
+      dataIndex: "checkinPolicy",
+      key: "checkinPolicy",
+      width: 180,
+      render: (value: string) => {
+        const policy = normalizeCheckinPolicy(value);
+        return (
+          <Tag color={CHECKIN_POLICY_META[policy].color}>
+            {CHECKIN_POLICY_META[policy].shortLabel}
+          </Tag>
         );
       },
     },

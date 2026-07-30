@@ -3,13 +3,23 @@
 import React, { useEffect } from "react";
 import { App, Form } from "antd";
 import { isAxiosError } from "axios";
-import { BaseSwitch, BaseInput, BaseTimePicker } from "@/components/ui";
+import {
+  BaseSwitch,
+  BaseInput,
+  BaseSelect,
+  BaseTimePicker,
+} from "@/components/ui";
 import BaseModal from "@/components/ui/BaseModal";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import { useAuthStore } from "@/stores/auth.store";
 import { useCreateShiftMutation, useUpdateShiftMutation } from "../hooks/use-shift";
 import { ShiftResponse } from "../types/shift.type";
+import {
+  CHECKIN_POLICY_META,
+  CHECKIN_POLICY_OPTIONS,
+  type CheckinPolicy,
+} from "../../checkin/constants/checkin-policy";
 
 dayjs.extend(customParseFormat);
 const format = "HH:mm";
@@ -37,6 +47,10 @@ export default function ShiftFormModal({
 }: ShiftFormModalProps) {
   const { message } = App.useApp();
   const [form] = Form.useForm();
+  const inheritPolicy = Form.useWatch("inheritPolicy", form) ?? true;
+  const policyOverride = Form.useWatch("checkinPolicyOverride", form) as
+    | CheckinPolicy
+    | undefined;
   const user = useAuthStore((state) => state.user);
   const tenantId = user?.tenantId;
 
@@ -53,12 +67,17 @@ export default function ShiftFormModal({
           startTime: dayjs(activeShift.startTime, format),
           endTime: dayjs(activeShift.endTime, format),
           allowOvernight: activeShift.allowOvernight,
+          inheritPolicy: !activeShift.checkinPolicyOverride,
+          checkinPolicyOverride:
+            activeShift.checkinPolicyOverride || "gps_only",
           status: activeShift.status === "active",
         });
       } else {
         form.resetFields();
         form.setFieldsValue({
           allowOvernight: false,
+          inheritPolicy: true,
+          checkinPolicyOverride: "gps_only",
           status: true,
         });
       }
@@ -70,6 +89,8 @@ export default function ShiftFormModal({
     startTime: dayjs.Dayjs;
     endTime: dayjs.Dayjs;
     allowOvernight: boolean;
+    inheritPolicy: boolean;
+    checkinPolicyOverride?: CheckinPolicy;
     status?: boolean;
   }) => {
     if (!tenantId) return;
@@ -97,6 +118,12 @@ export default function ShiftFormModal({
             startTime,
             endTime,
             allowOvernight: values.allowOvernight,
+            checkinPolicyOverride: values.inheritPolicy
+              ? undefined
+              : values.checkinPolicyOverride,
+            clearCheckinPolicyOverride:
+              values.inheritPolicy &&
+              Boolean(activeShift.checkinPolicyOverride),
             status: values.status ? "active" : "inactive",
           },
         },
@@ -122,6 +149,9 @@ export default function ShiftFormModal({
             startTime,
             endTime,
             allowOvernight: values.allowOvernight,
+            checkinPolicyOverride: values.inheritPolicy
+              ? undefined
+              : values.checkinPolicyOverride,
           },
         },
         {
@@ -231,6 +261,50 @@ export default function ShiftFormModal({
           >
             <BaseSwitch />
           </Form.Item>
+        </div>
+
+        <div className="mb-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <div className="font-medium text-slate-700">
+                Kế thừa chính sách của công trình
+              </div>
+              <div className="mt-1 text-xs text-slate-500">
+                Bật để ca tự nhận mọi thay đổi chính sách từ công trình.
+              </div>
+            </div>
+            <Form.Item
+              name="inheritPolicy"
+              valuePropName="checked"
+              noStyle
+            >
+              <BaseSwitch aria-label="Kế thừa chính sách chấm công từ công trình" />
+            </Form.Item>
+          </div>
+
+          {!inheritPolicy && (
+            <Form.Item
+              name="checkinPolicyOverride"
+              label="Chính sách ghi đè cho ca"
+              rules={[
+                {
+                  required: true,
+                  message: "Chọn chính sách chấm công cho ca",
+                },
+              ]}
+              className="mb-0 mt-4"
+              extra={
+                policyOverride
+                  ? CHECKIN_POLICY_META[policyOverride].description
+                  : undefined
+              }
+            >
+              <BaseSelect
+                aria-label="Chính sách chấm công ghi đè của ca"
+                options={CHECKIN_POLICY_OPTIONS}
+              />
+            </Form.Item>
+          )}
         </div>
 
         {isUpdate && (

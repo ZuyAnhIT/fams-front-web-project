@@ -1,3 +1,5 @@
+import type { CheckinPolicy } from "../../checkin/constants/checkin-policy";
+
 export interface ShiftResponse {
   id: string;
   siteId: string;
@@ -10,6 +12,7 @@ export interface ShiftResponse {
   earlyCheckinMinutes: number;
   lateCheckoutMinutes: number;
   status: "active" | "inactive";
+  checkinPolicyOverride: CheckinPolicy | null;
   createdBy: string;
   createdAt: string;
   updatedAt: string;
@@ -22,6 +25,7 @@ export interface CreateShiftRequest {
   startTime: string;
   endTime: string;
   allowOvernight: boolean;
+  checkinPolicyOverride?: CheckinPolicy | null;
 }
 
 export interface UpdateShiftRequest {
@@ -30,6 +34,8 @@ export interface UpdateShiftRequest {
   endTime?: string;
   allowOvernight?: boolean;
   status?: "active" | "inactive";
+  checkinPolicyOverride?: CheckinPolicy;
+  clearCheckinPolicyOverride?: boolean;
 }
 
 export interface ConfigureShiftOtRequest {

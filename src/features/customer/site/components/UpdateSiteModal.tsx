@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Form, message } from "antd";
+import { Alert, Form, message } from "antd";
 import { useAuthStore } from "@/stores/auth.store";
 import { useUpdateSiteMutation } from "../hooks/use-site";
 import { SiteResponse, UpdateSiteRequest } from "../types/site.type";
@@ -11,6 +11,11 @@ import BaseInput from "@/components/ui/BaseInput";
 import BaseSelect from "@/components/ui/BaseSelect";
 import BaseSwitch from "@/components/ui/BaseSwitch";
 import BaseTextArea from "@/components/ui/BaseTextArea";
+import {
+  CHECKIN_POLICY_META,
+  CHECKIN_POLICY_OPTIONS,
+  type CheckinPolicy,
+} from "../../checkin/constants/checkin-policy";
 
 interface UpdateSiteModalProps {
   isOpen: boolean;
@@ -20,6 +25,9 @@ interface UpdateSiteModalProps {
 
 export default function UpdateSiteModal({ isOpen, onClose, site }: UpdateSiteModalProps) {
   const [form] = Form.useForm();
+  const checkinPolicy = Form.useWatch("checkinPolicy", form) as
+    | CheckinPolicy
+    | undefined;
   const user = useAuthStore((state) => state.user);
   const { mutateAsync: updateSite, isPending } = useUpdateSiteMutation();
 
@@ -64,7 +72,7 @@ export default function UpdateSiteModal({ isOpen, onClose, site }: UpdateSiteMod
             ? Number(values.longitude)
             : undefined,
         timezone: values.timezone,
-        requireFaceIdCheckin: Boolean(values.requireFaceIdCheckin),
+        checkinPolicy: values.checkinPolicy,
         status: values.status ? "active" : "inactive",
       };
 
@@ -134,7 +142,7 @@ export default function UpdateSiteModal({ isOpen, onClose, site }: UpdateSiteMod
           latitude: site.latitude,
           longitude: site.longitude,
           timezone: site.timezone,
-          requireFaceIdCheckin: site.requireFaceIdCheckin,
+          checkinPolicy: site.checkinPolicy || "gps_only",
           status: site.status === "active",
         } : undefined}
         layout="vertical"
@@ -187,24 +195,33 @@ export default function UpdateSiteModal({ isOpen, onClose, site }: UpdateSiteMod
               <BaseSwitch />
             </Form.Item>
 
-            <div className="flex items-start justify-between gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
-              <div>
-                <div className="font-semibold text-slate-800">
-                  Bắt buộc Face ID khi chấm công
-                </div>
-                <p className="mt-1 text-xs leading-5 text-slate-500">
-                  Trước khi bật, hãy kiểm tra nhân viên tại công trình đã có
-                  Face ID được duyệt để tránh gián đoạn chấm công.
-                </p>
-              </div>
-              <Form.Item
-                name="requireFaceIdCheckin"
-                valuePropName="checked"
-                noStyle
-              >
-                <BaseSwitch aria-label="Bắt buộc Face ID khi chấm công" />
-              </Form.Item>
-            </div>
+            <Form.Item
+              name="checkinPolicy"
+              label={
+                <span className="font-medium text-slate-700">
+                  Chính sách xác thực chấm công
+                </span>
+              }
+              extra={
+                checkinPolicy
+                  ? CHECKIN_POLICY_META[checkinPolicy].description
+                  : undefined
+              }
+            >
+              <BaseSelect
+                aria-label="Chính sách xác thực chấm công"
+                options={CHECKIN_POLICY_OPTIONS}
+              />
+            </Form.Item>
+
+            {checkinPolicy && checkinPolicy !== "gps_only" && (
+              <Alert
+                type="warning"
+                showIcon
+                title="Có thể làm gián đoạn chấm công"
+                description="Hãy bảo đảm nhân viên tại công trình đã có Face ID được duyệt trước khi lưu chính sách này."
+              />
+            )}
 
             <Form.Item
               name="address"

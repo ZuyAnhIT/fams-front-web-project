@@ -26,6 +26,10 @@ import type { ShiftResponse } from "../types/shift.type";
 import ShiftFormModal from "./ShiftFormModal";
 import ShiftOtConfigModal from "./ShiftOtConfigModal";
 import { useAuthStore } from "@/stores/auth.store";
+import {
+  CHECKIN_POLICY_META,
+  normalizeCheckinPolicy,
+} from "../../checkin/constants/checkin-policy";
 
 interface ShiftManagementTabProps {
   tenantId?: string;
@@ -169,6 +173,28 @@ export default function ShiftManagementTab({
           <div>
             Sớm {shift.earlyCheckinMinutes} phút · muộn{" "}
             {shift.lateCheckoutMinutes} phút
+          </div>
+          <div>
+            {shift.checkinPolicyOverride ? (
+              <Tooltip title="Ca này không kế thừa chính sách mặc định của công trình">
+                <Tag
+                  color={
+                    CHECKIN_POLICY_META[
+                      normalizeCheckinPolicy(shift.checkinPolicyOverride)
+                    ].color
+                  }
+                >
+                  Ghi đè:{" "}
+                  {
+                    CHECKIN_POLICY_META[
+                      normalizeCheckinPolicy(shift.checkinPolicyOverride)
+                    ].shortLabel
+                  }
+                </Tag>
+              </Tooltip>
+            ) : (
+              <Tag>Kế thừa công trình</Tag>
+            )}
           </div>
         </div>
       ),

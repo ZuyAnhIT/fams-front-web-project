@@ -1,113 +1,315 @@
 "use client";
 
-import React, { useState } from "react";
-import { Tag, DatePicker } from "antd";
-import type { ColumnsType } from "antd/es/table";
-import { CheckinResponse, CheckinListParams } from "../types/checkin.type";
-import { useCheckins } from "../hooks/use-checkin";
-import dayjs from "dayjs";
+import { useMemo, useState } from "react";
+import { Alert, DatePicker, Tag, type TableColumnsType } from "antd";
 import { EyeOutlined } from "@ant-design/icons";
-import { useAuthStore } from "@/stores/auth.store";
-import BaseSelect from "@/components/ui/BaseSelect";
+import dayjs from "dayjs";
 import BaseButton from "@/components/ui/BaseButton";
+import BaseSelect from "@/components/ui/BaseSelect";
 import DataTable from "@/components/tables/DataTable";
+import { useAuthStore } from "@/stores/auth.store";
+import { SystemRole } from "@/features/customer/auth/types/auth.type";
+import { useSitesQuery } from "@/features/customer/site/hooks/use-site";
+import { useEmployees } from "@/features/customer/employee/hooks/use-employee";
+import { formatVietnameseName } from "@/utils/name.util";
+import { useCheckins } from "../hooks/use-checkin";
+import {
+  CHECKIN_POLICY_META,
+  type CheckinPolicy,
+} from "../constants/checkin-policy";
+import type {
+  CheckinListParams,
+  CheckinResponse,
+} from "../types/checkin.type";
 import CheckinDetailModal from "./CheckinDetailModal";
 
 const { RangePicker } = DatePicker;
 
+function VerificationTag({
+  value,
+  liveness,
+  policy,
+  hasEvent = true,
+}: {
+  value: boolean | null | undefined;
+  liveness?: boolean | null;
+  policy: CheckinPolicy | null;
+  hasEvent?: boolean;
+}) {
+  if (!hasEvent) return <Tag>Chưa check-out</Tag>;
+  if (value == null) {
+    if (policy === "gps_only") return <Tag>Không áp dụng</Tag>;
+    if (policy) return <Tag color="processing">Đang xác thực</Tag>;
+    return <Tag>Dữ liệu lịch sử</Tag>;
+  }
+  if (liveness === false) return <Tag color="error">Liveness thất bại</Tag>;
+  if (!value) return <Tag color="error">Không khớp</Tag>;
+  return (
+    <Tag color={liveness ? "purple" : "success"}>
+      {liveness ? "Đạt + liveness" : "Đạt Face ID"}
+    </Tag>
+  );
+}
+
+function pendingReason(record: CheckinResponse): string | null {
+  if (record.status !== "pending_review") return null;
+  if (
+    record.livenessVerified === false ||
+    record.checkoutLivenessVerified === false
+  ) {
+    return "Liveness thất bại";
+  }
+  if (
+    record.faceVerified === false ||
+    record.checkoutFaceVerified === false
+  ) {
+    return "Face ID không khớp";
+  }
+  if (
+    record.checkInInsideGeofence === false ||
+    record.checkOutInsideGeofence === false
+  ) {
+    return "Ngoài vùng chấm công";
+  }
+  return "Cần xem bằng chứng";
+}
+
 export default function CheckinListTab() {
-  const user = useAuthStore(state => state.user);
-  const currentTenantId = user?.tenantId;
-  
+  const user = useAuthStore((state) => state.user);
+  const tenantId = user?.tenantId ?? undefined;
+  const supervisorMustChooseSite =
+    user?.role === SystemRole.SITE_SUPERVISOR;
+
   const [params, setParams] = useState<CheckinListParams>({
     page: 0,
     size: 20,
     sortBy: "checkInAt",
     sortDir: "desc",
   });
+  const [selectedRecord, setSelectedRecord] =
+    useState<CheckinResponse | null>(null);
 
-  const [selectedCheckinId, setSelectedCheckinId] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { data: sitePage } = useSitesQuery({
+    tenantId,
+    status: "active",
+    sortBy: "name",
+    sortDir: "asc",
+    page: 0,
+    size: 100,
+  });
+  const sites = useMemo(
+    () => sitePage?.data?.content ?? [],
+    [sitePage?.data?.content],
+  );
 
-  const { data: pageData, isLoading } = useCheckins(currentTenantId || undefined, params);
+  const effectiveSiteId =
+    params.siteId ||
+    (supervisorMustChooseSite && sites.length === 1 ? sites[0].id : undefined);
+  const requestParams = useMemo(
+    () => ({ ...params, siteId: effectiveSiteId }),
+    [effectiveSiteId, params],
+  );
 
-  const handleTableChange = (pagination: any, filters: any, sorter: any) => {
-    setParams((prev) => ({
-      ...prev,
-      page: pagination.current ? pagination.current - 1 : 0,
-      size: pagination.pageSize || 20,
-      sortBy: sorter.field || "checkInAt",
-      sortDir: sorter.order === "ascend" ? "asc" : "desc",
-    }));
-  };
+  const { data: employeePage } = useEmployees(
+    {
+      page: 0,
+      size: 100,
+      sortBy: "firstName",
+      sortDir: "asc",
+    },
+    { enabled: Boolean(tenantId) },
+  );
+  const employees = useMemo(
+    () => employeePage?.content ?? [],
+    [employeePage?.content],
+  );
+  const employeeMap = useMemo(
+    () => new Map(employees.map((employee) => [employee.id, employee])),
+    [employees],
+  );
+  const siteMap = useMemo(
+    () => new Map(sites.map((site) => [site.id, site])),
+    [sites],
+  );
 
-  const openDetail = (id: string) => {
-    setSelectedCheckinId(id);
-    setIsModalOpen(true);
-  };
+  const canLoad =
+    Boolean(tenantId) && (!supervisorMustChooseSite || Boolean(effectiveSiteId));
+  const { data: pageData, isLoading, isError, error } = useCheckins(
+    tenantId,
+    requestParams,
+    canLoad,
+  );
 
-  const columns: ColumnsType<CheckinResponse> = [
+  const columns: TableColumnsType<CheckinResponse> = [
     {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
-      render: (status: string) => {
-        let color = "default";
-        let text = status;
-        if (status === "valid") { color = "success"; text = "Hợp lệ"; }
-        else if (status === "pending_review") { color = "warning"; text = "Cần xem xét"; }
-        else if (status === "rejected") { color = "error"; text = "Bị từ chối"; }
-        return <Tag color={color}>{text}</Tag>;
+      width: 170,
+      render: (status: CheckinResponse["status"], record) => {
+        const reason = pendingReason(record);
+        return (
+          <div className="space-y-1">
+            <Tag
+              color={
+                status === "valid"
+                  ? "success"
+                  : status === "pending_review"
+                    ? "warning"
+                    : "error"
+              }
+            >
+              {status === "valid"
+                ? "Hợp lệ"
+                : status === "pending_review"
+                  ? "Cần xem xét"
+                  : "Bị từ chối"}
+            </Tag>
+            <div>
+              <Tag color={record.source === "offline" ? "blue" : "default"}>
+                {record.source === "offline" ? "Offline" : "Online"}
+              </Tag>
+              {record.effectiveCheckinPolicy && (
+                <Tag
+                  color={
+                    CHECKIN_POLICY_META[record.effectiveCheckinPolicy].color
+                  }
+                >
+                  {CHECKIN_POLICY_META[record.effectiveCheckinPolicy].shortLabel}
+                </Tag>
+              )}
+            </div>
+            {reason && (
+              <div className="text-xs font-medium text-amber-700">{reason}</div>
+            )}
+          </div>
+        );
       },
     },
     {
       title: "Nhân viên",
       key: "employee",
+      width: 190,
+      render: (_, record) => {
+        const employee = employeeMap.get(record.employeeId);
+        return (
+          <div>
+            <div className="font-medium text-slate-800">
+              {record.employeeName ||
+                (employee
+                  ? formatVietnameseName(employee.firstName, employee.lastName)
+                  : record.employeeId)}
+            </div>
+            <div className="text-xs text-slate-500">
+              {record.employeeCode || employee?.employeeCode || "Chưa có mã"}
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      title: "Công trình",
+      key: "site",
+      width: 170,
+      render: (_, record) =>
+        record.siteName || siteMap.get(record.siteId)?.name || record.siteId,
+    },
+    {
+      title: "Giờ vào / ra",
+      key: "timestamps",
+      width: 200,
+      sorter: true,
       render: (_, record) => (
-        <div>
-          <div className="font-medium">{record.employeeName || record.employeeId}</div>
-          {record.employeeCode && <div className="text-xs text-slate-500">{record.employeeCode}</div>}
+        <div className="space-y-1 text-sm text-slate-700">
+          <div>
+            Vào:{" "}
+            {record.checkInAt
+              ? dayjs(record.checkInAt).format("DD/MM/YYYY HH:mm:ss")
+              : "—"}
+          </div>
+          <div>
+            Ra:{" "}
+            {record.checkOutAt
+              ? dayjs(record.checkOutAt).format("DD/MM/YYYY HH:mm:ss")
+              : "Chưa check-out"}
+          </div>
+          {record.workMinutes != null && (
+            <div className="text-xs font-medium text-blue-700">
+              {record.workMinutes} phút làm việc
+            </div>
+          )}
         </div>
       ),
     },
     {
-      title: "Site (Nơi làm việc)",
-      key: "site",
-      render: (_, record) => record.siteName || record.siteId,
-    },
-    {
-      title: "Giờ vào (Check-in)",
-      dataIndex: "checkInAt",
-      key: "checkInAt",
-      sorter: true,
-      render: (val) => val ? dayjs(val).format("DD/MM/YYYY HH:mm:ss") : "-",
-    },
-    {
-      title: "Giờ ra (Check-out)",
-      dataIndex: "checkOutAt",
-      key: "checkOutAt",
-      render: (val) => val ? dayjs(val).format("DD/MM/YYYY HH:mm:ss") : "-",
-    },
-    {
-      title: "Trong vùng",
+      title: "GPS",
       key: "geofence",
-      render: (_, record) => {
-        if (record.checkInInsideGeofence === null) return "-";
-        return record.checkInInsideGeofence ? (
-          <Tag color="success">Có</Tag>
-        ) : (
-          <Tag color="error">Không</Tag>
-        );
-      }
+      width: 140,
+      render: (_, record) => (
+        <div className="space-y-1">
+          <div>
+            Vào:{" "}
+            <Tag color={record.checkInInsideGeofence ? "success" : "error"}>
+              {record.checkInInsideGeofence ? "Trong vùng" : "Ngoài vùng"}
+            </Tag>
+          </div>
+          <div>
+            Ra:{" "}
+            {record.checkOutAt ? (
+              record.checkOutInsideGeofence == null ? (
+                <Tag>Chi tiết</Tag>
+              ) : (
+                <Tag
+                  color={
+                    record.checkOutInsideGeofence ? "success" : "error"
+                  }
+                >
+                  {record.checkOutInsideGeofence ? "Trong vùng" : "Ngoài vùng"}
+                </Tag>
+              )
+            ) : (
+              <Tag>Chưa có</Tag>
+            )}
+          </div>
+        </div>
+      ),
+    },
+    {
+      title: "Face ID vào / ra",
+      key: "faceVerification",
+      width: 190,
+      render: (_, record) => (
+        <div className="space-y-1">
+          <div>
+            <span className="mr-1 text-xs text-slate-500">Vào:</span>
+            <VerificationTag
+              value={record.faceVerified}
+              liveness={record.livenessVerified}
+              policy={record.effectiveCheckinPolicy}
+            />
+          </div>
+          <div>
+            <span className="mr-1 text-xs text-slate-500">Ra:</span>
+            <VerificationTag
+              value={record.checkoutFaceVerified}
+              liveness={record.checkoutLivenessVerified}
+              policy={record.effectiveCheckinPolicy}
+              hasEvent={Boolean(record.checkOutAt)}
+            />
+          </div>
+        </div>
+      ),
     },
     {
       title: "Thao tác",
       key: "action",
+      fixed: "right",
+      width: 110,
       render: (_, record) => (
-        <BaseButton 
-          type="link" 
-          icon={<EyeOutlined />} 
-          onClick={() => openDetail(record.id)}
+        <BaseButton
+          type="link"
+          icon={<EyeOutlined />}
+          onClick={() => setSelectedRecord(record)}
         >
           Chi tiết
         </BaseButton>
@@ -117,39 +319,99 @@ export default function CheckinListTab() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3 sm:flex-row sm:flex-wrap sm:p-4">
+      <Alert
+        type="info"
+        showIcon
+        title="Check-in và check-out dùng cùng mức xác thực"
+        description="Chính sách hiệu lực được Backend resolve từ công trình và ca làm. Bản ghi cần xem xét có thể do GPS, Face ID, liveness hoặc đồng bộ offline."
+      />
+
+      <div className="grid gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3 sm:grid-cols-2 xl:grid-cols-4 sm:p-4">
         <BaseSelect
-          aria-label="Lọc lượt check-in theo trạng thái"
+          aria-label="Lọc lượt chấm công theo công trình"
+          allowClear={!supervisorMustChooseSite}
+          placeholder={
+            supervisorMustChooseSite
+              ? "Chọn công trình bắt buộc"
+              : "Tất cả công trình"
+          }
+          value={effectiveSiteId}
+          onChange={(siteId) =>
+            setParams((current) => ({ ...current, siteId, page: 0 }))
+          }
+          options={sites.map((site) => ({
+            value: site.id,
+            label: site.name,
+          }))}
+        />
+        <BaseSelect
+          aria-label="Lọc lượt chấm công theo nhân viên"
+          showSearch
+          optionFilterProp="label"
           allowClear
-          placeholder="Trạng thái"
-          className="w-full sm:w-44"
-          onChange={(val) => setParams(p => ({ ...p, status: val, page: 0 }))}
+          placeholder="Tất cả nhân viên"
+          value={params.employeeId}
+          onChange={(employeeId) =>
+            setParams((current) => ({ ...current, employeeId, page: 0 }))
+          }
+          options={employees.map((employee) => ({
+            value: employee.id,
+            label: `${formatVietnameseName(employee.firstName, employee.lastName)}${employee.employeeCode ? ` (${employee.employeeCode})` : ""}`,
+          }))}
+        />
+        <BaseSelect
+          aria-label="Lọc lượt chấm công theo trạng thái"
+          allowClear
+          placeholder="Tất cả trạng thái"
+          value={params.status}
+          onChange={(status) =>
+            setParams((current) => ({ ...current, status, page: 0 }))
+          }
           options={[
             { label: "Hợp lệ", value: "valid" },
             { label: "Cần xem xét", value: "pending_review" },
             { label: "Bị từ chối", value: "rejected" },
           ]}
         />
-        <RangePicker 
-          aria-label="Lọc lượt check-in theo khoảng thời gian"
-          className="w-full sm:w-auto"
+        <RangePicker
+          aria-label="Lọc lượt chấm công theo khoảng thời gian"
           showTime
-          onChange={(dates) => {
-            setParams(p => ({
-              ...p,
-              from: dates ? dates[0]?.toISOString() : undefined,
-              to: dates ? dates[1]?.toISOString() : undefined,
-              page: 0
-            }));
-          }}
+          onChange={(dates) =>
+            setParams((current) => ({
+              ...current,
+              from: dates?.[0]?.toISOString(),
+              to: dates?.[1]?.toISOString(),
+              page: 0,
+            }))
+          }
         />
-        {/* We can add Employee/Site filters here if we have APIs to fetch their lists */}
       </div>
 
+      {supervisorMustChooseSite && !effectiveSiteId && (
+        <Alert
+          type="warning"
+          showIcon
+          title="Hãy chọn một công trình"
+          description="Supervisor được giao nhiều công trình phải chọn từng công trình trước khi tải danh sách chấm công."
+        />
+      )}
+
+      {isError && (
+        <Alert
+          type="error"
+          showIcon
+          title="Không thể tải danh sách chấm công"
+          description={
+            (error as { response?: { data?: { message?: string } } }).response
+              ?.data?.message || "Vui lòng thử lại."
+          }
+        />
+      )}
+
       <DataTable
-        ariaLabel="Lịch sử check-in"
-        emptyTitle="Không có lượt check-in"
-        emptyDescription="Thử chọn khoảng thời gian hoặc trạng thái khác."
+        ariaLabel="Lịch sử chấm công"
+        emptyTitle="Không có lượt chấm công"
+        emptyDescription="Thử chọn khoảng thời gian, công trình hoặc trạng thái khác."
         columns={columns}
         data={pageData?.content || []}
         rowKey="id"
@@ -157,14 +419,30 @@ export default function CheckinListTab() {
         currentPage={params.page || 0}
         pageSize={params.size || 20}
         totalElements={pageData?.totalElements || 0}
-        onChange={handleTableChange}
-        scroll={{ x: 800 }}
+        onPageChange={(page, size) =>
+          setParams((current) => ({ ...current, page, size }))
+        }
+        onChange={(_, __, sorter) => {
+          const item = Array.isArray(sorter) ? sorter[0] : sorter;
+          setParams((current) => ({
+            ...current,
+            sortBy: item?.order ? "checkInAt" : current.sortBy,
+            sortDir:
+              item?.order === "ascend"
+                ? "asc"
+                : item?.order === "descend"
+                  ? "desc"
+                  : current.sortDir,
+            page: 0,
+          }));
+        }}
+        scroll={{ x: 1350 }}
       />
 
-      <CheckinDetailModal 
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        checkinId={selectedCheckinId}
+      <CheckinDetailModal
+        isOpen={Boolean(selectedRecord)}
+        onClose={() => setSelectedRecord(null)}
+        checkinId={selectedRecord?.id || null}
       />
     </div>
   );

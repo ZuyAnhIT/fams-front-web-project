@@ -1,6 +1,9 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { checkinService } from "../services/checkin.service";
-import type { CheckinListParams } from "../types/checkin.type";
+import type {
+  CheckinListParams,
+  OverrideCheckinRequest,
+} from "../types/checkin.type";
 
 export const checkinKeys = {
   all: (tenantId?: string) => ["checkins", tenantId] as const,
@@ -12,12 +15,13 @@ export const checkinKeys = {
 
 export function useCheckins(
   tenantId: string | undefined,
-  params: CheckinListParams
+  params: CheckinListParams,
+  enabled = true,
 ) {
   return useQuery({
     queryKey: checkinKeys.list(tenantId, params),
     queryFn: () => checkinService.listCheckins(tenantId!, params),
-    enabled: Boolean(tenantId),
+    enabled: Boolean(tenantId) && enabled,
   });
 }
 
@@ -30,5 +34,25 @@ export function useCheckinDetail(
     queryKey: checkinKeys.detail(tenantId, checkinId),
     queryFn: () => checkinService.getCheckinDetail(tenantId!, checkinId!),
     enabled: enabled && Boolean(tenantId && checkinId),
+  });
+}
+
+export function useOverrideCheckin() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      tenantId,
+      checkinId,
+      payload,
+    }: {
+      tenantId: string;
+      checkinId: string;
+      payload: OverrideCheckinRequest;
+    }) => checkinService.overrideCheckin(tenantId, checkinId, payload),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: checkinKeys.all(variables.tenantId),
+      });
+    },
   });
 }

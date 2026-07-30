@@ -12,6 +12,10 @@ import { SiteDetailResponse } from "../types/site.type";
 import { GeofenceMap } from "./GeofenceMap";
 import EditGeofenceModal from "../../geofence/components/EditGeofenceModal";
 import { useAuthStore } from "@/stores/auth.store";
+import {
+  CHECKIN_POLICY_META,
+  normalizeCheckinPolicy,
+} from "../../checkin/constants/checkin-policy";
 
 interface ActiveGeofenceCardProps {
   site: SiteDetailResponse;
@@ -25,6 +29,7 @@ export default function ActiveGeofenceCard({ site, siteId }: ActiveGeofenceCardP
     ? hasPermission("geofences:update")
     : hasPermission("geofences:create");
   const hasCenter = site.latitude != null && site.longitude != null;
+  const policy = normalizeCheckinPolicy(site.checkinPolicy);
 
   return (
     <>
@@ -102,15 +107,18 @@ export default function ActiveGeofenceCard({ site, siteId }: ActiveGeofenceCardP
           <div className="flex items-center gap-3 text-slate-600">
             <SafetyCertificateOutlined className="text-cyan-600" />
             <div>
-              <div className="font-medium text-slate-700">Xác thực Face ID</div>
+              <div className="font-medium text-slate-700">
+                Chính sách chấm công mặc định
+              </div>
               <Tag
-                color={site.requireFaceIdCheckin ? "processing" : "default"}
+                color={CHECKIN_POLICY_META[policy].color}
                 className="mt-1"
               >
-                {site.requireFaceIdCheckin
-                  ? "Bắt buộc khi chấm công"
-                  : "Không bắt buộc"}
+                {CHECKIN_POLICY_META[policy].label}
               </Tag>
+              <div className="mt-1 text-xs text-slate-500">
+                Ca làm có thể ghi đè chính sách này.
+              </div>
             </div>
           </div>
         </div>
