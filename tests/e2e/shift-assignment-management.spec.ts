@@ -30,6 +30,7 @@ const site = {
   latitude: 10.7769,
   longitude: 106.7009,
   timezone: "Asia/Ho_Chi_Minh",
+  checkinPolicy: "gps_face",
   status: "active",
   createdBy: "admin-user",
   createdAt: "2026-07-27T01:00:00Z",
@@ -47,6 +48,7 @@ const activeShift = {
   allowOvertime: true,
   earlyCheckinMinutes: 15,
   lateCheckoutMinutes: 30,
+  checkinPolicyOverride: null,
   status: "active",
   createdBy: "admin-user",
   createdAt: "2026-07-27T01:00:00Z",
@@ -289,12 +291,23 @@ test("Admin quản lý vòng đời ca, OT và không gửi sort ngoài contract
   await createDialog.getByLabel("Giờ kết thúc").fill("16:00");
   await createDialog.getByLabel("Giờ kết thúc").press("Tab");
   await page.keyboard.press("Escape");
+  await createDialog
+    .getByLabel("Kế thừa chính sách chấm công từ công trình")
+    .click();
+  await createDialog
+    .getByLabel("Chính sách chấm công ghi đè của ca")
+    .click();
+  await page
+    .locator(".ant-select-dropdown:visible")
+    .getByText("GPS + Face ID + liveness", { exact: true })
+    .click();
   await createDialog.getByRole("button", { name: "Tạo ca" }).click();
   await expect.poll(() => createBody).toMatchObject({
     name: "Ca sáng",
     startTime: "07:00",
     endTime: "16:00",
     allowOvernight: false,
+    checkinPolicyOverride: "gps_face_liveness",
   });
 
   await page.getByRole("button", { name: "Cấu hình OT ca Ca hành chính" }).click();

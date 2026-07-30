@@ -1,3 +1,5 @@
+import type { CheckinPolicy } from "../constants/checkin-policy";
+
 export interface EmployeeInfo {
   id: string;
   firstName: string;
@@ -33,6 +35,7 @@ export interface CheckinResponse {
   employeeId: string;
   siteId: string;
   shiftId: string | null;
+  assignmentId: string;
   status: "valid" | "pending_review" | "rejected";
   message: string;
   
@@ -49,13 +52,22 @@ export interface CheckinResponse {
   checkOutInsideGeofence: boolean | null;
   
   workMinutes: number | null;
+  gpsRiskScore: number;
+  deviceId: string | null;
+  faceVerified: boolean | null;
+  livenessVerified: boolean | null;
+  faceVerifyScore: number | null;
+  checkoutFaceVerified: boolean | null;
+  checkoutLivenessVerified: boolean | null;
+  checkoutFaceVerifyScore: number | null;
+  effectiveCheckinPolicy: CheckinPolicy | null;
+  source: "online" | "offline";
   createdAt: string;
   updatedAt: string;
 
-  // Additional fields from global search (if any) or joined fields
-  employeeName?: string;
-  employeeCode?: string;
-  siteName?: string;
+  employeeName: string | null;
+  employeeCode: string | null;
+  siteName: string | null;
 }
 
 export interface CheckinDetailResponse {
@@ -64,7 +76,7 @@ export interface CheckinDetailResponse {
   status: "valid" | "pending_review" | "rejected";
   message: string;
   gpsRiskScore: number;
-  deviceId: string;
+  deviceId: string | null;
   
   checkInAt: string;
   checkInLat: number;
@@ -79,13 +91,30 @@ export interface CheckinDetailResponse {
   checkOutInsideGeofence: boolean | null;
   
   workMinutes: number | null;
+  faceVerified: boolean | null;
+  livenessVerified: boolean | null;
+  faceVerifyScore: number | null;
+  checkoutFaceVerified: boolean | null;
+  checkoutLivenessVerified: boolean | null;
+  checkoutFaceVerifyScore: number | null;
+  effectiveCheckinPolicy: CheckinPolicy | null;
+  source: "online" | "offline";
+  note: string | null;
+  clientNonce: string | null;
+  overriddenBy: string | null;
+  overriddenAt: string | null;
   
-  employee: EmployeeInfo;
-  site: SiteInfo;
+  employee: EmployeeInfo | null;
+  site: SiteInfo | null;
   shift: ShiftInfo | null;
   
   createdAt: string;
   updatedAt: string;
+}
+
+export interface OverrideCheckinRequest {
+  status: "valid" | "rejected";
+  reason: string;
 }
 
 export interface CheckinListParams {

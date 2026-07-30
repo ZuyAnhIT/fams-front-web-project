@@ -24,7 +24,7 @@ nghiệp vụ xét duyệt mới và đang gộp sai `pending` vào trạng thá
 - Không cho HR/Admin tự duyệt Face ID của chính mình khi có thể xác định
   `employee.userId === currentUser.id`.
 - Thu hồi được cả mẫu đang hoạt động hoặc yêu cầu đang chờ.
-- Cấu hình `requireFaceIdCheckin` khi tạo/sửa công trình và hiển thị lại trên
+- Cấu hình `checkinPolicy` (`gps_only`, `gps_face`, `gps_face_liveness`) khi tạo/sửa công trình và hiển thị lại trên
   chi tiết công trình.
 - Route và menu hỗ trợ phân quyền theo `reports:list` hoặc `face_id:manage`,
   không phụ thuộc cứng hoàn toàn vào tên role.
@@ -43,7 +43,7 @@ làm yếu cơ chế chống giả mạo.
 4. HR/Admin vào **Quản lý Face ID > Chờ duyệt**, xác minh độc lập rồi duyệt hoặc
    từ chối có lý do.
 5. Khi duyệt, mẫu mới trở thành `status=enrolled`.
-6. Nếu site có `requireFaceIdCheckin=true`, App chỉ cho chấm công bằng Face ID
+6. App dùng `effectiveCheckinPolicy` do Backend resolve từ công trình và ca để yêu cầu GPS, Face ID hoặc Face ID + liveness
    đã duyệt và challenge liveness hợp lệ.
 7. Khi nhân viên inactive/terminated hoặc rút consent, backend thu hồi mẫu;
    Web hiển thị trạng thái tương ứng.
@@ -161,7 +161,7 @@ Kịch bản Face ID:
 - Reject bắt buộc lý do và gửi đúng `{ "reason": "..." }`.
 - Ảnh review được tải bằng Bearer token, response live là `200 image/jpeg`,
   279.922 byte, kích thước 910×1137 và render thành công trên trình duyệt.
-- Tạo site gửi đúng `requireFaceIdCheckin=true`.
+- Tạo site gửi đúng `checkinPolicy=gps_face`.
 - Bộ regression site/geofence vẫn pass.
 
 Để kiểm tra response ảnh trên dữ liệu seed cũ, test tạm gắn ảnh fixture vào

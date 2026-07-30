@@ -24,7 +24,15 @@ export default function AttendancePage() {
   ];
 
   return (
-    <RoleGuard allowedRoles={[SystemRole.TENANT_ADMIN, SystemRole.HR_MANAGER, SystemRole.SITE_SUPERVISOR, SystemRole.PLATFORM_ADMIN]}>
+    <RoleGuard
+      allowedRoles={[
+        SystemRole.TENANT_ADMIN,
+        SystemRole.HR_MANAGER,
+        SystemRole.SITE_SUPERVISOR,
+        SystemRole.PLATFORM_ADMIN,
+      ]}
+      allowedPermissions={["checkins:list"]}
+    >
       <div className="mx-auto w-full max-w-[1600px] space-y-6 pb-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Quản lý chấm công</h1>

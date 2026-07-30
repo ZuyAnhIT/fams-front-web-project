@@ -32,7 +32,7 @@ const site = {
   latitude: 10.7769,
   longitude: 106.7009,
   timezone: "Asia/Ho_Chi_Minh",
-  requireFaceIdCheckin: true,
+  checkinPolicy: "gps_face_liveness",
   status: "active",
   createdBy: "admin-user",
   createdAt: "2026-07-27T01:00:00Z",
@@ -205,13 +205,17 @@ test("HR Manager tìm/lọc/sort/phân trang và tạo công trình đúng contr
   const dialog = page.getByRole("dialog");
   await dialog.getByLabel("Tên công trình *").fill("Kho Dự phòng");
   await dialog.getByLabel("Mã công trình").fill("WAREHOUSE-02");
-  await dialog.getByLabel("Bắt buộc Face ID khi chấm công").click();
+  await dialog.getByLabel("Chính sách xác thực chấm công").click();
+  await page
+    .locator(".ant-select-dropdown:visible")
+    .getByText("GPS + Face ID", { exact: true })
+    .click();
   await dialog.getByRole("button", { name: "Lưu công trình" }).click();
   await expect.poll(() => createBody).toMatchObject({
     name: "Kho Dự phòng",
     code: "WAREHOUSE-02",
     timezone: "Asia/Ho_Chi_Minh",
-    requireFaceIdCheckin: true,
+    checkinPolicy: "gps_face",
   });
 
   await page.screenshot({

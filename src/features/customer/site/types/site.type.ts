@@ -1,4 +1,5 @@
 import { ShiftResponse } from "../../shift/types/shift.type";
+import type { CheckinPolicy } from "../../checkin/constants/checkin-policy";
 
 export interface SiteResponse {
   id: string;
@@ -10,7 +11,7 @@ export interface SiteResponse {
   latitude?: number;
   longitude?: number;
   timezone: string;
-  requireFaceIdCheckin: boolean;
+  checkinPolicy: CheckinPolicy;
   status: "active" | "inactive";
   createdAt: string;
   updatedAt: string;
@@ -44,7 +45,7 @@ export interface CreateSiteRequest {
   latitude?: number;
   longitude?: number;
   timezone?: string;
-  requireFaceIdCheckin?: boolean;
+  checkinPolicy?: CheckinPolicy;
 }
 
 export interface UpdateSiteRequest {
@@ -56,7 +57,7 @@ export interface UpdateSiteRequest {
   latitude?: number;
   longitude?: number;
   timezone?: string;
-  requireFaceIdCheckin?: boolean;
+  checkinPolicy?: CheckinPolicy;
   status?: "active" | "inactive";
 }
 
