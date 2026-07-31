@@ -19,6 +19,8 @@ export interface AttendanceSummaryResponse {
   earlyLeaveMinutes: number;
   otMinutes: number;
   missingCheckout: boolean;
+  hasPendingReviewSession: boolean;
+  hasRejectedSession: boolean;
   createdAt: string;
   updatedAt: string;
   adjustmentReason: string | null;
@@ -40,6 +42,29 @@ export interface AttendanceHrMonthlyResponse {
   totalEarlyLeaveMinutes: number;
   totalOtMinutes: number;
   missingCheckoutDays: number;
+  daysWithPendingReview: number;
+  daysWithRejectedSession: number;
+}
+
+export interface AdjustAttendanceSummaryRequest {
+  totalWorkMinutes?: number;
+  status?: "present" | "incomplete";
+  late?: boolean;
+  lateMinutes?: number;
+  earlyLeave?: boolean;
+  earlyLeaveMinutes?: number;
+  otMinutes?: number;
+  missingCheckout?: boolean;
+  reason: string;
+}
+
+export interface UnlockAttendanceSummaryRequest {
+  reason: string;
+}
+
+export interface RecomputeAttendanceRequest {
+  date: string;
+  siteId?: string;
 }
 
 export interface AttendanceListParams {
@@ -48,6 +73,15 @@ export interface AttendanceListParams {
   status?: string;
   from?: string; // yyyy-MM-dd
   to?: string;   // yyyy-MM-dd
+  page?: number;
+  size?: number;
+}
+
+export interface AttendanceMonthlyParams {
+  year: number;
+  month: number;
+  employeeId?: string;
+  siteId?: string;
   page?: number;
   size?: number;
 }

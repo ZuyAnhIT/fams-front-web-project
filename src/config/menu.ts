@@ -72,8 +72,8 @@ export const SIDEBAR_MENU: MenuItem[] = [
     title: "Chấm công",
     path: CUSTOMER_ROUTES.ATTENDANCE,
     icon: "CalendarCheck",
-    allowedRoles: [SystemRole.TENANT_ADMIN, SystemRole.HR_MANAGER, SystemRole.SITE_SUPERVISOR],
-    allowedPermissions: ["checkins:list"],
+    allowedRoles: [SystemRole.PLATFORM_ADMIN],
+    allowedPermissions: ["checkins:list", "attendance:list"],
   },
   {
     title: "Công trình",
