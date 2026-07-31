@@ -165,7 +165,7 @@ test("owner sửa settings, thấy usage và nhận nguyên văn cảnh báo sel
       content: [{
         id: "ip-entry-1",
         tenantId,
-        ipAddress: "192.168.1.0/24",
+        ipAddress: "192.168.1.10/24",
         label: "Văn phòng",
         scope: "all",
         isActive: true,

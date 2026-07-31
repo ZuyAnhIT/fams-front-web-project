@@ -23,6 +23,23 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     initialize();
   }, [initialize]);
 
+  // Switching company in another tab replaces the shared localStorage tokens/user.
+  // Reload this tab immediately so its in-memory tenantId and all tenant-scoped queries
+  // cannot continue using the previous company alongside the new access token.
+  useEffect(() => {
+    const handleAuthStorageChange = (event: StorageEvent) => {
+      if (
+        event.oldValue !== event.newValue &&
+        (event.key === "fams_access_token" || event.key === "fams_user")
+      ) {
+        window.location.reload();
+      }
+    };
+
+    window.addEventListener("storage", handleAuthStorageChange);
+    return () => window.removeEventListener("storage", handleAuthStorageChange);
+  }, []);
+
   // Bảo vệ route: Nếu đã khởi tạo xong mà chưa đăng nhập, đá về trang login
   useEffect(() => {
     if (isInitialized && !isAuthenticated) {

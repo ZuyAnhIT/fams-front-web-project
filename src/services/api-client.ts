@@ -29,10 +29,10 @@ apiClient.interceptors.request.use(
 let isRefreshing = false;
 let failedQueue: Array<{
   resolve: (value?: unknown) => void;
-  reject: (reason?: any) => void;
+  reject: (reason?: unknown) => void;
 }> = [];
 
-const processQueue = (error: any, token: string | null = null) => {
+const processQueue = (error: unknown, token: string | null = null) => {
   failedQueue.forEach((prom) => {
     if (error) {
       prom.reject(error);
@@ -76,9 +76,12 @@ apiClient.interceptors.response.use(
     const isLogoutEndpoint = originalRequest?.url?.includes("/auth/logout");
     const isLoginEndpoint  = originalRequest?.url?.includes("/auth/login");
     const isRefreshEndpoint = originalRequest?.url?.includes("/auth/refresh-token");
+    const isSwitchTenantEndpoint = originalRequest?.url?.includes("/auth/switch-tenant");
 
-    // Bỏ qua lỗi 401 từ chính endpoint login/logout/refresh
-    if (isLogoutEndpoint || isLoginEndpoint || isRefreshEndpoint) {
+    // switch-tenant requires the current access + refresh token as one matching pair.
+    // Rotating only the refresh token here and retrying the old request body would make
+    // that pair inconsistent; its caller deliberately handles 401 by ending the session.
+    if (isLogoutEndpoint || isLoginEndpoint || isRefreshEndpoint || isSwitchTenantEndpoint) {
       return Promise.reject(error);
     }
 

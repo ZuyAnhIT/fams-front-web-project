@@ -1,21 +1,16 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { App } from "antd";
 import { Building2 } from "lucide-react";
 import FormInput from "@/components/forms/FormInput";
 import BaseButton from "@/components/ui/BaseButton";
 import { useCreateTenant } from "@/features/admin/tenant/hooks/use-tenant";
-import { useSwitchTenant } from "@/features/customer/auth/hooks/use-auth";
-import { authService } from "@/features/customer/auth/services/auth.service";
-import { authMapper } from "@/features/customer/auth/utils/auth.mapper";
-import { rolePermissionService } from "@/features/admin/role-permission/services/role-permission.service";
-import { authTokenService } from "@/services/auth-token.service";
-import { useAuthStore } from "@/stores/auth.store";
 import { CUSTOMER_ROUTES } from "@/constants/routes";
 import { createCompanySchema, type CreateCompanyFormData } from "../schemas/create-company.schema";
+import { useTenantSessionSwitch } from "../hooks/use-tenant-session-switch";
 
 function slugify(value: string): string {
   return value
@@ -38,23 +33,22 @@ interface CreateCompanyFormProps {
  */
 export default function CreateCompanyForm({ onCreated }: CreateCompanyFormProps) {
   const { message } = App.useApp();
-  const { setAuth } = useAuthStore();
   const { mutateAsync: createTenant, isPending: isCreating } = useCreateTenant();
-  const { mutateAsync: switchTenant, isPending: isSwitching } = useSwitchTenant();
+  const { switchTenantSession, isPending: isSwitching } =
+    useTenantSessionSwitch();
 
   const {
     control,
     handleSubmit,
     setValue,
-    watch,
     formState: { errors },
   } = useForm<CreateCompanyFormData>({
     resolver: zodResolver(createCompanySchema),
     defaultValues: { name: "", slug: "", industry: "" },
   });
 
-  const nameValue = watch("name");
-  const slugValue = watch("slug");
+  const nameValue = useWatch({ control, name: "name" });
+  const slugValue = useWatch({ control, name: "slug" });
   const lastAutoSlugRef = useRef("");
 
   // Auto-derive the slug from the company name as the user types, but stop once they've
@@ -80,22 +74,7 @@ export default function CreateCompanyForm({ onCreated }: CreateCompanyFormProps)
 
       // Switch into the newly created company right away (creator is auto-assigned
       // TENANT_ADMIN there) so they land in its dashboard, not the old/no-company view.
-      const refreshToken = authTokenService.getRefreshToken();
-      if (refreshToken) {
-        const switchResponse = await switchTenant({ tenantId: createdTenant.id, refreshToken });
-        authTokenService.setAccessToken(switchResponse.accessToken);
-        authTokenService.setRefreshToken(switchResponse.refreshToken);
-
-        const profile = await authService.getProfile();
-        let rolesResponse;
-        try {
-          rolesResponse = await rolePermissionService.getMyRoles();
-        } catch {
-          // authMapper falls back gracefully when roles can't be fetched
-        }
-        const authUser = authMapper.toAuthUser(profile, switchResponse.accessToken, rolesResponse?.data);
-        setAuth(authUser, switchResponse.accessToken, switchResponse.refreshToken);
-      }
+      await switchTenantSession(createdTenant.id);
 
       message.success(`Đã tạo công ty "${createdTenant.name}" thành công!`);
       onCreated?.();

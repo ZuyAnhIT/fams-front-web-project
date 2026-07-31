@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const backendApiUrl = process.env.FAMS_BACKEND_URL || "http://localhost:8080/api/v1";
-const allowedDevOrigins = (process.env.FAMS_DEV_ORIGINS || "192.168.1.7")
+const allowedDevOrigins = (process.env.FAMS_DEV_ORIGINS || "192.168.1.10")
   .split(",")
   .map((origin) => origin.trim())
   .filter(Boolean);
