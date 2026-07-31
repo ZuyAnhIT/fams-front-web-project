@@ -11,6 +11,7 @@ interface NotificationState {
   setNotifications: (items: Notification[]) => void;
   markNotificationAsRead: (id: string) => void;
   markAllNotificationsAsRead: () => void;
+  reset: () => void;
   refresh: () => void;
 }
 
@@ -77,10 +78,14 @@ export const useNotificationStore = create<NotificationState>((set) => ({
       };
     }),
 
-  refresh: () =>
-    set((state) => ({
-      lastUpdated: Date.now(),
-    })),
+  reset: () =>
+    set({
+      unreadCount: 0,
+      notifications: [],
+      lastUpdated: null,
+    }),
+
+  refresh: () => set({ lastUpdated: Date.now() }),
 }));
 
 // Event emitter for cross-component communication (e.g. trigger re-fetch on remote changes)

@@ -20,11 +20,20 @@ export const authMapper = {
       // pick the one matching the JWT's current tenant (set at login/switch-tenant), not a
       // flattened union of every tenant's permissions, which would over-grant UI affordances
       // for tenants the user isn't currently operating as.
-      const currentRole = (tenantId && userRoles.find((r) => r.tenantId === tenantId)) || userRoles[0];
+      const matchingAssignments = tenantId
+        ? userRoles.filter((role) => role.tenantId === tenantId)
+        : [];
+      // A freshly issued token should always point at one row returned by /roles/me.
+      // Keep a defensive fallback so a temporarily stale roles response cannot crash login.
+      const currentAssignments =
+        matchingAssignments.length > 0 ? matchingAssignments : [userRoles[0]];
+      const currentRole = currentAssignments[0];
       if (!tenantRole) tenantRole = currentRole.roleName as SystemRole;
       if (!tenantId) tenantId = currentRole.tenantId;
 
-      permissions = currentRole.permissions || [];
+      permissions = Array.from(
+        new Set(currentAssignments.flatMap((role) => role.permissions ?? [])),
+      );
     }
 
     return {

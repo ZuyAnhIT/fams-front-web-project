@@ -4,13 +4,9 @@ import { useState } from "react";
 import { App, Spin } from "antd";
 import { Building2, Check, Plus } from "lucide-react";
 import { useAuthStore } from "@/stores/auth.store";
-import { useSwitchTenant } from "@/features/customer/auth/hooks/use-auth";
-import { authService } from "@/features/customer/auth/services/auth.service";
-import { authMapper } from "@/features/customer/auth/utils/auth.mapper";
-import { rolePermissionService } from "@/features/admin/role-permission/services/role-permission.service";
-import { authTokenService } from "@/services/auth-token.service";
 import { CUSTOMER_ROUTES } from "@/constants/routes";
 import { useMyMemberships } from "../hooks/use-my-memberships";
+import { useTenantSessionSwitch } from "../hooks/use-tenant-session-switch";
 import CreateCompanyForm from "./CreateCompanyForm";
 
 const ROLE_LABELS: Record<string, string> = {
@@ -28,36 +24,38 @@ const ROLE_LABELS: Record<string, string> = {
  */
 export default function SelectCompanyPage() {
   const { message } = App.useApp();
-  const { user, setAuth } = useAuthStore();
-  const { data: memberships, isLoading } = useMyMemberships();
-  const { mutateAsync: switchTenant } = useSwitchTenant();
+  const user = useAuthStore((state) => state.user);
+  const { data: memberships, isLoading, refetch } = useMyMemberships();
+  const { switchTenantSession } = useTenantSessionSwitch();
   const [switchingTo, setSwitchingTo] = useState<string | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
 
   const handleSelect = async (tenantId: string) => {
-    const refreshToken = authTokenService.getRefreshToken();
-    if (!refreshToken) return;
-
     setSwitchingTo(tenantId);
     try {
-      const response = await switchTenant({ tenantId, refreshToken });
-      authTokenService.setAccessToken(response.accessToken);
-      authTokenService.setRefreshToken(response.refreshToken);
-
-      const profile = await authService.getProfile();
-      let rolesResponse;
-      try {
-        rolesResponse = await rolePermissionService.getMyRoles();
-      } catch {
-        // authMapper falls back gracefully when roles can't be fetched
-      }
-      const authUser = authMapper.toAuthUser(profile, response.accessToken, rolesResponse?.data);
-      setAuth(authUser, response.accessToken, response.refreshToken);
+      await switchTenantSession(tenantId);
 
       window.location.assign(CUSTOMER_ROUTES.DASHBOARD);
     } catch (error: unknown) {
-      const err = error as { response?: { data?: { userMessage?: string; message?: string } } };
-      message.error(err.response?.data?.userMessage || err.response?.data?.message || "Không thể chọn công ty này.");
+      const err = error as {
+        response?: {
+          status?: number;
+          data?: { userMessage?: string; message?: string };
+        };
+      };
+      if (err.response?.status === 403) {
+        await refetch();
+        message.warning(
+          "Vai trò của bạn tại công ty này không còn hiệu lực. Danh sách đã được cập nhật.",
+        );
+      } else {
+        message.error(
+          err.response?.data?.userMessage ||
+            err.response?.data?.message ||
+            (error instanceof Error ? error.message : undefined) ||
+            "Không thể chọn công ty này.",
+        );
+      }
       setSwitchingTo(null);
     }
   };
@@ -98,7 +96,11 @@ export default function SelectCompanyPage() {
                 </div>
                 <div className="min-w-0">
                   <p className="truncate font-semibold text-slate-900">{m.tenantName || m.tenantId}</p>
-                  <p className="text-xs text-slate-500">{m.roleName ? ROLE_LABELS[m.roleName] || m.roleName : ""}</p>
+                  <p className="text-xs text-slate-500">
+                    {m.roleNames
+                      .map((role) => ROLE_LABELS[role] || role)
+                      .join(" · ")}
+                  </p>
                 </div>
               </div>
               {m.tenantId === user?.tenantId ? (

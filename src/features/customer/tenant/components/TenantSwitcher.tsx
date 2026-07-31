@@ -1,16 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Dropdown, App, type MenuProps } from "antd";
+import { Dropdown, App, Spin, type MenuProps } from "antd";
 import { Building2, ChevronDown, Check, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth.store";
-import { useSwitchTenant } from "@/features/customer/auth/hooks/use-auth";
-import { authService } from "@/features/customer/auth/services/auth.service";
-import { authMapper } from "@/features/customer/auth/utils/auth.mapper";
-import { rolePermissionService } from "@/features/admin/role-permission/services/role-permission.service";
-import { authTokenService } from "@/services/auth-token.service";
 import { CUSTOMER_ROUTES } from "@/constants/routes";
+import { useMyMemberships } from "../hooks/use-my-memberships";
+import { useTenantSessionSwitch } from "../hooks/use-tenant-session-switch";
+import { groupTenantMemberships } from "../utils/tenant-membership.util";
 
 /**
  * Issue #3 (docs/issues/ISSUES.md): a user may hold roles across several companies. Only
@@ -19,37 +17,23 @@ import { CUSTOMER_ROUTES } from "@/constants/routes";
 export default function TenantSwitcher() {
   const { message } = App.useApp();
   const router = useRouter();
-  const { user, setAuth } = useAuthStore();
-  const { mutateAsync: switchTenant, isPending } = useSwitchTenant();
+  const user = useAuthStore((state) => state.user);
+  const { data: freshTenants, refetch, isFetching } = useMyMemberships();
+  const { switchTenantSession, isPending } = useTenantSessionSwitch();
   const [switchingTo, setSwitchingTo] = useState<string | null>(null);
 
-  const memberships = user?.memberships ?? [];
-  const uniqueTenants = Array.from(
-    new Map(memberships.filter((m) => m.tenantId).map((m) => [m.tenantId, m])).values()
-  );
+  // Stored memberships make the header stable during the initial fetch. The live response
+  // wins as soon as it arrives and is explicitly refreshed whenever the menu opens.
+  const uniqueTenants =
+    freshTenants ?? groupTenantMemberships(user?.memberships ?? []);
 
   if (uniqueTenants.length < 2) return null;
 
   const handleSwitch = async (tenantId: string) => {
     if (tenantId === user?.tenantId) return;
-    const refreshToken = authTokenService.getRefreshToken();
-    if (!refreshToken) return;
-
     setSwitchingTo(tenantId);
     try {
-      const response = await switchTenant({ tenantId, refreshToken });
-      authTokenService.setAccessToken(response.accessToken);
-      authTokenService.setRefreshToken(response.refreshToken);
-
-      const profile = await authService.getProfile();
-      let rolesResponse;
-      try {
-        rolesResponse = await rolePermissionService.getMyRoles();
-      } catch {
-        // authMapper falls back gracefully when roles can't be fetched
-      }
-      const authUser = authMapper.toAuthUser(profile, response.accessToken, rolesResponse?.data);
-      setAuth(authUser, response.accessToken, response.refreshToken);
+      const { authUser } = await switchTenantSession(tenantId);
 
       const newName = authUser.memberships?.find((m) => m.tenantId === tenantId)?.tenantName;
       message.success(`Đã chuyển sang ${newName ?? "công ty mới"}`);
@@ -59,8 +43,25 @@ export default function TenantSwitcher() {
       // stale data from the company just left.
       window.location.assign(CUSTOMER_ROUTES.DASHBOARD);
     } catch (error: unknown) {
-      const err = error as { response?: { data?: { userMessage?: string; message?: string } } };
-      message.error(err.response?.data?.userMessage || err.response?.data?.message || "Không thể chuyển công ty.");
+      const err = error as {
+        response?: {
+          status?: number;
+          data?: { userMessage?: string; message?: string };
+        };
+      };
+      if (err.response?.status === 403) {
+        await refetch();
+        message.warning(
+          "Vai trò của bạn tại công ty này không còn hiệu lực. Danh sách đã được cập nhật.",
+        );
+      } else {
+        message.error(
+          err.response?.data?.userMessage ||
+            err.response?.data?.message ||
+            (error instanceof Error ? error.message : undefined) ||
+            "Không thể chuyển công ty.",
+        );
+      }
       setSwitchingTo(null);
     }
   };
@@ -74,7 +75,7 @@ export default function TenantSwitcher() {
           {m.tenantId === user?.tenantId && <Check className="h-4 w-4 text-blue-600" aria-hidden="true" />}
         </div>
       ),
-      disabled: isPending && switchingTo === m.tenantId,
+      disabled: isPending,
       onClick: () => void handleSwitch(m.tenantId),
     })),
     { type: "divider" as const },
@@ -89,7 +90,14 @@ export default function TenantSwitcher() {
   const currentName = uniqueTenants.find((m) => m.tenantId === user?.tenantId)?.tenantName;
 
   return (
-    <Dropdown menu={{ items }} trigger={["click"]} placement="bottomRight">
+    <Dropdown
+      menu={{ items }}
+      trigger={["click"]}
+      placement="bottomRight"
+      onOpenChange={(open) => {
+        if (open) void refetch();
+      }}
+    >
       <button
         type="button"
         aria-label="Chuyển đổi công ty"
@@ -98,7 +106,11 @@ export default function TenantSwitcher() {
       >
         <Building2 className="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
         <span className="truncate">{currentName || "Công ty"}</span>
-        <ChevronDown className="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden="true" />
+        {isFetching || switchingTo ? (
+          <Spin size="small" />
+        ) : (
+          <ChevronDown className="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden="true" />
+        )}
       </button>
     </Dropdown>
   );
