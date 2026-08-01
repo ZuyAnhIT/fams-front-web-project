@@ -188,6 +188,7 @@ export default function AttendanceDetailModal({
                 hasPendingReviewSession={data.hasPendingReviewSession}
                 hasRejectedSession={data.hasRejectedSession}
                 adjustmentReason={data.adjustmentReason}
+                hasRandomCheckFailure={data.hasRandomCheckFailure}
               />
             </Descriptions.Item>
           </Descriptions>

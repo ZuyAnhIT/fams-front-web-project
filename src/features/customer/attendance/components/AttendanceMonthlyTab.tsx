@@ -91,6 +91,10 @@ export default function AttendanceMonthlyTab() {
               Phiên chờ duyệt có thể làm tổng giờ tăng sau khi duyệt; phiên bị từ chối
               đã bị loại khỏi số liệu hiện tại.
             </p>
+            <p>
+              Random check thất bại/không phản hồi chỉ là tín hiệu audit, không tự động
+              trừ công hoặc lương; HR cần đối soát trước khi bỏ qua cảnh báo.
+            </p>
             <p>Hãy ưu tiên xử lý các dòng cảnh báo trước khi xuất dữ liệu cho payroll.</p>
           </div>
         ),
@@ -228,7 +232,15 @@ export default function AttendanceMonthlyTab() {
               <Tag color="error">Từ chối {record.daysWithRejectedSession} ngày</Tag>
             </Tooltip>
           )}
-          {record.daysWithPendingReview === 0 && record.daysWithRejectedSession === 0 && "—"}
+          {record.daysWithRandomCheckFailure > 0 && (
+            <Tooltip title="Không tự trừ công/lương; HR cần mở lịch random check để đối soát.">
+              <Tag color={record.exceedsRandomCheckFailureThreshold ? "error" : "orange"}>
+                Random check {record.daysWithRandomCheckFailure} ngày
+                {record.exceedsRandomCheckFailureThreshold ? " · vượt ngưỡng" : ""}
+              </Tag>
+            </Tooltip>
+          )}
+          {record.daysWithPendingReview === 0 && record.daysWithRejectedSession === 0 && record.daysWithRandomCheckFailure === 0 && "—"}
         </div>
       ),
     },

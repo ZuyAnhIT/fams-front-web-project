@@ -333,7 +333,9 @@ test("Supervisor site-scoped phải chọn site trước khi tải lịch random
   await siteFilter.click();
   await siteFilter.press("ArrowDown");
   await siteFilter.press("Enter");
-  await expect(page.getByText("Chờ gửi")).toBeVisible();
+  await expect(
+    page.getByLabel("Danh sách lịch kiểm tra ngẫu nhiên").getByText("Chờ gửi"),
+  ).toBeVisible();
   await expect.poll(() => listSiteId).toBe(siteId);
   await page.screenshot({ path: `${evidenceDir}/05-random-check-site-scope.png`, fullPage: true });
 });

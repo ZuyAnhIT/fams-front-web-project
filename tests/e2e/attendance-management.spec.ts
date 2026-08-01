@@ -77,6 +77,7 @@ const pendingSummary = {
   missingCheckout: false,
   hasPendingReviewSession: true,
   hasRejectedSession: false,
+  hasRandomCheckFailure: true,
   adjustmentReason: "Đã đối chiếu đơn công tác",
   createdAt: "2026-07-29T10:00:00Z",
   updatedAt: "2026-07-29T11:00:00Z",
@@ -91,6 +92,7 @@ const rejectedSummary = {
   otMinutes: 0,
   hasPendingReviewSession: false,
   hasRejectedSession: true,
+  hasRandomCheckFailure: false,
   adjustmentReason: null,
 };
 
@@ -113,6 +115,8 @@ const monthlyRows = [
     missingCheckoutDays: 1,
     daysWithPendingReview: 2,
     daysWithRejectedSession: 1,
+    daysWithRandomCheckFailure: 2,
+    exceedsRandomCheckFailureThreshold: false,
   },
   {
     tenantId,
@@ -132,6 +136,8 @@ const monthlyRows = [
     missingCheckoutDays: 0,
     daysWithPendingReview: 0,
     daysWithRejectedSession: 0,
+    daysWithRandomCheckFailure: 0,
+    exceedsRandomCheckFailureThreshold: false,
   },
 ];
 
@@ -212,6 +218,7 @@ test("HR thấy đúng trạng thái chưa chốt và điều chỉnh bảng cô
   await expect(page.getByText("Chờ duyệt", { exact: true }).first()).toBeVisible();
   await expect(page.getByText("Đã từ chối", { exact: true })).toBeVisible();
   await expect(page.getByText("Điều chỉnh tay", { exact: true })).toBeVisible();
+  await expect(page.getByText("Random check", { exact: true })).toBeVisible();
   await expect(page.getByText("gồm 30p OT")).toBeVisible();
 
   await page.getByRole("row").filter({ hasText: "29/07/2026" }).getByRole("button", { name: "Chi tiết" }).click();
@@ -291,6 +298,7 @@ test("xuất bảng lương dùng readiness 409 của Backend và chỉ retry sa
   await page.getByRole("tab", { name: "Tổng hợp tháng" }).click();
   await expect(page.getByText("Chờ duyệt 2 ngày")).toBeVisible();
   await expect(page.getByText("Từ chối 1 ngày")).toBeVisible();
+  await expect(page.getByText("Random check 2 ngày")).toBeVisible();
   await expect(page.getByText("gồm 1h 30p OT")).toBeVisible();
   await page.getByRole("button", { name: "Xuất toàn bộ tháng" }).click();
 
