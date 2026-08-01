@@ -36,6 +36,7 @@ import UpdateSiteModal from "@/features/customer/site/components/UpdateSiteModal
 import ShiftManagementTab from "@/features/customer/shift/components/ShiftManagementTab";
 import AssignmentManagementTab from "@/features/customer/assignment/components/AssignmentManagementTab";
 import GeofenceHistoryTab from "@/features/customer/geofence/components/GeofenceHistoryTab";
+import SiteRandomCheckConfigTab from "@/features/customer/random-check/components/SiteRandomCheckConfigTab";
 
 function SiteDetailsContent() {
   const params = useParams();
@@ -63,6 +64,7 @@ function SiteDetailsContent() {
     hasPermission("geofences:read") ||
     hasPermission("geofences:create") ||
     hasPermission("geofences:update");
+  const canConfigureRandomChecks = hasPermission("randomchecks:configure");
 
   if (isLoading) {
     return (
@@ -171,6 +173,17 @@ function SiteDetailsContent() {
                 siteLatitude={site.latitude}
                 siteLongitude={site.longitude}
               />
+            ),
+          },
+        ]
+      : []),
+    ...(canConfigureRandomChecks
+      ? [
+          {
+            key: "random-check-config",
+            label: "Kiểm tra ngẫu nhiên",
+            children: (
+              <SiteRandomCheckConfigTab tenantId={tenantId} siteId={siteId} />
             ),
           },
         ]

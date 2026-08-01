@@ -21,6 +21,7 @@ export interface AttendanceSummaryResponse {
   missingCheckout: boolean;
   hasPendingReviewSession: boolean;
   hasRejectedSession: boolean;
+  hasRandomCheckFailure: boolean;
   createdAt: string;
   updatedAt: string;
   adjustmentReason: string | null;
@@ -44,6 +45,8 @@ export interface AttendanceHrMonthlyResponse {
   missingCheckoutDays: number;
   daysWithPendingReview: number;
   daysWithRejectedSession: number;
+  daysWithRandomCheckFailure: number;
+  exceedsRandomCheckFailureThreshold: boolean;
 }
 
 export interface AdjustAttendanceSummaryRequest {

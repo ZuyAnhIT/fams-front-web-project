@@ -1,0 +1,148 @@
+"use client";
+
+import { useState } from "react";
+import { Alert, Descriptions, Spin, Tag } from "antd";
+import dayjs from "dayjs";
+import { Camera } from "lucide-react";
+import BaseButton from "@/components/ui/BaseButton";
+import BaseModal from "@/components/ui/BaseModal";
+import { useScheduledCheckDetail } from "../hooks/use-scheduled-check";
+import type { RandomCheckMode, ScheduledCheckResponse } from "../types";
+import RandomCheckEvidencePhotoModal from "./RandomCheckEvidencePhotoModal";
+
+interface Props {
+  tenantId: string;
+  check: ScheduledCheckResponse | null;
+  employeeName?: string;
+  siteName?: string;
+  onClose: () => void;
+}
+
+const outcomeMeta = {
+  pass: { label: "Đạt", color: "success" },
+  fail: { label: "Không đạt", color: "error" },
+};
+
+const failureLabels: Record<string, string> = {
+  location_mismatch: "Ngoài geofence",
+  face_fail: "Face ID không đạt/chưa đăng ký",
+  liveness_fail: "Liveness không đạt",
+  no_response: "Không phản hồi",
+};
+
+function readMode(snapshot?: string): RandomCheckMode | undefined {
+  if (!snapshot) return undefined;
+  try {
+    return (JSON.parse(snapshot) as { checkMode?: RandomCheckMode }).checkMode;
+  } catch {
+    return undefined;
+  }
+}
+
+export default function ScheduledCheckDetailModal({
+  tenantId,
+  check,
+  employeeName,
+  siteName,
+  onClose,
+}: Props) {
+  const [photoOpen, setPhotoOpen] = useState(false);
+  const detail = useScheduledCheckDetail(tenantId, check?.id || null);
+  const data = detail.data?.data;
+  const response = data?.response;
+  const manualReason = data?.manualReason;
+  const triggeredBy = data?.triggeredBy;
+  const mode = readMode(data?.configSnapshot || check?.configSnapshot);
+
+  return (
+    <BaseModal
+      title="Chi tiết lượt kiểm tra ngẫu nhiên"
+      isOpen={Boolean(check)}
+      onClose={onClose}
+      hideFooter
+      width={760}
+    >
+      {detail.isLoading ? (
+        <div className="flex justify-center py-12"><Spin size="large" /></div>
+      ) : detail.isError ? (
+        <Alert type="error" showIcon title="Không thể tải chi tiết" description="Lượt kiểm tra không tồn tại hoặc nằm ngoài site-scope được cấp." />
+      ) : data ? (
+        <div className="space-y-4">
+          {manualReason && (
+            <Alert
+              type="warning"
+              showIcon
+              title="Kiểm tra thủ công có chủ đích"
+              description={`Lý do: ${manualReason}${triggeredBy ? ` · Người kích hoạt: ${triggeredBy}` : ""}`}
+            />
+          )}
+          <Descriptions bordered size="small" column={{ xs: 1, sm: 2 }}>
+            <Descriptions.Item label="Nhân viên">{employeeName || data.employeeId}</Descriptions.Item>
+            <Descriptions.Item label="Công trình">{siteName || data.siteId}</Descriptions.Item>
+            <Descriptions.Item label="Ngày">{dayjs(data.checkDate).format("DD/MM/YYYY")}</Descriptions.Item>
+            <Descriptions.Item label="Thời điểm gửi">{dayjs(data.scheduledAt).format("DD/MM/YYYY HH:mm:ss")}</Descriptions.Item>
+            <Descriptions.Item label="Hạn phản hồi">{data.expiresAt ? dayjs(data.expiresAt).format("DD/MM/YYYY HH:mm:ss") : "—"}</Descriptions.Item>
+            <Descriptions.Item label="Trạng thái"><Tag>{data.status}</Tag></Descriptions.Item>
+            <Descriptions.Item label="Mode" span={2}>{mode || "Không đọc được snapshot"}</Descriptions.Item>
+          </Descriptions>
+
+          {response ? (
+            <Descriptions title="Bằng chứng phản hồi" bordered size="small" column={{ xs: 1, sm: 2 }}>
+              <Descriptions.Item label="Kết quả">
+                <Tag color={outcomeMeta[response.outcome]?.color}>{outcomeMeta[response.outcome]?.label || response.outcome}</Tag>
+              </Descriptions.Item>
+              <Descriptions.Item label="Thời điểm phản hồi">{dayjs(response.respondedAt).format("DD/MM/YYYY HH:mm:ss")}</Descriptions.Item>
+              <Descriptions.Item label="GPS">
+                <a href={`https://www.google.com/maps?q=${response.latitude},${response.longitude}`} target="_blank" rel="noreferrer">
+                  {response.latitude}, {response.longitude}
+                </a>
+              </Descriptions.Item>
+              <Descriptions.Item label="Độ chính xác">{response.accuracyMeters != null ? `${response.accuracyMeters} m` : "—"}</Descriptions.Item>
+              <Descriptions.Item label="Trong geofence">{response.locationVerified ? <Tag color="success">Đạt</Tag> : <Tag color="error">Không đạt</Tag>}</Descriptions.Item>
+              <Descriptions.Item label="Face ID">{response.faceVerified == null ? "Không áp dụng/đang xử lý" : response.faceVerified ? <Tag color="success">Đạt</Tag> : <Tag color="error">Không đạt</Tag>}</Descriptions.Item>
+              <Descriptions.Item label="Độ tin cậy Face ID">
+                {response.faceVerifyScore == null
+                  ? "—"
+                  : `${(response.faceVerifyScore * 100).toFixed(1)}% (${response.faceVerifyScore.toFixed(3)})`}
+              </Descriptions.Item>
+              <Descriptions.Item label="Liveness">{response.livenessVerified == null ? "Không áp dụng/đang xử lý" : response.livenessVerified ? <Tag color="success">Đạt</Tag> : <Tag color="error">Không đạt</Tag>}</Descriptions.Item>
+              <Descriptions.Item label="Lý do không đạt">
+                {response.failureReason
+                  ? response.failureReason.split(",").map((reason) => <Tag color="error" key={reason}>{failureLabels[reason.trim()] || reason.trim()}</Tag>)
+                  : "—"}
+              </Descriptions.Item>
+              <Descriptions.Item label="Ảnh selfie bằng chứng" span={2}>
+                {response.hasPhotoEvidence ? (
+                  <BaseButton
+                    size="small"
+                    icon={<Camera className="h-4 w-4" />}
+                    onClick={() => setPhotoOpen(true)}
+                  >
+                    Xem ảnh bằng chứng
+                  </BaseButton>
+                ) : "Không có ảnh được gửi/lưu cho lượt kiểm tra này"}
+              </Descriptions.Item>
+            </Descriptions>
+          ) : (
+            <Alert
+              type={data.status === "no_response" ? "error" : "info"}
+              showIcon
+              title={data.status === "no_response" ? "Nhân viên không phản hồi" : "Chưa có bằng chứng phản hồi"}
+              description="Bằng chứng GPS/Face ID chỉ xuất hiện sau khi nhân viên gửi phản hồi."
+            />
+          )}
+        </div>
+      ) : null}
+
+      {photoOpen && data?.id && (
+        <RandomCheckEvidencePhotoModal
+          tenantId={tenantId}
+          checkId={data.id}
+          employeeName={employeeName}
+          open
+          onClose={() => setPhotoOpen(false)}
+        />
+      )}
+    </BaseModal>
+  );
+}

@@ -159,6 +159,7 @@ export default function AttendanceSummaryTab() {
           hasPendingReviewSession={record.hasPendingReviewSession}
           hasRejectedSession={record.hasRejectedSession}
           adjustmentReason={record.adjustmentReason}
+          hasRandomCheckFailure={record.hasRandomCheckFailure}
         />
       ),
     },
