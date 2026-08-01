@@ -174,7 +174,15 @@ test("HR gửi kiểm tra thủ công có reason và xem bằng chứng GPS Face
     siteName: "Công trình Riverside",
     shiftId: "shift-1",
     configId,
-    configSnapshot: JSON.stringify({ checkMode: "location_face_liveness" }),
+    configSnapshot: JSON.stringify({
+      checkMode: "location_face_liveness",
+      checksPerShift: 2,
+      minIntervalMinutes: 60,
+      allowedStartTime: "08:00",
+      allowedEndTime: "17:00",
+      applicableRoles: ["worker", "supervisor"],
+      responseWindowSeconds: 300,
+    }),
     checkDate: "2026-07-31",
     checkIndex: 0,
     scheduledAt: "2026-07-31T08:00:00Z",
@@ -270,6 +278,10 @@ test("HR gửi kiểm tra thủ công có reason và xem bằng chứng GPS Face
   await expect(detail.getByText("10.73, 106.72")).toBeVisible();
   await expect(detail.getByText("Liveness", { exact: true })).toBeVisible();
   await expect(detail.getByText("87.0% (0.870)")).toBeVisible();
+  await expect(detail.getByText("08:00 – 17:00")).toBeVisible();
+  await expect(detail.getByText("300 giây")).toBeVisible();
+  await expect(detail.getByText("2 lượt · tối thiểu 60 phút")).toBeVisible();
+  await expect(detail.getByText("worker, supervisor")).toBeVisible();
   expect(photoRequests).toBe(0);
   await detail.getByRole("button", { name: "Xem ảnh bằng chứng" }).click();
   const photoDialog = page.getByRole("dialog", { name: "Ảnh selfie bằng chứng" });
@@ -294,7 +306,7 @@ test("Danh sách dùng tên và kết quả Backend đã hydrate, detail tự đ
     configId,
     configSnapshot: JSON.stringify({ checkMode: "location_face" }),
     checkDate: "2026-07-31",
-    checkIndex: -1,
+    checkIndex: 1,
     scheduledAt: "2026-07-31T08:00:00Z",
     expiresAt: "2026-07-31T08:05:00Z",
     status: "responded",
@@ -334,6 +346,8 @@ test("Danh sách dùng tên và kết quả Backend đã hydrate, detail tự đ
   );
 
   await page.goto("/customer/random-checks");
+  await expect(page.locator("thead").getByText("Giờ dự kiến")).toBeVisible();
+  await expect(page.getByText("Lượt tự động #1")).toBeVisible();
   await expect(page.getByText("Tên hydrate từ Backend")).toBeVisible();
   await expect(page.getByText("Site hydrate từ Backend")).toBeVisible();
   await expect(page.getByText("Ngoài geofence, Face ID không đạt/chưa đăng ký")).toBeVisible();

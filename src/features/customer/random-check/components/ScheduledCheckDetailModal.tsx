@@ -30,12 +30,27 @@ const failureLabels: Record<string, string> = {
   no_response: "Không phản hồi",
 };
 
-function readMode(snapshot?: string): RandomCheckMode | undefined {
-  if (!snapshot) return undefined;
+interface ConfigSnapshot {
+  checkMode?: RandomCheckMode;
+  checksPerShift?: number;
+  minIntervalMinutes?: number;
+  allowedStartTime?: string;
+  allowedEndTime?: string;
+  applicableRoles?: string[];
+  responseWindowSeconds?: number;
+}
+
+function readSnapshot(snapshot?: string): ConfigSnapshot {
+  if (!snapshot) return {};
   try {
-    return (JSON.parse(snapshot) as { checkMode?: RandomCheckMode }).checkMode;
+    return JSON.parse(snapshot) as ConfigSnapshot;
   } catch {
-    return undefined;
+    const modes: RandomCheckMode[] = [
+      "location_face_liveness",
+      "location_face",
+      "location_only",
+    ];
+    return { checkMode: modes.find((mode) => snapshot.includes(mode)) };
   }
 }
 
@@ -52,7 +67,8 @@ export default function ScheduledCheckDetailModal({
   const response = data?.response;
   const manualReason = data?.manualReason;
   const triggeredBy = data?.triggeredBy;
-  const mode = readMode(data?.configSnapshot || check?.configSnapshot);
+  const snapshot = readSnapshot(data?.configSnapshot || check?.configSnapshot);
+  const mode = snapshot.checkMode;
 
   return (
     <BaseModal
@@ -80,10 +96,32 @@ export default function ScheduledCheckDetailModal({
             <Descriptions.Item label="Nhân viên">{employeeName || data.employeeId}</Descriptions.Item>
             <Descriptions.Item label="Công trình">{siteName || data.siteId}</Descriptions.Item>
             <Descriptions.Item label="Ngày">{dayjs(data.checkDate).format("DD/MM/YYYY")}</Descriptions.Item>
-            <Descriptions.Item label="Thời điểm gửi">{dayjs(data.scheduledAt).format("DD/MM/YYYY HH:mm:ss")}</Descriptions.Item>
+            <Descriptions.Item label="Giờ dự kiến">{dayjs(data.scheduledAt).format("DD/MM/YYYY HH:mm:ss")}</Descriptions.Item>
             <Descriptions.Item label="Hạn phản hồi">{data.expiresAt ? dayjs(data.expiresAt).format("DD/MM/YYYY HH:mm:ss") : "—"}</Descriptions.Item>
             <Descriptions.Item label="Trạng thái"><Tag>{data.status}</Tag></Descriptions.Item>
-            <Descriptions.Item label="Mode" span={2}>{mode || "Không đọc được snapshot"}</Descriptions.Item>
+            <Descriptions.Item label="Mode theo snapshot" span={2}>{mode || "Không đọc được snapshot"}</Descriptions.Item>
+            <Descriptions.Item label="Khung giờ policy">
+              {snapshot.allowedStartTime && snapshot.allowedEndTime
+                ? `${snapshot.allowedStartTime} – ${snapshot.allowedEndTime}`
+                : "—"}
+            </Descriptions.Item>
+            <Descriptions.Item label="Thời gian phản hồi">
+              {snapshot.responseWindowSeconds != null
+                ? `${snapshot.responseWindowSeconds} giây`
+                : "—"}
+            </Descriptions.Item>
+            <Descriptions.Item label="Số lượt/khoảng cách">
+              {snapshot.checksPerShift != null
+                ? `${snapshot.checksPerShift} lượt${snapshot.minIntervalMinutes != null ? ` · tối thiểu ${snapshot.minIntervalMinutes} phút` : ""}`
+                : "—"}
+            </Descriptions.Item>
+            <Descriptions.Item label="Vai trò áp dụng">
+              {snapshot.applicableRoles
+                ? snapshot.applicableRoles.length > 0
+                  ? snapshot.applicableRoles.join(", ")
+                  : "Tất cả vai trò"
+                : "—"}
+            </Descriptions.Item>
           </Descriptions>
 
           {response ? (

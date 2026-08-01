@@ -160,13 +160,19 @@ export function ScheduledChecksPage() {
 
   const columns: ColumnsType<ScheduledCheckResponse> = [
     {
-      title: "Thời điểm",
+      title: (
+        <Tooltip title="Giờ lên lịch là mốc dự kiến. Job dispatch quét theo chu kỳ nên thông báo có thể được phát trễ khoảng 60 giây; hãy dựa vào trạng thái của lượt kiểm tra.">
+          <span className="cursor-help">Giờ dự kiến</span>
+        </Tooltip>
+      ),
       key: "scheduledAt",
       width: 165,
       render: (_, check) => (
         <div>
           <div className="font-medium">{dayjs(check.scheduledAt).format("DD/MM/YYYY HH:mm")}</div>
-          <div className="text-xs text-slate-500">Lượt #{check.checkIndex}</div>
+          <div className="text-xs text-slate-500">
+            {check.manualReason ? "Gửi ngay · thủ công" : `Lượt tự động #${check.checkIndex}`}
+          </div>
         </div>
       ),
     },

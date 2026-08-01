@@ -61,7 +61,9 @@ export default function EmployeeListPage() {
       content:
         newStatus === "active"
           ? "Nhân viên sẽ được phép sử dụng các chức năng theo vai trò hiện có."
-          : "Nhân viên sẽ bị ngăn truy cập/chấm công trong tenant này. Dữ liệu lịch sử vẫn được giữ.",
+          : newStatus === "terminated"
+            ? "Nhân viên sẽ bị ngăn truy cập/chấm công. Mọi Random Check đang chờ hoặc đã gửi chưa phản hồi sẽ tự động bị hủy. Dữ liệu lịch sử vẫn được giữ; các phân công hiện có không tự kết thúc nên HR cần rà soát và hủy riêng nếu cần."
+            : "Nhân viên sẽ bị ngăn truy cập/chấm công trong tenant này. Dữ liệu lịch sử vẫn được giữ.",
       okText: "Xác nhận",
       cancelText: "Hủy",
       okButtonProps: { danger: newStatus !== "active" },
