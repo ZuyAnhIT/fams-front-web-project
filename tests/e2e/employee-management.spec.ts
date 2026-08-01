@@ -153,6 +153,22 @@ test("HR phân biệt tạo hồ sơ, mời tài khoản, import và export theo
   await page.screenshot({ path: `${evidenceDir}/01-company-employee-flows.png`, fullPage: true });
 });
 
+test("HR được cảnh báo hủy Random Check và rà soát phân công khi cho nghỉ việc", async ({ page }) => {
+  await seedUser(page, "TENANT_ADMIN");
+  await page.route(`**/api/v1/tenants/${tenantId}/employees?*`, (route) =>
+    route.fulfill({ json: api(pageData([employee])) }),
+  );
+
+  await page.goto("/customer/employees");
+  await page.getByText("Hoạt động", { exact: true }).click();
+  await page.getByText("Đánh dấu Đã nghỉ việc", { exact: true }).click();
+
+  const confirm = page.getByRole("dialog", { name: /Chuyển sang.*Đã nghỉ việc/ });
+  await expect(confirm.getByText(/Random Check đang chờ hoặc đã gửi chưa phản hồi sẽ tự động bị hủy/)).toBeVisible();
+  await expect(confirm.getByText(/các phân công hiện có không tự kết thúc/)).toBeVisible();
+  await confirm.getByRole("button", { name: "Hủy" }).click();
+});
+
 test("Chi tiết HR hiển thị workspace, assignment, role và Face ID thật", async ({ page }) => {
   await seedUser(page, "TENANT_ADMIN");
   await page.route(`**/api/v1/tenants/${tenantId}/employees/${employeeId}`, (route) =>
