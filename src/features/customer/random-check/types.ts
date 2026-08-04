@@ -19,6 +19,16 @@ export interface ScheduledCheckResponse {
   triggeredBy?: string | null;
   outcome?: "pass" | "fail" | null;
   failureReason?: string | null;
+  /** Soft signal returned by POST /manual; never a hard rate limit. */
+  manualTriggerCountToday?: number;
+}
+
+export interface ScheduledCheckViolationSummary {
+  id: string;
+  violationType: 'no_response' | 'location_fail' | 'face_fail' | 'liveness_fail';
+  resolved: boolean;
+  resolution: 'confirmed' | 'dismissed' | null;
+  description: string | null;
 }
 
 export interface CheckResponseDetail {
@@ -41,6 +51,7 @@ export interface CheckResponseDetail {
 
 export interface ScheduledCheckDetailResponse extends ScheduledCheckResponse {
   response: CheckResponseDetail | null;
+  violations?: ScheduledCheckViolationSummary[];
 }
 
 export interface ScheduledCheckListParams {

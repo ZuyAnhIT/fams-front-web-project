@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Alert,
   App,
   Badge,
   Descriptions,
   Divider,
+  Image,
   Modal,
   Spin,
   Tag,
@@ -20,7 +21,7 @@ import BaseSelect from "@/components/ui/BaseSelect";
 import BaseTextArea from "@/components/ui/BaseTextArea";
 import { useAuthStore } from "@/stores/auth.store";
 import { formatVietnameseName } from "@/utils/name.util";
-import { useCheckinDetail, useOverrideCheckin } from "../hooks/use-checkin";
+import { useCheckinDetail, useCheckinExplanationPhoto, useOverrideCheckin } from "../hooks/use-checkin";
 import {
   CHECKIN_POLICY_META,
   type CheckinPolicy,
@@ -115,6 +116,15 @@ export default function CheckinDetailModal({
   const [submitError, setSubmitError] = useState("");
 
   const currentStatus = detail?.status;
+  const managedPhoto = Boolean(detail?.employeePhotoUrl?.startsWith(`/api/v1/tenants/${tenantId}/`));
+  const explanationPhoto = useCheckinExplanationPhoto(tenantId, checkinId, Boolean(isOpen && managedPhoto));
+  const explanationPhotoUrl = useMemo(
+    () => explanationPhoto.data ? URL.createObjectURL(explanationPhoto.data) : null,
+    [explanationPhoto.data],
+  );
+  useEffect(() => () => {
+    if (explanationPhotoUrl) URL.revokeObjectURL(explanationPhotoUrl);
+  }, [explanationPhotoUrl]);
 
   const openOverride = () => {
     setNextStatus(currentStatus === "valid" ? "rejected" : "valid");
@@ -306,6 +316,22 @@ export default function CheckinDetailModal({
                   </Descriptions.Item>
                   <Descriptions.Item label="Lý do" span={2}>
                     {detail.note || "Không có lý do"}
+                  </Descriptions.Item>
+                </Descriptions>
+              </>
+            )}
+
+            {(detail.employeeNote || detail.employeePhotoUrl) && (
+              <>
+                <Divider titlePlacement="left" plain>Giải trình của nhân viên</Divider>
+                <Descriptions bordered column={1} size="small">
+                  <Descriptions.Item label="Nội dung">{detail.employeeNote || "—"}</Descriptions.Item>
+                  <Descriptions.Item label="Ảnh bổ sung">
+                    {detail.employeePhotoUrl ? (
+                      managedPhoto
+                        ? explanationPhoto.isLoading ? "Đang tải ảnh có bảo vệ…" : explanationPhotoUrl ? <Image width={200} src={explanationPhotoUrl} alt="Ảnh giải trình chấm công" /> : "Không thể tải ảnh bằng chứng"
+                        : <Image width={200} src={detail.employeePhotoUrl} alt="Ảnh giải trình chấm công" />
+                    ) : "—"}
                   </Descriptions.Item>
                 </Descriptions>
               </>

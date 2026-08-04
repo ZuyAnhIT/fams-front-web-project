@@ -94,6 +94,19 @@ export const SIDEBAR_MENU: MenuItem[] = [
     icon: "RadioTower",
     allowedPermissions: ["randomchecks:list", "randomchecks:configure"]
   },
+  {
+    title: "Vi phạm",
+    path: CUSTOMER_ROUTES.VIOLATIONS,
+    icon: "AlertTriangle",
+    allowedPermissions: ["violations:list", "violations:read"],
+    allowedRoles: [SystemRole.PLATFORM_ADMIN],
+  },
+  {
+    title: "Cần giải thích",
+    path: CUSTOMER_ROUTES.EXCEPTIONS,
+    icon: "MessageSquareText",
+    allowedRoles: [SystemRole.EMPLOYEE, SystemRole.SITE_SUPERVISOR, SystemRole.HR_MANAGER, SystemRole.TENANT_ADMIN],
+  },
 
   // -- CẤU HÌNH HỆ THỐNG (CUSTOMER) --
   {

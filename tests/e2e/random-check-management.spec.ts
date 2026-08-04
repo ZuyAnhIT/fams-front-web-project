@@ -192,6 +192,7 @@ test("HR gửi kiểm tra thủ công có reason và xem bằng chứng GPS Face
     failureReason: null,
     manualReason: "Nghi ngờ chấm công hộ",
     triggeredBy: "random-check-admin",
+    manualTriggerCountToday: 3,
     createdAt: "2026-07-31T08:00:00Z",
   };
 
@@ -241,6 +242,13 @@ test("HR gửi kiểm tra thủ công có reason và xem bằng chứng GPS Face
         failureReason: null,
         createdAt: "2026-07-31T08:01:00Z",
       },
+      violations: [{
+        id: "violation-1",
+        violationType: "face_fail",
+        resolved: false,
+        resolution: null,
+        description: "Face ID không đạt",
+      }],
     }) }),
   );
   await page.route(`**/api/v1/tenants/${tenantId}/scheduled-checks/${checkId}/photo`, (route) => {
@@ -273,6 +281,7 @@ test("HR gửi kiểm tra thủ công có reason và xem bằng chứng GPS Face
     employeeId,
     reason: "Nghi ngờ chấm công hộ",
   });
+  await expect(page.getByText("Đây là lần thứ 3 hôm nay", { exact: false })).toBeVisible();
   const detail = page.getByRole("dialog", { name: "Chi tiết lượt kiểm tra ngẫu nhiên" });
   await expect(detail.getByText("Kiểm tra thủ công có chủ đích")).toBeVisible();
   await expect(detail.getByText("10.73, 106.72")).toBeVisible();
@@ -282,6 +291,8 @@ test("HR gửi kiểm tra thủ công có reason và xem bằng chứng GPS Face
   await expect(detail.getByText("300 giây")).toBeVisible();
   await expect(detail.getByText("2 lượt · tối thiểu 60 phút")).toBeVisible();
   await expect(detail.getByText("worker, supervisor")).toBeVisible();
+  await expect(detail.getByText("Vi phạm phát sinh")).toBeVisible();
+  await expect(detail.getByRole("link", { name: "Xem đầy đủ" })).toHaveAttribute("href", `/customer/violations?scheduledCheckId=${checkId}`);
   expect(photoRequests).toBe(0);
   await detail.getByRole("button", { name: "Xem ảnh bằng chứng" }).click();
   const photoDialog = page.getByRole("dialog", { name: "Ảnh selfie bằng chứng" });
