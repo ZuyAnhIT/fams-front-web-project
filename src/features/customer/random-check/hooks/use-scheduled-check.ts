@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { scheduledCheckService } from "../services/scheduled-check.service";
 import type { ManualCheckPayload, ScheduledCheckListParams } from "../types";
 
-const keys = {
+export const scheduledCheckKeys = {
   all: ["scheduled-checks"] as const,
   list: (params: ScheduledCheckListParams) => ["scheduled-checks", "list", params] as const,
   summary: (tenantId: string, params: object) =>
@@ -15,7 +15,7 @@ const keys = {
 
 export function useScheduledChecksQuery(params: ScheduledCheckListParams, enabled: boolean) {
   return useQuery({
-    queryKey: keys.list(params),
+    queryKey: scheduledCheckKeys.list(params),
     queryFn: () => scheduledCheckService.list(params),
     enabled,
   });
@@ -27,7 +27,7 @@ export function useScheduledCheckSummary(
   enabled: boolean,
 ) {
   return useQuery({
-    queryKey: keys.summary(tenantId, params),
+    queryKey: scheduledCheckKeys.summary(tenantId, params),
     queryFn: () => scheduledCheckService.summary(tenantId, params),
     enabled: Boolean(tenantId) && enabled,
   });
@@ -38,7 +38,7 @@ export function useScheduledCheckDetail(
   checkId: string | null,
 ) {
   return useQuery({
-    queryKey: keys.detail(tenantId, checkId),
+    queryKey: scheduledCheckKeys.detail(tenantId, checkId),
     queryFn: () => scheduledCheckService.detail(tenantId, checkId!),
     enabled: Boolean(tenantId && checkId),
     retry: (failureCount, error) => {
@@ -54,7 +54,7 @@ export function useScheduledCheckPhoto(
   enabled: boolean,
 ) {
   return useQuery({
-    queryKey: keys.photo(tenantId, checkId),
+    queryKey: scheduledCheckKeys.photo(tenantId, checkId),
     queryFn: () => scheduledCheckService.photo(tenantId, checkId!),
     enabled: Boolean(tenantId && checkId) && enabled,
     staleTime: 60_000,
@@ -74,7 +74,7 @@ export function useTriggerManualCheck() {
       tenantId: string;
       payload: ManualCheckPayload;
     }) => scheduledCheckService.triggerManual(tenantId, payload),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: keys.all }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: scheduledCheckKeys.all }),
   });
 }
 
@@ -83,7 +83,7 @@ export function useCancelScheduledCheck() {
   return useMutation({
     mutationFn: ({ tenantId, checkId }: { tenantId: string; checkId: string }) =>
       scheduledCheckService.cancel(tenantId, checkId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: keys.all }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: scheduledCheckKeys.all }),
   });
 }
 
@@ -92,6 +92,6 @@ export function useDispatchScheduledCheck() {
   return useMutation({
     mutationFn: ({ tenantId, checkId }: { tenantId: string; checkId: string }) =>
       scheduledCheckService.dispatch(tenantId, checkId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: keys.all }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: scheduledCheckKeys.all }),
   });
 }

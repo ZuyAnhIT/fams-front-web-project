@@ -378,7 +378,11 @@ export function ScheduledChecksPage() {
         open={manualOpen}
         onClose={() => setManualOpen(false)}
         onCreated={(check) => {
-          message.success("Đã gửi kiểm tra; thời gian phản hồi đang được tính từ bây giờ.");
+          message.success(
+            check.manualTriggerCountToday
+              ? `Đã gửi kiểm tra. Đây là lần thứ ${check.manualTriggerCountToday} hôm nay với nhân viên này.`
+              : "Đã gửi kiểm tra; thời gian phản hồi đang được tính từ bây giờ.",
+          );
           setSelectedCheck(check);
         }}
       />

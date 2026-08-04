@@ -33,4 +33,11 @@ export const checkinService = {
     );
     return data.data;
   },
+  getExplanationPhoto: async (tenantId: string, checkinId: string) => {
+    const response = await apiClient.get<Blob>(
+      `/tenants/${tenantId}/checkin/${checkinId}/explanation-photo`,
+      { responseType: "blob" },
+    );
+    return response.data;
+  },
 };

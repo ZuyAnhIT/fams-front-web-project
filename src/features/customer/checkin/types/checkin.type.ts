@@ -103,6 +103,8 @@ export interface CheckinDetailResponse {
   clientNonce: string | null;
   overriddenBy: string | null;
   overriddenAt: string | null;
+  employeeNote: string | null;
+  employeePhotoUrl: string | null;
   
   employee: EmployeeInfo | null;
   site: SiteInfo | null;

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Alert, Descriptions, Spin, Tag } from "antd";
 import dayjs from "dayjs";
 import { Camera } from "lucide-react";
+import Link from "next/link";
 import BaseButton from "@/components/ui/BaseButton";
 import BaseModal from "@/components/ui/BaseModal";
 import { useScheduledCheckDetail } from "../hooks/use-scheduled-check";
@@ -168,6 +169,22 @@ export default function ScheduledCheckDetailModal({
               title={data.status === "no_response" ? "Nhân viên không phản hồi" : "Chưa có bằng chứng phản hồi"}
               description="Bằng chứng GPS/Face ID chỉ xuất hiện sau khi nhân viên gửi phản hồi."
             />
+          )}
+
+          {(data.violations?.length ?? 0) > 0 && (
+            <Descriptions title="Vi phạm phát sinh" bordered size="small" column={1}>
+              {data.violations!.map((violation) => (
+                <Descriptions.Item key={violation.id} label={violation.violationType}>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <Tag color={violation.resolved ? "success" : "warning"}>{violation.resolved ? "Đã xử lý" : "Chưa xử lý"}</Tag>
+                      <span className="text-sm text-slate-600">{violation.description || "Không có mô tả"}</span>
+                    </div>
+                    <Link className="text-sm font-semibold text-blue-600 hover:text-blue-700" href={`/customer/violations?scheduledCheckId=${data.id}`}>Xem đầy đủ</Link>
+                  </div>
+                </Descriptions.Item>
+              ))}
+            </Descriptions>
           )}
         </div>
       ) : null}

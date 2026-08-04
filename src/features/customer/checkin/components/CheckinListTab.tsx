@@ -91,7 +91,6 @@ export default function CheckinListTab() {
 
   const { data: sitePage } = useSitesQuery({
     tenantId,
-    status: "active",
     sortBy: "name",
     sortDir: "asc",
     page: 0,
