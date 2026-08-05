@@ -1,0 +1,106 @@
+'use client';
+
+import { Alert, Progress, Spin, Tag } from 'antd';
+import dayjs from 'dayjs';
+import { AlertTriangle, Bell, Building2, CalendarCheck, Clock3, MapPin, Users } from 'lucide-react';
+import Link from 'next/link';
+import StatCard from '@/components/charts/StatCard';
+import EmptyState from '@/components/feedback/EmptyState';
+import { CUSTOMER_ROUTES } from '@/constants/routes';
+import { SystemRole } from '@/features/customer/auth/types/auth.type';
+import { useAuthStore } from '@/stores/auth.store';
+import { useEmployeeDashboard, useHrDashboard, useSupervisorDashboard } from '../hooks/use-dashboard';
+
+const VIOLATION_LABELS = {
+  no_response: 'Không phản hồi',
+  location_fail: 'Sai vị trí',
+  face_fail: 'Face ID',
+  liveness_fail: 'Liveness',
+} as const;
+
+const CHECKIN_STATUS_LABELS = {
+  valid: 'Hợp lệ',
+  pending_review: 'Chờ HR duyệt',
+  rejected: 'Không hợp lệ',
+} as const;
+
+function errorStatus(error: unknown) {
+  return (error as { response?: { status?: number } }).response?.status;
+}
+
+function LoadingDashboard() {
+  return <div className="flex min-h-[320px] items-center justify-center" role="status"><Spin size="large" /></div>;
+}
+
+function HrDashboardView({ tenantId }: { tenantId: string }) {
+  const query = useHrDashboard(tenantId);
+  const data = query.data;
+  if (query.isLoading) return <LoadingDashboard />;
+  if (query.isError || !data) return <Alert type="error" showIcon title="Không thể tải Dashboard HR" description="Bạn có thể chưa có quyền employees:list hoặc dữ liệu công ty hiện không khả dụng." />;
+
+  const types = Object.keys(VIOLATION_LABELS) as Array<keyof typeof VIOLATION_LABELS>;
+  const maxViolation = Math.max(1, ...types.map((type) => data.violations.unresolvedByType[type] ?? 0));
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard title="Tổng nhân viên" value={data.personnel.totalEmployees} description={`+${data.personnel.newThisMonth} trong tháng này`} icon={Users} href={CUSTOMER_ROUTES.EMPLOYEES} />
+        <StatCard title="Có mặt hôm nay" value={data.attendance.presentToday} description={`${data.attendance.onSiteNow} người đang tại công trình · ${data.attendance.lateToday} đi muộn`} icon={CalendarCheck} tone="emerald" href={CUSTOMER_ROUTES.ATTENDANCE} />
+        <StatCard title="Vi phạm chưa xử lý" value={data.violations.unresolved} description={`${data.violations.resolvedThisMonth} đã xử lý trong tháng`} icon={AlertTriangle} tone="amber" href={`${CUSTOMER_ROUTES.VIOLATIONS}?resolved=false`} />
+        <StatCard title="Công trình" value={data.sites.totalSites} description={`${data.sites.employeesOnSiteNow} nhân viên đang có mặt`} icon={Building2} tone="violet" href={CUSTOMER_ROUTES.SITES} />
+      </div>
+
+      <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm" aria-labelledby="violation-overview-title">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div><h2 id="violation-overview-title" className="text-lg font-semibold text-slate-900">Vi phạm đang chờ theo loại</h2><p className="mt-1 text-sm text-slate-500">Key không có trong response được hiển thị là 0.</p></div>
+          <Link href={`${CUSTOMER_ROUTES.VIOLATIONS}?resolved=false`} className="text-sm font-semibold text-blue-700">Mở danh sách vi phạm</Link>
+        </div>
+        <div className="mt-5 grid gap-4 md:grid-cols-2">
+          {types.map((type) => {
+            const count = data.violations.unresolvedByType[type] ?? 0;
+            return <div key={type} className="rounded-lg bg-slate-50 p-4"><div className="mb-2 flex items-center justify-between text-sm"><span className="font-medium text-slate-700">{VIOLATION_LABELS[type]}</span><strong>{count}</strong></div><Progress percent={Math.round((count / maxViolation) * 100)} showInfo={false} strokeColor={count ? '#f59e0b' : '#cbd5e1'} /></div>;
+          })}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function SupervisorDashboardView({ tenantId }: { tenantId: string }) {
+  const query = useSupervisorDashboard(tenantId);
+  if (query.isLoading) return <LoadingDashboard />;
+  if (query.isError) {
+    const missingEmployee = errorStatus(query.error) === 404;
+    return <Alert type="error" showIcon title={missingEmployee ? 'Tài khoản chưa có hồ sơ nhân viên' : 'Không thể tải hiện trường'} description={missingEmployee ? 'Liên hệ HR để liên kết tài khoản với hồ sơ nhân viên trong công ty này.' : 'Vui lòng thử lại sau.'} />;
+  }
+  const sites = query.data?.supervisedSites ?? [];
+  if (!sites.length) return <EmptyState title="Chưa có công trình cần giám sát hôm nay" description="Khi assignment supervisor có hiệu lực, công trình và danh sách người đang có mặt sẽ xuất hiện tại đây." />;
+
+  return <div className="grid gap-5 xl:grid-cols-2">{sites.map((site) => {
+    const attendanceRate = site.expectedToday > 0 ? Math.min(100, Math.round(site.onSiteNow * 100 / site.expectedToday)) : 0;
+    return <section key={site.siteId} className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+      <div className="border-b border-slate-100 p-5"><div className="flex items-start justify-between gap-4"><div><h2 className="flex items-center gap-2 font-semibold text-slate-900"><MapPin className="h-4 w-4 text-blue-600" />{site.siteName}</h2><p className="mt-1 text-sm text-slate-500">{site.onSiteNow}/{site.expectedToday} nhân viên đang có mặt</p></div><Tag color="processing">Tự cập nhật mỗi phút</Tag></div><Progress className="mt-3" percent={attendanceRate} strokeColor="#2563eb" /></div>
+      <div className="p-5"><h3 className="mb-3 text-sm font-semibold text-slate-700">Đang có mặt</h3>{site.onSiteEmployees.length ? <div className="space-y-2">{site.onSiteEmployees.map((employee) => <div key={employee.employeeId} className="flex items-center gap-3 rounded-lg bg-slate-50 p-3"><span className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 font-semibold text-blue-700">{(employee.lastName || employee.firstName || 'N').charAt(0)}</span><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-slate-800">{employee.lastName} {employee.firstName}</p><p className="text-xs text-slate-500">{employee.employeeCode || 'Chưa có mã'} · vào {dayjs(employee.checkInAt).format('HH:mm')}</p></div></div>)}</div> : <p className="text-sm text-slate-500">Chưa có nhân viên check-in hôm nay.</p>}</div>
+    </section>;
+  })}</div>;
+}
+
+function EmployeeDashboardView({ tenantId }: { tenantId: string }) {
+  const query = useEmployeeDashboard(tenantId);
+  if (query.isLoading) return <LoadingDashboard />;
+  if (query.isError || !query.data) return <Alert type="error" showIcon title="Không thể tải Dashboard nhân viên" description="Tài khoản có thể chưa được liên kết với hồ sơ nhân viên trong công ty này." />;
+  const data = query.data;
+  return <div className="space-y-6">
+    {(data.alerts.pendingExplanations > 0 || data.alerts.unreadNotifications > 0) && <div className="grid gap-3 sm:grid-cols-2"><Link href={CUSTOMER_ROUTES.EXCEPTIONS} className="rounded-xl border border-amber-200 bg-amber-50 p-4"><strong className="text-amber-900">{data.alerts.pendingExplanations} mục cần giải thích</strong><p className="mt-1 text-sm text-amber-700">Bổ sung thông tin cho HR</p></Link><Link href={CUSTOMER_ROUTES.NOTIFICATIONS} className="rounded-xl border border-blue-200 bg-blue-50 p-4"><strong className="text-blue-900">{data.alerts.unreadNotifications} thông báo chưa đọc</strong><p className="mt-1 text-sm text-blue-700">Mở hộp thư thông báo</p></Link></div>}
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4"><StatCard title="Ca hôm nay" value={data.todayShifts.length} description={data.todayShifts[0]?.siteName || 'Chưa có phân công'} icon={Clock3} /><StatCard title="Trạng thái chấm công" value={data.checkin ? `${data.checkin.open ? 'Đang trong ca' : 'Đã kết thúc'} · ${CHECKIN_STATUS_LABELS[data.checkin.status]}` : 'Chưa check-in'} icon={CalendarCheck} tone="emerald" href={CUSTOMER_ROUTES.ATTENDANCE} /><StatCard title="Ngày công tháng" value={data.monthlyAttendance.presentDays} description={`${data.monthlyAttendance.totalWorkMinutes} phút · OT ${data.monthlyAttendance.totalOtMinutes} phút`} icon={CalendarCheck} tone="violet" href={CUSTOMER_ROUTES.ATTENDANCE} /><StatCard title="Cần xử lý" value={data.alerts.pendingExplanations} description={`${data.alerts.unreadNotifications} thông báo chưa đọc`} icon={Bell} tone="amber" href={CUSTOMER_ROUTES.EXCEPTIONS} /></div>
+  </div>;
+}
+
+export default function CustomerDashboard() {
+  const user = useAuthStore((state) => state.user);
+  const tenantId = user?.tenantId || '';
+  const role = user?.role;
+  const hasPermission = useAuthStore((state) => state.hasPermission);
+  const isHr = role === SystemRole.TENANT_ADMIN || role === SystemRole.HR_MANAGER || hasPermission('employees:list');
+  const isSupervisor = role === SystemRole.SITE_SUPERVISOR;
+  return <div className="mx-auto w-full max-w-[1600px] space-y-6"><header><p className="text-sm font-medium text-blue-700">Tổng quan theo vai trò</p><h1 className="mt-1 text-2xl font-bold text-slate-900 sm:text-3xl">Xin chào, {user?.displayName || 'bạn'}</h1><p className="mt-2 text-sm text-slate-600">Số liệu hôm nay được backend tính theo múi giờ công ty/công trình.</p></header>{isSupervisor ? <SupervisorDashboardView tenantId={tenantId} /> : isHr ? <HrDashboardView tenantId={tenantId} /> : <EmployeeDashboardView tenantId={tenantId} />}</div>;
+}

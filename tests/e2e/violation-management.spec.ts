@@ -46,15 +46,19 @@ test('HR lọc, xem bằng chứng và dismiss vi phạm với lý do audit', as
   let impactBody: Record<string, unknown> = {};
   let photoRequests = 0;
   let dismissed = false;
+  let listResolvedFilter: string | null = null;
   await page.route(new RegExp(`/api/v1/tenants/${tenantId}/sites(?:\\?.*)?$`), (route) => route.fulfill({ json: api(pageData([{ id: siteId, tenantId, name: 'Công trình Riverside', status: 'active' }])) }));
   await page.route(new RegExp(`/api/v1/tenants/${tenantId}/employees(?:\\?.*)?$`), (route) => route.fulfill({ json: api(pageData([{ id: employeeId, tenantId, firstName: 'An', lastName: 'Nguyễn', fullName: 'Nguyễn An', status: 'active' }])) }));
-  await page.route(new RegExp(`/api/v1/tenants/${tenantId}/violations(?:\\?.*)?$`), (route) => route.fulfill({ json: api(pageData([{
-    ...violation,
-    resolved: dismissed,
-    resolution: dismissed ? 'dismissed' : null,
-    resolutionReason: dismissed ? 'Đã xác nhận camera ngược sáng với quản lý site.' : null,
-    resolvedAt: dismissed ? '2026-08-04T00:00:00Z' : null,
-  }])) }));
+  await page.route(new RegExp(`/api/v1/tenants/${tenantId}/violations(?:\\?.*)?$`), (route) => {
+    listResolvedFilter = new URL(route.request().url()).searchParams.get('resolved');
+    return route.fulfill({ json: api(pageData([{
+      ...violation,
+      resolved: dismissed,
+      resolution: dismissed ? 'dismissed' : null,
+      resolutionReason: dismissed ? 'Đã xác nhận camera ngược sáng với quản lý site.' : null,
+      resolvedAt: dismissed ? '2026-08-04T00:00:00Z' : null,
+    }])) });
+  });
   await page.route(`**/api/v1/tenants/${tenantId}/violations/${violationId}`, (route) => route.fulfill({ json: api({
     ...violation,
     resolved: dismissed,
@@ -83,8 +87,9 @@ test('HR lọc, xem bằng chứng và dismiss vi phạm với lý do audit', as
     });
   });
 
-  await page.goto('/customer/violations', { waitUntil: 'domcontentloaded' });
+  await page.goto('/customer/violations?resolved=false', { waitUntil: 'domcontentloaded' });
   await expect(page.getByText('Face ID không đạt', { exact: true })).toBeVisible();
+  await expect.poll(() => listResolvedFilter).toBe('false');
   await page.getByRole('button', { name: 'Chi tiết' }).click();
   const detail = page.getByRole('dialog', { name: 'Chi tiết vi phạm' });
   await expect(detail.getByText('Camera bị ngược sáng')).toBeVisible();

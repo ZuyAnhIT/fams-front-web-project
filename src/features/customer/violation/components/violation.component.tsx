@@ -26,12 +26,15 @@ export default function ViolationManagementPage() {
   const user = useAuthStore((state) => state.user);
   const tenantId = user?.tenantId || '';
   const initialScheduledCheckId = searchParams.get('scheduledCheckId') || undefined;
+  const resolvedQuery = searchParams.get('resolved');
+  const initialResolved = resolvedQuery === 'true' ? true : resolvedQuery === 'false' ? false : undefined;
   const [params, setParams] = useState<ViolationListParams>({
     page: 0,
     size: 20,
     sortBy: 'checkDate',
     sortDir: 'desc',
     scheduledCheckId: initialScheduledCheckId,
+    resolved: initialResolved,
   });
   const [selected, setSelected] = useState<ViolationListItem | null>(null);
 
