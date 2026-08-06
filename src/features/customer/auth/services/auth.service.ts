@@ -15,6 +15,8 @@ import {
   type ChangePasswordPayload,
   type TotpSetupResponse,
   type TotpVerifyPayload,
+  type TotpEnableResponse,
+  type TotpDisablePayload,
   type LoginTotpPayload,
   type LogoutPayload,
   type SwitchTenantPayload,
@@ -137,15 +139,16 @@ export const authService = {
   /**
    * Xác nhận bật TOTP
    */
-  async verifyTotp(payload: TotpVerifyPayload): Promise<void> {
-    await apiClient.post("/auth/totp/verify", payload);
+  async verifyTotp(payload: TotpVerifyPayload): Promise<TotpEnableResponse> {
+    const response = await apiClient.post<ApiResponse<TotpEnableResponse>>("/auth/totp/verify", payload);
+    return response.data.data;
   },
 
   /**
    * Tắt TOTP
    */
-  async disableTotp(): Promise<void> {
-    await apiClient.post("/auth/totp/disable");
+  async disableTotp(payload: TotpDisablePayload): Promise<void> {
+    await apiClient.post("/auth/totp/disable", payload);
   },
 
   /**

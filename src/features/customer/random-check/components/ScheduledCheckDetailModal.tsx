@@ -14,6 +14,7 @@ import RandomCheckEvidencePhotoModal from "./RandomCheckEvidencePhotoModal";
 interface Props {
   tenantId: string;
   check: ScheduledCheckResponse | null;
+  checkId?: string | null;
   employeeName?: string;
   siteName?: string;
   onClose: () => void;
@@ -58,12 +59,14 @@ function readSnapshot(snapshot?: string): ConfigSnapshot {
 export default function ScheduledCheckDetailModal({
   tenantId,
   check,
+  checkId,
   employeeName,
   siteName,
   onClose,
 }: Props) {
   const [photoOpen, setPhotoOpen] = useState(false);
-  const detail = useScheduledCheckDetail(tenantId, check?.id || null);
+  const effectiveCheckId = check?.id || checkId || null;
+  const detail = useScheduledCheckDetail(tenantId, effectiveCheckId);
   const data = detail.data?.data;
   const response = data?.response;
   const manualReason = data?.manualReason;
@@ -74,7 +77,7 @@ export default function ScheduledCheckDetailModal({
   return (
     <BaseModal
       title="Chi tiết lượt kiểm tra ngẫu nhiên"
-      isOpen={Boolean(check)}
+      isOpen={Boolean(effectiveCheckId)}
       onClose={onClose}
       hideFooter
       width={760}

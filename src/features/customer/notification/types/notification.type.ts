@@ -7,6 +7,7 @@ export interface Notification {
   eventType: string;
   title: string;
   body: string | null;
+  metadata: Record<string, unknown> | null;
   isRead: boolean;
   readAt: string | null;
   createdAt: string;
@@ -29,6 +30,30 @@ export interface NotificationFilter {
   unreadOnly?: boolean;
 }
 
+export interface NotificationSetting {
+  id: string | null;
+  userId: string;
+  eventType: string;
+  label: string | null;
+  inAppEnabled: boolean;
+  pushEnabled: boolean;
+  customized: boolean;
+  updatedAt: string | null;
+}
+
+export interface NotificationEventType {
+  eventType: string;
+  label: string;
+  description: string;
+  defaultInAppEnabled: boolean;
+  defaultPushEnabled: boolean;
+}
+
+export interface UpdateNotificationSettingPayload {
+  inAppEnabled: boolean;
+  pushEnabled: boolean;
+}
+
 // ======= Generic API wrapper =======
 
 export interface ApiResponse<T> {
@@ -46,34 +71,7 @@ export type NotificationTypeMeta = {
 };
 
 export const NOTIFICATION_TYPE_LABELS: Record<string, NotificationTypeMeta> = {
-  // Attendance
-  "attendance.late_checkin": { label: "Chấm công trễ", icon: "Clock", color: "orange" },
-  "attendance.missing_checkout": { label: "Thiếu giờ ra", icon: "Clock4", color: "orange" },
-  "attendance.ot_detected": { label: "Tăng ca", icon: "TrendingUp", color: "blue" },
-  // Random Check
-  "randomcheck.dispatched": { label: "Kiểm tra vị trí", icon: "MapPin", color: "purple" },
-  "randomcheck.no_response": { label: "Không phản hồi", icon: "AlertCircle", color: "red" },
-  // Violation
-  "violation.raised": { label: "Vi phạm mới", icon: "AlertTriangle", color: "red" },
-  "violation.confirmed": { label: "Vi phạm xác nhận", icon: "CheckCircle", color: "red" },
-  "violation.dismissed": { label: "Vi phạm hủy", icon: "XCircle", color: "green" },
-  // Assignment
-  "assignment.created": { label: "Phân công mới", icon: "UserPlus", color: "blue" },
-  // System
-  "system.announcement": { label: "Thông báo hệ thống", icon: "Megaphone", color: "gray" },
-  "report.ready": { label: "Báo cáo sẵn sàng", icon: "FileText", color: "blue" },
-  // Face ID
-  "face_id.enrolled": { label: "Face ID đăng ký", icon: "ScanFace", color: "green" },
-  "face_id.revoked": { label: "Face ID hủy", icon: "ScanFace", color: "orange" },
-  // Appointment
-  "appointment.created": { label: "Lịch hẹn mới", icon: "Clock", color: "blue" },
-  "appointment.confirmed": { label: "Lịch hẹn xác nhận", icon: "CheckCircle", color: "green" },
-  "appointment.cancelled": { label: "Lịch hẹn hủy", icon: "XCircle", color: "red" },
-  "appointment.reminder": { label: "Nhắc lịch hẹn", icon: "Bell", color: "orange" },
-  // Payment
-  "payment.success": { label: "Thanh toán thành công", icon: "CheckCircle", color: "green" },
-  "payment.failed": { label: "Thanh toán thất bại", icon: "XCircle", color: "red" },
-  "payment.refund": { label: "Hoàn tiền", icon: "TrendingUp", color: "blue" },
+  RANDOM_CHECK_SENT: { label: "Yêu cầu kiểm tra ngẫu nhiên", icon: "MapPin", color: "purple" },
 };
 
 export const DEFAULT_NOTIFICATION_TYPE: NotificationTypeMeta = {

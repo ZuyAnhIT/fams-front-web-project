@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import {
   Bell,
   Check,
@@ -17,6 +18,7 @@ import {
   FileText,
   ScanFace,
   BellOff,
+  ExternalLink,
 } from "lucide-react";
 import {
   NOTIFICATION_TYPE_LABELS,
@@ -24,9 +26,10 @@ import {
   type Notification,
 } from "../types/notification.type";
 import { notificationService } from "../services/notification.service";
-import { Empty, Segmented, Spin } from "antd";
+import { Checkbox, Empty, Segmented, Spin } from "antd";
 import { message } from "antd";
 import { notificationEventBus, useNotificationStore } from "../stores/notification.store";
+import { getNotificationHref } from "../utils/notification.mapper";
 
 // Icon mapping cho các loại notification
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -79,10 +82,13 @@ function getColorClass(color: string): string {
 interface NotificationCardProps {
   notification: Notification;
   onMarkAsRead: (id: string) => void;
+  onOpen: (notification: Notification) => void;
+  selected: boolean;
+  onSelectedChange: (id: string, selected: boolean) => void;
   isMarking: boolean;
 }
 
-function NotificationCard({ notification, onMarkAsRead, isMarking }: NotificationCardProps) {
+function NotificationCard({ notification, onMarkAsRead, onOpen, selected, onSelectedChange, isMarking }: NotificationCardProps) {
   const typeInfo = getTypeInfo(notification.eventType);
   const IconComponent = ICON_MAP[typeInfo.icon] || Bell;
   const colorClass = getColorClass(typeInfo.color);
@@ -102,6 +108,12 @@ function NotificationCard({ notification, onMarkAsRead, isMarking }: Notificatio
 
       <div className="p-4 pl-5">
         <div className="flex items-start gap-4">
+          <Checkbox
+            aria-label={`Chọn thông báo ${notification.title}`}
+            checked={selected}
+            disabled={notification.isRead || isMarking}
+            onChange={(event) => onSelectedChange(notification.id, event.target.checked)}
+          />
           {/* Icon */}
           <div
             className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center ${colorClass}`}
@@ -141,6 +153,15 @@ function NotificationCard({ notification, onMarkAsRead, isMarking }: Notificatio
                     </span>
                   )}
                 </div>
+                {getNotificationHref(notification) && (
+                  <button
+                    type="button"
+                    onClick={() => onOpen(notification)}
+                    className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-700"
+                  >
+                    Mở nội dung liên quan <ExternalLink className="h-3.5 w-3.5" />
+                  </button>
+                )}
               </div>
 
               {/* Actions */}
@@ -167,6 +188,7 @@ function NotificationCard({ notification, onMarkAsRead, isMarking }: Notificatio
 type FilterType = "all" | "unread";
 
 export default function NotificationPage() {
+  const router = useRouter();
   const [filter, setFilter] = useState<FilterType>("all");
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -175,6 +197,8 @@ export default function NotificationPage() {
   const [error, setError] = useState<string | null>(null);
   const [markingId, setMarkingId] = useState<string | null>(null);
   const [isMarkingAll, setIsMarkingAll] = useState(false);
+  const [isMarkingSelected, setIsMarkingSelected] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(0);
@@ -183,6 +207,7 @@ export default function NotificationPage() {
 
   // Subscribe to notification store
   const setUnreadCount = useNotificationStore((state) => state.setUnreadCount);
+  const unreadCount = useNotificationStore((state) => state.unreadCount);
 
   // Merge items by id, keeping the freshest createdAt first (newest → oldest)
   const mergeByIdDesc = (existing: Notification[], incoming: Notification[]) => {
@@ -206,11 +231,12 @@ export default function NotificationPage() {
         unreadOnly: filter === "unread",
       });
       setNotifications(data.items);
+      setSelectedIds(new Set());
       setCurrentPage(0);
       setHasMore(!data.last);
       setUnreadCount(data.unreadCount);
-    } catch (err: any) {
-      setError(err.message || "Không thể tải thông báo");
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : "Không thể tải thông báo");
       message.error("Không thể tải thông báo");
     } finally {
       setIsLoading(false);
@@ -234,8 +260,8 @@ export default function NotificationPage() {
       setCurrentPage(nextPage);
       setHasMore(!data.last);
       setUnreadCount(data.unreadCount);
-    } catch (err: any) {
-      setError(err.message || "Không thể tải thêm");
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : "Không thể tải thêm");
       message.error("Không thể tải thêm thông báo");
     } finally {
       setIsLoadingMore(false);
@@ -256,9 +282,9 @@ export default function NotificationPage() {
       setNotifications((prev) => mergeByIdDesc(prev, data.items));
       setUnreadCount(data.unreadCount);
       // Don't touch currentPage or hasMore — the list may have grown organically.
-    } catch (err) {
+    } catch (error: unknown) {
       // silent: do not toast for poll errors
-      console.warn("Silent refresh failed", err);
+      console.warn("Silent refresh failed", error);
     } finally {
       setIsRefreshing(false);
     }
@@ -308,10 +334,49 @@ export default function NotificationPage() {
       message.success("Đã đánh dấu đã đọc");
       // Emit event để NotificationBell cập nhật badge
       notificationEventBus.emit("refresh");
-    } catch (err) {
+    } catch {
       message.error("Không thể đánh dấu đã đọc");
     } finally {
       setMarkingId(null);
+    }
+  };
+
+  const handleOpenNotification = async (notification: Notification) => {
+    const href = getNotificationHref(notification);
+    if (!href) return;
+    if (!notification.isRead) await handleMarkAsRead(notification.id);
+    router.push(href);
+  };
+
+  const handleSelectedChange = (id: string, selected: boolean) => {
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      if (selected) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  };
+
+  const unreadIdsOnPage = notifications.filter((item) => !item.isRead).map((item) => item.id);
+  const allUnreadOnPageSelected = unreadIdsOnPage.length > 0
+    && unreadIdsOnPage.every((id) => selectedIds.has(id));
+
+  const handleSelectAllOnPage = (selected: boolean) => {
+    setSelectedIds(selected ? new Set(unreadIdsOnPage) : new Set());
+  };
+
+  const handleMarkSelectedAsRead = async () => {
+    if (selectedIds.size === 0) return;
+    setIsMarkingSelected(true);
+    try {
+      const markedCount = await notificationService.markBatchAsRead(Array.from(selectedIds));
+      await loadFirstPage();
+      notificationEventBus.emit("refresh");
+      message.success(`Đã đánh dấu ${markedCount} thông báo là đã đọc`);
+    } catch {
+      message.error("Không thể đánh dấu nhóm thông báo đã chọn");
+    } finally {
+      setIsMarkingSelected(false);
     }
   };
 
@@ -322,15 +387,12 @@ export default function NotificationPage() {
       await loadFirstPage();
       message.success("Đã đánh dấu tất cả đã đọc");
       notificationEventBus.emit("refresh");
-    } catch (err) {
+    } catch {
       message.error("Không thể đánh dấu tất cả đã đọc");
     } finally {
       setIsMarkingAll(false);
     }
   };
-
-  const unreadCount = notifications.filter((n) => !n.isRead).length;
-  const totalCount = notifications.length;
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -364,7 +426,7 @@ export default function NotificationPage() {
 
       {/* Filter */}
       <div className="bg-white rounded-xl border border-slate-200 p-4 mb-6">
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <Segmented
             value={filter}
             onChange={(value) => setFilter(value as FilterType)}
@@ -397,6 +459,28 @@ export default function NotificationPage() {
             {isLoading ? "Đang tải..." : `Hiển thị ${notifications.length} thông báo`}
           </div>
         </div>
+        {!isLoading && unreadIdsOnPage.length > 0 && (
+          <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-slate-100 pt-4">
+            <Checkbox
+              checked={allUnreadOnPageSelected}
+              indeterminate={selectedIds.size > 0 && !allUnreadOnPageSelected}
+              onChange={(event) => handleSelectAllOnPage(event.target.checked)}
+            >
+              Chọn tất cả chưa đọc trên trang
+            </Checkbox>
+            {selectedIds.size > 0 && (
+              <button
+                type="button"
+                onClick={handleMarkSelectedAsRead}
+                disabled={isMarkingSelected}
+                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+              >
+                <CheckCheck className="h-4 w-4" />
+                Đánh dấu đã đọc ({selectedIds.size})
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Notification List */}
@@ -467,6 +551,9 @@ export default function NotificationPage() {
                 key={notification.id}
                 notification={notification}
                 onMarkAsRead={handleMarkAsRead}
+                onOpen={handleOpenNotification}
+                selected={selectedIds.has(notification.id)}
+                onSelectedChange={handleSelectedChange}
                 isMarking={markingId === notification.id}
               />
             ))}

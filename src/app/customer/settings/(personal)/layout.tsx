@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { User, Shield, Lock, MonitorSmartphone, ShieldCheck } from "lucide-react";
+import { User, Shield, Lock, MonitorSmartphone, ShieldCheck, BellRing } from "lucide-react";
 
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -11,6 +11,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
     { name: "Thông tin cá nhân", href: "/customer/settings", icon: User },
     { name: "Đổi mật khẩu", href: "/customer/settings/password", icon: Lock },
     { name: "Bảo mật 2 Lớp", href: "/customer/settings/totp", icon: Shield },
+    { name: "Thông báo", href: "/customer/settings/notifications", icon: BellRing },
     { name: "Thiết bị & Phiên", href: "/customer/settings/sessions", icon: MonitorSmartphone },
     { name: "Quyền của tôi", href: "/customer/settings/permissions", icon: ShieldCheck },
   ];

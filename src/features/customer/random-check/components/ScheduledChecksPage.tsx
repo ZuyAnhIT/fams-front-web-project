@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Alert, App, Card, Space, Statistic, Tabs, Tag, Tooltip } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
@@ -60,6 +61,7 @@ function getErrorMessage(error: unknown, fallback: string) {
 }
 
 export function ScheduledChecksPage() {
+  const searchParams = useSearchParams();
   const { message, modal } = App.useApp();
   const user = useAuthStore((state) => state.user);
   const hasPermission = useAuthStore((state) => state.hasPermission);
@@ -73,6 +75,7 @@ export function ScheduledChecksPage() {
   const [size, setSize] = useState(20);
   const [manualOpen, setManualOpen] = useState(false);
   const [selectedCheck, setSelectedCheck] = useState<ScheduledCheckResponse | null>(null);
+  const [deepLinkedCheckId, setDeepLinkedCheckId] = useState<string | null>(searchParams.get("checkId"));
 
   const { data: myRoles, isLoading: isLoadingMyRoles } = useMyRolesQuery();
   const relevantAssignments = (myRoles?.data || []).filter(
@@ -389,9 +392,10 @@ export function ScheduledChecksPage() {
       <ScheduledCheckDetailModal
         tenantId={tenantId}
         check={selectedCheck}
+        checkId={deepLinkedCheckId}
         employeeName={selectedCheck?.employeeName || (selectedCheck ? employeeNames.get(selectedCheck.employeeId) : undefined)}
         siteName={selectedCheck?.siteName || (selectedCheck ? siteNames.get(selectedCheck.siteId) : undefined)}
-        onClose={() => setSelectedCheck(null)}
+        onClose={() => { setSelectedCheck(null); setDeepLinkedCheckId(null); }}
       />
     </div>
   );
