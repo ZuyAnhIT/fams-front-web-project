@@ -15,6 +15,8 @@ import {
   type ChangePasswordPayload,
   type TotpSetupResponse,
   type TotpVerifyPayload,
+  type TotpEnableResponse,
+  type TotpDisablePayload,
   type LoginTotpPayload,
   type ResetPasswordPayload,
   type LogoutPayload,
@@ -107,14 +109,14 @@ export const useSetupTotp = () => {
 };
 
 export const useVerifyTotp = () => {
-  return useMutation<void, Error, TotpVerifyPayload>({
+  return useMutation<TotpEnableResponse, Error, TotpVerifyPayload>({
     mutationFn: (payload) => authService.verifyTotp(payload),
   });
 };
 
 export const useDisableTotp = () => {
-  return useMutation<void, Error, void>({
-    mutationFn: () => authService.disableTotp(),
+  return useMutation<void, Error, TotpDisablePayload>({
+    mutationFn: (payload) => authService.disableTotp(payload),
   });
 };
 

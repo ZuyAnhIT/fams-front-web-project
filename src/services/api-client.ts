@@ -14,6 +14,12 @@ export const apiClient: AxiosInstance = axios.create({
 // Tự động gắn Access Token vào header Authorization cho mọi request
 apiClient.interceptors.request.use(
   (config) => {
+    // Correlate client errors with Backend audit/log entries. Backend will also
+    // echo this value in the X-Request-Id response header.
+    if (!config.headers["X-Request-Id"]) {
+      config.headers["X-Request-Id"] = globalThis.crypto?.randomUUID?.()
+        ?? `web-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    }
     const token = authTokenService.getAccessToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;

@@ -1,26 +1,46 @@
 "use client";
 
 import { useState } from "react";
-import { useForm, Controller } from "react-hook-form";
-import { z } from "zod";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { message, Input } from "antd";
+import { z } from "zod";
+import { Alert, App, Checkbox, Input, Modal, Radio } from "antd";
+import { Copy, Download, KeyRound, ShieldCheck, ShieldOff } from "lucide-react";
 import BaseButton from "@/components/ui/BaseButton";
-import { useSetupTotp, useVerifyTotp, useDisableTotp } from "@/features/customer/auth/hooks/use-auth";
+import {
+  useDisableTotp,
+  useSetupTotp,
+  useVerifyTotp,
+} from "@/features/customer/auth/hooks/use-auth";
+import type {
+  TotpDisablePayload,
+  TotpSetupResponse,
+} from "@/features/customer/auth/types/auth.type";
 
 const totpSchema = z.object({
-  code: z.string().length(6, "Mã xác thực phải gồm 6 chữ số").regex(/^\d+$/, "Mã xác thực chỉ chứa số"),
+  code: z.string().regex(/^\d{6}$/, "Mã Authenticator phải gồm đúng 6 chữ số"),
 });
 
 type TotpFormData = z.infer<typeof totpSchema>;
+type DisableMethod = "password" | "code" | "backupCode";
+
+function getErrorMessage(error: unknown, fallback: string) {
+  const response = (error as { response?: { data?: { userMessage?: string; message?: string } } }).response;
+  return response?.data?.userMessage || response?.data?.message || fallback;
+}
 
 export default function TotpSettingForm() {
-  const [setupData, setSetupData] = useState<{ setupToken: string; qrCodeUrl: string; manualEntryKey: string } | null>(null);
+  const { message } = App.useApp();
+  const [setupData, setSetupData] = useState<TotpSetupResponse | null>(null);
+  const [backupCodes, setBackupCodes] = useState<string[]>([]);
+  const [backupConfirmed, setBackupConfirmed] = useState(false);
+  const [disableOpen, setDisableOpen] = useState(false);
+  const [disableMethod, setDisableMethod] = useState<DisableMethod>("password");
+  const [disableCredential, setDisableCredential] = useState("");
 
   const { mutateAsync: setupTotp, isPending: isSettingUp } = useSetupTotp();
   const { mutateAsync: verifyTotp, isPending: isVerifying } = useVerifyTotp();
   const { mutateAsync: disableTotp, isPending: isDisabling } = useDisableTotp();
-
   const {
     control,
     handleSubmit,
@@ -28,114 +48,215 @@ export default function TotpSettingForm() {
     formState: { errors },
   } = useForm<TotpFormData>({
     resolver: zodResolver(totpSchema),
-    defaultValues: {
-      code: "",
-    },
+    defaultValues: { code: "" },
   });
 
   const handleSetup = async () => {
     try {
-      const data = await setupTotp();
-      setSetupData(data);
-    } catch (e: unknown) {
-      const error = e as { response?: { status?: number } };
-      if (error.response?.status === 409) {
-        message.warning("TOTP đã được bật sẵn!");
-      } else {
-        message.error("Khởi tạo thiết lập TOTP thất bại.");
-      }
+      setSetupData(await setupTotp());
+      setBackupCodes([]);
+      setBackupConfirmed(false);
+    } catch (error: unknown) {
+      const status = (error as { response?: { status?: number } }).response?.status;
+      message[status === 409 ? "warning" : "error"](
+        status === 409
+          ? "Tài khoản đã bật xác thực hai lớp."
+          : getErrorMessage(error, "Không thể khởi tạo xác thực hai lớp."),
+      );
     }
   };
 
   const handleVerify = async (data: TotpFormData) => {
     if (!setupData) return;
     try {
-      await verifyTotp({
-        setupToken: setupData.setupToken,
-        code: data.code,
-      });
-      message.success("Bảo mật 2 lớp đã được bật thành công!");
-      setSetupData(null); // Đóng form setup
+      const result = await verifyTotp({ setupToken: setupData.setupToken, code: data.code });
+      setBackupCodes(result.backupCodes);
+      setSetupData(null);
       reset();
-    } catch {
-      message.error("Mã xác thực không chính xác. Vui lòng thử lại.");
+      message.success("Đã bật xác thực hai lớp.");
+    } catch (error: unknown) {
+      message.error(getErrorMessage(error, "Mã không đúng hoặc phiên thiết lập đã hết hạn."));
     }
   };
 
+  const copyBackupCodes = async () => {
+    await navigator.clipboard.writeText(backupCodes.join("\n"));
+    message.success("Đã sao chép mã dự phòng.");
+  };
+
+  const downloadBackupCodes = () => {
+    const blob = new Blob([
+      `FAMS - Mã dự phòng xác thực hai lớp\n\n${backupCodes.join("\n")}\n\nMỗi mã chỉ dùng được một lần.`,
+    ], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "fams-backup-codes.txt";
+    anchor.click();
+    URL.revokeObjectURL(url);
+  };
+
   const handleDisable = async () => {
+    const credential = disableCredential.trim();
+    if (!credential) {
+      message.error("Vui lòng nhập thông tin xác thực lại.");
+      return;
+    }
+    if (disableMethod === "code" && !/^\d{6}$/.test(credential)) {
+      message.error("Mã Authenticator phải gồm đúng 6 chữ số.");
+      return;
+    }
+
+    const payload: TotpDisablePayload = disableMethod === "password"
+      ? { password: credential }
+      : disableMethod === "code"
+        ? { code: credential }
+        : { backupCode: credential };
+
     try {
-      await disableTotp();
-      message.success("Đã tắt Bảo mật 2 lớp!");
-    } catch {
-      message.error("Tắt thất bại hoặc TOTP chưa được bật.");
+      await disableTotp(payload);
+      setDisableOpen(false);
+      setDisableCredential("");
+      message.success("Đã tắt xác thực hai lớp.");
+    } catch (error: unknown) {
+      message.error(getErrorMessage(error, "Xác thực lại thất bại hoặc 2FA chưa được bật."));
     }
   };
 
   return (
-    <div className="w-full">
-      <div className="border-b border-gray-300 pb-4 mb-6">
-        <h3 className="text-xl font-semibold text-brand-950">Bảo mật 2 Lớp (TOTP)</h3>
-        <p className="text-sm text-gray-500 mt-1">Bảo vệ tài khoản của bạn bằng mã xác thực một lần</p>
+    <div className="w-full space-y-6">
+      <div className="border-b border-gray-300 pb-4">
+        <h2 className="text-xl font-semibold text-brand-950">Xác thực hai lớp (TOTP)</h2>
+        <p className="mt-1 text-sm text-gray-500">
+          Dùng Google Authenticator, Microsoft Authenticator hoặc ứng dụng tương thích TOTP.
+        </p>
       </div>
-      <div className="space-y-6 w-full lg:max-w-3xl">
-      <p className="text-sm text-brand-700">
-        Sử dụng ứng dụng Google Authenticator hoặc Authy để quét mã QR và bật bảo mật 2 lớp cho tài khoản của bạn.
-      </p>
 
-      <div className="flex gap-4">
-        <BaseButton onClick={handleSetup} loading={isSettingUp} type="primary" className="!bg-blue-600 !text-white hover:!bg-blue-700 !border-0 shadow-md shadow-blue-500/20 font-bold">
-          Bật TOTP
+      <Alert
+        showIcon
+        type="info"
+        message="Thêm một lớp bảo vệ sau mật khẩu"
+        description="Sau khi bật, mỗi lần đăng nhập bằng mật khẩu bạn cần mã 6 số hoặc một mã dự phòng. Google Sign-In không đi qua bước TOTP theo chính sách hiện tại."
+      />
+
+      <div className="flex flex-wrap gap-3">
+        <BaseButton
+          type="primary"
+          icon={<ShieldCheck className="h-4 w-4" />}
+          loading={isSettingUp}
+          onClick={handleSetup}
+        >
+          Bật xác thực hai lớp
         </BaseButton>
-        <BaseButton onClick={handleDisable} loading={isDisabling} danger>
-          Tắt TOTP
+        <BaseButton
+          danger
+          icon={<ShieldOff className="h-4 w-4" />}
+          onClick={() => setDisableOpen(true)}
+        >
+          Tắt xác thực hai lớp
         </BaseButton>
       </div>
 
       {setupData && (
-        <div className="mt-8 p-6 bg-white rounded-xl border border-brand-200 text-center animate-fade-in">
-          <h4 className="font-semibold text-brand-900 mb-4">Quét mã QR sau bằng ứng dụng Authenticator</h4>
-
-          <div className="flex justify-center mb-4">
-            {/* Sử dụng API tạo QR Code từ chuỗi otpauth */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=otpauth://totp/FAMS?secret=${setupData.manualEntryKey}%26issuer=FAMS`}
-              alt="TOTP QR Code"
-              className="w-48 h-48 border rounded-lg p-2 bg-white"
+        <section className="rounded-2xl border border-blue-200 bg-blue-50/40 p-5" aria-label="Thiết lập ứng dụng Authenticator">
+          <h3 className="font-semibold text-slate-900">1. Quét QR hoặc nhập khóa thủ công</h3>
+          <p className="mt-1 text-sm text-slate-600">Phiên thiết lập có hiệu lực 10 phút.</p>
+          <div className="mt-4 grid gap-5 md:grid-cols-[240px_1fr]">
+            <iframe
+              title="QR thiết lập TOTP"
+              src={setupData.qrCodeUrl}
+              className="h-60 w-full rounded-xl border border-slate-200 bg-white"
+              sandbox="allow-same-origin"
             />
-          </div>
-
-          <p className="text-xs text-brand-600 mb-6">
-            Hoặc nhập mã này thủ công: <strong className="font-mono text-brand-900 tracking-wider bg-brand-50 px-2 py-1 rounded">{setupData.manualEntryKey}</strong>
-          </p>
-
-          <form onSubmit={handleSubmit(handleVerify)} className="max-w-xs mx-auto space-y-4 text-left">
-            <div className="flex flex-col items-center justify-center space-y-2">
-              <label className="text-[14px] font-medium tracking-wide text-brand-900">Nhập mã xác thực (6 số)</label>
-              <Controller
-                name="code"
-                control={control}
-                render={({ field }) => (
-                  <Input.OTP
-                    {...field}
-                    length={6}
-                    size="large"
-                    status={errors.code ? "error" : undefined}
-                    className="mt-2 flex justify-center w-full [&_input]:!bg-white [&_input]:!text-brand-950 [&_input]:!border-brand-300 [&_input:focus]:!border-brand-500"
-                  />
-                )}
-              />
-              {errors.code && (
-                <p className="text-xs text-red-500 mt-1">{errors.code.message}</p>
-              )}
+            <div className="space-y-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Khóa nhập thủ công</p>
+                <div className="mt-2 break-all rounded-lg bg-white p-3 font-mono text-sm font-semibold text-slate-900 ring-1 ring-slate-200">
+                  {setupData.manualEntryKey}
+                </div>
+              </div>
+              <form onSubmit={handleSubmit(handleVerify)} className="space-y-3">
+                <label className="block text-sm font-semibold text-slate-800">2. Nhập mã đang hiển thị trong ứng dụng</label>
+                <Controller
+                  name="code"
+                  control={control}
+                  render={({ field }) => (
+                    <Input.OTP {...field} length={6} size="large" status={errors.code ? "error" : undefined} />
+                  )}
+                />
+                {errors.code && <p className="text-xs text-red-600">{errors.code.message}</p>}
+                <BaseButton htmlType="submit" type="primary" loading={isVerifying}>
+                  Xác nhận và bật
+                </BaseButton>
+              </form>
             </div>
-            <BaseButton htmlType="submit" loading={isVerifying} block type="primary" className="!bg-blue-600 !text-white hover:!bg-blue-700 !border-0 shadow-md shadow-blue-500/20 mt-4 font-bold">
-              Xác nhận & Bật
-            </BaseButton>
-          </form>
-        </div>
+          </div>
+        </section>
       )}
-    </div>
+
+      {backupCodes.length > 0 && (
+        <section className="rounded-2xl border-2 border-amber-300 bg-amber-50 p-5" aria-label="Mã dự phòng TOTP">
+          <div className="flex items-start gap-3">
+            <KeyRound className="mt-0.5 h-6 w-6 text-amber-700" />
+            <div>
+              <h3 className="font-bold text-amber-950">Lưu mã dự phòng ngay bây giờ</h3>
+              <p className="mt-1 text-sm text-amber-900">
+                Đây là lần duy nhất hệ thống hiển thị các mã này. Mỗi mã chỉ dùng được một lần khi bạn mất thiết bị Authenticator.
+              </p>
+            </div>
+          </div>
+          <div className="mt-4 grid grid-cols-2 gap-2 rounded-xl bg-white p-4 font-mono font-semibold text-slate-900 sm:grid-cols-4">
+            {backupCodes.map((code) => <span key={code}>{code}</span>)}
+          </div>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <BaseButton icon={<Copy className="h-4 w-4" />} onClick={copyBackupCodes}>Sao chép</BaseButton>
+            <BaseButton icon={<Download className="h-4 w-4" />} onClick={downloadBackupCodes}>Tải file</BaseButton>
+          </div>
+          <Checkbox className="mt-4" checked={backupConfirmed} onChange={(event) => setBackupConfirmed(event.target.checked)}>
+            Tôi đã lưu mã dự phòng ở nơi an toàn
+          </Checkbox>
+          <div className="mt-3">
+            <BaseButton type="primary" disabled={!backupConfirmed} onClick={() => setBackupCodes([])}>
+              Hoàn tất
+            </BaseButton>
+          </div>
+        </section>
+      )}
+
+      <Modal
+        title="Xác thực lại để tắt 2FA"
+        open={disableOpen}
+        onCancel={() => { setDisableOpen(false); setDisableCredential(""); }}
+        onOk={handleDisable}
+        okText="Xác nhận tắt"
+        cancelText="Hủy"
+        okButtonProps={{ danger: true, loading: isDisabling }}
+        destroyOnHidden
+      >
+        <Alert
+          className="mb-4"
+          type="warning"
+          showIcon
+          message="Tắt 2FA làm giảm mức bảo vệ tài khoản"
+          description="Bạn phải xác thực lại bằng đúng một phương thức."
+        />
+        <Radio.Group
+          value={disableMethod}
+          onChange={(event) => { setDisableMethod(event.target.value); setDisableCredential(""); }}
+          className="mb-4 flex flex-col gap-2 sm:flex-row"
+        >
+          <Radio value="password">Mật khẩu</Radio>
+          <Radio value="code">Mã Authenticator</Radio>
+          <Radio value="backupCode">Mã dự phòng</Radio>
+        </Radio.Group>
+        <Input.Password
+          aria-label={disableMethod === "password" ? "Mật khẩu xác thực lại" : disableMethod === "code" ? "Mã Authenticator xác thực lại" : "Mã dự phòng xác thực lại"}
+          value={disableCredential}
+          onChange={(event) => setDisableCredential(event.target.value)}
+          placeholder={disableMethod === "password" ? "Nhập mật khẩu hiện tại" : disableMethod === "code" ? "Nhập mã 6 số" : "Nhập một mã dự phòng"}
+          visibilityToggle={disableMethod === "password"}
+        />
+      </Modal>
     </div>
   );
 }

@@ -4,7 +4,10 @@ import type {
   ApiResponse,
   Notification,
   NotificationFilter,
+  NotificationEventType,
   NotificationPageResponse,
+  NotificationSetting,
+  UpdateNotificationSettingPayload,
 } from "../types/notification.type";
 
 const getTenantId = (): string | null => {
@@ -51,10 +54,45 @@ export const notificationService = {
       throw new Error("Tenant ID not found");
     }
 
-    const response = await apiClient.patch<ApiResponse<{ count: number }>>(
+    const response = await apiClient.patch<ApiResponse<{ markedCount: number }>>(
       `/tenants/${tenantId}/notifications/read-all`
     );
 
-    return response.data.data.count;
+    return response.data.data.markedCount;
+  },
+
+  markBatchAsRead: async (notificationIds: string[]): Promise<number> => {
+    const tenantId = getTenantId();
+    if (!tenantId) throw new Error("Tenant ID not found");
+    const response = await apiClient.patch<ApiResponse<{ markedCount: number }>>(
+      `/tenants/${tenantId}/notifications/read`,
+      { notificationIds },
+    );
+    return response.data.data.markedCount;
+  },
+
+  getSettings: async (): Promise<NotificationSetting[]> => {
+    const response = await apiClient.get<ApiResponse<NotificationSetting[]>>(
+      "/me/notification-settings",
+    );
+    return response.data.data;
+  },
+
+  getEventTypes: async (): Promise<NotificationEventType[]> => {
+    const response = await apiClient.get<ApiResponse<NotificationEventType[]>>(
+      "/notification-event-types",
+    );
+    return response.data.data;
+  },
+
+  updateSetting: async (
+    eventType: string,
+    payload: UpdateNotificationSettingPayload,
+  ): Promise<NotificationSetting> => {
+    const response = await apiClient.put<ApiResponse<NotificationSetting>>(
+      `/me/notification-settings/${encodeURIComponent(eventType)}`,
+      payload,
+    );
+    return response.data.data;
   },
 };

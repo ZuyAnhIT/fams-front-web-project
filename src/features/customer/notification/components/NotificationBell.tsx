@@ -12,6 +12,7 @@ import { Badge, Popover, Spin } from "antd";
 import { useRouter } from "next/navigation";
 import { message } from "antd";
 import { useNotificationStore, notificationEventBus } from "../stores/notification.store";
+import { getNotificationHref } from "../utils/notification.mapper";
 
 // Icon mapping cho các loại notification
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -63,7 +64,7 @@ function getColorClass(color: string): string {
 
 interface NotificationItemProps {
   notification: Notification;
-  onClick: (id: string) => void;
+  onClick: (notification: Notification) => void;
   isMarking: boolean;
 }
 
@@ -78,7 +79,7 @@ function NotificationItem({ notification, onClick, isMarking }: NotificationItem
       className={`flex w-full items-start gap-3 rounded-lg p-3 text-left transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
         !notification.isRead ? "bg-blue-50/50" : ""
       } ${isMarking ? "opacity-50" : ""}`}
-      onClick={() => !isMarking && onClick(notification.id)}
+      onClick={() => !isMarking && onClick(notification)}
       disabled={isMarking}
       aria-label={`${notification.isRead ? "Mở" : "Đánh dấu đã đọc và mở"}: ${notification.title}`}
     >
@@ -112,7 +113,7 @@ function NotificationItem({ notification, onClick, isMarking }: NotificationItem
 interface NotificationPopoverContentProps {
   notifications: Notification[];
   unreadCount: number;
-  onMarkAsRead: (id: string) => void;
+  onMarkAsRead: (notification: Notification) => void;
   onMarkAllAsRead: () => void;
   onViewAll: () => void;
   markingId: string | null;
@@ -264,16 +265,15 @@ export default function NotificationBell() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleMarkAsRead = async (id: string) => {
-    setMarkingId(id);
+  const handleMarkAsRead = async (notification: Notification) => {
+    setMarkingId(notification.id);
     try {
-      await notificationService.markAsRead(id);
+      if (!notification.isRead) await notificationService.markAsRead(notification.id);
       // Update shared store so other components (NotificationPage) reflect the change
-      markNotificationAsRead(id);
+      if (!notification.isRead) markNotificationAsRead(notification.id);
       notificationEventBus.emit("refresh");
-      // Đóng popover và chuyển đến trang thông báo
       setOpen(false);
-      router.push("/customer/notifications");
+      router.push(getNotificationHref(notification) || "/customer/notifications");
     } catch {
       message.error("Không thể đánh dấu đã đọc");
     } finally {

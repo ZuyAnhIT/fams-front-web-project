@@ -175,6 +175,17 @@ export interface TotpVerifyPayload {
   code: string;
 }
 
+/** Backup codes are returned once, immediately after TOTP is enabled. */
+export interface TotpEnableResponse {
+  backupCodes: string[];
+}
+
+/** Backend requires exactly one re-authentication method before disabling 2FA. */
+export type TotpDisablePayload =
+  | { password: string; code?: never; backupCode?: never }
+  | { password?: never; code: string; backupCode?: never }
+  | { password?: never; code?: never; backupCode: string };
+
 
 /** Dữ liệu gửi lên khi xác nhận TOTP ở màn hình Login */
 export interface LoginTotpPayload {
