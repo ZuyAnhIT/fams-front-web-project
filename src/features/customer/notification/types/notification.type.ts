@@ -54,6 +54,36 @@ export interface UpdateNotificationSettingPayload {
   pushEnabled: boolean;
 }
 
+export interface NotificationTemplate {
+  id: string;
+  tenantId: string;
+  eventType: string;
+  locale: string;
+  titleTemplate: string;
+  bodyTemplate: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface NotificationTemplatePage {
+  content: NotificationTemplate[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  first: boolean;
+  last: boolean;
+}
+
+export interface NotificationTemplatePayload {
+  eventType: string;
+  locale: string;
+  titleTemplate: string;
+  bodyTemplate: string;
+}
+
+export type UpdateNotificationTemplatePayload = Partial<NotificationTemplatePayload>;
+
 // ======= Generic API wrapper =======
 
 export interface ApiResponse<T> {

@@ -52,6 +52,13 @@ export const SIDEBAR_MENU: MenuItem[] = [
     icon: "ScrollText",
     allowedRoles: [SystemRole.PLATFORM_ADMIN],
   },
+  {
+    title: "Vận hành hệ thống",
+    path: ADMIN_ROUTES.SYSTEM_STATUS,
+    icon: "Activity",
+    allowedRoles: [SystemRole.PLATFORM_ADMIN],
+    allowedPermissions: ["system:read"],
+  },
 
   // -- CUSTOMER DASHBOARD --
   {
@@ -133,6 +140,13 @@ export const SIDEBAR_MENU: MenuItem[] = [
     path: CUSTOMER_ROUTES.ROLES,
     icon: "ShieldCheck",
     allowedPermissions: ["roles:read", "roles:create", "roles:update", "roles:delete"]
+  },
+  {
+    title: "Mẫu thông báo",
+    path: CUSTOMER_ROUTES.NOTIFICATION_TEMPLATES,
+    icon: "MessagesSquare",
+    allowedRoles: [SystemRole.PLATFORM_ADMIN],
+    allowedPermissions: ["notifications:manage", "tenant:admin"],
   },
 
 ];

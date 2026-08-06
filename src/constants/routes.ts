@@ -20,6 +20,7 @@ export const ADMIN_ROUTES = {
   ROLES: "/admin/settings/roles",
   USERS: "/admin/users",
   AUDIT_LOGS: "/admin/audit-logs",
+  SYSTEM_STATUS: "/admin/system-status",
 };
 
 export const CUSTOMER_ROUTES = {
@@ -40,4 +41,5 @@ export const CUSTOMER_ROUTES = {
   SELECT_COMPANY: "/customer/select-company",
   NOTIFICATIONS: "/customer/notifications",
   AUDIT_LOGS: "/customer/audit-logs",
+  NOTIFICATION_TEMPLATES: "/customer/settings/notification-templates",
 };
