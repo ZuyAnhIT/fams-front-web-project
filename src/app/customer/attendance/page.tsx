@@ -4,10 +4,12 @@ import RoleGuard from "@/components/guards/RoleGuard";
 import { SystemRole } from "@/features/customer/auth/types/auth.type";
 import { Tabs } from "antd";
 import { useAuthStore } from "@/stores/auth.store";
+import { useSearchParams } from "next/navigation";
 import CheckinListTab from "@/features/customer/checkin/components/CheckinListTab";
 import AttendanceSummaryTab from "@/features/customer/attendance/components/AttendanceSummaryTab";
 import AttendanceMonthlyTab from "@/features/customer/attendance/components/AttendanceMonthlyTab";
 export default function AttendancePage() {
+  const searchParams = useSearchParams();
   const user = useAuthStore((state) => state.user);
   const isPlatformAdmin = user?.role === SystemRole.PLATFORM_ADMIN;
   const permissions = new Set(user?.permissions ?? []);
@@ -47,7 +49,7 @@ export default function AttendancePage() {
           <p className="mt-1 text-sm text-slate-600">Theo dõi lượt check-in, bảng công theo ngày và tổng hợp theo tháng.</p>
         </div>
         <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
-          <Tabs defaultActiveKey={items[0]?.key} items={items} />
+          <Tabs defaultActiveKey={searchParams.get("tab") === "checkins" && canListCheckins ? "1" : items[0]?.key} items={items} />
         </div>
       </div>
     </RoleGuard>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Alert, DatePicker, Tag, type TableColumnsType } from "antd";
 import { EyeOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
@@ -75,6 +76,7 @@ function pendingReason(record: CheckinResponse): string | null {
 }
 
 export default function CheckinListTab() {
+  const searchParams = useSearchParams();
   const user = useAuthStore((state) => state.user);
   const tenantId = user?.tenantId ?? undefined;
   const supervisorMustChooseSite =
@@ -86,8 +88,9 @@ export default function CheckinListTab() {
     sortBy: "checkInAt",
     sortDir: "desc",
   });
-  const [selectedRecord, setSelectedRecord] =
-    useState<CheckinResponse | null>(null);
+  const [selectedCheckinId, setSelectedCheckinId] = useState<string | null>(
+    searchParams.get("checkinId"),
+  );
 
   const { data: sitePage } = useSitesQuery({
     tenantId,
@@ -308,7 +311,7 @@ export default function CheckinListTab() {
         <BaseButton
           type="link"
           icon={<EyeOutlined />}
-          onClick={() => setSelectedRecord(record)}
+          onClick={() => setSelectedCheckinId(record.id)}
         >
           Chi tiết
         </BaseButton>
@@ -439,9 +442,9 @@ export default function CheckinListTab() {
       />
 
       <CheckinDetailModal
-        isOpen={Boolean(selectedRecord)}
-        onClose={() => setSelectedRecord(null)}
-        checkinId={selectedRecord?.id || null}
+        isOpen={Boolean(selectedCheckinId)}
+        onClose={() => setSelectedCheckinId(null)}
+        checkinId={selectedCheckinId}
       />
     </div>
   );
