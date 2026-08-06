@@ -5,6 +5,7 @@ const evidenceDir = "docs/test-evidence/face-id-management";
 const tenantId = "11111111-1111-4111-8111-111111111111";
 const employeeId = "22222222-2222-4222-8222-222222222222";
 const rejectedEmployeeId = "33333333-3333-4333-8333-333333333333";
+const departmentId = "44444444-4444-4444-8444-444444444444";
 
 const api = (data: unknown) => ({ success: true, message: "Success", data });
 
@@ -125,6 +126,88 @@ test("HR xem đúng trạng thái đã duyệt và trạng thái review độc l
     path: `${evidenceDir}/01-report-approved-and-review-status.png`,
     fullPage: true,
   });
+});
+
+test("HR tìm kiếm và lọc phòng ban Face ID hoàn toàn phía server", async ({ page }) => {
+  await seedHr(page);
+  let reportParams = new URLSearchParams();
+
+  await page.route(
+    `**/api/v1/tenants/${tenantId}/workspaces?*`,
+    (route) => route.fulfill({
+      json: api({
+        content: [{
+          id: departmentId,
+          tenantId,
+          name: "Thi công",
+          code: "TC",
+          description: null,
+          type: "department",
+          status: "active",
+          parentId: null,
+          parentName: null,
+          memberCount: 5,
+          createdAt: "2026-08-01T00:00:00Z",
+          updatedAt: "2026-08-01T00:00:00Z",
+        }],
+        page: 0,
+        size: 100,
+        totalElements: 1,
+        totalPages: 1,
+        first: true,
+        last: true,
+      }),
+    }),
+  );
+  await page.route(
+    `**/api/v1/tenants/${tenantId}/reports/face-id/enrollment?*`,
+    (route) => {
+      reportParams = new URL(route.request().url()).searchParams;
+      return route.fulfill({
+        json: api({
+          totalEmployees: 1,
+          enrolledCount: 1,
+          pendingCount: 0,
+          notEnrolledCount: 0,
+          revokedCount: 0,
+          statusFilter: null,
+          departmentId: reportParams.get("departmentId"),
+          search: reportParams.get("search"),
+          records: {
+            content: [{
+              employeeId,
+              employeeCode: "NV-FACE-01",
+              firstName: "Giang",
+              lastName: "Nguyễn",
+              email: "giang@example.com",
+              department: "Thi công",
+              faceIdStatus: "enrolled",
+              consentGiven: true,
+              consentGivenAt: "2026-06-01T01:00:00Z",
+              enrolledAt: "2026-06-01T02:00:00Z",
+              revokedAt: null,
+              reviewStatus: "none",
+              submittedAt: null,
+              rejectionReason: null,
+            }],
+            page: 0,
+            size: 20,
+            totalElements: 1,
+            totalPages: 1,
+          },
+        }),
+      });
+    },
+  );
+
+  await page.goto("/customer/reports/face-id-enrollment");
+  await page.getByLabel("Tìm kiếm báo cáo Face ID phía server").fill("Giang");
+  await expect.poll(() => reportParams.get("search")).toBe("Giang");
+
+  await page.getByLabel("Lọc báo cáo theo phòng ban").click();
+  await page.locator(".ant-select-dropdown:visible .ant-select-item-option").filter({ hasText: "Thi công" }).click();
+  await expect.poll(() => reportParams.get("departmentId")).toBe(departmentId);
+  await expect(page.getByText("Nguyễn Giang")).toBeVisible();
 });
 
 test("HR duyệt và từ chối hàng đợi theo đúng API contract", async ({ page }) => {

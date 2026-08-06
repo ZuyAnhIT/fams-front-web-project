@@ -26,6 +26,8 @@ export interface FaceIdReportResponse {
   notEnrolledCount: number;
   revokedCount: number;
   statusFilter: FaceIdStatusFilter | null;
+  departmentId: string | null;
+  search: string | null;
   records: {
     content: FaceIdReportRow[];
     page: number;
@@ -37,6 +39,8 @@ export interface FaceIdReportResponse {
 
 export interface FaceIdReportParams {
   status?: FaceIdStatusFilter;
+  departmentId?: string;
+  search?: string;
   page?: number;
   size?: number;
 }

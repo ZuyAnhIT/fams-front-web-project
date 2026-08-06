@@ -30,6 +30,7 @@ export const CUSTOMER_ROUTES = {
   EXCEPTIONS: "/customer/exceptions",
   RANDOM_CHECKS: "/customer/random-checks",
   FACE_ID_REPORT: "/customer/reports/face-id-enrollment",
+  REPORTS: "/customer/reports",
   SETTINGS: "/customer/settings",
   TENANT_SETTINGS: "/customer/settings/tenant",
   ROLES: "/customer/settings/roles",

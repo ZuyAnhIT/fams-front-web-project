@@ -17,6 +17,7 @@ import { authTokenService } from "@/services/auth-token.service";
 import NotificationBell from "@/features/customer/notification/components/NotificationBell";
 import TenantSwitcher from "@/features/customer/tenant/components/TenantSwitcher";
 import { SystemRole } from "@/features/customer/auth/types/auth.type";
+import GlobalSearch from "@/features/customer/report/components/GlobalSearch";
 
 interface HeaderProps {
   onOpenMenu: () => void;
@@ -45,7 +46,8 @@ const PAGE_TITLES: Array<{ match: (path: string) => boolean; title: string; area
   { match: (path) => path === "/customer/sites", title: "Quản lý công trình", area: "Vận hành" },
   { match: (path) => path === "/customer/attendance", title: "Quản lý chấm công", area: "Vận hành" },
   { match: (path) => path === "/customer/notifications", title: "Thông báo", area: "Tài khoản" },
-  { match: (path) => path.startsWith("/customer/reports"), title: "Quản lý Face ID", area: "Báo cáo" },
+  { match: (path) => path === "/customer/reports", title: "Báo cáo vận hành", area: "Báo cáo" },
+  { match: (path) => path.startsWith("/customer/reports/face-id"), title: "Quản lý Face ID", area: "Báo cáo" },
   { match: (path) => path.includes("tenant-settings") || path === "/customer/settings/tenant", title: "Cấu hình công ty", area: "Cài đặt" },
   { match: (path) => path.startsWith("/customer/settings"), title: "Cài đặt tài khoản", area: "Tài khoản" },
 ];
@@ -135,6 +137,7 @@ export default function Header({ onOpenMenu }: HeaderProps) {
       </div>
 
       <div className="flex items-center gap-1 sm:gap-2">
+        <GlobalSearch />
         {user?.tenantId && <TenantSwitcher />}
         {user?.tenantId && <NotificationBell />}
 

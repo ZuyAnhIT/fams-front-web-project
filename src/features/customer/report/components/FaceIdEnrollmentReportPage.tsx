@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Alert, Tag } from "antd";
 import type { ColumnsType } from "antd/es/table";
@@ -32,6 +32,7 @@ import { CUSTOMER_ROUTES } from "@/constants/routes";
 import { formatVietnameseName } from "@/utils/name.util";
 import { useAuthStore } from "@/stores/auth.store";
 import FaceIdPendingReviewTab from "./FaceIdPendingReviewTab";
+import { useWorkspacesQuery } from "@/features/customer/workspace/hooks/use-workspace";
 
 type StatusFilter = FaceIdStatusFilter | "all";
 type ViewMode = "overview" | "pending";
@@ -130,6 +131,7 @@ function StatCard({ title, value, total, icon, tone }: StatCardProps) {
 export default function FaceIdEnrollmentReportPage() {
   const router = useRouter();
   const hasPermission = useAuthStore((state) => state.hasPermission);
+  const tenantId = useAuthStore((state) => state.user?.tenantId || undefined);
   const canViewReport = hasPermission("reports:list");
   const canManageFaceId = hasPermission("face_id:manage");
   const { state, setPagination } = usePagination(20);
@@ -150,8 +152,21 @@ export default function FaceIdEnrollmentReportPage() {
   const apiStatus: FaceIdStatusFilter | undefined =
     statusFilter === "all" ? undefined : statusFilter;
 
+  const { data: departmentPage } = useWorkspacesQuery({
+    tenantId,
+    type: "department",
+    status: "active",
+    sortBy: "name",
+    sortDir: "asc",
+    page: 0,
+    size: 100,
+  });
+  const departments = departmentPage?.data?.content ?? [];
+
   const { data, isLoading, isFetching, refetch } = useFaceIdEnrollmentReport({
     status: apiStatus,
+    departmentId: state.department,
+    search: debouncedSearch.trim() || undefined,
     page: state.page,
     size: state.size,
   }, {
@@ -160,21 +175,6 @@ export default function FaceIdEnrollmentReportPage() {
 
   const rows = data?.records?.content ?? [];
   const total = data?.records.totalElements ?? 0;
-
-  const filteredRows = useMemo(() => {
-    if (!debouncedSearch.trim()) return rows;
-    const q = debouncedSearch.toLowerCase().trim();
-    return rows.filter((r) => {
-      return (
-        r.firstName?.toLowerCase().includes(q) ||
-        r.lastName?.toLowerCase().includes(q) ||
-        formatVietnameseName(r.firstName, r.lastName).toLowerCase().includes(q) ||
-        r.email?.toLowerCase().includes(q) ||
-        r.employeeCode?.toLowerCase().includes(q) ||
-        r.department?.toLowerCase().includes(q)
-      );
-    });
-  }, [rows, debouncedSearch]);
 
   const columns: ColumnsType<FaceIdReportRow> = [
     {
@@ -424,19 +424,30 @@ export default function FaceIdEnrollmentReportPage() {
         <ListHeader
           searchValue={searchInput}
           onSearchChange={setSearchInput}
-          searchPlaceholder="Lọc nhanh trong trang hiện tại..."
-          searchAriaLabel="Lọc báo cáo Face ID trong trang hiện tại"
+          searchPlaceholder="Tìm theo tên, email hoặc mã nhân viên..."
+          searchAriaLabel="Tìm kiếm báo cáo Face ID phía server"
           filters={
-            <BaseSelect
-              aria-label="Lọc báo cáo theo trạng thái Face ID"
-              className="!w-full sm:!w-56"
-              value={statusFilter}
-              onChange={(val) => {
-                setStatusFilter(val as StatusFilter);
-                setPagination({ page: 0 });
-              }}
-              options={STATUS_OPTIONS}
-            />
+            <>
+              <BaseSelect
+                aria-label="Lọc báo cáo theo phòng ban"
+                className="!w-full sm:!w-56"
+                allowClear
+                placeholder="Tất cả phòng ban"
+                value={state.department}
+                onChange={(department) => setPagination({ department })}
+                options={departments.map((department) => ({ value: department.id, label: department.name }))}
+              />
+              <BaseSelect
+                aria-label="Lọc báo cáo theo trạng thái Face ID"
+                className="!w-full sm:!w-56"
+                value={statusFilter}
+                onChange={(val) => {
+                  setStatusFilter(val as StatusFilter);
+                  setPagination({ page: 0 });
+                }}
+                options={STATUS_OPTIONS}
+              />
+            </>
           }
           actions={
             statusFilter !== "all" && (
@@ -456,7 +467,7 @@ export default function FaceIdEnrollmentReportPage() {
             emptyTitle="Không có dữ liệu Face ID"
             emptyDescription="Thử thay đổi trạng thái hoặc từ khóa lọc."
             columns={columns}
-            data={filteredRows}
+            data={rows}
             loading={isLoading}
             totalElements={total}
             currentPage={state.page}
@@ -468,7 +479,7 @@ export default function FaceIdEnrollmentReportPage() {
         <div className="mt-4 flex items-center justify-between text-xs text-slate-500 font-medium px-1">
           <div>
             Đang hiển thị{" "}
-            <span className="font-bold text-slate-700">{filteredRows.length}</span> /{" "}
+            <span className="font-bold text-slate-700">{rows.length}</span> /{" "}
             <span className="font-bold text-slate-700">{total}</span> nhân viên
           </div>
           {debouncedSearch && (
@@ -476,7 +487,7 @@ export default function FaceIdEnrollmentReportPage() {
               Từ khoá:{" "}
               <span className="font-bold text-blue-600">&quot;{debouncedSearch}&quot;</span>
               <span className="ml-2 text-slate-400">
-                (lọc trong trang hiện tại)
+                (tìm kiếm toàn bộ phía server)
               </span>
             </div>
           )}
