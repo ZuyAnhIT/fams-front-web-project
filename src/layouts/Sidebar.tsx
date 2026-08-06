@@ -129,6 +129,7 @@ export default function Sidebar({ variant = "desktop", onNavigate }: SidebarProp
         !isMobile && isCollapsed ? "px-2" : "px-4"
       )}>
         {SIDEBAR_MENU.filter((item) => {
+          if (user?.role && item.excludedRoles?.includes(user.role)) return false;
           if (item.path === CUSTOMER_ROUTES.TENANT_SETTINGS && !isActiveTenantOwner) {
             return false;
           }

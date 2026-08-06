@@ -8,6 +8,7 @@ export interface MenuItem {
   icon: keyof typeof Icons;
   allowedRoles?: SystemRole[]; // Các role được phép xem menu này
   allowedPermissions?: string[];
+  excludedRoles?: SystemRole[];
 }
 
 export const SIDEBAR_MENU: MenuItem[] = [
@@ -44,6 +45,12 @@ export const SIDEBAR_MENU: MenuItem[] = [
     path: ADMIN_ROUTES.USERS,
     icon: "Users",
     allowedRoles: [SystemRole.PLATFORM_ADMIN]
+  },
+  {
+    title: "Audit toàn hệ thống",
+    path: ADMIN_ROUTES.AUDIT_LOGS,
+    icon: "ScrollText",
+    allowedRoles: [SystemRole.PLATFORM_ADMIN],
   },
 
   // -- CUSTOMER DASHBOARD --
@@ -99,6 +106,13 @@ export const SIDEBAR_MENU: MenuItem[] = [
     icon: "AlertTriangle",
     allowedPermissions: ["violations:list", "violations:read"],
     allowedRoles: [SystemRole.PLATFORM_ADMIN],
+  },
+  {
+    title: "Nhật ký audit",
+    path: CUSTOMER_ROUTES.AUDIT_LOGS,
+    icon: "ScrollText",
+    allowedPermissions: ["audit:list"],
+    excludedRoles: [SystemRole.PLATFORM_ADMIN],
   },
   {
     title: "Cần giải thích",
