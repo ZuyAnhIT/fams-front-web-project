@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Building2, CreditCard, ShieldCheck } from "lucide-react";
+import { Activity, ArrowRight, Building2, CreditCard, ShieldCheck } from "lucide-react";
 import RoleGuard from "@/components/guards/RoleGuard";
 import { ADMIN_ROUTES } from "@/constants/routes";
 import { SystemRole } from "@/features/customer/auth/types/auth.type";
@@ -25,6 +25,12 @@ const MANAGEMENT_AREAS = [
     description: "Kiểm soát quyền truy cập hệ thống theo vai trò và phạm vi quản trị.",
     href: ADMIN_ROUTES.ROLES,
     icon: ShieldCheck,
+  },
+  {
+    title: "Vận hành hệ thống",
+    description: "Theo dõi sức khỏe dịch vụ, job định kỳ, hàng đợi và lịch sử gửi thông báo.",
+    href: ADMIN_ROUTES.SYSTEM_STATUS,
+    icon: Activity,
   },
 ];
 

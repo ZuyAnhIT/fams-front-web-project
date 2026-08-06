@@ -7,6 +7,10 @@ import type {
   NotificationEventType,
   NotificationPageResponse,
   NotificationSetting,
+  NotificationTemplate,
+  NotificationTemplatePage,
+  NotificationTemplatePayload,
+  UpdateNotificationTemplatePayload,
   UpdateNotificationSettingPayload,
 } from "../types/notification.type";
 
@@ -94,5 +98,37 @@ export const notificationService = {
       payload,
     );
     return response.data.data;
+  },
+
+  getTemplates: async (tenantId: string, page = 0, size = 20): Promise<NotificationTemplatePage> => {
+    const response = await apiClient.get<ApiResponse<NotificationTemplatePage>>(
+      `/tenants/${tenantId}/notification-templates`,
+      { params: { page, size } },
+    );
+    return response.data.data;
+  },
+
+  createTemplate: async (tenantId: string, payload: NotificationTemplatePayload): Promise<NotificationTemplate> => {
+    const response = await apiClient.post<ApiResponse<NotificationTemplate>>(
+      `/tenants/${tenantId}/notification-templates`,
+      payload,
+    );
+    return response.data.data;
+  },
+
+  updateTemplate: async (
+    tenantId: string,
+    templateId: string,
+    payload: UpdateNotificationTemplatePayload,
+  ): Promise<NotificationTemplate> => {
+    const response = await apiClient.put<ApiResponse<NotificationTemplate>>(
+      `/tenants/${tenantId}/notification-templates/${templateId}`,
+      payload,
+    );
+    return response.data.data;
+  },
+
+  deleteTemplate: async (tenantId: string, templateId: string): Promise<void> => {
+    await apiClient.delete(`/tenants/${tenantId}/notification-templates/${templateId}`);
   },
 };

@@ -26,8 +26,7 @@ import {
   type Notification,
 } from "../types/notification.type";
 import { notificationService } from "../services/notification.service";
-import { Checkbox, Empty, Segmented, Spin } from "antd";
-import { message } from "antd";
+import { App, Checkbox, Empty, Segmented, Spin } from "antd";
 import { notificationEventBus, useNotificationStore } from "../stores/notification.store";
 import { getNotificationHref } from "../utils/notification.mapper";
 
@@ -189,6 +188,7 @@ type FilterType = "all" | "unread";
 
 export default function NotificationPage() {
   const router = useRouter();
+  const { message } = App.useApp();
   const [filter, setFilter] = useState<FilterType>("all");
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -241,7 +241,7 @@ export default function NotificationPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [filter, setUnreadCount]);
+  }, [filter, message, setUnreadCount]);
 
   // 2) Load more (next page). Appends to the end of the list.
   const loadMore = useCallback(async () => {
@@ -266,7 +266,7 @@ export default function NotificationPage() {
     } finally {
       setIsLoadingMore(false);
     }
-  }, [currentPage, hasMore, isLoadingMore, filter, setUnreadCount]);
+  }, [currentPage, hasMore, isLoadingMore, filter, message, setUnreadCount]);
 
   // 3) Silent refresh: only merge NEW items (createdAt newer than current top).
   //    Does NOT reset currentPage or replace existing items.
