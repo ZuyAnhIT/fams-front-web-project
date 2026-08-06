@@ -6,6 +6,7 @@ import type {
   MonthlyAttendanceReportParams,
   SitePresenceParams,
   ViolationReportParams,
+  ViolationExportParams,
 } from '../types/report-search.type';
 
 export const reportSearchKeys = {
@@ -73,7 +74,7 @@ export function useExportAttendanceReport() {
 
 export function useExportViolationReport() {
   return useMutation({
-    mutationFn: ({ tenantId, params }: { tenantId: string; params: ViolationReportParams }) =>
+    mutationFn: ({ tenantId, params }: { tenantId: string; params: ViolationExportParams }) =>
       reportSearchService.exportViolations(tenantId, params),
   });
 }

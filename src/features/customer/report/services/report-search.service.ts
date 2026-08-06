@@ -10,6 +10,7 @@ import type {
   SitePresenceParams,
   SitePresenceReport,
   ViolationReport,
+  ViolationExportParams,
   ViolationReportParams,
 } from '../types/report-search.type';
 
@@ -78,7 +79,7 @@ export const reportSearchService = {
     }
   },
 
-  async exportViolations(tenantId: string, params: ViolationReportParams) {
+  async exportViolations(tenantId: string, params: ViolationExportParams) {
     try {
       const response = await apiClient.get(`/tenants/${tenantId}/reports/violations/export`, {
         params: { ...params, page: undefined, size: undefined },

@@ -69,6 +69,10 @@ export interface ViolationReportParams {
   size?: number;
 }
 
+export interface ViolationExportParams extends ViolationReportParams {
+  resolved?: boolean;
+}
+
 export interface ViolationReport {
   from: string | null;
   to: string | null;

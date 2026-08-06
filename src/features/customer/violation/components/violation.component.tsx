@@ -1,10 +1,10 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { Alert, DatePicker, Tag, Tooltip } from 'antd';
+import { useCallback, useMemo, useState } from 'react';
+import { Alert, App, DatePicker, Tag, Tooltip } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
-import { AlertTriangle, Eye } from 'lucide-react';
+import { AlertTriangle, Download, Eye } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import ContentCard from '@/components/shared/layout/ContentCard';
 import DataTable from '@/components/tables/DataTable';
@@ -13,6 +13,10 @@ import { useAuthStore } from '@/stores/auth.store';
 import { useEmployees } from '@/features/customer/employee/hooks/use-employee';
 import { useSitesQuery } from '@/features/customer/site/hooks/use-site';
 import { formatVietnameseName } from '@/utils/name.util';
+import SavedFilterToolbar from '@/features/shared/saved-filter/components/SavedFilterToolbar';
+import type { SavedFilterParams } from '@/features/shared/saved-filter/types/saved-filter.type';
+import { useExportViolationReport } from '@/features/customer/report/hooks/use-report-search';
+import { downloadBlob, reportErrorMessage } from '@/features/customer/report/components/report-utils';
 
 import { useViolations } from '../hooks/use-violation';
 import type { ViolationListItem, ViolationListParams, ViolationType } from '../types/violation.type';
@@ -22,6 +26,7 @@ import ViolationDetailModal from './ViolationDetailModal';
 const { RangePicker } = DatePicker;
 
 export default function ViolationManagementPage() {
+  const { message } = App.useApp();
   const searchParams = useSearchParams();
   const user = useAuthStore((state) => state.user);
   const tenantId = user?.tenantId || '';
@@ -47,6 +52,63 @@ export default function ViolationManagementPage() {
   const employeeNames = useMemo(() => new Map(employees.map((employee) => [employee.id, formatVietnameseName(employee.firstName, employee.lastName)])), [employees]);
   const siteNames = useMemo(() => new Map(sites.map((site) => [site.id, site.name])), [sites]);
   const query = useViolations(tenantId, params);
+  const exportMutation = useExportViolationReport();
+  const canExport = user?.role === 'PLATFORM_ADMIN' || Boolean(user?.permissions?.includes('reports:export'));
+  const savedParams = useMemo<SavedFilterParams>(() => Object.fromEntries(
+    Object.entries({
+      employeeId: params.employeeId,
+      siteId: params.siteId,
+      violationType: params.violationType,
+      resolved: params.resolved,
+      from: params.from,
+      to: params.to,
+      scheduledCheckId: params.scheduledCheckId,
+      sortBy: params.sortBy,
+      sortDir: params.sortDir,
+    }).filter(([, value]) => value !== undefined),
+  ), [params]);
+
+  const applySavedFilter = useCallback((stored: SavedFilterParams) => {
+    const allowedTypes: ViolationType[] = ['no_response', 'location_fail', 'face_fail', 'liveness_fail'];
+    const allowedSort = ['checkDate', 'createdAt', 'violationType', 'employeeId', 'siteId'] as const;
+    setParams((current) => ({
+      page: 0,
+      size: current.size || 20,
+      employeeId: typeof stored.employeeId === 'string' ? stored.employeeId : undefined,
+      siteId: typeof stored.siteId === 'string' ? stored.siteId : undefined,
+      violationType: typeof stored.violationType === 'string' && allowedTypes.includes(stored.violationType as ViolationType)
+        ? stored.violationType as ViolationType
+        : undefined,
+      resolved: typeof stored.resolved === 'boolean' ? stored.resolved : undefined,
+      from: typeof stored.from === 'string' ? stored.from : undefined,
+      to: typeof stored.to === 'string' ? stored.to : undefined,
+      scheduledCheckId: typeof stored.scheduledCheckId === 'string' ? stored.scheduledCheckId : undefined,
+      sortBy: typeof stored.sortBy === 'string' && allowedSort.includes(stored.sortBy as typeof allowedSort[number])
+        ? stored.sortBy as typeof allowedSort[number]
+        : 'checkDate',
+      sortDir: stored.sortDir === 'asc' || stored.sortDir === 'desc' ? stored.sortDir : 'desc',
+    }));
+  }, []);
+
+  const exportNow = async () => {
+    try {
+      const blob = await exportMutation.mutateAsync({
+        tenantId,
+        params: {
+          from: params.from,
+          to: params.to,
+          siteId: params.siteId,
+          employeeId: params.employeeId,
+          violationType: params.violationType,
+          resolved: params.resolved,
+        },
+      });
+      downloadBlob(blob, `violations-${new Date().toISOString().slice(0, 10)}.xlsx`);
+      message.success('Đã xuất danh sách vi phạm.');
+    } catch (error) {
+      message.error(reportErrorMessage(error));
+    }
+  };
 
   const columns: ColumnsType<ViolationListItem> = [
     { title: 'Ngày', dataIndex: 'checkDate', key: 'checkDate', width: 115, sorter: true, sortOrder: params.sortBy === 'checkDate' ? (params.sortDir === 'asc' ? 'ascend' : 'descend') : null, render: (value) => dayjs(value).format('DD/MM/YYYY') },
@@ -75,6 +137,15 @@ export default function ViolationManagementPage() {
       {params.scheduledCheckId && <Alert type="warning" showIcon closable onClose={() => setParams((current) => ({ ...current, scheduledCheckId: undefined, page: 0 }))} title="Đang lọc theo một lượt kiểm tra cụ thể" description={<span className="font-mono text-xs">{params.scheduledCheckId}</span>} />}
 
       <ContentCard className="p-5">
+        <div className="mb-4">
+          <SavedFilterToolbar
+            tenantId={tenantId}
+            resourceType="violations"
+            currentParams={savedParams}
+            onApply={applySavedFilter}
+            skipDefault={Boolean(initialScheduledCheckId || resolvedQuery)}
+          />
+        </div>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
           <BaseSelect allowClear showSearch optionFilterProp="label" placeholder="Tất cả nhân viên" value={params.employeeId} onChange={(employeeId) => setParams((current) => ({ ...current, employeeId, page: 0 }))} options={employees.map((employee) => ({ value: employee.id, label: formatVietnameseName(employee.firstName, employee.lastName) }))} />
           <BaseSelect allowClear showSearch optionFilterProp="label" placeholder="Tất cả công trình" value={params.siteId} onChange={(siteId) => setParams((current) => ({ ...current, siteId, page: 0 }))} options={sites.map((site) => ({ value: site.id, label: site.name }))} />
@@ -83,6 +154,14 @@ export default function ViolationManagementPage() {
           <RangePicker className="w-full" onChange={(_, values) => setParams((current) => ({ ...current, from: values[0] || undefined, to: values[1] || undefined, page: 0 }))} />
         </div>
       </ContentCard>
+
+      {canExport && (
+        <div className="flex justify-end">
+          <BaseButton icon={<Download className="h-4 w-4" />} loading={exportMutation.isPending} onClick={() => void exportNow()}>
+            Xuất Excel theo bộ lọc
+          </BaseButton>
+        </div>
+      )}
 
       {query.isError && <Alert type="error" showIcon title="Không thể tải danh sách vi phạm" description={getViolationErrorMessage(query.error, 'Vui lòng thử lại.')} />}
       <DataTable

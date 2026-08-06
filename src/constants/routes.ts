@@ -19,6 +19,7 @@ export const ADMIN_ROUTES = {
   REPORTS: "/admin/reports",
   ROLES: "/admin/settings/roles",
   USERS: "/admin/users",
+  AUDIT_LOGS: "/admin/audit-logs",
 };
 
 export const CUSTOMER_ROUTES = {
@@ -38,4 +39,5 @@ export const CUSTOMER_ROUTES = {
   WORKSPACES: "/customer/workspaces",
   SELECT_COMPANY: "/customer/select-company",
   NOTIFICATIONS: "/customer/notifications",
+  AUDIT_LOGS: "/customer/audit-logs",
 };
