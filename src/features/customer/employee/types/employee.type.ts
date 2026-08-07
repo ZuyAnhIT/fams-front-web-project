@@ -16,6 +16,8 @@ export interface EmployeeResponse {
   status: string; // 'active' | 'inactive' | 'terminated'
   createdAt: string;
   updatedAt: string;
+  /** Metadata authoritative from Backend; never infer masking from the string value. */
+  piiMasked: boolean;
   faceId?: FaceIdStatus;
 }
 

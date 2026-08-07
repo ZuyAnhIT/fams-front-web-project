@@ -20,12 +20,15 @@ import ListHeader from "@/components/shared/layout/ListHeader";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { EMPLOYEE_STATUS } from "@/constants/status";
 import { formatVietnameseName } from "@/utils/name.util";
+import MaskedValue from "@/components/security/MaskedValue";
+import { SystemRole } from "@/features/customer/auth/types/auth.type";
 
 export default function EmployeeListPage() {
   const hasPermission = useAuthStore((state) => state.hasPermission);
   const user = useAuthStore((state) => state.user);
   const { message, modal } = App.useApp();
   const router = useRouter();
+  const canViewSensitiveData = user?.role === SystemRole.PLATFORM_ADMIN || hasPermission("employees:pii:read");
   const { state, setPagination } = usePagination(20);
   const [searchInput, setSearchInput] = useState(state.search || "");
   const debouncedSearch = useDebounce(searchInput, 600);
@@ -148,7 +151,7 @@ export default function EmployeeListPage() {
           )}
           <div className="flex flex-col">
             <span className="font-bold text-slate-900 text-sm">{formatVietnameseName(record.firstName, record.lastName)}</span>
-            <span className="text-xs text-slate-500 font-medium">{record.email}</span>
+            <span className="text-xs font-medium"><MaskedValue value={record.email} masked={record.piiMasked} fallback="Chưa có email" /></span>
           </div>
         </div>
       ),
@@ -242,6 +245,14 @@ export default function EmployeeListPage() {
           showIcon
           message="Bạn đang xem dữ liệu theo phạm vi công trường"
           description="Danh sách, chi tiết và file xuất chỉ gồm nhân viên thuộc các site bạn được phân công."
+        />
+      )}
+      {!canViewSensitiveData && (
+        <Alert
+          type="info"
+          showIcon
+          message="Thông tin liên hệ được bảo vệ theo quyền"
+          description="Email và số điện thoại có thể được che một phần. File Excel xuất ra áp dụng cùng quy tắc; Web không có chức năng giải che dữ liệu."
         />
       )}
       <ListHeader

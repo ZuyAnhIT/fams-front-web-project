@@ -23,6 +23,9 @@ import type {
   NotificationDeliveryLog,
   ScheduledJobStatus,
 } from "../types/system-operations.type";
+import GoLiveReadinessPanel from "./GoLiveReadinessPanel";
+import { useAuthStore } from "@/stores/auth.store";
+import { SystemRole } from "@/features/customer/auth/types/auth.type";
 
 const { RangePicker } = DatePicker;
 
@@ -33,6 +36,7 @@ const JOB_LABELS: Record<string, string> = {
   RandomCheckQueueReconciliationJob: "Đối soát hàng đợi random check",
   NoResponseViolationJob: "Phát hiện không phản hồi",
   DataRetentionJob: "Dọn dữ liệu quá hạn",
+  SubscriptionExpirationJob: "Khóa tenant hết hạn subscription",
 };
 
 const DELIVERY_STATUS: Record<string, { color: string; label: string }> = {
@@ -42,22 +46,37 @@ const DELIVERY_STATUS: Record<string, { color: string; label: string }> = {
   FALLBACK_EMAIL_FAILED: { color: "error", label: "Email dự phòng thất bại" },
 };
 
+const HEALTH_COMPONENT_META: Record<string, { label: string; description: string }> = {
+  db: { label: "PostgreSQL", description: "Kết nối cơ sở dữ liệu chính" },
+  redis: { label: "Redis", description: "Cache và hàng đợi realtime" },
+  fcm: { label: "Firebase / FCM", description: "Nhà cung cấp push notification" },
+  aiService: { label: "AI Service", description: "Face ID, liveness và embedding" },
+  randomCheckJob: { label: "Random Check Job", description: "Phát hiện job dispatch/no-response bị trễ" },
+  randomCheckQueue: { label: "Random Check Queue", description: "Độ sâu và độ trễ queue dispatch" },
+  mail: { label: "Email provider", description: "Email mời, reset mật khẩu và fallback" },
+  diskSpace: { label: "Dung lượng đĩa", description: "Không gian lưu trữ Backend" },
+  ssl: { label: "SSL", description: "Chứng chỉ kết nối bảo mật" },
+  ping: { label: "Application", description: "Tiến trình Backend đang phản hồi" },
+};
+
 function errorMessage(error: unknown, fallback: string) {
   const response = (error as { response?: { status?: number; data?: { message?: string } } })?.response;
   if (response?.status === 403) return "Bạn không có quyền system:read để xem dữ liệu vận hành nền tảng.";
   return response?.data?.message || fallback;
 }
 
-function statusTag(status?: string | null) {
+function statusTag(status?: string | null, stale = false) {
   const normalized = status?.toUpperCase() || "UNKNOWN";
+  if (stale) return <Tooltip title="Lần cuối OK nhưng đã quá ngưỡng không chạy lại"><Tag color="warning">STALE</Tag></Tooltip>;
+  if (normalized === "NEVER_RUN") return <Tooltip title="Job có trong catalog nhưng chưa từng ghi nhận lần chạy"><Tag color="default">NEVER RUN</Tag></Tooltip>;
   const healthy = ["UP", "OK", "SUCCESS", "COMPLETED"].includes(normalized);
   return <Tag color={healthy ? "success" : normalized === "UNKNOWN" ? "default" : "error"}>{normalized}</Tag>;
 }
 
-function DeliveryLogsPanel() {
+function DeliveryLogsPanel({ enabled }: { enabled: boolean }) {
   const [draft, setDraft] = useState<DeliveryLogParams>({ page: 0, size: 20 });
   const [params, setParams] = useState<DeliveryLogParams>({ page: 0, size: 20 });
-  const query = useNotificationDeliveryLogs(params);
+  const query = useNotificationDeliveryLogs(params, enabled);
 
   const columns: ColumnsType<NotificationDeliveryLog> = [
     {
@@ -164,9 +183,16 @@ function DeliveryLogsPanel() {
 }
 
 export default function SystemOperationsPage() {
-  const statusQuery = useSystemStatus();
+  const user = useAuthStore((state) => state.user);
+  const isPlatformAdmin = user?.role === SystemRole.PLATFORM_ADMIN;
+  const canReadSystem = isPlatformAdmin || Boolean(user?.permissions?.includes("system:read"));
+  const canManageGoLive = isPlatformAdmin || Boolean(user?.permissions?.includes("golive:manage"));
+  const statusQuery = useSystemStatus(canReadSystem);
   const status = statusQuery.data;
-  const healthComponents = useMemo(() => Object.entries(status?.healthComponents || {}), [status?.healthComponents]);
+  const healthComponents = useMemo(
+    () => Object.entries(status?.healthComponents || {}),
+    [status?.healthComponents],
+  );
   const jobRows = useMemo(
     () => (status?.jobs || []).map((job) => ({ ...job, id: job.jobName })),
     [status?.jobs],
@@ -177,10 +203,13 @@ export default function SystemOperationsPage() {
       title: "Job",
       dataIndex: "jobName",
       width: 300,
-      render: (value: string) => <div><p className="font-semibold text-slate-900">{JOB_LABELS[value] || value}</p><code className="text-[11px] text-slate-400">{value}</code></div>,
+      render: (value: string, record) => <div><p className="font-semibold text-slate-900">{JOB_LABELS[value] || value}</p><code className="text-[11px] text-slate-400">{value}</code>{record.description && <p className="mt-1 max-w-md text-xs text-slate-500">{record.description}</p>}</div>,
     },
-    { title: "Trạng thái gần nhất", dataIndex: "lastStatus", width: 180, render: (value: string) => statusTag(value) },
+    { title: "Trạng thái vận hành", dataIndex: "lastStatus", width: 180, render: (value: string, record) => statusTag(value, record.stale) },
     { title: "Chạy gần nhất", dataIndex: "lastRunAt", width: 190, render: (value: string | null) => value ? dayjs(value).format("DD/MM/YYYY HH:mm:ss") : "Chưa ghi nhận" },
+    { title: "Chạy tiếp theo", dataIndex: "expectedNextRunAt", width: 190, render: (value: string | null) => value ? dayjs(value).format("DD/MM/YYYY HH:mm:ss") : "Chưa xác định" },
+    { title: "Thời lượng", dataIndex: "lastRunDurationMs", width: 120, align: "right", render: (value: number | null) => value == null ? "—" : `${value.toLocaleString("vi-VN")} ms` },
+    { title: "Ngưỡng stale", dataIndex: "staleThresholdMinutes", width: 130, align: "right", render: (value: number) => `${value.toLocaleString("vi-VN")} phút` },
     { title: "Lỗi", dataIndex: "errorMessage", width: 420, render: (value: string | null) => value ? <span className="text-red-600">{value}</span> : "—" },
   ];
 
@@ -204,8 +233,10 @@ export default function SystemOperationsPage() {
         </div>
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {healthComponents.map(([name, component]) => {
-            const componentStatus = typeof component === "string" ? component : component?.status;
-            return <div key={name} className="flex items-center justify-between rounded-lg border border-slate-200 px-4 py-3"><span className="font-medium capitalize text-slate-700">{name}</span>{statusTag(componentStatus)}</div>;
+            const componentStatus = component.status;
+            const details = component.details;
+            const meta = HEALTH_COMPONENT_META[name] || { label: name, description: "Thành phần hạ tầng" };
+            return <div key={name} className="rounded-lg border border-slate-200 px-4 py-3"><div className="flex items-center justify-between gap-3"><div><p className="font-medium text-slate-700">{meta.label}</p><p className="text-xs text-slate-400">{meta.description}</p></div>{statusTag(componentStatus)}</div>{details && Object.keys(details).length > 0 && <details className="mt-2"><summary className="cursor-pointer text-xs font-medium text-blue-600">Xem tín hiệu kỹ thuật</summary><pre className="mt-2 max-h-40 overflow-auto rounded bg-slate-950 p-2 text-[11px] text-slate-100">{JSON.stringify(details, null, 2)}</pre></details>}</div>;
           })}
           {!healthComponents.length && <p className="text-sm text-slate-500">Chưa có dữ liệu thành phần.</p>}
         </div>
@@ -222,9 +253,9 @@ export default function SystemOperationsPage() {
           data={jobRows}
           loading={statusQuery.isLoading || statusQuery.isFetching}
           showPagination={false}
-          emptyTitle="Chưa ghi nhận job nào"
-          emptyDescription="Job sẽ xuất hiện sau lần chạy đầu tiên và ghi trạng thái vào Backend."
-          scroll={{ x: 1050 }}
+          emptyTitle="Không nhận được catalog job"
+          emptyDescription="Backend phải luôn trả đủ 7 job, kể cả job có trạng thái NEVER_RUN. Hãy kiểm tra API System Status."
+          scroll={{ x: 1550 }}
         />
       </div>
 
@@ -245,14 +276,13 @@ export default function SystemOperationsPage() {
           <p className="mt-1 text-sm text-slate-500">Theo dõi job nền, hàng đợi và khả năng phân phối thông báo trên toàn nền tảng.</p>
           {status?.generatedAt && <p className="mt-1 text-xs text-slate-400">Dữ liệu tạo lúc {dayjs(status.generatedAt).format("DD/MM/YYYY HH:mm:ss")}; tự làm mới mỗi 60 giây.</p>}
         </div>
-        <BaseButton type="default" loading={statusQuery.isFetching} icon={<RefreshCw className="h-4 w-4" />} onClick={() => void statusQuery.refetch()}>Làm mới</BaseButton>
+        {canReadSystem && <BaseButton type="default" loading={statusQuery.isFetching} icon={<RefreshCw className="h-4 w-4" />} onClick={() => void statusQuery.refetch()}>Làm mới</BaseButton>}
       </div>
-      <Tabs
-        items={[
-          { key: "health", label: "Sức khỏe & Job", children: overview },
-          { key: "delivery", label: "Delivery log", children: <DeliveryLogsPanel /> },
-        ]}
-      />
+      <Tabs items={[
+        ...(canReadSystem ? [{ key: "health", label: "Sức khỏe & Job", children: overview }] : []),
+        ...(canManageGoLive ? [{ key: "go-live", label: "Go-live & UAT", children: <GoLiveReadinessPanel status={status} loading={statusQuery.isLoading} /> }] : []),
+        ...(canReadSystem ? [{ key: "delivery", label: "Delivery log", children: <DeliveryLogsPanel enabled={canReadSystem} /> }] : []),
+      ]} />
     </div>
   );
 }

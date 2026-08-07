@@ -4,8 +4,8 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { App } from "antd";
-import { ArrowLeft, Save } from "lucide-react";
+import { Alert, App } from "antd";
+import { Save } from "lucide-react";
 import FormInput from "@/components/forms/FormInput";
 import FormSelect from "@/components/forms/FormSelect";
 import BaseButton from "@/components/ui/BaseButton";
@@ -37,6 +37,7 @@ export default function EmployeeForm({ initialData, isEditMode = false }: Employ
   });
 
   const isPending = isCreating || isUpdating;
+  const piiMasked = Boolean(initialData?.piiMasked);
 
   const {
     control,
@@ -63,8 +64,10 @@ export default function EmployeeForm({ initialData, isEditMode = false }: Employ
       reset({
         firstName: initialData.firstName || "",
         lastName: initialData.lastName || "",
-        email: initialData.email || "",
-        phone: initialData.phone || "",
+        // Masked values are display-only. Never send a***@... or ***123 back to
+        // PATCH when HR changes an unrelated field.
+        email: piiMasked ? "" : initialData.email || "",
+        phone: piiMasked ? "" : initialData.phone || "",
         employeeCode: initialData.employeeCode || "",
         position: initialData.position || "",
         department: initialData.department || "",
@@ -72,17 +75,14 @@ export default function EmployeeForm({ initialData, isEditMode = false }: Employ
         hiredDate: initialData.hiredDate || "",
       });
     }
-  }, [initialData, reset]);
+  }, [initialData, piiMasked, reset]);
 
   const onSubmit = async (data: EmployeeFormData) => {
     try {
       // Clean up empty strings to undefined to avoid backend parsing errors (e.g. LocalDate)
-      const payload: any = { ...data };
-      Object.keys(payload).forEach(key => {
-        if (payload[key] === "") {
-          payload[key] = undefined;
-        }
-      });
+      const payload = Object.fromEntries(
+        Object.entries(data).filter(([, value]) => value !== ""),
+      ) as EmployeeFormData;
 
       if (isEditMode && initialData) {
         await updateEmployee({ id: initialData.id, payload });
@@ -103,6 +103,14 @@ export default function EmployeeForm({ initialData, isEditMode = false }: Employ
       {/* Form Content */}
       <ContentCard>
         <form id="employee-form" onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          {piiMasked && (
+            <Alert
+              showIcon
+              type="info"
+              message="Dữ liệu liên hệ hiện tại đang được che"
+              description="Web không đưa giá trị đã che vào form và không gửi lại khi bạn lưu trường khác. Chỉ nhập email hoặc số điện thoại đầy đủ nếu bạn thực sự muốn thay thế giá trị hiện tại."
+            />
+          )}
           {/* Thông tin cơ bản */}
           <div className="flex items-center gap-2 mb-6 border-b border-slate-100 pb-4 relative z-10">
             <h3 className="text-lg font-bold text-slate-800">Thông tin cơ bản</h3>
@@ -134,6 +142,7 @@ export default function EmployeeForm({ initialData, isEditMode = false }: Employ
               label="Email liên hệ"
               placeholder="Ví dụ: email@domain.com"
               error={errors.email}
+              helpText={piiMasked && initialData?.email ? `Giá trị hiện tại: ${initialData.email}. Để trống nếu không thay đổi.` : undefined}
             />
 
             <FormInput
@@ -142,6 +151,7 @@ export default function EmployeeForm({ initialData, isEditMode = false }: Employ
               label="Số điện thoại"
               placeholder="Ví dụ: 0912345678"
               error={errors.phone}
+              helpText={piiMasked && initialData?.phone ? `Giá trị hiện tại: ${initialData.phone}. Để trống nếu không thay đổi.` : undefined}
             />
 
           </div>

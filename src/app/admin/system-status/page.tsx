@@ -6,7 +6,7 @@ export const metadata = { title: "Vận hành hệ thống | FAMS" };
 
 export default function PlatformSystemStatusPage() {
   return (
-    <RoleGuard allowedRoles={[SystemRole.PLATFORM_ADMIN]} allowedPermissions={["system:read"]}>
+    <RoleGuard allowedRoles={[SystemRole.PLATFORM_ADMIN]} allowedPermissions={["system:read", "golive:manage"]}>
       <SystemOperationsPage />
     </RoleGuard>
   );

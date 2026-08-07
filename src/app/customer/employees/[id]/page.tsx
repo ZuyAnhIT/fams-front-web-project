@@ -13,8 +13,10 @@ import DetailHeader from "@/components/shared/layout/DetailHeader";
 import ContentCard from "@/components/shared/layout/ContentCard";
 import { formatVietnameseName } from "@/utils/name.util";
 import { useAuthStore } from "@/stores/auth.store";
+import RoleGuard from "@/components/guards/RoleGuard";
+import { SystemRole } from "@/features/customer/auth/types/auth.type";
 
-export default function EditEmployeePage({ params }: { params: Promise<{ id: string }> }) {
+function EmployeeDetailContent({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const resolvedParams = use(params);
   const { data, isLoading } = useEmployeeDetail(resolvedParams.id);
@@ -104,5 +106,13 @@ export default function EditEmployeePage({ params }: { params: Promise<{ id: str
         />
       </ContentCard>
     </div>
+  );
+}
+
+export default function EditEmployeePage({ params }: { params: Promise<{ id: string }> }) {
+  return (
+    <RoleGuard allowedRoles={[SystemRole.PLATFORM_ADMIN]} allowedPermissions={["employees:read"]}>
+      <EmployeeDetailContent params={params} />
+    </RoleGuard>
   );
 }
