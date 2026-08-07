@@ -57,7 +57,13 @@ export const SIDEBAR_MENU: MenuItem[] = [
     path: ADMIN_ROUTES.SYSTEM_STATUS,
     icon: "Activity",
     allowedRoles: [SystemRole.PLATFORM_ADMIN],
-    allowedPermissions: ["system:read"],
+    allowedPermissions: ["system:read", "golive:manage"],
+  },
+  {
+    title: "Hướng dẫn sử dụng",
+    path: ADMIN_ROUTES.HELP,
+    icon: "BookOpenCheck",
+    allowedRoles: [SystemRole.PLATFORM_ADMIN, SystemRole.PLATFORM_STAFF],
   },
 
   // -- CUSTOMER DASHBOARD --
@@ -73,7 +79,7 @@ export const SIDEBAR_MENU: MenuItem[] = [
     title: "Nhân viên",
     path: CUSTOMER_ROUTES.EMPLOYEES,
     icon: "Users",
-    allowedRoles: [SystemRole.TENANT_ADMIN, SystemRole.HR_MANAGER, SystemRole.SITE_SUPERVISOR],
+    allowedRoles: [SystemRole.PLATFORM_ADMIN],
     allowedPermissions: ["employees:list", "employees:read"],
   },
   {
@@ -126,6 +132,12 @@ export const SIDEBAR_MENU: MenuItem[] = [
     path: CUSTOMER_ROUTES.EXCEPTIONS,
     icon: "MessageSquareText",
     allowedRoles: [SystemRole.EMPLOYEE, SystemRole.SITE_SUPERVISOR, SystemRole.HR_MANAGER, SystemRole.TENANT_ADMIN],
+  },
+  {
+    title: "Hướng dẫn sử dụng",
+    path: CUSTOMER_ROUTES.HELP,
+    icon: "BookOpenCheck",
+    allowedRoles: [SystemRole.TENANT_ADMIN, SystemRole.HR_MANAGER, SystemRole.SITE_SUPERVISOR, SystemRole.EMPLOYEE],
   },
 
   // -- CẤU HÌNH HỆ THỐNG (CUSTOMER) --

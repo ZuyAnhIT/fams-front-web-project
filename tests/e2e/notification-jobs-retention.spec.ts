@@ -113,12 +113,18 @@ test("Platform Admin giám sát job và lọc delivery log thất bại", async 
 
   await page.route("**/api/v1/platform/system-status", (route) => route.fulfill({ json: api({
     overallHealth: "UP",
-    healthComponents: { db: { status: "UP" }, redis: { status: "UP" }, randomCheckQueue: { status: "UP" } },
-    jobs: [
-      { jobName: "AttendanceSummaryJob", lastStatus: "SUCCESS", lastRunAt: "2026-08-06T01:00:00Z", errorMessage: null },
-      { jobName: "RandomCheckQueueReconciliationJob", lastStatus: "SUCCESS", lastRunAt: "2026-08-06T08:55:00Z", errorMessage: null },
-      { jobName: "DataRetentionJob", lastStatus: "SUCCESS", lastRunAt: "2026-08-03T03:00:00Z", errorMessage: null },
-    ],
+    healthComponents: { db: { status: "UP", details: null }, redis: { status: "UP", details: null }, randomCheckQueue: { status: "UP", details: null } },
+    jobs: ["AttendanceSummaryJob", "RandomCheckSchedulerJob", "RandomCheckDispatchJob", "NoResponseViolationJob", "RandomCheckQueueReconciliationJob", "DataRetentionJob", "SubscriptionExpirationJob"].map((jobName, index) => ({
+      jobName,
+      description: `Mô tả ${jobName}`,
+      lastStatus: "OK",
+      lastRunAt: `2026-08-06T0${index + 1}:00:00Z`,
+      lastRunDurationMs: index + 1,
+      errorMessage: null,
+      expectedNextRunAt: `2026-08-07T0${index + 1}:00:00Z`,
+      staleThresholdMinutes: 1560,
+      stale: false,
+    })),
     activeTenantCount: 15,
     faceVerifyQueueDepth: 2,
     dispatchQueueDepth: 4,

@@ -10,9 +10,6 @@ export default function EmployeesPage() {
   return (
     <RoleGuard
       allowedRoles={[
-        SystemRole.TENANT_ADMIN,
-        SystemRole.HR_MANAGER,
-        SystemRole.SITE_SUPERVISOR,
         SystemRole.PLATFORM_ADMIN,
       ]}
       allowedPermissions={["employees:list", "employees:read"]}

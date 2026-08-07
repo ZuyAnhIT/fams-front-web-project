@@ -21,6 +21,7 @@ export const ADMIN_ROUTES = {
   USERS: "/admin/users",
   AUDIT_LOGS: "/admin/audit-logs",
   SYSTEM_STATUS: "/admin/system-status",
+  HELP: "/admin/help",
 };
 
 export const CUSTOMER_ROUTES = {
@@ -42,4 +43,5 @@ export const CUSTOMER_ROUTES = {
   NOTIFICATIONS: "/customer/notifications",
   AUDIT_LOGS: "/customer/audit-logs",
   NOTIFICATION_TEMPLATES: "/customer/settings/notification-templates",
+  HELP: "/customer/help",
 };
