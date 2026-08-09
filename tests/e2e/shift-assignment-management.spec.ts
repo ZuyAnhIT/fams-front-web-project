@@ -2,6 +2,7 @@ import { mkdirSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 
 const evidenceDir = "docs/test-evidence/shift-assignment-management";
+const backendFixEvidenceDir = "docs/test-evidence/backend-fixes-2026-08-07";
 const tenantId = "11111111-1111-4111-8111-111111111111";
 const siteId = "22222222-2222-4222-8222-222222222222";
 const activeShiftId = "33333333-3333-4333-8333-333333333333";
@@ -48,6 +49,8 @@ const activeShift = {
   allowOvertime: true,
   earlyCheckinMinutes: 15,
   lateCheckoutMinutes: 30,
+  maxOtMinutesPerDay: 120,
+  maxOtMinutesPerWeek: 600,
   checkinPolicyOverride: null,
   status: "active",
   createdBy: "admin-user",
@@ -199,7 +202,10 @@ async function mockSiteDetail(
   );
 }
 
-test.beforeAll(() => mkdirSync(evidenceDir, { recursive: true }));
+test.beforeAll(() => {
+  mkdirSync(evidenceDir, { recursive: true });
+  mkdirSync(backendFixEvidenceDir, { recursive: true });
+});
 test.beforeEach(async ({ page }) => {
   await page.route("**/api/v1/**", (route) => {
     if (route.request().url().includes("/notifications")) {
@@ -314,11 +320,18 @@ test("Admin quản lý vòng đời ca, OT và không gửi sort ngoài contract
   const otDialog = page.getByRole("dialog");
   await otDialog.getByLabel("Cho phép đến sớm").fill("20");
   await otDialog.getByLabel("Cho phép về muộn").fill("45");
+  await otDialog.getByLabel("Tối đa OT mỗi ngày").fill("180");
+  await otDialog.getByLabel("Tối đa OT mỗi tuần").fill("720");
   await otDialog.getByRole("button", { name: "Lưu cấu hình" }).click();
   await expect.poll(() => otBody).toMatchObject({
     earlyCheckinMinutes: 20,
     lateCheckoutMinutes: 45,
+    maxOtMinutesPerDay: 180,
+    clearMaxOtMinutesPerDay: false,
+    maxOtMinutesPerWeek: 720,
+    clearMaxOtMinutesPerWeek: false,
   });
+  await page.screenshot({ path: `${backendFixEvidenceDir}/01-ot-limit-config.png`, fullPage: true });
 
   await page.getByRole("button", { name: "Ngừng dùng ca Ca hành chính" }).click();
   await page.getByRole("dialog").getByRole("button", { name: "Ngừng dùng" }).click();

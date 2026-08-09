@@ -44,6 +44,8 @@ export default function ShiftOtConfigModal({
         allowOvertime: activeShift.allowOvertime,
         earlyCheckinMinutes: activeShift.earlyCheckinMinutes,
         lateCheckoutMinutes: activeShift.lateCheckoutMinutes,
+        maxOtMinutesPerDay: activeShift.maxOtMinutesPerDay,
+        maxOtMinutesPerWeek: activeShift.maxOtMinutesPerWeek,
       });
     }
   }, [isOpen, activeShift, form]);
@@ -52,6 +54,8 @@ export default function ShiftOtConfigModal({
     allowOvertime?: boolean;
     earlyCheckinMinutes?: number | null;
     lateCheckoutMinutes?: number | null;
+    maxOtMinutesPerDay?: number | null;
+    maxOtMinutesPerWeek?: number | null;
   }) => {
     if (!tenantId || !activeShift) return;
 
@@ -64,6 +68,10 @@ export default function ShiftOtConfigModal({
           allowOvertime: values.allowOvertime,
           earlyCheckinMinutes: values.earlyCheckinMinutes ?? 0,
           lateCheckoutMinutes: values.lateCheckoutMinutes ?? 0,
+          maxOtMinutesPerDay: values.maxOtMinutesPerDay ?? undefined,
+          clearMaxOtMinutesPerDay: values.maxOtMinutesPerDay == null,
+          maxOtMinutesPerWeek: values.maxOtMinutesPerWeek ?? undefined,
+          clearMaxOtMinutesPerWeek: values.maxOtMinutesPerWeek == null,
         },
       },
       {
@@ -146,7 +154,7 @@ export default function ShiftOtConfigModal({
           >
             <InputNumber
               className="w-full"
-              addonAfter="phút"
+              suffix="phút"
               min={0}
               placeholder="VD: 15"
             />
@@ -163,7 +171,7 @@ export default function ShiftOtConfigModal({
           >
             <InputNumber
               className="w-full"
-              addonAfter="phút"
+              suffix="phút"
               min={0}
               placeholder="VD: 15"
             />
@@ -171,6 +179,31 @@ export default function ShiftOtConfigModal({
         </div>
         <div className="text-xs text-slate-400 bg-blue-50 p-3 rounded text-blue-800 border border-blue-100">
           <strong>Lưu ý:</strong> Nhân viên check-in/out trong khoảng thời gian châm chước này sẽ được tính là đúng giờ.
+        </div>
+
+        <div className="mt-6 text-slate-500 font-medium mb-4">
+          Ngưỡng cảnh báo tăng ca
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Form.Item
+            name="maxOtMinutesPerDay"
+            label="Tối đa OT mỗi ngày"
+            extra="Để trống = không giới hạn"
+            rules={[{ type: "integer", min: 0, message: "Số phút phải là số nguyên không âm." }]}
+          >
+            <InputNumber className="w-full" suffix="phút" min={0} precision={0} placeholder="VD: 120" />
+          </Form.Item>
+          <Form.Item
+            name="maxOtMinutesPerWeek"
+            label="Tối đa OT mỗi tuần"
+            extra="Tuần ISO: Thứ 2 đến Chủ Nhật"
+            rules={[{ type: "integer", min: 0, message: "Số phút phải là số nguyên không âm." }]}
+          >
+            <InputNumber className="w-full" suffix="phút" min={0} precision={0} placeholder="VD: 600" />
+          </Form.Item>
+        </div>
+        <div className="rounded border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-800">
+          Đây là ngưỡng <strong>cảnh báo cho HR</strong>. Vượt giới hạn không chặn check-out, không ẩn thao tác và không tự cắt số phút OT/lương.
         </div>
 
       </Form>

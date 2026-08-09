@@ -2,6 +2,7 @@ import { mkdirSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 
 const evidenceDir = "docs/test-evidence/attendance-management";
+const backendFixEvidenceDir = "docs/test-evidence/backend-fixes-2026-08-07";
 const tenantId = "11111111-1111-4111-8111-111111111111";
 const siteId = "22222222-2222-4222-8222-222222222222";
 const secondSiteId = "33333333-3333-4333-8333-333333333333";
@@ -74,6 +75,8 @@ const pendingSummary = {
   earlyLeave: false,
   earlyLeaveMinutes: 0,
   otMinutes: 30,
+  otDailyLimitExceeded: true,
+  otWeeklyLimitExceeded: true,
   missingCheckout: false,
   hasPendingReviewSession: true,
   hasRejectedSession: false,
@@ -90,6 +93,8 @@ const rejectedSummary = {
   totalWorkMinutes: 0,
   sessionCount: 0,
   otMinutes: 0,
+  otDailyLimitExceeded: false,
+  otWeeklyLimitExceeded: false,
   hasPendingReviewSession: false,
   hasRejectedSession: true,
   hasRandomCheckFailure: false,
@@ -174,7 +179,10 @@ async function mockDirectories(page: Page) {
   );
 }
 
-test.beforeAll(() => mkdirSync(evidenceDir, { recursive: true }));
+test.beforeAll(() => {
+  mkdirSync(evidenceDir, { recursive: true });
+  mkdirSync(backendFixEvidenceDir, { recursive: true });
+});
 test.beforeEach(async ({ page }) => {
   await page.route("**/api/v1/**", (route) => {
     if (route.request().url().includes("/notifications")) {
@@ -219,7 +227,10 @@ test("HR thấy đúng trạng thái chưa chốt và điều chỉnh bảng cô
   await expect(page.getByText("Đã từ chối", { exact: true })).toBeVisible();
   await expect(page.getByText("Điều chỉnh tay", { exact: true })).toBeVisible();
   await expect(page.getByText("Random check", { exact: true })).toBeVisible();
+  await expect(page.getByText("Vượt OT ngày", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText("Vượt OT tuần", { exact: true }).first()).toBeVisible();
   await expect(page.getByText("gồm 30p OT")).toBeVisible();
+  await page.screenshot({ path: `${backendFixEvidenceDir}/02-attendance-ot-warnings.png`, fullPage: true });
 
   await page.getByRole("row").filter({ hasText: "29/07/2026" }).getByRole("button", { name: "Chi tiết" }).click();
   const dialog = page.getByRole("dialog", { name: "Chi tiết bảng công ngày" });

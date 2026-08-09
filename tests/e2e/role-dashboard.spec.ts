@@ -1,6 +1,8 @@
+import { mkdirSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
 
 const tenantId = '11111111-1111-4111-8111-111111111111';
+const backendFixEvidenceDir = 'docs/test-evidence/backend-fixes-2026-08-07';
 const api = (data: unknown) => ({ success: true, message: 'Success', data });
 
 async function seedUser(page: Page, role: 'HR_MANAGER' | 'SITE_SUPERVISOR' | 'EMPLOYEE', permissions: string[]) {
@@ -16,6 +18,7 @@ async function seedUser(page: Page, role: 'HR_MANAGER' | 'SITE_SUPERVISOR' | 'EM
   }, { seededTenant: tenantId, seededRole: role, seededPermissions: permissions });
 }
 
+test.beforeAll(() => mkdirSync(backendFixEvidenceDir, { recursive: true }));
 test.beforeEach(async ({ page }) => {
   await page.route('**/api/v1/**', (route) => route.fulfill({ json: api(null) }));
 });
@@ -42,8 +45,8 @@ test('Dashboard HR hiển thị số liệu và map loại violation thiếu key
 test('Dashboard Supervisor hỗ trợ nhiều site và danh sách người đang có mặt', async ({ page }) => {
   await seedUser(page, 'SITE_SUPERVISOR', ['employees:list']);
   await page.route(`**/api/v1/tenants/${tenantId}/dashboard/supervisor`, (route) => route.fulfill({ json: api({ supervisedSites: [
-    { siteId: 'site-a', siteName: 'Công trình Riverside', expectedToday: 24, onSiteNow: 1, onSiteEmployees: [{ employeeId: 'employee-a', firstName: 'An', lastName: 'Nguyễn', employeeCode: 'NV001', checkinId: 'checkin-a', checkInAt: '2026-08-04T00:05:00Z' }] },
-    { siteId: 'site-b', siteName: 'Kho Đông Anh', expectedToday: 10, onSiteNow: 0, onSiteEmployees: [] },
+    { siteId: 'site-a', siteName: 'Công trình Riverside', expectedToday: 24, onSiteNow: 1, siteLatitude: 10.7769, siteLongitude: 106.7009, onSiteEmployees: [{ employeeId: 'employee-a', firstName: 'An', lastName: 'Nguyễn', employeeCode: 'NV001', checkinId: 'checkin-a', checkInAt: '2026-08-04T00:05:00Z', checkInLat: 10.777, checkInLon: 106.701 }] },
+    { siteId: 'site-b', siteName: 'Kho Đông Anh', expectedToday: 10, onSiteNow: 0, siteLatitude: null, siteLongitude: null, onSiteEmployees: [] },
   ] }) }));
 
   await page.goto('/customer/dashboard', { waitUntil: 'domcontentloaded' });
@@ -51,6 +54,10 @@ test('Dashboard Supervisor hỗ trợ nhiều site và danh sách người đang
   await expect(page.getByText('Kho Đông Anh')).toBeVisible();
   await expect(page.getByText('Nguyễn An')).toBeVisible();
   await expect(page.getByText('1/24 nhân viên đang có mặt')).toBeVisible();
+  await expect(page.getByText(/vị trí ghi nhận lúc check-in/i)).toBeVisible();
+  await expect(page.getByText(/không phải vị trí hiện tại/i)).toBeVisible();
+  await expect(page.getByText('Vị trí lúc check-in 07:05 04/08/2026')).toBeAttached();
+  await page.screenshot({ path: `${backendFixEvidenceDir}/03-supervisor-checkin-map.png`, fullPage: true });
 });
 
 test('Dashboard Supervisor coi supervisedSites rỗng là empty-state bình thường', async ({ page }) => {

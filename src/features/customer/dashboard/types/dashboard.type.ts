@@ -45,6 +45,8 @@ export interface SupervisorOnSiteEmployee {
   employeeCode: string | null;
   checkinId: string;
   checkInAt: string;
+  checkInLat: number | null;
+  checkInLon: number | null;
 }
 
 export interface SupervisorSiteSummary {
@@ -52,6 +54,8 @@ export interface SupervisorSiteSummary {
   siteName: string;
   expectedToday: number;
   onSiteNow: number;
+  siteLatitude: number | null;
+  siteLongitude: number | null;
   onSiteEmployees: SupervisorOnSiteEmployee[];
 }
 
