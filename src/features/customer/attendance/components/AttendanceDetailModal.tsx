@@ -189,6 +189,8 @@ export default function AttendanceDetailModal({
                 hasRejectedSession={data.hasRejectedSession}
                 adjustmentReason={data.adjustmentReason}
                 hasRandomCheckFailure={data.hasRandomCheckFailure}
+                otDailyLimitExceeded={data.otDailyLimitExceeded}
+                otWeeklyLimitExceeded={data.otWeeklyLimitExceeded}
               />
             </Descriptions.Item>
           </Descriptions>

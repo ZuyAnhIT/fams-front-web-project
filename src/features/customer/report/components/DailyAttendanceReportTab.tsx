@@ -31,7 +31,7 @@ export default function DailyAttendanceReportTab() {
     { title: 'Công trình', key: 'site', render: (_, row) => row.siteName || row.siteId },
     { title: 'Vào', dataIndex: 'firstCheckinAt', width: 95, render: (value) => value ? dayjs(value).format('HH:mm') : '—' },
     { title: 'Ra', dataIndex: 'lastCheckoutAt', width: 95, render: (value) => value ? dayjs(value).format('HH:mm') : '—' },
-    { title: 'Giờ làm', dataIndex: 'totalWorkMinutes', width: 125, render: (value) => formatMinutes(value) },
+    { title: 'Giờ làm / OT', key: 'work', width: 170, render: (_, row) => <div><span>{formatMinutes(row.totalWorkMinutes)}</span>{row.otMinutes > 0 && <div className="text-xs text-blue-600">gồm {formatMinutes(row.otMinutes)} OT</div>}{row.otDailyLimitExceeded && <Tag color="warning">Vượt OT ngày</Tag>}{row.otWeeklyLimitExceeded && <Tag color="warning">Vượt OT tuần</Tag>}</div> },
     { title: 'Đi muộn', dataIndex: 'lateMinutes', width: 110, render: (value) => value > 0 ? <Tag color="warning">{value} phút</Tag> : '—' },
     { title: 'Về sớm', dataIndex: 'earlyLeaveMinutes', width: 110, render: (value) => value > 0 ? <Tag color="warning">{value} phút</Tag> : '—' },
     { title: 'Trạng thái', key: 'status', width: 150, render: (_, row) => row.missingCheckout ? <Tag color="error">Thiếu check-out</Tag> : <Tag color="success">Có mặt</Tag> },

@@ -175,6 +175,11 @@ export default function ShiftManagementTab({
             {shift.lateCheckoutMinutes} phút
           </div>
           <div>
+            Cảnh báo OT: {shift.maxOtMinutesPerDay == null ? "không giới hạn ngày" : `${shift.maxOtMinutesPerDay} phút/ngày`}
+            {" · "}
+            {shift.maxOtMinutesPerWeek == null ? "không giới hạn tuần" : `${shift.maxOtMinutesPerWeek} phút/tuần`}
+          </div>
+          <div>
             {shift.checkinPolicyOverride ? (
               <Tooltip title="Ca này không kế thừa chính sách mặc định của công trình">
                 <Tag

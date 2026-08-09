@@ -1,11 +1,13 @@
 import { Tag, Tooltip } from "antd";
-import { Crosshair, LockKeyhole } from "lucide-react";
+import { AlertTriangle, Crosshair, LockKeyhole } from "lucide-react";
 
 interface AttendanceIssueBadgesProps {
   hasPendingReviewSession?: boolean;
   hasRejectedSession?: boolean;
   adjustmentReason?: string | null;
   hasRandomCheckFailure?: boolean;
+  otDailyLimitExceeded?: boolean;
+  otWeeklyLimitExceeded?: boolean;
 }
 
 export default function AttendanceIssueBadges({
@@ -13,8 +15,10 @@ export default function AttendanceIssueBadges({
   hasRejectedSession,
   adjustmentReason,
   hasRandomCheckFailure,
+  otDailyLimitExceeded,
+  otWeeklyLimitExceeded,
 }: AttendanceIssueBadgesProps) {
-  if (!hasPendingReviewSession && !hasRejectedSession && !adjustmentReason && !hasRandomCheckFailure) {
+  if (!hasPendingReviewSession && !hasRejectedSession && !adjustmentReason && !hasRandomCheckFailure && !otDailyLimitExceeded && !otWeeklyLimitExceeded) {
     return <span className="text-slate-400">—</span>;
   }
 
@@ -42,6 +46,16 @@ export default function AttendanceIssueBadges({
           <Tag color="orange" icon={<Crosshair className="h-3 w-3" />}>
             Random check
           </Tag>
+        </Tooltip>
+      )}
+      {otDailyLimitExceeded && (
+        <Tooltip title="OT ngày vượt ngưỡng cấu hình của ca. Đây chỉ là cảnh báo; số phút OT vẫn được giữ nguyên và không khóa thao tác.">
+          <Tag color="warning" icon={<AlertTriangle className="h-3 w-3" />}>Vượt OT ngày</Tag>
+        </Tooltip>
+      )}
+      {otWeeklyLimitExceeded && (
+        <Tooltip title="Tổng OT tuần ISO của nhân viên vượt ngưỡng cấu hình. Đây chỉ là cảnh báo, không tự cắt OT/lương.">
+          <Tag color="warning" icon={<AlertTriangle className="h-3 w-3" />}>Vượt OT tuần</Tag>
         </Tooltip>
       )}
     </div>

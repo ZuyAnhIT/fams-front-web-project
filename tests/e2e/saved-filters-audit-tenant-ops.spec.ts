@@ -126,19 +126,27 @@ test('Company Admin xem diff và trace luôn giữ tenant hiện tại', async (
 test('Platform Admin lọc audit toàn hệ thống theo tenant được chọn', async ({ page }) => {
   await seedUser(page, 'PLATFORM_ADMIN', [], null);
   let requestedTenant: string | null = null;
+  const automaticAudit = {
+    id: 'audit-system-subscription', tenantId: otherTenantId, actorId: null, actorEmail: null,
+    entityType: 'TenantSubscription', entityId: otherTenantId, action: 'subscription_updated',
+    oldValue: { status: 'ACTIVE' }, newValue: { status: 'EXPIRED' }, requestId: 'cron-subscription-expiration',
+    ipAddress: null, userAgent: null, createdAt: '2026-08-07T01:00:00Z',
+  };
   await page.route(new RegExp('/api/v1/tenants(?:\\?.*)?$'), (route) => route.fulfill({ json: api(pageData([
     { id: tenantId, name: 'Công ty Alpha', slug: 'alpha', status: 'active', timezone: 'Asia/Ho_Chi_Minh', locale: 'vi', createdAt: '2026-01-01T00:00:00Z', updatedAt: '2026-01-01T00:00:00Z' },
     { id: otherTenantId, name: 'Công ty Beta', slug: 'beta', status: 'suspended', timezone: 'Asia/Ho_Chi_Minh', locale: 'vi', createdAt: '2026-01-01T00:00:00Z', updatedAt: '2026-01-01T00:00:00Z' },
   ])) }));
   await page.route(new RegExp('/api/v1/audit-logs(?:\\?.*)?$'), (route) => {
     requestedTenant = new URL(route.request().url()).searchParams.get('tenantId');
-    return route.fulfill({ json: api(pageData([])) });
+    return route.fulfill({ json: api(pageData([automaticAudit])) });
   });
 
   await page.goto('/admin/audit-logs');
   await expect.poll(() => requestedTenant).toBeNull();
+  await expect(page.getByText('Subscription', { exact: true })).toBeVisible();
+  await expect(page.getByText('Hệ thống tự động')).toBeVisible();
   await page.getByRole('combobox').first().click();
-  await page.getByText('Công ty Beta', { exact: true }).click();
+  await page.locator('.ant-select-dropdown:visible').getByText('Công ty Beta', { exact: true }).click();
   await page.getByRole('button', { name: 'Tìm kiếm' }).click();
   await expect.poll(() => requestedTenant).toBe(otherTenantId);
   await expect(page.getByText('Dữ liệu được giới hạn theo công ty đang chọn')).toHaveCount(0);

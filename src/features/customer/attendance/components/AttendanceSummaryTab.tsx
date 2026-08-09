@@ -160,6 +160,8 @@ export default function AttendanceSummaryTab() {
           hasRejectedSession={record.hasRejectedSession}
           adjustmentReason={record.adjustmentReason}
           hasRandomCheckFailure={record.hasRandomCheckFailure}
+          otDailyLimitExceeded={record.otDailyLimitExceeded}
+          otWeeklyLimitExceeded={record.otWeeklyLimitExceeded}
         />
       ),
     },

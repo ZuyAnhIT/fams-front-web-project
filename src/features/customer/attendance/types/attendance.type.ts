@@ -18,6 +18,8 @@ export interface AttendanceSummaryResponse {
   earlyLeave: boolean;
   earlyLeaveMinutes: number;
   otMinutes: number;
+  otDailyLimitExceeded: boolean;
+  otWeeklyLimitExceeded: boolean;
   missingCheckout: boolean;
   hasPendingReviewSession: boolean;
   hasRejectedSession: boolean;

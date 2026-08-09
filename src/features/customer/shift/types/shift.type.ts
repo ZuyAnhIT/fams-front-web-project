@@ -11,6 +11,8 @@ export interface ShiftResponse {
   allowOvertime: boolean;
   earlyCheckinMinutes: number;
   lateCheckoutMinutes: number;
+  maxOtMinutesPerDay: number | null;
+  maxOtMinutesPerWeek: number | null;
   status: "active" | "inactive";
   checkinPolicyOverride: CheckinPolicy | null;
   createdBy: string;
@@ -42,6 +44,10 @@ export interface ConfigureShiftOtRequest {
   allowOvertime?: boolean;
   earlyCheckinMinutes?: number;
   lateCheckoutMinutes?: number;
+  maxOtMinutesPerDay?: number;
+  clearMaxOtMinutesPerDay?: boolean;
+  maxOtMinutesPerWeek?: number;
+  clearMaxOtMinutesPerWeek?: boolean;
 }
 
 export interface ShiftListParams {

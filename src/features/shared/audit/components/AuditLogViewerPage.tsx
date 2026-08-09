@@ -16,9 +16,18 @@ import JsonDiffViewer from './JsonDiffViewer';
 
 const { RangePicker } = DatePicker;
 
-const ACTION_COLORS: Record<string, string> = {
-  CREATE: 'success', UPDATE: 'processing', DELETE: 'error', SUSPEND: 'warning', REACTIVATE: 'cyan',
+const ENTITY_TYPE_LABELS: Record<string, string> = {
+  Tenant: 'Công ty', Role: 'Vai trò', UserRole: 'Gán vai trò', TenantSubscription: 'Subscription', Plan: 'Gói dịch vụ', PlanLimits: 'Giới hạn gói',
 };
+
+function actionColor(action: string) {
+  const normalized = action.toLowerCase();
+  if (normalized.includes('suspend')) return 'warning';
+  if (normalized.includes('delete') || normalized.includes('cancel') || normalized.includes('revoke')) return 'error';
+  if (normalized.includes('create') || normalized.includes('assign') || normalized.includes('reactivate')) return 'success';
+  if (normalized.includes('update')) return 'processing';
+  return 'default';
+}
 
 function errorMessage(error: unknown) {
   const response = (error as { response?: { status?: number; data?: { message?: string } } } | null | undefined)?.response;
@@ -62,9 +71,9 @@ export default function AuditLogViewerPage({ platformMode }: { platformMode: boo
   const columns: ColumnsType<AuditLogEntry> = [
     { title: 'Thời gian', dataIndex: 'createdAt', width: 170, render: (value) => dayjs(value).format('DD/MM/YYYY HH:mm:ss') },
     ...(platformMode ? [{ title: 'Công ty', dataIndex: 'tenantId', width: 180, render: (value: string) => tenantNames.get(value) || <code className="text-xs">{value}</code> }] : []),
-    { title: 'Người thao tác', key: 'actor', width: 210, render: (_, row) => <div><p className="font-medium">{row.actorEmail || 'Hệ thống'}</p>{row.actorId && <code className="text-[11px] text-slate-400">{row.actorId}</code>}</div> },
-    { title: 'Hành động', dataIndex: 'action', width: 130, render: (value: string) => <Tag color={ACTION_COLORS[value] || 'default'}>{value}</Tag> },
-    { title: 'Đối tượng', key: 'entity', width: 220, render: (_, row) => <div><p className="font-semibold">{row.entityType}</p><code className="text-[11px] text-slate-500">{row.entityId || '—'}</code></div> },
+    { title: 'Người thao tác', key: 'actor', width: 210, render: (_, row) => <div><p className="font-medium">{row.actorEmail || 'Hệ thống tự động'}</p>{row.actorId && <code className="text-[11px] text-slate-400">{row.actorId}</code>}</div> },
+    { title: 'Hành động', dataIndex: 'action', width: 170, render: (value: string) => <Tag color={actionColor(value)}>{value}</Tag> },
+    { title: 'Đối tượng', key: 'entity', width: 220, render: (_, row) => <div><p className="font-semibold">{ENTITY_TYPE_LABELS[row.entityType] || row.entityType}</p><code className="text-[11px] text-slate-500">{row.entityType} · {row.entityId || '—'}</code></div> },
     { title: 'Request ID', dataIndex: 'requestId', width: 240, render: (value: string | null, row) => value ? <div className="flex items-center gap-1"><Tooltip title={value}><code className="max-w-40 truncate text-xs">{value}</code></Tooltip><BaseButton type="text" size="small" aria-label={`Sao chép request ID ${value}`} icon={<ClipboardCopy className="h-3.5 w-3.5" />} onClick={() => void copyRequestId(value)} /><BaseButton type="text" size="small" aria-label={`Trace request ${value}`} icon={<Route className="h-3.5 w-3.5" />} onClick={() => trace(value, row.tenantId)} /></div> : '—' },
     { title: 'IP', dataIndex: 'ipAddress', width: 130, render: (value) => value || '—' },
     { title: 'Chi tiết', key: 'detail', fixed: 'right', width: 100, render: (_, row) => <BaseButton type="link" disabled={!canReadDetail} icon={<Eye className="h-4 w-4" />} onClick={() => setSelectedId(row.id)}>Xem</BaseButton> },
@@ -113,8 +122,8 @@ export default function AuditLogViewerPage({ platformMode }: { platformMode: boo
       <Modal title="Chi tiết thay đổi" open={Boolean(selectedId)} width={1100} footer={null} onCancel={() => setSelectedId(null)} destroyOnHidden>
         {detailQuery.isLoading ? <div className="flex min-h-64 items-center justify-center"><Spin /></div> : detailQuery.isError || !detailQuery.data ? <Alert showIcon type="error" message="Không thể tải chi tiết" description={errorMessage(detailQuery.error)} /> : <div className="space-y-5 pt-3">
           <Descriptions bordered size="small" column={{ xs: 1, md: 2 }}>
-            <Descriptions.Item label="Người thao tác">{detailQuery.data.actorEmail || 'Hệ thống'}</Descriptions.Item>
-            <Descriptions.Item label="Hành động"><Tag color={ACTION_COLORS[detailQuery.data.action] || 'default'}>{detailQuery.data.action}</Tag></Descriptions.Item>
+            <Descriptions.Item label="Người thao tác">{detailQuery.data.actorEmail || 'Hệ thống tự động'}</Descriptions.Item>
+            <Descriptions.Item label="Hành động"><Tag color={actionColor(detailQuery.data.action)}>{detailQuery.data.action}</Tag></Descriptions.Item>
             <Descriptions.Item label="Đối tượng">{detailQuery.data.entityType} · {detailQuery.data.entityId || '—'}</Descriptions.Item>
             <Descriptions.Item label="Thời gian">{dayjs(detailQuery.data.createdAt).format('DD/MM/YYYY HH:mm:ss')}</Descriptions.Item>
             <Descriptions.Item label="Request ID" span={2}><code>{detailQuery.data.requestId || '—'}</code></Descriptions.Item>
