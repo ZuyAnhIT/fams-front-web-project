@@ -22,6 +22,19 @@ const getTenantId = (): string | null => {
   return null;
 };
 
+const emptyNotificationPage = (
+  filter: NotificationFilter,
+): NotificationPageResponse => ({
+  items: [],
+  page: filter.page ?? 0,
+  size: filter.size ?? 20,
+  totalElements: 0,
+  totalPages: 0,
+  first: true,
+  last: true,
+  unreadCount: 0,
+});
+
 export const notificationService = {
   getNotifications: async (
     filter: NotificationFilter = {}
@@ -36,7 +49,19 @@ export const notificationService = {
       { params: filter }
     );
 
-    return response.data.data;
+    const data = response.data.data as NotificationPageResponse | null;
+    if (!data) {
+      // A successful response should always contain a page. Keep the global
+      // notification shell usable if an older deployment returns data=null.
+      return emptyNotificationPage(filter);
+    }
+
+    return {
+      ...emptyNotificationPage(filter),
+      ...data,
+      items: Array.isArray(data.items) ? data.items : [],
+      unreadCount: Number.isFinite(data.unreadCount) ? data.unreadCount : 0,
+    };
   },
 
   markAsRead: async (notificationId: string): Promise<Notification> => {

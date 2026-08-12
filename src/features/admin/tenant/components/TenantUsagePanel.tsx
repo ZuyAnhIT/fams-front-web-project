@@ -97,7 +97,7 @@ export default function TenantUsagePanel({ tenant }: { tenant: TenantOperational
       <Alert
         showIcon
         type="info"
-        message="Cần nâng cấp hoặc thay đổi gói?"
+        title="Cần nâng cấp hoặc thay đổi gói?"
         description={
           <span>
             Thanh toán tự phục vụ chưa được mở. Chủ sở hữu gửi yêu cầu để đội ngũ FAMS

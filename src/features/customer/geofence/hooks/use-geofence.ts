@@ -1,24 +1,19 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { geofenceService } from "../services/geofence.service";
-import { CreateGeofenceRequest, UpdateGeofenceRequest } from "../types/geofence.type";
+import { CreateGeofenceRequest, GeofenceHistoryParams, UpdateGeofenceRequest } from "../types/geofence.type";
 import { siteKeys } from "../../site/hooks/use-site";
 
 export const geofenceKeys = {
   all: ["geofences"] as const,
   lists: () => [...geofenceKeys.all, "list"] as const,
-  list: (siteId: string, params: any) => [...geofenceKeys.lists(), siteId, params] as const,
+  list: (siteId: string, params: GeofenceHistoryParams) => [...geofenceKeys.lists(), siteId, params] as const,
   active: (siteId: string) => [...geofenceKeys.all, "active", siteId] as const,
 };
 
 export const useGeofenceHistoryQuery = (
   tenantId: string | undefined,
   siteId: string,
-  params: {
-    page: number;
-    size: number;
-    sortBy?: string;
-    sortDir?: "asc" | "desc";
-  },
+  params: GeofenceHistoryParams,
 ) => {
   return useQuery({
     queryKey: geofenceKeys.list(siteId, params),

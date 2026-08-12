@@ -197,7 +197,7 @@ export const employeeService = {
    */
   async revokeFaceId(employeeId: string) {
     const tenantId = getTenantId();
-    const response = await apiClient.delete<ApiResponse<any>>(
+    const response = await apiClient.delete<ApiResponse<unknown>>(
       `/tenants/${tenantId}/employees/${employeeId}/face-id`
     );
     return response.data.data;

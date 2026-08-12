@@ -1,19 +1,18 @@
 import React from "react";
 import { DatePickerProps } from "antd";
-import { Controller } from "react-hook-form";
+import { Controller, type Control, type FieldValues, type Path } from "react-hook-form";
 import BaseDatePicker from "@/components/ui/BaseDatePicker";
 
-interface FormDatePickerProps extends Omit<DatePickerProps, 'name'> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  control: any;
-  name: string;
+interface FormDatePickerProps<T extends FieldValues> extends Omit<DatePickerProps, 'name'> {
+  control: Control<T>;
+  name: Path<T>;
   label?: string;
-  error?: any;
+  error?: { message?: string };
   helperText?: React.ReactNode;
   required?: boolean;
 }
 
-export default function FormDatePicker({
+export default function FormDatePicker<T extends FieldValues>({
   control,
   name,
   label,
@@ -21,7 +20,7 @@ export default function FormDatePicker({
   helperText,
   required,
   ...datePickerProps
-}: FormDatePickerProps) {
+}: FormDatePickerProps<T>) {
   const inputId = datePickerProps.id || name;
   const messageId = `${inputId}-${error ? "error" : "help"}`;
 

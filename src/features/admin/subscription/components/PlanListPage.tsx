@@ -231,7 +231,7 @@ export default function PlanListPage() {
           <Alert
             showIcon
             type="warning"
-            message="Kiểm tra tenant đang sử dụng gói"
+            title="Kiểm tra tenant đang sử dụng gói"
             description="Nếu còn tenant đang dùng gói này, backend yêu cầu chọn gói đích để chuyển an toàn. Việc chuyển có thể bị chặn nếu tenant vượt giới hạn của gói đích."
           />
           <div>

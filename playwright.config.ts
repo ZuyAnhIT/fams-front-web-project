@@ -25,6 +25,6 @@ export default defineConfig({
     command: `npm run build -- --webpack && npm run start -- -p ${port}`,
     url: `${baseURL}/api/health`,
     reuseExistingServer: true,
-    timeout: 120_000,
+    timeout: 240_000,
   },
 });

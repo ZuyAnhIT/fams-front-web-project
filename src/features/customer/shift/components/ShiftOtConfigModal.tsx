@@ -100,7 +100,7 @@ export default function ShiftOtConfigModal({
       }
       isOpen={isOpen}
       onClose={onClose}
-      destroyOnClose
+      destroyOnHidden
       confirmText="Lưu cấu hình"
       cancelText="Hủy bỏ"
       confirmLoading={isLoading}

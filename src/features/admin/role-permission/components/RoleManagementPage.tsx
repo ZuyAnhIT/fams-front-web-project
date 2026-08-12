@@ -17,6 +17,8 @@ import BaseSelect from "@/components/ui/BaseSelect";
 import DataTable from "@/components/tables/DataTable";
 import { Plus } from "lucide-react";
 import { useDebounce } from "@/hooks/useDebounce";
+import { getApiErrorMessage } from "@/utils/api-error.util";
+import type { ColumnsType } from "antd/es/table";
 
 
 
@@ -83,8 +85,8 @@ export const RoleManagementPage: React.FC<RoleManagementPageProps> = ({ scope })
         setSelectedRole(res.data);
         setIsModalOpen(true);
       }
-    } catch (error: any) {
-      messageApi.error(error?.response?.data?.message || "Lỗi khi tải chi tiết role");
+    } catch (error: unknown) {
+      messageApi.error(getApiErrorMessage(error, "Lỗi khi tải chi tiết role"));
     } finally {
       setIsFetchingRole(false);
     }
@@ -101,8 +103,8 @@ export const RoleManagementPage: React.FC<RoleManagementPageProps> = ({ scope })
         try {
           await deleteRole.mutateAsync(id);
           messageApi.success("Role đã được xóa");
-        } catch (error: any) {
-          messageApi.error(error?.response?.data?.message || "Lỗi khi xóa role");
+        } catch (error: unknown) {
+          messageApi.error(getApiErrorMessage(error, "Lỗi khi xóa role"));
         }
       },
     });
@@ -122,14 +124,14 @@ export const RoleManagementPage: React.FC<RoleManagementPageProps> = ({ scope })
         },
       });
       messageApi.success(role.isActive ? "Đã vô hiệu hóa role" : "Đã kích hoạt lại role");
-    } catch (error: any) {
-      messageApi.error(error?.response?.data?.message || "Không thể cập nhật trạng thái role");
+    } catch (error: unknown) {
+      messageApi.error(getApiErrorMessage(error, "Không thể cập nhật trạng thái role"));
     } finally {
       setIsFetchingRole(false);
     }
   };
 
-  const columns = [
+  const columns: ColumnsType<RoleResponse> = [
     {
       title: "Trạng thái",
       dataIndex: "isActive",
@@ -145,7 +147,7 @@ export const RoleManagementPage: React.FC<RoleManagementPageProps> = ({ scope })
       sorter: true,
       render: (text: string, record: RoleResponse) => (
         <span className="font-semibold text-gray-800">
-          {text} {(record.isSystem || (record as any).system) && <Tag color="blue" className="ml-2">Hệ thống</Tag>}
+          {text} {record.isSystem && <Tag color="blue" className="ml-2">Hệ thống</Tag>}
         </span>
       ),
     },
@@ -181,8 +183,8 @@ export const RoleManagementPage: React.FC<RoleManagementPageProps> = ({ scope })
     {
       title: "Thao tác",
       key: "action",
-      render: (_: any, record: RoleResponse) => {
-        const isSystemRole = record.isSystem || (record as any).system;
+      render: (_, record) => {
+        const isSystemRole = record.isSystem;
         return (
           <Space size="middle">
             {isSystemRole ? (
@@ -284,7 +286,7 @@ export const RoleManagementPage: React.FC<RoleManagementPageProps> = ({ scope })
       <Alert
         showIcon
         type="info"
-        message={
+        title={
           scope === "platform"
             ? "Role hệ thống là bất biến; role tùy chỉnh ở đây có tenantId = null và chỉ Platform Admin nhìn thấy."
             : "Role hệ thống chỉ được xem. Vô hiệu hóa role không thu hồi quyền của người đang giữ, nhưng ngăn các lượt gán mới."
@@ -333,7 +335,7 @@ export const RoleManagementPage: React.FC<RoleManagementPageProps> = ({ scope })
             ariaLabel="Danh sách vai trò và phân quyền"
             emptyTitle="Không tìm thấy vai trò"
             emptyDescription="Thử thay đổi từ khóa hoặc bộ lọc."
-            columns={columns as any}
+            columns={columns}
             data={rolesResponse?.data?.content || []}
             loading={isLoading || isFetching}
             totalElements={rolesResponse?.data?.totalElements || 0}
@@ -343,7 +345,7 @@ export const RoleManagementPage: React.FC<RoleManagementPageProps> = ({ scope })
               setPage(p);
               setSize(s);
             }}
-            onChange={(_, __, sorter: any) => {
+            onChange={(_, __, sorter) => {
               if (!Array.isArray(sorter) && (sorter.columnKey || sorter.field)) {
                 setSortBy((sorter.columnKey || sorter.field) as string);
                 setSortDir(sorter.order === "ascend" ? "asc" : sorter.order === "descend" ? "desc" : undefined);

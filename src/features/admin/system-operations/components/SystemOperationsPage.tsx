@@ -37,6 +37,9 @@ const JOB_LABELS: Record<string, string> = {
   NoResponseViolationJob: "Phát hiện không phản hồi",
   DataRetentionJob: "Dọn dữ liệu quá hạn",
   SubscriptionExpirationJob: "Khóa tenant hết hạn subscription",
+  // 2026-08-12: 2 job mới, xem docs/api/backend-feature-audit... của backend hoặc /system-status
+  FaceVerifyTimeoutJob: "Đối soát AI xác thực quá hạn",
+  AttendanceSummarySameDayCatchUpJob: "Tính lại bảng công hôm nay (2h/lần)",
 };
 
 const DELIVERY_STATUS: Record<string, { color: string; label: string }> = {
@@ -132,7 +135,7 @@ function DeliveryLogsPanel({ enabled }: { enabled: boolean }) {
       <Alert
         showIcon
         type="info"
-        message="Retry và email fallback do Backend tự xử lý"
+        title="Retry và email fallback do Backend tự xử lý"
         description="Mỗi dòng là một lần gửi thực tế. FCM thử tối đa 3 lần trên từng thiết bị; email dự phòng chỉ được dùng khi toàn bộ thiết bị của người dùng đều thất bại."
       />
       <ContentCard className="space-y-4 p-5">
@@ -164,7 +167,7 @@ function DeliveryLogsPanel({ enabled }: { enabled: boolean }) {
           <BaseButton icon={<Search className="h-4 w-4" />} onClick={() => setParams({ ...draft, page: 0, size: params.size || 20 })}>Áp dụng</BaseButton>
         </div>
       </ContentCard>
-      {query.isError && <Alert showIcon type="error" message="Không thể tải lịch sử gửi" description={errorMessage(query.error, "Không thể tải delivery log.")} />}
+      {query.isError && <Alert showIcon type="error" title="Không thể tải lịch sử gửi" description={errorMessage(query.error, "Không thể tải delivery log.")} />}
       <DataTable
         ariaLabel="Lịch sử gửi thông báo"
         columns={columns}
@@ -215,9 +218,9 @@ export default function SystemOperationsPage() {
 
   const overview = (
     <div className="space-y-5">
-      {statusQuery.isError && <Alert showIcon type="error" message="Không thể tải trạng thái hệ thống" description={errorMessage(statusQuery.error, "Không thể kết nối API trạng thái hệ thống.")} />}
+      {statusQuery.isError && <Alert showIcon type="error" title="Không thể tải trạng thái hệ thống" description={errorMessage(statusQuery.error, "Không thể kết nối API trạng thái hệ thống.")} />}
       {status && status.overallHealth.toUpperCase() !== "UP" && (
-        <Alert showIcon type="error" message="Hệ thống đang có thành phần không khỏe" description="Kiểm tra chi tiết thành phần và job lỗi trước khi xử lý dữ liệu thủ công." />
+        <Alert showIcon type="error" title="Hệ thống đang có thành phần không khỏe" description="Kiểm tra chi tiết thành phần và job lỗi trước khi xử lý dữ liệu thủ công." />
       )}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <ContentCard className="p-5"><Statistic title="Sức khỏe tổng thể" value={status?.overallHealth || "—"} prefix={<Activity className="h-5 w-5 text-emerald-600" />} /></ContentCard>
@@ -262,8 +265,8 @@ export default function SystemOperationsPage() {
       <Alert
         showIcon
         type="warning"
-        message="Retention hiện là policy toàn hệ thống"
-        description="Bản Backend hiện tại dọn delivery log sau 30 ngày, notification đã đọc sau 90 ngày và ảnh chấm công/random-check sau 30 ngày; ảnh enrollment được xóa ngay khi thu hồi Face ID. Web chỉ giám sát DataRetentionJob, chưa có API cấu hình policy riêng theo tenant."
+        title="Retention hiện là policy toàn hệ thống"
+        description="Web giám sát trạng thái DataRetentionJob nhưng Backend chưa trả policy retention qua API. Không hiển thị số ngày cố định tại đây để tránh sai lệch khi cấu hình vận hành thay đổi; hãy đối chiếu policy của môi trường triển khai."
       />
     </div>
   );

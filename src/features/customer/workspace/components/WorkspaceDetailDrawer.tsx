@@ -1,9 +1,9 @@
-import React, { useEffect } from "react";
-import { Drawer, Descriptions, Tag, App } from "antd";
+import React from "react";
+import { Drawer, Tag } from "antd";
 import BaseButton from "@/components/ui/BaseButton";
 import { WorkspaceResponse } from "../types";
 import dayjs from "dayjs";
-import { Building2, Users, Edit3, Trash2 } from "lucide-react";
+import { Building2, Users, Edit3 } from "lucide-react";
 import { useWorkspaceByIdQuery } from "../hooks/use-workspace";
 
 interface WorkspaceDetailDrawerProps {
@@ -14,8 +14,7 @@ interface WorkspaceDetailDrawerProps {
 }
 
 export default function WorkspaceDetailDrawer({ workspace, isOpen, onClose, onEdit }: WorkspaceDetailDrawerProps) {
-  const { message } = App.useApp();
-  const { data: detailResponse, isLoading } = useWorkspaceByIdQuery(
+  const { data: detailResponse } = useWorkspaceByIdQuery(
     workspace?.tenantId,
     isOpen ? workspace?.id : undefined
   );

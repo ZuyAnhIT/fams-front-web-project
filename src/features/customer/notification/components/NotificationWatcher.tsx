@@ -6,10 +6,12 @@ import { Bell } from "lucide-react";
 import { notificationService } from "../services/notification.service";
 import { useNotificationStore } from "../stores/notification.store";
 import { useAuthStore } from "@/stores/auth.store";
+import { useRouter } from "next/navigation";
 
 const POLL_INTERVAL_MS = 30000;
 
 export default function NotificationWatcher() {
+  const router = useRouter();
   const [api, contextHolder] = message.useMessage();
   const unreadCount = useNotificationStore((state) => state.unreadCount);
   const setUnreadCount = useNotificationStore((state) => state.setUnreadCount);
@@ -72,7 +74,7 @@ export default function NotificationWatcher() {
               className: "cursor-pointer",
               onClick: () => {
                 if (typeof window !== "undefined") {
-                  window.location.href = "/customer/notifications";
+                  router.push("/customer/notifications");
                 }
               },
             });
@@ -89,7 +91,7 @@ export default function NotificationWatcher() {
     const interval = setInterval(checkNewNotifications, POLL_INTERVAL_MS);
 
     return () => clearInterval(interval);
-  }, [api, setUnreadCount, tenantId, unreadCount]);
+  }, [api, router, setUnreadCount, tenantId, unreadCount]);
 
   return contextHolder;
 }

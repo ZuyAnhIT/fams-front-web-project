@@ -34,7 +34,7 @@ export default function DataTable<T extends object>({
   ...rest
 }: DataTableProps<T>) {
   const paginationConfig: TablePaginationConfig | false = showPagination ? {
-    position: ["bottomRight"],
+    placement: ["bottomEnd"],
     current: currentPage + 1, // Ant Design dùng 1-indexed
     pageSize: pageSize,
     total: totalElements,

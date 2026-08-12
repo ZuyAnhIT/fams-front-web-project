@@ -4,11 +4,12 @@ import React, { useEffect } from "react";
 import { Alert, Form, message, Radio } from "antd";
 import BaseModal from "@/components/ui/BaseModal";
 import BaseSelect from "@/components/ui/BaseSelect";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useRolesQuery, useAssignRoleMutation } from "../hooks/use-role-permission";
 import { useSitesQuery } from "@/features/customer/site/hooks/use-site";
+import { getApiErrorMessage } from "@/utils/api-error.util";
 
 const assignRoleSchema = z.object({
   roleId: z.string().min(1, "Vui lòng chọn một role"),
@@ -56,7 +57,7 @@ export const AssignRoleModal: React.FC<AssignRoleModalProps> = ({
     size: 100,
   });
 
-  const { control, handleSubmit, reset, watch, setValue } = useForm<AssignRoleValues>({
+  const { control, handleSubmit, reset, setValue } = useForm<AssignRoleValues>({
     resolver: zodResolver(assignRoleSchema),
     defaultValues: {
       roleId: "",
@@ -82,8 +83,8 @@ export const AssignRoleModal: React.FC<AssignRoleModalProps> = ({
       messageApi.success("Đã gán role thành công");
       if (onSuccess) onSuccess();
       onClose();
-    } catch (error: any) {
-      messageApi.error(error?.response?.data?.message || "Lỗi khi gán role");
+    } catch (error: unknown) {
+      messageApi.error(getApiErrorMessage(error, "Lỗi khi gán role"));
     }
   };
 
@@ -94,11 +95,12 @@ export const AssignRoleModal: React.FC<AssignRoleModalProps> = ({
     label: role.name + (role.isSystem ? " (Hệ thống)" : ""),
     value: role.id,
   })) || [];
-  const selectedRole = assignableRoles.find((role) => role.id === watch("roleId"));
+  const selectedRoleId = useWatch({ control, name: "roleId" });
+  const selectedRole = assignableRoles.find((role) => role.id === selectedRoleId);
   const supportsSiteScope = Boolean(
     selectedRole && (selectedRole.name === "SITE_SUPERVISOR" || !selectedRole.isSystem),
   );
-  const selectedScope = watch("scope");
+  const selectedScope = useWatch({ control, name: "scope" });
   const siteOptions = sitesData?.data?.content.map((site) => ({
     label: `${site.name}${site.code ? ` (${site.code})` : ""}`,
     value: site.id,
@@ -111,7 +113,7 @@ export const AssignRoleModal: React.FC<AssignRoleModalProps> = ({
         title="Gán Role cho Người Dùng"
         isOpen={open}
         onClose={onClose}
-        destroyOnClose
+        destroyOnHidden
         centered
         width={500}
         confirmText="Lưu"
@@ -195,7 +197,7 @@ export const AssignRoleModal: React.FC<AssignRoleModalProps> = ({
               <Alert
                 type="info"
                 showIcon
-                message="Quy tắc phạm vi"
+                title="Quy tắc phạm vi"
                 description="Nếu người dùng có một role khác áp dụng toàn công ty, phạm vi không giới hạn sẽ được ưu tiên."
               />
             </>

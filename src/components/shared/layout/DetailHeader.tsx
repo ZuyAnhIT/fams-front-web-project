@@ -1,5 +1,6 @@
 import React from "react";
 import { ArrowLeft } from "lucide-react";
+import Image from "next/image";
 
 interface DetailHeaderProps {
   title: string;
@@ -37,9 +38,12 @@ export default function DetailHeader({
         <div className="min-w-0">
           <div className="flex min-w-0 items-center gap-3 sm:gap-4">
             {avatarUrl ? (
-              <img 
+              <Image
                 src={avatarUrl} 
                 alt={title} 
+                width={48}
+                height={48}
+                unoptimized
                 className="w-12 h-12 rounded-lg border border-brand-200 object-cover bg-white p-1 shadow-sm"
               />
             ) : avatarFallback ? (

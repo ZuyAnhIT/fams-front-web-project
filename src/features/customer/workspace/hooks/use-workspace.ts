@@ -5,43 +5,36 @@ import {
   CreateWorkspaceRequest,
   TransferWorkspaceMemberRequest,
   UpdateWorkspaceRequest,
+  WorkspaceListParams,
+  WorkspaceTreeParams,
 } from "../types";
+
+type OptionalTenant<T extends { tenantId: string }> = Omit<T, "tenantId"> & {
+  tenantId: string | undefined;
+};
 
 export const workspaceKeys = {
   all: ["workspaces"] as const,
   lists: () => [...workspaceKeys.all, "list"] as const,
-  list: (params: any) => [...workspaceKeys.lists(), params] as const,
+  list: (params: OptionalTenant<WorkspaceListParams>) => [...workspaceKeys.lists(), params] as const,
   trees: () => [...workspaceKeys.all, "tree"] as const,
-  tree: (params: any) => [...workspaceKeys.trees(), params] as const,
+  tree: (params: OptionalTenant<WorkspaceTreeParams>) => [...workspaceKeys.trees(), params] as const,
   details: () => [...workspaceKeys.all, "detail"] as const,
   detail: (id: string) => [...workspaceKeys.details(), id] as const,
 };
 
-export const useWorkspacesQuery = (params: {
-  tenantId: string | undefined;
-  search?: string;
-  status?: string;
-  type?: string;
-  sortBy?: string;
-  sortDir?: "asc" | "desc";
-  page?: number;
-  size?: number;
-}) => {
+export const useWorkspacesQuery = (params: OptionalTenant<WorkspaceListParams>) => {
   return useQuery({
     queryKey: workspaceKeys.list(params),
-    queryFn: () => workspaceService.getWorkspaces(params as any),
+    queryFn: () => workspaceService.getWorkspaces({ ...params, tenantId: params.tenantId! }),
     enabled: !!params.tenantId,
   });
 };
 
-export const useWorkspaceTreeQuery = (params: {
-  tenantId: string | undefined;
-  search?: string;
-  status?: string;
-}) => {
+export const useWorkspaceTreeQuery = (params: OptionalTenant<WorkspaceTreeParams>) => {
   return useQuery({
     queryKey: workspaceKeys.tree(params),
-    queryFn: () => workspaceService.getWorkspaceTree(params as any),
+    queryFn: () => workspaceService.getWorkspaceTree({ ...params, tenantId: params.tenantId! }),
     enabled: !!params.tenantId,
   });
 };

@@ -8,19 +8,12 @@ import {
   AssignWorkspaceMemberRequest,
   TransferWorkspaceMemberRequest,
   WorkspaceMemberResponse,
+  WorkspaceListParams,
+  WorkspaceTreeParams,
 } from "../types";
 
 export const workspaceService = {
-  getWorkspaces: async (params: {
-    tenantId: string;
-    search?: string;
-    status?: string;
-    type?: string;
-    sortBy?: string;
-    sortDir?: "asc" | "desc";
-    page?: number;
-    size?: number;
-  }): Promise<ApiResponse<PageResponse<WorkspaceResponse>>> => {
+  getWorkspaces: async (params: WorkspaceListParams): Promise<ApiResponse<PageResponse<WorkspaceResponse>>> => {
     const { tenantId, ...restParams } = params;
     const response = await apiClient.get<ApiResponse<PageResponse<WorkspaceResponse>>>(
       `/tenants/${tenantId}/workspaces`,
@@ -29,11 +22,7 @@ export const workspaceService = {
     return response.data;
   },
 
-  getWorkspaceTree: async (params: {
-    tenantId: string;
-    search?: string;
-    status?: string;
-  }): Promise<ApiResponse<WorkspaceTreeResponse[]>> => {
+  getWorkspaceTree: async (params: WorkspaceTreeParams): Promise<ApiResponse<WorkspaceTreeResponse[]>> => {
     const { tenantId, ...restParams } = params;
     const response = await apiClient.get<ApiResponse<WorkspaceTreeResponse[]>>(
       `/tenants/${tenantId}/workspaces/tree`,

@@ -16,7 +16,6 @@ export const ADMIN_ROUTES = {
   DASHBOARD: "/admin/dashboard",
   PLANS: "/admin/plans",
   TENANTS: "/admin/tenants",
-  REPORTS: "/admin/reports",
   ROLES: "/admin/settings/roles",
   USERS: "/admin/users",
   AUDIT_LOGS: "/admin/audit-logs",

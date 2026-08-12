@@ -149,7 +149,6 @@ export default function SitePage() {
       dataIndex: "actions",
       key: "actions",
       width: 100,
-      /* align: "right" as any */
       render: (_, record: SiteResponse) => (
         <div className="flex items-center gap-2">
           <Link href={`/customer/sites/${record.id}`}>
@@ -232,7 +231,7 @@ export default function SitePage() {
             ariaLabel="Danh sách công trình"
             emptyTitle="Chưa có công trình"
             emptyDescription="Tạo công trình đầu tiên để cấu hình địa điểm chấm công."
-            columns={columns as any}
+            columns={columns}
             data={sites}
             loading={isLoading}
             totalElements={totalElements}
@@ -242,7 +241,7 @@ export default function SitePage() {
               setPage(p);
               setSize(s);
             }}
-            onChange={(_, __, sorter: any) => {
+            onChange={(_, __, sorter) => {
               if (!Array.isArray(sorter) && (sorter.columnKey || sorter.field)) {
                 setSortBy((sorter.columnKey || sorter.field) as string);
                 setSortDir(sorter.order === "ascend" ? "asc" : sorter.order === "descend" ? "desc" : undefined);

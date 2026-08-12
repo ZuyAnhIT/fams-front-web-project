@@ -182,7 +182,7 @@ export default function FaceIdEnrollmentReportPage() {
       key: "index",
       width: 60,
       align: "center",
-      render: (_: any, __: any, index: number) => (
+      render: (_, __, index) => (
         <span className="font-mono text-xs font-bold text-slate-400">
           {state.page * state.size + index + 1}
         </span>
@@ -191,7 +191,7 @@ export default function FaceIdEnrollmentReportPage() {
     {
       title: "Nhân viên",
       key: "name",
-      render: (_: any, record) => (
+      render: (_, record) => (
         <div className="flex items-center gap-3 py-1">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-100 text-brand-700 font-bold uppercase shadow-inner">
             {(record.lastName || record.firstName || "?")[0]?.toUpperCase()}
@@ -233,7 +233,7 @@ export default function FaceIdEnrollmentReportPage() {
       title: "Trạng thái Face ID",
       key: "faceIdStatus",
       width: 180,
-      render: (_: any, record) => {
+      render: (_, record) => {
         const cfg = STATUS_TAG_MAP[record.faceIdStatus];
         return (
           <Tag
@@ -276,7 +276,7 @@ export default function FaceIdEnrollmentReportPage() {
       title: "Consent",
       key: "consent",
       width: 140,
-      render: (_: any, record) =>
+      render: (_, record) =>
         record.consentGiven ? (
           <Tag color="success" className="font-medium m-0 border-0 bg-emerald-50 text-emerald-700">
             Đã đồng ý
@@ -306,7 +306,7 @@ export default function FaceIdEnrollmentReportPage() {
       key: "actions",
       width: 130,
       fixed: "right",
-      render: (_: any, record) => (
+      render: (_, record) => (
         <BaseButton
           type="default"
           icon={<ChevronRight className="h-4 w-4" />}
@@ -376,7 +376,7 @@ export default function FaceIdEnrollmentReportPage() {
         <Alert
           type="warning"
           showIcon
-          message="Bạn không có quyền xem báo cáo Face ID"
+          title="Bạn không có quyền xem báo cáo Face ID"
         />
       ) : (
       <>

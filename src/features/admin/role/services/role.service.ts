@@ -6,6 +6,7 @@ import type {
   CreateRolePayload,
   UpdateRolePayload,
   PermissionGroupResponse,
+  RoleListParams,
 } from "../types/role.type";
 import { useAuthStore } from "@/stores/auth.store";
 
@@ -21,15 +22,7 @@ export const roleService = {
   /**
    * Lấy danh sách Vai trò (Roles) có phân trang
    */
-  async listRoles(params: {
-    page?: number;
-    size?: number;
-    search?: string;
-    isSystem?: boolean;
-    sortBy?: string;
-    sortDir?: "asc" | "desc";
-    tenantId?: string; // Platform Admin filter
-  }): Promise<PageResponse<Role>> {
+  async listRoles(params: RoleListParams): Promise<PageResponse<Role>> {
     // Tự động thêm tenantId vào params nếu không phải Platform Admin
     const effectiveParams = { ...params, tenantId: params.tenantId || getTenantId() };
     const response = await apiClient.get<ApiResponse<PageResponse<Role>>>("/roles", {

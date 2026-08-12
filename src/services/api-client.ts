@@ -1,9 +1,10 @@
 import axios, { AxiosInstance } from "axios";
 import { authTokenService } from "./auth-token.service";
 import { message } from "antd";
+import { publicEnv } from "@/config/env";
 
 export const apiClient: AxiosInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  baseURL: publicEnv.NEXT_PUBLIC_API_URL,
   timeout: 30000,
   headers: {
     "Content-Type": "application/json",
@@ -61,7 +62,9 @@ function forceLogout() {
     });
     setTimeout(() => {
       isRedirectingToLogin = false;
-      window.location.href = "/login";
+      // A hard replace is intentional here: this module lives outside React,
+      // and an expired session must reset every in-memory tenant query/store.
+      window.location.replace("/login");
     }, 1500);
   }
 }

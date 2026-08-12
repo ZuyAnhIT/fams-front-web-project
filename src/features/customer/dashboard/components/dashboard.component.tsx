@@ -17,6 +17,7 @@ const VIOLATION_LABELS = {
   location_fail: 'Sai vị trí',
   face_fail: 'Face ID',
   liveness_fail: 'Liveness',
+  face_verify_timeout: 'AI quá hạn',
 } as const;
 
 const CHECKIN_STATUS_LABELS = {

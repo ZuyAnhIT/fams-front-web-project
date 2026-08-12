@@ -13,6 +13,7 @@ import { useUsersQuery } from "@/hooks/use-user";
 import type { UserProfile } from "@/features/customer/auth/types/auth.type";
 import { AssignPlatformRoleModal } from "@/features/admin/role-permission/components/AssignPlatformRoleModal";
 import { PlatformInvitationPanel } from "./PlatformInvitationPanel";
+import type { ColumnsType } from "antd/es/table";
 
 export function UserDirectoryPage() {
   const [page, setPage] = useState(0);
@@ -35,7 +36,7 @@ export function UserDirectoryPage() {
     size,
   });
 
-  const columns = [
+  const columns: ColumnsType<UserProfile> = [
     {
       title: "Người dùng",
       key: "user",
@@ -120,7 +121,7 @@ export function UserDirectoryPage() {
         <Alert
           type="info"
           showIcon
-          message="Danh mục này gồm mọi tài khoản trên hệ thống"
+          title="Danh mục này gồm mọi tài khoản trên hệ thống"
           description="Dùng tìm người và gán vai trò cấp nền tảng. Bộ lọc bên dưới chỉ dựa trên cờ Platform Admin, không đại diện cho role PLATFORM_STAFF."
           className="m-5 mb-0"
         />
@@ -128,7 +129,7 @@ export function UserDirectoryPage() {
           <Alert
             type="error"
             showIcon
-            message="Không thể tải danh mục người dùng toàn hệ thống"
+            title="Không thể tải danh mục người dùng toàn hệ thống"
             className="m-5"
           />
         )}
@@ -174,7 +175,7 @@ export function UserDirectoryPage() {
         <div className="p-5">
           <DataTable
             ariaLabel="Danh sách người dùng toàn hệ thống"
-            columns={columns as any}
+            columns={columns}
             data={data?.content || []}
             loading={isLoading || isFetching}
             totalElements={data?.totalElements || 0}
@@ -184,11 +185,11 @@ export function UserDirectoryPage() {
               setPage(nextPage);
               setSize(nextSize);
             }}
-            onChange={(_, __, sorter: any) => {
+            onChange={(_, __, sorter) => {
               if (!Array.isArray(sorter) && sorter.order) {
                 const key = sorter.columnKey === "user" ? "displayName" : sorter.columnKey;
-                if (["email", "displayName", "createdAt", "lastLoginAt"].includes(key)) {
-                  setSortBy(key);
+                if (typeof key === "string" && ["email", "displayName", "createdAt", "lastLoginAt"].includes(key)) {
+                  setSortBy(key as "email" | "displayName" | "createdAt" | "lastLoginAt");
                   setSortDir(sorter.order === "ascend" ? "asc" : "desc");
                   setPage(0);
                 }

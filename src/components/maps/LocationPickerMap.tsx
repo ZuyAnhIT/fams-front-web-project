@@ -4,16 +4,14 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Select, Spin } from "antd";
 import { Search } from "lucide-react";
+import { mapConfig } from "@/config/map";
 
-// Fix Leaflet's default icon missing issue in Next.js
-const customIcon = new L.Icon({
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
+// CSS-only marker keeps the map independent from third-party icon CDNs.
+const customIcon = L.divIcon({
+  className: "",
+  html: '<span aria-hidden="true" style="display:block;width:22px;height:22px;border:3px solid white;border-radius:9999px;background:#2563eb;box-shadow:0 2px 8px rgba(15,23,42,.45)"></span>',
+  iconSize: [22, 22],
+  iconAnchor: [11, 11],
 });
 
 interface LocationPickerMapProps {
@@ -23,13 +21,35 @@ interface LocationPickerMapProps {
   className?: string;
 }
 
+interface GeocodingResult {
+  display_name: string;
+  lat: string;
+  lon: string;
+}
+
+interface LocationOption {
+  label: string;
+  value: string;
+  lat: number;
+  lng: number;
+  address: string;
+}
+
+function isGeocodingResult(value: unknown): value is GeocodingResult {
+  if (!value || typeof value !== "object") return false;
+  const item = value as Record<string, unknown>;
+  return typeof item.display_name === "string"
+    && typeof item.lat === "string"
+    && typeof item.lon === "string";
+}
+
 const DEFAULT_CENTER = { lat: 10.762622, lng: 106.660172 }; // Ho Chi Minh City
 
 // Helper to reverse geocode using Nominatim API
 const reverseGeocode = async (lat: number, lng: number): Promise<string | undefined> => {
   try {
     const response = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=vi`
+      `/api/maps/geocode?mode=reverse&lat=${lat}&lon=${lng}`
     );
     const data = await response.json();
     return data?.display_name;
@@ -43,10 +63,11 @@ const reverseGeocode = async (lat: number, lng: number): Promise<string | undefi
 const searchGeocode = async (query: string) => {
   try {
     const response = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&countrycodes=vn&accept-language=vi`
+      `/api/maps/geocode?mode=search&q=${encodeURIComponent(query)}`
     );
-    const data = await response.json();
-    return data.map((item: any) => ({
+    const data: unknown = await response.json();
+    if (!Array.isArray(data)) return [];
+    return data.filter(isGeocodingResult).map((item) => ({
       label: item.display_name,
       value: `${item.lat},${item.lon}`,
       lat: parseFloat(item.lat),
@@ -91,7 +112,7 @@ export default function LocationPickerMap({
       ? { lat: latitude, lng: longitude }
       : DEFAULT_CENTER;
 
-  const [options, setOptions] = useState<any[]>([]);
+  const [options, setOptions] = useState<LocationOption[]>([]);
   const [fetching, setFetching] = useState(false);
   const searchTimeoutRef = useRef<NodeJS.Timeout>(null);
 
@@ -113,7 +134,7 @@ export default function LocationPickerMap({
     }, 500);
   };
 
-  const handleSelect = (value: string, option: any) => {
+  const handleSelect = (_value: string, option: LocationOption) => {
     onChange(option.lat, option.lng, option.address);
   };
 
@@ -121,7 +142,7 @@ export default function LocationPickerMap({
     <div className="relative w-full h-full rounded-lg overflow-hidden border border-slate-200">
       {/* Search Overlay */}
       <div className="absolute top-3 left-12 right-3 z-[1000]">
-        <Select
+        <Select<string, LocationOption>
           showSearch
           placeholder="Tìm kiếm địa điểm (Tên đường, phường, quận...)"
           className="w-full shadow-lg rounded-lg"
@@ -142,8 +163,8 @@ export default function LocationPickerMap({
         scrollWheelZoom={true}
       >
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution={mapConfig.attribution}
+          url={mapConfig.tileUrl}
         />
         {latitude != null && longitude != null && (
           <Marker position={{ lat: latitude, lng: longitude }} icon={customIcon} />

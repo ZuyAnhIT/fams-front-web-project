@@ -12,6 +12,8 @@ import { AssignRoleModal } from "@/features/admin/role-permission/components/Ass
 import { useRevokeRoleMutation } from "@/features/admin/role-permission/hooks/use-role-permission";
 import type { EmployeeDetailResponse, EmployeeRoleAssignment } from "../types/employee.type";
 import { useAuthStore } from "@/stores/auth.store";
+import { getApiErrorMessage } from "@/utils/api-error.util";
+import type { ColumnsType } from "antd/es/table";
 
 interface EmployeeRolesTabProps {
   employee: EmployeeDetailResponse;
@@ -39,14 +41,14 @@ export default function EmployeeRolesTab({ employee }: EmployeeRolesTabProps) {
       await revokeRole.mutateAsync(revokeRoleId);
       message.success("Đã thu hồi role thành công");
       handleSuccess();
-    } catch (error: any) {
-      message.error(error?.response?.data?.message || "Lỗi khi thu hồi role");
+    } catch (error: unknown) {
+      message.error(getApiErrorMessage(error, "Lỗi khi thu hồi role"));
     } finally {
       setRevokeRoleId(null);
     }
   };
 
-  const columns = [
+  const columns: ColumnsType<EmployeeRoleAssignment> = [
     {
       title: "Tên Role",
       dataIndex: "roleName",
@@ -126,14 +128,14 @@ export default function EmployeeRolesTab({ employee }: EmployeeRolesTabProps) {
         <Alert
           type="warning"
           showIcon
-          message="Chưa có tài khoản đăng nhập"
+          title="Chưa có tài khoản đăng nhập"
           description="Nhân viên này được tạo thủ công và chưa liên kết với tài khoản hệ thống nào. Bạn cần gửi lời mời tham gia (Invite) để họ thiết lập tài khoản trước khi có thể gán quyền."
         />
       )}
 
       <GlassCard className="border-brand-200 bg-white shadow-sm overflow-hidden">
         <DataTable
-          columns={columns as any}
+          columns={columns}
           data={employee.roles || []}
           showPagination={false}
         />

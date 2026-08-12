@@ -132,6 +132,9 @@ test("Company Admin xem role hệ thống chỉ đọc và tạo role tenant đ�
     permissionIds: [permissionId],
   });
   await page.screenshot({ path: `${evidenceDir}/01-company-role-management.png`, fullPage: true });
+
+  await page.goto("/admin/settings/roles/create");
+  await expect(page.getByText("403 Access Denied")).toBeVisible();
 });
 
 test("Platform Admin tạo và gán role nền tảng không gửi tenantId", async ({ page }) => {
@@ -181,7 +184,7 @@ test("Platform Admin tạo và gán role nền tảng không gửi tenantId", as
 });
 
 test("Gán role theo site, thu hồi role và hiển thị Quyền của tôi", async ({ page }) => {
-  await seedUser(page, "TENANT_ADMIN", tenantId, ["roles:read", "roles:update"]);
+  await seedUser(page, "TENANT_ADMIN", tenantId, ["roles:read", "roles:update", "employees:read"]);
   let assignBody: Record<string, unknown> = {};
   let revokedId = "";
   const employeeId = "77777777-7777-4777-8777-777777777777";

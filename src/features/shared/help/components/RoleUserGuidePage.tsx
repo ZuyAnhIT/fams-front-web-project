@@ -68,7 +68,7 @@ export default function RoleUserGuidePage() {
         <p className="mt-1 text-sm text-slate-500">Các luồng nghiệp vụ đã được đối chiếu với quyền và contract Backend hiện tại.</p>
       </div>
 
-      <Alert showIcon type="info" message="Quyền hiển thị do phiên đăng nhập hiện tại quyết định" description="Nếu một chức năng không xuất hiện hoặc API trả 403, hãy kiểm tra role/permission trong đúng công ty đang chọn; không dùng quyền của tenant khác để thao tác." />
+      <Alert showIcon type="info" title="Quyền hiển thị do phiên đăng nhập hiện tại quyết định" description="Nếu một chức năng không xuất hiện hoặc API trả 403, hãy kiểm tra role/permission trong đúng công ty đang chọn; không dùng quyền của tenant khác để thao tác." />
 
       <ContentCard className="p-5">
         <Tabs items={items} />

@@ -2,7 +2,7 @@
 import { resolvePostLoginRoute } from "@/utils/route.util";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch, type SubmitHandler } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Checkbox, message } from "antd";
@@ -17,11 +17,13 @@ import { authService } from "@/features/customer/auth/services/auth.service";
 import { authTokenService } from "@/services/auth-token.service";
 import { authMapper } from "@/features/customer/auth/utils/auth.mapper";
 import { rolePermissionService } from "@/features/admin/role-permission/services/role-permission.service";
+import { publicEnv } from "@/config/env";
 import type { InvitationType } from "@/features/customer/employee/types/employee.type";
+import { getApiErrorMessage } from "@/utils/api-error.util";
 
 const acceptSchema = z.object({
-  isExistingUser: z.boolean().default(false),
-  linkExistingPhone: z.boolean().default(false),
+  isExistingUser: z.boolean(),
+  linkExistingPhone: z.boolean(),
   password: z.string().optional(),
   confirmPassword: z.string().optional(),
   existingPhone: z.string().optional(),
@@ -73,11 +75,10 @@ function AcceptInviteForm() {
   const {
     control,
     handleSubmit,
-    watch,
     setValue,
     formState: { errors },
   } = useForm<AcceptFormData>({
-    resolver: zodResolver(acceptSchema) as any,
+    resolver: zodResolver(acceptSchema),
     defaultValues: {
       isExistingUser: false,
       linkExistingPhone: false,
@@ -88,10 +89,10 @@ function AcceptInviteForm() {
     },
   });
 
-  const isExistingUser = watch("isExistingUser");
-  const linkExistingPhone = watch("linkExistingPhone");
+  const isExistingUser = useWatch({ control, name: "isExistingUser" });
+  const linkExistingPhone = useWatch({ control, name: "linkExistingPhone" });
   const appDeepLink = token
-    ? `famsfrontappproject://accept-invite?type=${invitationType}&token=${encodeURIComponent(token)}`
+    ? `${publicEnv.NEXT_PUBLIC_MOBILE_APP_SCHEME}://accept-invite?type=${invitationType}&token=${encodeURIComponent(token)}`
     : null;
 
   useEffect(() => {
@@ -128,7 +129,7 @@ function AcceptInviteForm() {
     );
   }
 
-  const onSubmit: any = async (data: AcceptFormData) => {
+  const onSubmit: SubmitHandler<AcceptFormData> = async (data) => {
     try {
       const result = await acceptInvitation({
         token,
@@ -160,8 +161,8 @@ function AcceptInviteForm() {
         message.success("Chấp nhận lời mời thành công! Vui lòng đăng nhập.");
         router.push(ROUTES.LOGIN);
       }
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.message || "Kích hoạt thất bại. Lời mời có thể đã hết hạn.";
+    } catch (error: unknown) {
+      const errorMessage = getApiErrorMessage(error, "Kích hoạt thất bại. Lời mời có thể đã hết hạn.");
 
       // Auto-fallback if the user selected "existing user" but backend requires a password
       if (isExistingUser && errorMessage.toLowerCase().includes("password is required")) {

@@ -27,6 +27,7 @@ import { authMapper } from "@/features/customer/auth/utils/auth.mapper";
 import { rolePermissionService } from "@/features/admin/role-permission/services/role-permission.service";
 import { getOrCreateDeviceId } from "@/features/customer/auth/utils/auth-device.util";
 import type { LoginResponse } from "@/features/customer/auth/types/auth.type";
+import { isGoogleConfigured } from "@/config/env";
 
 const totpSchema = z.object({
   code: z.string(),
@@ -425,17 +426,19 @@ export default function LoginForm() {
             Đăng nhập nhanh bằng OTP
           </BaseButton>
 
-          <div className="flex justify-center w-full [&>div]:w-full [&>div>div]:!w-full [&_iframe]:!w-full">
-            <GoogleLogin
-              onSuccess={handleGoogleSuccess}
-              onError={() => message.error("Đăng nhập Google thất bại.")}
-              theme="outline"
-              size="large"
-              text="continue_with"
-              logo_alignment="center"
-              shape="rectangular"
-            />
-          </div>
+          {isGoogleConfigured && (
+            <div className="flex justify-center w-full [&>div]:w-full [&>div>div]:!w-full [&_iframe]:!w-full">
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={() => message.error("Đăng nhập Google thất bại.")}
+                theme="outline"
+                size="large"
+                text="continue_with"
+                logo_alignment="center"
+                shape="rectangular"
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>

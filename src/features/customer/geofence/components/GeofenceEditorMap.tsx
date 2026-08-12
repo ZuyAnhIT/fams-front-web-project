@@ -1,15 +1,14 @@
 "use client";
 
-import { useEffect } from "react";
 import dynamic from "next/dynamic";
 import "leaflet/dist/leaflet.css";
 import BaseButton from "@/components/ui/BaseButton";
+import { mapConfig } from "@/config/map";
 
 // Dynamic import for react-leaflet components to avoid SSR issues
 const MapContainer = dynamic(() => import("react-leaflet").then((mod) => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import("react-leaflet").then((mod) => mod.TileLayer), { ssr: false });
 const Polygon = dynamic(() => import("react-leaflet").then((mod) => mod.Polygon), { ssr: false });
-const Marker = dynamic(() => import("react-leaflet").then((mod) => mod.Marker), { ssr: false });
 const CircleMarker = dynamic(() => import("react-leaflet").then((mod) => mod.CircleMarker), { ssr: false });
 const Polyline = dynamic(() => import("react-leaflet").then((mod) => mod.Polyline), { ssr: false });
 const Tooltip = dynamic(() => import("react-leaflet").then((mod) => mod.Tooltip), { ssr: false });
@@ -30,18 +29,6 @@ export function GeofenceEditorMap({
   onChange,
 }: GeofenceEditorMapProps) {
   const points = initialCoordinates;
-
-  useEffect(() => {
-    // Fix Leaflet icons
-    import("leaflet").then((L) => {
-      delete (L.Icon.Default.prototype as any)._getIconUrl;
-      L.Icon.Default.mergeOptions({
-        iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-        iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-        shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-      });
-    });
-  }, []);
 
   const handleMapClick = (latlng: { lat: number; lng: number }) => {
     const newPoints = [...points, [latlng.lat, latlng.lng] as [number, number]];
@@ -90,12 +77,16 @@ export function GeofenceEditorMap({
         style={{ height: "100%", width: "100%", zIndex: 0, cursor: "crosshair" }}
       >
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution={mapConfig.attribution}
+          url={mapConfig.tileUrl}
         />
         <MapEvents onClick={handleMapClick} />
 
-        <Marker position={[latitude, longitude]} />
+        <CircleMarker
+          center={[latitude, longitude]}
+          radius={8}
+          pathOptions={{ color: "white", fillColor: "#2563eb", fillOpacity: 1, weight: 3 }}
+        />
 
         {isPolygon ? (
           <Polygon

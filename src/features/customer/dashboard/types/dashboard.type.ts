@@ -33,7 +33,7 @@ export interface HrDashboard {
   violations: {
     unresolved: number;
     resolvedThisMonth: number;
-    unresolvedByType: Partial<Record<'no_response' | 'location_fail' | 'face_fail' | 'liveness_fail', number>>;
+    unresolvedByType: Partial<Record<'no_response' | 'location_fail' | 'face_fail' | 'liveness_fail' | 'face_verify_timeout', number>>;
   };
   sites: { totalSites: number; employeesOnSiteNow: number };
 }

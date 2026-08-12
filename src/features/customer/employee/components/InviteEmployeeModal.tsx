@@ -11,6 +11,7 @@ import { inviteEmployeeSchema, type InviteEmployeeFormData } from "../schemas/em
 import { useEffect } from "react";
 import { useRolesQuery } from "@/features/admin/role-permission/hooks/use-role-permission";
 import { useAuthStore } from "@/stores/auth.store";
+import { getApiErrorMessage } from "@/utils/api-error.util";
 
 interface InviteEmployeeModalProps {
   open: boolean;
@@ -54,9 +55,8 @@ export default function InviteEmployeeModal({ open, onClose }: InviteEmployeeMod
       await sendInvitation({ payload });
       message.success(`Đã gửi lời mời tới ${data.email} thành công!`);
       onClose();
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.message || "Không thể gửi lời mời. Vui lòng thử lại.";
-      message.error(errorMessage);
+    } catch (error: unknown) {
+      message.error(getApiErrorMessage(error, "Không thể gửi lời mời. Vui lòng thử lại."));
     }
   };
 

@@ -69,7 +69,7 @@ export default function ActiveGeofenceCard({ site, siteId }: ActiveGeofenceCardP
             className="mt-4"
             type="warning"
             showIcon
-            message="Công trình chưa có geofence"
+            title="Công trình chưa có geofence"
             description="Chưa có polygon active để backend đối chiếu vị trí check-in. Hãy cấu hình vùng chấm công trước khi vận hành chính thức."
           />
         )}

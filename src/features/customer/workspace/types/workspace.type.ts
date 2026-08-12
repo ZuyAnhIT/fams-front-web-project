@@ -17,6 +17,23 @@ export interface WorkspaceTreeResponse extends WorkspaceResponse {
   children: WorkspaceTreeResponse[];
 }
 
+export interface WorkspaceListParams {
+  tenantId: string;
+  search?: string;
+  status?: "active" | "inactive";
+  type?: "department" | "team";
+  sortBy?: string;
+  sortDir?: "asc" | "desc";
+  page?: number;
+  size?: number;
+}
+
+export interface WorkspaceTreeParams {
+  tenantId: string;
+  search?: string;
+  status?: "active" | "inactive";
+}
+
 export interface CreateWorkspaceRequest {
   name: string;
   description?: string;

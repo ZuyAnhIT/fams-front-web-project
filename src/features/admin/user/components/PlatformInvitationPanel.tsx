@@ -24,6 +24,8 @@ import type { PlatformInvitationResponse } from "@/features/customer/employee/ty
 import StatusBadge from "@/components/ui/StatusBadge";
 import { INVITATION_STATUS } from "@/constants/status";
 import { formatVietnameseName } from "@/utils/name.util";
+import { getApiErrorMessage } from "@/utils/api-error.util";
+import type { ColumnsType } from "antd/es/table";
 
 const schema = z.object({
   email: z.string().email("Vui lòng nhập email hợp lệ"),
@@ -87,8 +89,8 @@ export function PlatformInvitationPanel() {
       message.success(`Đã gửi lời mời nhân sự nền tảng tới ${values.email}`);
       setOpen(false);
       reset();
-    } catch (error: any) {
-      message.error(error.response?.data?.message || "Không thể gửi lời mời");
+    } catch (error: unknown) {
+      message.error(getApiErrorMessage(error, "Không thể gửi lời mời"));
     }
   };
 
@@ -103,14 +105,14 @@ export function PlatformInvitationPanel() {
         try {
           await cancelInvitation.mutateAsync(record.id);
           message.success("Đã hủy lời mời");
-        } catch (error: any) {
-          message.error(error.response?.data?.message || "Không thể hủy lời mời");
+        } catch (error: unknown) {
+          message.error(getApiErrorMessage(error, "Không thể hủy lời mời"));
         }
       },
     });
   };
 
-  const columns = [
+  const columns: ColumnsType<PlatformInvitationResponse> = [
     {
       title: "Email",
       dataIndex: "email",
@@ -162,7 +164,7 @@ export function PlatformInvitationPanel() {
       <Alert
         type="info"
         showIcon
-        message="Nhân sự nền tảng không phải nhân viên của một công ty khách hàng"
+        title="Nhân sự nền tảng không phải nhân viên của một công ty khách hàng"
         description="Khi chấp nhận, người dùng nhận vai trò cấp nền tảng và không tạo hồ sơ Employee, workspace, assignment hay Face ID."
       />
 
@@ -201,11 +203,11 @@ export function PlatformInvitationPanel() {
       />
 
       {invitations.isError && (
-        <Alert type="error" showIcon message="Không thể tải danh sách lời mời nền tảng" />
+        <Alert type="error" showIcon title="Không thể tải danh sách lời mời nền tảng" />
       )}
       <DataTable
         ariaLabel="Danh sách lời mời nhân sự nền tảng"
-        columns={columns as any}
+        columns={columns}
         data={invitations.data?.content ?? []}
         loading={invitations.isLoading || invitations.isFetching}
         totalElements={invitations.data?.totalElements ?? 0}

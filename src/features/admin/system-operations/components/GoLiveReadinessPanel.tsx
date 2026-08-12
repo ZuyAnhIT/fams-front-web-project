@@ -158,7 +158,7 @@ export default function GoLiveReadinessPanel({ status, loading }: { status?: Sys
       <Alert
         showIcon
         type={automaticReady ? "success" : "error"}
-        message={automaticReady ? "Hạ tầng và 7 job đều sẵn sàng" : "Chưa đủ điều kiện kỹ thuật để go-live"}
+        title={automaticReady ? "Hạ tầng và 7 job đều sẵn sàng" : "Chưa đủ điều kiện kỹ thuật để go-live"}
         description="Mọi health component bắt buộc phải UP; đủ 7 job phải từng chạy OK và không stale. NEVER_RUN, ERROR hoặc stale đều cần được điều tra trước khi ký biên bản."
       />
 
@@ -187,7 +187,7 @@ export default function GoLiveReadinessPanel({ status, loading }: { status?: Sys
       </div>
 
       {!canManage ? (
-        <Alert showIcon type="warning" message="Bạn chỉ có quyền xem System Health" description="Cần quyền golive:manage để xem và ký biên bản go-live." />
+        <Alert showIcon type="warning" title="Bạn chỉ có quyền xem System Health" description="Cần quyền golive:manage để xem và ký biên bản go-live." />
       ) : (
         <>
           <ContentCard className="space-y-4 p-5">
@@ -195,7 +195,7 @@ export default function GoLiveReadinessPanel({ status, loading }: { status?: Sys
               <div><h2 className="flex items-center gap-2 font-semibold text-slate-900"><FileSignature className="h-5 w-5 text-blue-600" />Biên bản go-live đã lưu</h2><p className="mt-1 text-sm text-slate-500">APPROVED/REJECTED là trạng thái cuối và không thể sửa hoặc xóa.</p></div>
               <div className="flex flex-wrap gap-2"><BaseSelect allowClear showSearch optionFilterProp="label" className="w-56" placeholder="Tất cả tenant" value={tenantFilter} options={(tenantsQuery.data?.content || []).map((tenant) => ({ value: tenant.id, label: tenant.name }))} onChange={(value) => { setTenantFilter(value); setRecordPage(0); }} /><BaseSelect allowClear className="w-44" placeholder="Tất cả trạng thái" value={statusFilter} options={["DRAFT", "APPROVED", "REJECTED"].map((value) => ({ value, label: value }))} onChange={(value) => { setStatusFilter(value); setRecordPage(0); }} /><BaseButton icon={<Plus className="h-4 w-4" />} onClick={() => setCreateOpen(true)}>Tạo biên bản</BaseButton></div>
             </div>
-            {recordsQuery.isError && <Alert showIcon type="error" message="Không thể tải biên bản" description={getErrorMessage(recordsQuery.error, "Vui lòng thử lại.")} />}
+            {recordsQuery.isError && <Alert showIcon type="error" title="Không thể tải biên bản" description={getErrorMessage(recordsQuery.error, "Vui lòng thử lại.")} />}
             <div className="grid gap-3 lg:grid-cols-2">
               {(recordsQuery.data?.content || []).map((record) => (
                 <button key={record.id} type="button" onClick={() => openRecord(record)} className={`rounded-lg border p-4 text-left transition hover:border-blue-300 ${activeRecord?.id === record.id ? "border-blue-500 bg-blue-50" : "border-slate-200 bg-white"}`}>
@@ -214,7 +214,7 @@ export default function GoLiveReadinessPanel({ status, loading }: { status?: Sys
                 <div><h2 className="flex items-center gap-2 font-semibold text-slate-900"><ClipboardCheck className="h-5 w-5 text-blue-600" />{activeRecord.tenantName} · {activeRecord.buildVersion}</h2><p className="mt-1 text-sm text-slate-500">{activeRecord.environment} · người thực hiện {activeRecord.performedByName}</p></div>
                 <Tag color={recordColor(activeRecord.status)}>{activeRecord.status}</Tag>
               </div>
-              {readOnly && <Alert showIcon type={activeRecord.status === "APPROVED" ? "success" : "error"} message="Biên bản chính thức đã khóa" description={`${activeRecord.approvedByName || "Người phê duyệt"} · ${activeRecord.approvedAt ? new Date(activeRecord.approvedAt).toLocaleString("vi-VN") : "—"}${activeRecord.approvalNote ? ` · ${activeRecord.approvalNote}` : ""}`} />}
+              {readOnly && <Alert showIcon type={activeRecord.status === "APPROVED" ? "success" : "error"} title="Biên bản chính thức đã khóa" description={`${activeRecord.approvedByName || "Người phê duyệt"} · ${activeRecord.approvedAt ? new Date(activeRecord.approvedAt).toLocaleString("vi-VN") : "—"}${activeRecord.approvalNote ? ` · ${activeRecord.approvalNote}` : ""}`} />}
               <Progress percent={percent} status={percent === 100 ? "success" : "active"} />
               <div className="space-y-3">
                 {editableSteps.map((step, index) => (
@@ -229,7 +229,7 @@ export default function GoLiveReadinessPanel({ status, loading }: { status?: Sys
                 ))}
               </div>
               {!readOnly && <div className="flex flex-wrap justify-end gap-2"><BaseButton type="default" loading={updateMutation.isPending} onClick={() => void saveSteps(false)}>Lưu nháp</BaseButton><BaseButton loading={updateMutation.isPending} disabled={!allStepsCompleted} onClick={() => void saveSteps(true)}>Hoàn tất checklist</BaseButton><BaseButton danger type="default" onClick={() => setDecision("reject")}>Từ chối</BaseButton><BaseButton disabled={!activeRecord.completedAt || !allStepsCompleted} onClick={() => setDecision("approve")}>Phê duyệt</BaseButton></div>}
-              {!readOnly && !automaticReady && <Alert showIcon type="warning" message="Health/job chưa được xác nhận đầy đủ" description="Kiểm tra tín hiệu vận hành trước khi phê duyệt. Backend không ép điều kiện này nên Web cảnh báo nhưng không tự thay đổi contract phê duyệt." />}
+              {!readOnly && !automaticReady && <Alert showIcon type="warning" title="Health/job chưa được xác nhận đầy đủ" description="Kiểm tra tín hiệu vận hành trước khi phê duyệt. Backend không ép điều kiện này nên Web cảnh báo nhưng không tự thay đổi contract phê duyệt." />}
             </ContentCard>
           )}
         </>
@@ -240,7 +240,7 @@ export default function GoLiveReadinessPanel({ status, loading }: { status?: Sys
       </Modal>
 
       <Modal title={decision === "approve" ? "Phê duyệt go-live" : "Từ chối go-live"} open={Boolean(decision)} confirmLoading={decideMutation.isPending} okButtonProps={{ danger: decision === "reject" }} okText={decision === "approve" ? "Phê duyệt và khóa" : "Từ chối và khóa"} cancelText="Hủy" onOk={() => void submitDecision()} onCancel={() => setDecision(null)}>
-        <Alert className="mb-4" showIcon type="warning" message="Quyết định này là bất biến" description="Sau khi ký, checklist không thể sửa, ký lại hoặc xóa. Nên áp dụng maker-checker: người phê duyệt khác người thực hiện. Nếu cần chạy lại phải tạo biên bản mới." />
+        <Alert className="mb-4" showIcon type="warning" title="Quyết định này là bất biến" description="Sau khi ký, checklist không thể sửa, ký lại hoặc xóa. Nên áp dụng maker-checker: người phê duyệt khác người thực hiện. Nếu cần chạy lại phải tạo biên bản mới." />
         <Input.TextArea rows={4} value={decisionNote} onChange={(event) => setDecisionNote(event.target.value)} placeholder="Ghi chú phê duyệt/từ chối" />
       </Modal>
     </div>

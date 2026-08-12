@@ -39,9 +39,7 @@ export default function TenantSettingsPage({ tenantId, canEdit = false }: Tenant
     reset,
     formState: { errors, isDirty, dirtyFields },
   } = useForm<UpdateTenantSettingsFormData>({
-    // Zod coercion accepts string input from number fields and returns the typed output.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    resolver: zodResolver(updateTenantSettingsSchema) as any,
+    resolver: zodResolver(updateTenantSettingsSchema),
     defaultValues: defaults,
   });
 
@@ -86,7 +84,7 @@ export default function TenantSettingsPage({ tenantId, canEdit = false }: Tenant
       <Alert
         showIcon
         type="error"
-        message="Không tải được cấu hình công ty"
+        title="Không tải được cấu hình công ty"
         description={status === 403
           ? "Tài khoản không phải thành viên của công ty này."
           : "Vui lòng tải lại trang hoặc thử lại sau."}
@@ -100,7 +98,7 @@ export default function TenantSettingsPage({ tenantId, canEdit = false }: Tenant
         <Alert
           showIcon
           type="info"
-          message="Chế độ chỉ xem"
+          title="Chế độ chỉ xem"
           description="Chỉ chủ sở hữu công ty được thay đổi cấu hình giao diện và định dạng."
         />
       )}

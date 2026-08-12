@@ -24,6 +24,7 @@ import { authTokenService } from "@/services/auth-token.service";
 import { useAuthStore } from "@/stores/auth.store";
 import { rolePermissionService } from "@/features/admin/role-permission/services/role-permission.service";
 import { getOrCreateDeviceId } from "@/features/customer/auth/utils/auth-device.util";
+import { getApiErrorBody, getApiErrorMessage } from "@/utils/api-error.util";
 
 /**
  * PhoneLoginForm - Form đăng nhập bằng số điện thoại + OTP.
@@ -124,14 +125,16 @@ export default function PhoneLoginForm() {
       setAuth(authUser, response.accessToken, response.refreshToken);
       message.success("Đăng nhập thành công!");
       router.push(resolvePostLoginRoute(authUser));
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
-      if (error?.code?.startsWith?.("auth/")) {
+    } catch (error: unknown) {
+      const firebaseCode = error && typeof error === "object" && "code" in error
+        ? (error as { code?: unknown }).code
+        : undefined;
+      if (typeof firebaseCode === "string" && firebaseCode.startsWith("auth/")) {
         message.error(mapFirebasePhoneError(error));
       } else {
-        const errorMessage = error.response?.data?.errorCode === "INVALID_OTP"
+        const errorMessage = getApiErrorBody(error)?.errorCode === "INVALID_OTP"
           ? "OTP không hợp lệ hoặc số điện thoại chưa có tài khoản FAMS. Vui lòng thử lại hoặc đăng ký."
-          : error.response?.data?.message || "Đăng nhập thất bại. Vui lòng thử lại.";
+          : getApiErrorMessage(error, "Đăng nhập thất bại. Vui lòng thử lại.");
         message.error(errorMessage);
       }
     }

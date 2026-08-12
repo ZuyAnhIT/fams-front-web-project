@@ -5,6 +5,7 @@ import { expect, test, type Page } from "@playwright/test";
 test.describe.configure({ mode: "serial" });
 
 const evidenceDir = "docs/test-evidence/auth";
+const liveBackendEnabled = process.env.LIVE_BACKEND === "true";
 const runId = `${Date.now()}`;
 const phone = `+8494${runId.slice(-7)}`;
 const email = `frontend.auth.${runId}@example.com`;
@@ -92,6 +93,7 @@ test.beforeAll(() => {
 });
 
 test("đăng ký số điện thoại qua OTP backend và đăng nhập bằng mật khẩu", async ({ page }) => {
+  test.skip(!liveBackendEnabled, "Cần LIVE_BACKEND=true và stack Docker Backend đang chạy");
   await fillRegistration(page, phone);
 
   const sendOtpResponse = page.waitForResponse((response) => response.url().includes("/api/v1/auth/register/send-otp") && response.request().method() === "POST");
@@ -120,6 +122,7 @@ test("đăng ký số điện thoại qua OTP backend và đăng nhập bằng m
 });
 
 test("đăng ký email, gửi lại, mở link xác thực và đăng nhập", async ({ page }) => {
+  test.skip(!liveBackendEnabled, "Cần LIVE_BACKEND=true và stack Docker Backend đang chạy");
   await fillRegistration(page, email);
   const registerResponsePromise = page.waitForResponse((response) => response.url().endsWith("/api/v1/auth/register") && response.request().method() === "POST");
   await page.getByRole("button", { name: "Đăng ký" }).click();

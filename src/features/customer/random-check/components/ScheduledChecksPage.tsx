@@ -51,6 +51,7 @@ const failureLabels: Record<string, string> = {
   face_fail: "Face ID không đạt/chưa đăng ký",
   liveness_fail: "Liveness không đạt",
   no_response: "Không phản hồi",
+  face_verify_timeout: "AI xác thực quá hạn (có thể do lỗi hạ tầng)",
 };
 
 function getErrorMessage(error: unknown, fallback: string) {

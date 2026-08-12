@@ -2,8 +2,8 @@
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Search, Shield, Trash2, Edit } from "lucide-react";
-import { Input, Tag, message, Popconfirm } from "antd";
+import { Plus, Shield, Trash2, Edit } from "lucide-react";
+import { Tag, message, Popconfirm } from "antd";
 import DataTable from "@/components/tables/DataTable";
 import BaseButton from "@/components/ui/BaseButton";
 import ListHeader from "@/components/shared/layout/ListHeader";
@@ -13,6 +13,8 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { useRoles, useDeleteRole } from "../hooks/use-role";
 import type { Role } from "../types/role.type";
 import { format } from "date-fns";
+import type { ColumnsType } from "antd/es/table";
+import { getApiErrorMessage } from "@/utils/api-error.util";
 
 export default function RoleListPage() {
   const router = useRouter();
@@ -34,16 +36,16 @@ export default function RoleListPage() {
     try {
       await deleteRole(id);
       message.success("Xóa vai trò thành công");
-    } catch (error: any) {
-      message.error(error.response?.data?.message || "Lỗi khi xóa vai trò");
+    } catch (error: unknown) {
+      message.error(getApiErrorMessage(error, "Lỗi khi xóa vai trò"));
     }
   };
 
-  const columns = [
+  const columns: ColumnsType<Role> = [
     {
       title: "Vai trò",
       key: "name",
-      render: (_: any, record: Role) => (
+      render: (_, record) => (
         <div className="flex items-center gap-3">
           <div className={`p-2 rounded-lg ${record.isSystem ? 'bg-rose-50 text-rose-600 ring-1 ring-rose-500/20' : 'bg-blue-50 text-blue-600 ring-1 ring-blue-500/20'}`}>
             <Shield className="h-4 w-4" />
@@ -74,7 +76,7 @@ export default function RoleListPage() {
     {
       title: "Thao tác",
       key: "actions",
-      render: (_: any, record: Role) => (
+      render: (_, record) => (
         <div className="flex gap-2">
           <BaseButton
             size="small"

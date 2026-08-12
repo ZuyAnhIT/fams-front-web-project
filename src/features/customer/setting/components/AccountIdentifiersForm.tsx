@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { App, Input, Tag } from "antd";
-import { GoogleLogin, GoogleOAuthProvider, type CredentialResponse } from "@react-oauth/google";
+import { Alert, App, Input, Tag } from "antd";
+import { GoogleLogin, type CredentialResponse } from "@react-oauth/google";
 import { AtSign, Link2, Phone, ShieldCheck } from "lucide-react";
 import { isAxiosError } from "axios";
 import BaseButton from "@/components/ui/BaseButton";
@@ -17,6 +17,8 @@ import {
 } from "@/features/customer/auth/hooks/use-auth";
 import type { AuthUser, UserProfile } from "@/features/customer/auth/types/auth.type";
 import { useAuthStore } from "@/stores/auth.store";
+import { isGoogleConfigured } from "@/config/env";
+import OptionalGoogleOAuthProvider from "@/components/providers/OptionalGoogleOAuthProvider";
 
 function errorText(error: unknown, fallback: string) {
   if (!isAxiosError(error)) return fallback;
@@ -171,7 +173,7 @@ function AccountIdentifiersContent() {
           </div>
           {user?.googleLinked ? (
             <BaseButton danger loading={unlinkGoogle.isPending} onClick={() => void handleUnlinkGoogle()}>Gỡ liên kết Google</BaseButton>
-          ) : (
+          ) : isGoogleConfigured ? (
             <div className="max-w-sm">
               <GoogleLogin
                 onSuccess={(credential) => void handleGoogleSuccess(credential)}
@@ -180,6 +182,13 @@ function AccountIdentifiersContent() {
                 shape="rectangular"
               />
             </div>
+          ) : (
+            <Alert
+              showIcon
+              type="warning"
+              title="Chưa cấu hình đăng nhập Google"
+              description="Quản trị hệ thống cần bổ sung NEXT_PUBLIC_GOOGLE_CLIENT_ID trước khi người dùng có thể liên kết tài khoản."
+            />
           )}
           {unlinkNeedsPassword && (
             <p className="mt-3 text-sm text-amber-700">
@@ -194,8 +203,8 @@ function AccountIdentifiersContent() {
 
 export default function AccountIdentifiersForm() {
   return (
-    <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ""}>
+    <OptionalGoogleOAuthProvider>
       <AccountIdentifiersContent />
-    </GoogleOAuthProvider>
+    </OptionalGoogleOAuthProvider>
   );
 }

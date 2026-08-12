@@ -1,20 +1,20 @@
 import React from "react";
 import { SelectProps } from "antd";
-import { Controller, Control } from "react-hook-form";
+import { Controller, type Control, type FieldValues, type Path } from "react-hook-form";
+import type { DefaultOptionType } from "antd/es/select";
 import BaseSelect from "@/components/ui/BaseSelect";
 
-interface FormSelectProps extends SelectProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  control: any;
-  name: string;
+interface FormSelectProps<T extends FieldValues> extends SelectProps {
+  control: Control<T>;
+  name: Path<T>;
   label?: string;
-  error?: any;
-  options: { label: React.ReactNode; value: any }[];
+  error?: { message?: string };
+  options: Array<{ label: React.ReactNode; value: DefaultOptionType["value"] }>;
   helperText?: React.ReactNode;
   required?: boolean;
 }
 
-export default function FormSelect({
+export default function FormSelect<T extends FieldValues>({
   control,
   name,
   label,
@@ -23,7 +23,7 @@ export default function FormSelect({
   helperText,
   required,
   ...selectProps
-}: FormSelectProps) {
+}: FormSelectProps<T>) {
   const inputId = selectProps.id || name;
   const messageId = `${inputId}-${error ? "error" : "help"}`;
 

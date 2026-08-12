@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { Drawer, App, Checkbox, Spin } from "antd";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import FormInput from "@/components/forms/FormInput";
 import BaseButton from "@/components/ui/BaseButton";
@@ -25,10 +25,8 @@ export default function PlanLimitsDrawer({ open, onClose, plan }: PlanLimitsDraw
     control,
     handleSubmit,
     reset,
-    watch,
   } = useForm<PlanLimitsFormData>({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    resolver: zodResolver(planLimitsSchema) as any,
+    resolver: zodResolver(planLimitsSchema),
     defaultValues: {
       maxEmployees: null,
       maxSites: null,
@@ -41,10 +39,10 @@ export default function PlanLimitsDrawer({ open, onClose, plan }: PlanLimitsDraw
     },
   });
 
-  const watchIsUnlimitedEmployees = watch("isUnlimitedEmployees");
-  const watchIsUnlimitedSites = watch("isUnlimitedSites");
-  const watchIsUnlimitedStorage = watch("isUnlimitedStorage");
-  const watchIsUnlimitedChecks = watch("isUnlimitedChecks");
+  const watchIsUnlimitedEmployees = useWatch({ control, name: "isUnlimitedEmployees" });
+  const watchIsUnlimitedSites = useWatch({ control, name: "isUnlimitedSites" });
+  const watchIsUnlimitedStorage = useWatch({ control, name: "isUnlimitedStorage" });
+  const watchIsUnlimitedChecks = useWatch({ control, name: "isUnlimitedChecks" });
 
   useEffect(() => {
     if (limits && open) {

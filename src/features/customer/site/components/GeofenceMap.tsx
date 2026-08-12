@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
 import dynamic from "next/dynamic";
 import "leaflet/dist/leaflet.css";
+import { mapConfig } from "@/config/map";
 
 // Dynamic import for react-leaflet components to avoid SSR issues
 const MapContainer = dynamic(
@@ -15,10 +15,6 @@ const TileLayer = dynamic(
 );
 const Polygon = dynamic(
   () => import("react-leaflet").then((mod) => mod.Polygon),
-  { ssr: false }
-);
-const Marker = dynamic(
-  () => import("react-leaflet").then((mod) => mod.Marker),
   { ssr: false }
 );
 const CircleMarker = dynamic(
@@ -43,18 +39,6 @@ export function GeofenceMap({
   polygonCoordinates,
   heightClassName = "h-[300px]",
 }: GeofenceMapProps) {
-  useEffect(() => {
-    // Fix for Leaflet marker icon issue in Next.js
-    import("leaflet").then((L) => {
-      delete (L.Icon.Default.prototype as any)._getIconUrl;
-      L.Icon.Default.mergeOptions({
-        iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-        iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-        shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-      });
-    });
-  }, []);
-
   // Convert GeoJSON [lng, lat] to Leaflet [lat, lng]
   const positions: [number, number][] = polygonCoordinates
     ? polygonCoordinates.map((coord) => [coord[1], coord[0]])
@@ -69,10 +53,14 @@ export function GeofenceMap({
         style={{ height: "100%", width: "100%", zIndex: 0 }}
       >
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution={mapConfig.attribution}
+          url={mapConfig.tileUrl}
         />
-        <Marker position={[latitude, longitude]} />
+        <CircleMarker
+          center={[latitude, longitude]}
+          radius={8}
+          pathOptions={{ color: "white", fillColor: "#2563eb", fillOpacity: 1, weight: 3 }}
+        />
         {positions.length > 0 && (
           <>
             <Polygon

@@ -189,7 +189,7 @@ export default function EmployeeFaceIdTab({ employee }: EmployeeFaceIdTabProps) 
               <Alert
                 type="error"
                 showIcon
-                message="Lý do từ chối"
+                title="Lý do từ chối"
                 description={faceId.rejectionReason}
               />
             )}
@@ -199,7 +199,7 @@ export default function EmployeeFaceIdTab({ employee }: EmployeeFaceIdTabProps) 
              <div className="absolute inset-0 flex items-center justify-center opacity-10">
                <UserX className="w-20 h-20 text-slate-900" />
              </div>
-             <img src="/images/face-scan-placeholder.png" alt="Face Scan" className="w-20 h-20 object-contain z-10" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+             <ShieldCheck className="z-10 h-14 w-14 text-brand-600" aria-label="Trạng thái Face ID" />
           </div>
         </div>
 
@@ -209,7 +209,7 @@ export default function EmployeeFaceIdTab({ employee }: EmployeeFaceIdTabProps) 
               <Alert
                 type="warning"
                 showIcon
-                message="Không thể tự duyệt Face ID của chính mình"
+                title="Không thể tự duyệt Face ID của chính mình"
                 description="Một HR/Admin khác có quyền face_id:manage phải thực hiện xét duyệt."
               />
             ) : (

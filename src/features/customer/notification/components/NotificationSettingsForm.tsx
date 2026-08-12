@@ -49,7 +49,7 @@ export default function NotificationSettingsForm() {
       <Alert
         showIcon
         type="info"
-        message="Hai kênh hoạt động độc lập"
+        title="Hai kênh hoạt động độc lập"
         description="Tắt thông báo trong ứng dụng không tự tắt push và ngược lại. Push chỉ đến thiết bị đã đăng ký FCM/APNS trong App; Web không đăng ký token thiết bị thay cho App."
       />
 
@@ -59,14 +59,14 @@ export default function NotificationSettingsForm() {
         <Alert
           showIcon
           type="error"
-          message="Không thể tải cài đặt thông báo"
+          title="Không thể tải cài đặt thông báo"
           action={<button className="font-semibold text-blue-600" onClick={() => settingsQuery.refetch()}>Thử lại</button>}
         />
       ) : settings.length === 0 ? (
         <Alert
           showIcon
           type="warning"
-          message="Chưa có loại thông báo"
+          title="Chưa có loại thông báo"
           description="Backend chưa trả danh mục sự kiện. Hãy tải lại trang hoặc liên hệ quản trị hệ thống."
         />
       ) : (

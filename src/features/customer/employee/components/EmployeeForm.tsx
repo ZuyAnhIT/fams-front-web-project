@@ -15,6 +15,7 @@ import { employeeSchema, type EmployeeFormData } from "../schemas/employee.schem
 import type { EmployeeDetailResponse } from "../types/employee.type";
 import { useWorkspacesQuery } from "@/features/customer/workspace/hooks/use-workspace";
 import { useAuthStore } from "@/stores/auth.store";
+import { getApiErrorMessage } from "@/utils/api-error.util";
 
 interface EmployeeFormProps {
   initialData?: EmployeeDetailResponse;
@@ -92,9 +93,8 @@ export default function EmployeeForm({ initialData, isEditMode = false }: Employ
         message.success("Thêm mới nhân viên thành công");
         router.push("/customer/employees");
       }
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.message || "Đã xảy ra lỗi, vui lòng thử lại sau";
-      message.error(errorMessage);
+    } catch (error: unknown) {
+      message.error(getApiErrorMessage(error, "Đã xảy ra lỗi, vui lòng thử lại sau"));
     }
   };
 
@@ -107,7 +107,7 @@ export default function EmployeeForm({ initialData, isEditMode = false }: Employ
             <Alert
               showIcon
               type="info"
-              message="Dữ liệu liên hệ hiện tại đang được che"
+              title="Dữ liệu liên hệ hiện tại đang được che"
               description="Web không đưa giá trị đã che vào form và không gửi lại khi bạn lưu trường khác. Chỉ nhập email hoặc số điện thoại đầy đủ nếu bạn thực sự muốn thay thế giá trị hiện tại."
             />
           )}

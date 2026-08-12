@@ -35,8 +35,7 @@ export default function RoleForm({ initialData, isEditMode = false }: RoleFormPr
     reset,
     formState: { errors },
   } = useForm<RoleFormData>({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    resolver: zodResolver(roleSchema) as any,
+    resolver: zodResolver(roleSchema),
     defaultValues: {
       name: "",
       description: "",
@@ -114,7 +113,7 @@ export default function RoleForm({ initialData, isEditMode = false }: RoleFormPr
         <Alert
           type="info"
           showIcon
-          message="Vai trò hệ thống"
+          title="Vai trò hệ thống"
           description="Đây là vai trò mặc định của hệ thống. Bạn chỉ có thể xem, không thể chỉnh sửa tên hay phân quyền của vai trò này."
           className="bg-blue-50 border-blue-200"
         />

@@ -1,9 +1,10 @@
 import { z } from "zod";
+import dayjs, { type Dayjs } from "dayjs";
 
 export const profileSchema = z.object({
   displayName: z.string().min(1, "Tên hiển thị không được để trống").max(100, "Tên hiển thị tối đa 100 ký tự"),
   // Issue #4 (docs/issues/ISSUES.md)
-  dateOfBirth: z.any().nullable().optional(),
+  dateOfBirth: z.custom<Dayjs>((value) => dayjs.isDayjs(value)).nullable().optional(),
   hometown: z.string().max(255, "Quê quán tối đa 255 ký tự").or(z.literal("")).optional().nullable(),
   gender: z.string().max(20, "Giới tính tối đa 20 ký tự").or(z.literal("")).optional().nullable(),
   address: z.string().max(500, "Địa chỉ tối đa 500 ký tự").or(z.literal("")).optional().nullable(),

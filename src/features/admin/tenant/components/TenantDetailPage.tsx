@@ -54,7 +54,7 @@ export default function TenantDetailPage({ id }: { id: string }) {
       <Alert
         showIcon
         type="error"
-        message={status === 404 ? "Không tìm thấy công ty" : "Không tải được chi tiết công ty"}
+        title={status === 404 ? "Không tìm thấy công ty" : "Không tải được chi tiết công ty"}
         description={status === 403 ? "Tài khoản cần quyền tenants:read." : "Vui lòng quay lại danh sách và thử lại."}
         action={<button onClick={() => router.push(ADMIN_ROUTES.TENANTS)}>Quay lại</button>}
       />
@@ -66,7 +66,7 @@ export default function TenantDetailPage({ id }: { id: string }) {
       <Alert
         showIcon
         type="info"
-        message="Hồ sơ công ty chỉ do chủ sở hữu chỉnh sửa"
+        title="Hồ sơ công ty chỉ do chủ sở hữu chỉnh sửa"
         description="Platform Admin và Platform Staff chỉ được xem hồ sơ tại đây. Các thao tác vòng đời và subscription được tách riêng theo đúng phân quyền backend."
       />
       <Descriptions bordered column={{ xs: 1, md: 2 }} size="small">

@@ -1,5 +1,6 @@
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
+import { isFirebaseConfigured, publicEnv } from "@/config/env";
 
 /**
  * Backlog #2 (Đăng nhập bằng số điện thoại OTP): the backend only verifies an
@@ -9,10 +10,10 @@ import { getAuth, type Auth } from "firebase/auth";
  * against Firebase directly.
  */
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  apiKey: publicEnv.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: publicEnv.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: publicEnv.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  appId: publicEnv.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
 let cachedAuth: Auth | null = null;
@@ -25,7 +26,7 @@ let cachedAuth: Auth | null = null;
  * instead of only failing when the user actually tries to use phone login.
  */
 export function getFirebaseAuth(): Auth {
-  if (!firebaseConfig.apiKey) {
+  if (!isFirebaseConfigured) {
     throw new Error("FIREBASE_NOT_CONFIGURED");
   }
   if (!cachedAuth) {

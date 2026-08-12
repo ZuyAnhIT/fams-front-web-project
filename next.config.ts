@@ -1,7 +1,12 @@
 import type { NextConfig } from "next";
 
-const backendApiUrl = process.env.FAMS_BACKEND_URL || "http://localhost:8080/api/v1";
-const allowedDevOrigins = (process.env.FAMS_DEV_ORIGINS || "192.168.1.10")
+const backendApiUrl = (process.env.FAMS_BACKEND_URL || "http://localhost:8080/api/v1").replace(/\/$/, "");
+try {
+  new URL(backendApiUrl);
+} catch {
+  throw new Error("FAMS_BACKEND_URL phải là URL tuyệt đối hợp lệ, ví dụ http://localhost:8080/api/v1");
+}
+const allowedDevOrigins = (process.env.FAMS_DEV_ORIGINS || "192.168.1.15")
   .split(",")
   .map((origin) => origin.trim())
   .filter(Boolean);

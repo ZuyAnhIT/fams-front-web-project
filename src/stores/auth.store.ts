@@ -1,8 +1,6 @@
 import { create } from "zustand";
 import { type AuthUser } from "@/features/customer/auth/types/auth.type";
 import { authTokenService } from "@/services/auth-token.service";
-import { authService } from "@/features/customer/auth/services/auth.service";
-import { authMapper } from "@/features/customer/auth/utils/auth.mapper";
 
 interface AuthState {
   user: AuthUser | null;
@@ -117,5 +115,4 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     return state.user.permissions?.includes(permission) ?? false;
   },
 }));
-
 

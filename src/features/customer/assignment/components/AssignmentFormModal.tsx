@@ -102,7 +102,7 @@ export default function AssignmentFormModal({
       employeeId: "",
       shiftId: null,
       role: "worker",
-      startDate: null,
+      startDate: undefined,
       endDate: null,
       daysOfWeek: [],
       notes: "",
@@ -126,7 +126,7 @@ export default function AssignmentFormModal({
           employeeId: "",
           shiftId: null,
           role: "worker",
-          startDate: null,
+          startDate: undefined,
           endDate: null,
           daysOfWeek: [],
           notes: "",
@@ -267,7 +267,7 @@ export default function AssignmentFormModal({
       }
       isOpen={isOpen}
       onClose={onClose}
-      destroyOnClose
+      destroyOnHidden
       width={640}
       confirmText={isUpdate ? "Lưu thay đổi" : "Tạo phân công"}
       cancelText="Hủy bỏ"
@@ -292,7 +292,7 @@ export default function AssignmentFormModal({
           <Alert
             type="warning"
             showIcon
-            message="Không thể lưu phân công"
+            title="Không thể lưu phân công"
             description="Công trình đã ngừng hoạt động. Hãy đóng biểu mẫu và kích hoạt lại công trình trước."
           />
         )}
@@ -398,7 +398,7 @@ export default function AssignmentFormModal({
         <Alert
           type="info"
           showIcon
-          message="Hệ thống sẽ chặn lịch bị chồng chéo với site khác"
+          title="Hệ thống sẽ chặn lịch bị chồng chéo với site khác"
           description="Nếu nhân viên làm ở nhiều công trình, hãy bảo đảm khoảng ngày hoặc ngày trong tuần không giao nhau."
         />
 

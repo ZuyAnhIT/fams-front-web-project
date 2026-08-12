@@ -126,7 +126,7 @@ export default function CreateTenantModal({ open, onClose }: CreateTenantModalPr
         <Alert
           showIcon
           type="info"
-          message="Chế độ platform provisioning"
+          title="Chế độ platform provisioning"
           description="Chủ sở hữu phải là tài khoản FAMS đã tồn tại. Công ty được tạo với gói trial; đổi gói là thao tác riêng tại trang chi tiết. Người cấp phát không trở thành thành viên."
         />
 

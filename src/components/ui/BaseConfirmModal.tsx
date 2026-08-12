@@ -2,7 +2,7 @@
 
 import React from "react";
 import BaseModal from "./BaseModal";
-import { AlertTriangle, Info, ShieldAlert, Trash2 } from "lucide-react";
+import { AlertTriangle, Info } from "lucide-react";
 import { cn } from "@/utils/cn";
 
 export interface BaseConfirmModalProps {

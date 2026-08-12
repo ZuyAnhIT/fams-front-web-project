@@ -1,25 +1,24 @@
 import React from "react";
 import { TreeSelectProps } from "antd";
-import { Controller, Control } from "react-hook-form";
+import { Controller, type Control, type FieldValues, type Path } from "react-hook-form";
 import BaseTreeSelect from "@/components/ui/BaseTreeSelect";
 
-interface FormTreeSelectProps extends TreeSelectProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  control: any;
-  name: string;
+interface FormTreeSelectProps<T extends FieldValues> extends TreeSelectProps {
+  control: Control<T>;
+  name: Path<T>;
   label?: string;
-  error?: any;
+  error?: { message?: string };
   helperText?: React.ReactNode;
 }
 
-export default function FormTreeSelect({
+export default function FormTreeSelect<T extends FieldValues>({
   control,
   name,
   label,
   error,
   helperText,
   ...treeSelectProps
-}: FormTreeSelectProps) {
+}: FormTreeSelectProps<T>) {
   const inputId = treeSelectProps.id || name;
   const messageId = `${inputId}-${error ? "error" : "help"}`;
 

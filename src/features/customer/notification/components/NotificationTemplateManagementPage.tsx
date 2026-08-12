@@ -172,7 +172,7 @@ export default function NotificationTemplateManagementPage() {
   ];
 
   if (!tenantId) {
-    return <Alert showIcon type="warning" message="Chưa chọn công ty" description="Hãy chuyển sang công ty cần cấu hình trước khi quản lý template thông báo." />;
+    return <Alert showIcon type="warning" title="Chưa chọn công ty" description="Hãy chuyển sang công ty cần cấu hình trước khi quản lý template thông báo." />;
   }
 
   return (
@@ -190,7 +190,7 @@ export default function NotificationTemplateManagementPage() {
       <Alert
         showIcon
         type="info"
-        message="Template có hiệu lực ngay lần gửi tiếp theo"
+        title="Template có hiệu lực ngay lần gửi tiếp theo"
         description="Hệ thống chọn template khớp event type và locale của công ty. Nếu không có template phù hợp hoặc template bị xóa, nội dung mặc định vẫn được gửi bình thường."
       />
 
@@ -206,7 +206,7 @@ export default function NotificationTemplateManagementPage() {
         </div>
       </ContentCard>
 
-      {templatesQuery.isError && <Alert showIcon type="error" message="Không thể tải template" description={errorMessage(templatesQuery.error)} />}
+      {templatesQuery.isError && <Alert showIcon type="error" title="Không thể tải template" description={errorMessage(templatesQuery.error)} />}
       <DataTable
         ariaLabel="Danh sách template thông báo"
         columns={columns}
