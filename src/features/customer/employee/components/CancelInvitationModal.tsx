@@ -3,6 +3,7 @@ import BaseModal from "@/components/ui/BaseModal";
 import { useCancelInvitation } from "../hooks/use-employee";
 import type { InvitationResponse } from "../types/employee.type";
 import { AlertCircle } from "lucide-react";
+import { getApiErrorMessage } from "@/utils/api-error.util";
 
 interface CancelInvitationModalProps {
   open: boolean;
@@ -19,8 +20,8 @@ export default function CancelInvitationModal({ open, onClose, invitation }: Can
       await cancelInvitation(invitation.id);
       message.success("Hủy lời mời thành công.");
       onClose();
-    } catch (error: any) {
-      message.error(error?.response?.data?.message || "Lỗi khi hủy lời mời.");
+    } catch (error: unknown) {
+      message.error(getApiErrorMessage(error, "Lỗi khi hủy lời mời."));
     }
   };
 
@@ -42,7 +43,7 @@ export default function CancelInvitationModal({ open, onClose, invitation }: Can
         danger: true, 
         className: "!bg-rose-600 hover:!bg-rose-700 !border-0 text-white font-bold shadow-lg shadow-rose-500/25 transition-all" 
       }}
-      destroyOnClose
+      destroyOnHidden
       width={480}
     >
       <div className="mt-4">

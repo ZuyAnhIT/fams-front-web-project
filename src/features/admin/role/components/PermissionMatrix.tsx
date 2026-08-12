@@ -66,7 +66,7 @@ export default function PermissionMatrix({ value = [], onChange, disabled = fals
   }
 
   if (isError || !groupedPermissions) {
-    return <Alert type="error" message="Không thể tải danh sách quyền hệ thống" />;
+    return <Alert type="error" title="Không thể tải danh sách quyền hệ thống" />;
   }
 
   const collapseItems = groupedPermissions.map(group => {

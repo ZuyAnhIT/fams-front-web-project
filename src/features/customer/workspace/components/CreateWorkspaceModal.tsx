@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { App } from "antd";
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import FormInput from "@/components/forms/FormInput";
 import FormSelect from "@/components/forms/FormSelect";
@@ -11,10 +11,18 @@ import { CreateWorkspaceFormData, createWorkspaceSchema } from "../schemas/works
 import { useCreateWorkspaceMutation, useWorkspaceTreeQuery } from "../hooks/use-workspace";
 import { useAuthStore } from "@/stores/auth.store";
 import { WorkspaceTreeResponse } from "../types";
+import { getApiErrorMessage } from "@/utils/api-error.util";
 
 interface CreateWorkspaceModalProps {
   isOpen: boolean;
   onClose: () => void;
+}
+
+interface WorkspaceTreeOption {
+  title: string;
+  value: string;
+  key: string;
+  children: WorkspaceTreeOption[];
 }
 
 export default function CreateWorkspaceModal({ isOpen, onClose }: CreateWorkspaceModalProps) {
@@ -54,14 +62,13 @@ export default function CreateWorkspaceModal({ isOpen, onClose }: CreateWorkspac
       await createMutation.mutateAsync({ tenantId, data });
       message.success("Tạo phòng ban thành công!");
       onClose();
-    } catch (error: any) {
-      const msg = error.response?.data?.message || "Có lỗi xảy ra khi tạo phòng ban";
-      message.error(msg);
+    } catch (error: unknown) {
+      message.error(getApiErrorMessage(error, "Có lỗi xảy ra khi tạo phòng ban"));
     }
   };
 
   // Convert TreeResponse to TreeSelect data format
-  const formatTreeData = (nodes: WorkspaceTreeResponse[]): any[] => {
+  const formatTreeData = (nodes: WorkspaceTreeResponse[]): WorkspaceTreeOption[] => {
     return nodes.map((node) => ({
       title: node.name,
       value: node.id,

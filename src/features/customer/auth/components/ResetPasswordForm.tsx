@@ -13,13 +13,14 @@ import BaseButton from "@/components/ui/BaseButton";
 import { resetPasswordSchema, type ResetPasswordFormData } from "@/features/customer/auth/schemas/auth.schema";
 import { useResetPassword } from "@/features/customer/auth/hooks/use-auth";
 import { ROUTES } from "@/constants/routes";
+import { publicEnv } from "@/config/env";
 
 export default function ResetPasswordForm() {
   const { message } = App.useApp();
   const searchParams = useSearchParams();
   const router = useRouter();
   const token = searchParams.get("token");
-  const mobileAppScheme = process.env.NEXT_PUBLIC_MOBILE_APP_SCHEME || "famsfrontappproject";
+  const mobileAppScheme = publicEnv.NEXT_PUBLIC_MOBILE_APP_SCHEME;
 
   const [isSuccess, setIsSuccess] = useState(false);
 

@@ -23,6 +23,8 @@ import { useRouter } from "next/navigation";
 import { useTenantStore } from "@/stores/tenant.store";
 import { useAuthStore } from "@/stores/auth.store";
 import type { TenantListParams } from "../types/tenant.type";
+import { getApiErrorMessage } from "@/utils/api-error.util";
+import Image from "next/image";
 
 export default function TenantListPage() {
   const router = useRouter();
@@ -83,9 +85,9 @@ export default function TenantListPage() {
               message.success(`Đã đình chỉ công ty ${tenant.name} thành công`);
               resolve(true);
             },
-            onError: (err: any) => {
-              message.error(`Không thể đình chỉ công ty: ${err?.response?.data?.message || err.message}`);
-              reject(err);
+            onError: (error: unknown) => {
+              message.error(`Không thể đình chỉ công ty: ${getApiErrorMessage(error, "Vui lòng thử lại")}`);
+              reject(error);
             }
           });
         });
@@ -106,9 +108,9 @@ export default function TenantListPage() {
               message.success(`Đã kích hoạt công ty ${tenant.name} thành công`);
               resolve(true);
             },
-            onError: (err: any) => {
-              message.error(`Không thể kích hoạt công ty: ${err?.response?.data?.message || err.message}`);
-              reject(err);
+            onError: (error: unknown) => {
+              message.error(`Không thể kích hoạt công ty: ${getApiErrorMessage(error, "Vui lòng thử lại")}`);
+              reject(error);
             }
           });
         });
@@ -130,9 +132,9 @@ export default function TenantListPage() {
               message.success(`Đã hủy bỏ vĩnh viễn công ty ${tenant.name} thành công`);
               resolve(true);
             },
-            onError: (err: any) => {
-              message.error(`Không thể hủy bỏ công ty: ${err?.response?.data?.message || err.message}`);
-              reject(err);
+            onError: (error: unknown) => {
+              message.error(`Không thể hủy bỏ công ty: ${getApiErrorMessage(error, "Vui lòng thử lại")}`);
+              reject(error);
             }
           });
         });
@@ -193,9 +195,12 @@ export default function TenantListPage() {
       render: (_: unknown, record: Tenant) => (
         <div className="flex items-center gap-3 py-1">
           {record.logoUrl ? (
-            <img
+            <Image
               src={record.logoUrl}
               alt={record.name}
+              width={36}
+              height={36}
+              unoptimized
               className="h-9 w-9 rounded-lg ring-1 ring-slate-200 object-contain bg-white p-1 shadow-sm"
             />
           ) : (

@@ -15,6 +15,18 @@ import {
   CHECKIN_POLICY_OPTIONS,
   type CheckinPolicy,
 } from "../../checkin/constants/checkin-policy";
+import { getApiErrorMessage } from "@/utils/api-error.util";
+
+interface CreateSiteFormValues {
+  name: string;
+  code?: string;
+  description?: string;
+  address?: string;
+  latitude?: number | string | null;
+  longitude?: number | string | null;
+  timezone?: string;
+  checkinPolicy?: CheckinPolicy;
+}
 
 interface CreateSiteModalProps {
   isOpen: boolean;
@@ -48,7 +60,7 @@ export default function CreateSiteModal({ isOpen, onClose }: CreateSiteModalProp
     }
   };
 
-  const handleFinish = async (values: any) => {
+  const handleFinish = async (values: CreateSiteFormValues) => {
     try {
       if (!user?.tenantId) {
         message.error("Lỗi: Không xác định được Tenant ID");
@@ -79,11 +91,9 @@ export default function CreateSiteModal({ isOpen, onClose }: CreateSiteModalProp
 
       message.success("Tạo công trình thành công!");
       handleClose();
-    } catch (error: any) {
-      console.error("Create Site Error:", error.response?.data || error);
-      const errorMsg = error.response?.data?.message 
-        || (error.response?.data?.details ? JSON.stringify(error.response.data.details) : "Có lỗi xảy ra khi tạo công trình");
-      message.error(errorMsg);
+    } catch (error: unknown) {
+      console.error("Create Site Error:", error);
+      message.error(getApiErrorMessage(error, "Có lỗi xảy ra khi tạo công trình"));
     }
   };
 
@@ -109,7 +119,7 @@ export default function CreateSiteModal({ isOpen, onClose }: CreateSiteModalProp
       }
       isOpen={isOpen}
       onClose={handleClose}
-      destroyOnClose
+      destroyOnHidden
       centered
       width={1000}
       footer={

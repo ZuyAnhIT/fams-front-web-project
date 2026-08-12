@@ -315,7 +315,7 @@ export default function AssignmentManagementTab({
         <Alert
           type="warning"
           showIcon
-          message="Công trình không nhận phân công mới"
+          title="Công trình không nhận phân công mới"
           description="Công trình đã ngừng hoạt động nên không thể tạo hoặc sửa phân công. Bạn vẫn có thể xem lịch sử và hủy các phân công còn hiệu lực."
         />
       )}

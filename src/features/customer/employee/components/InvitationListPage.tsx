@@ -15,6 +15,7 @@ import { useAuthStore } from "@/stores/auth.store";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { INVITATION_STATUS } from "@/constants/status";
 import { formatVietnameseName } from "@/utils/name.util";
+import type { ColumnsType } from "antd/es/table";
 
 export default function InvitationListPage() {
   const hasPermission = useAuthStore((state) => state.hasPermission);
@@ -40,7 +41,7 @@ export default function InvitationListPage() {
     setIsCancelModalOpen(true);
   };
 
-  const columns = [
+  const columns: ColumnsType<InvitationResponse> = [
     {
       title: "Email",
       dataIndex: "email",
@@ -51,7 +52,7 @@ export default function InvitationListPage() {
     {
       title: "Họ tên",
       key: "name",
-      render: (_: any, record: InvitationResponse) => (
+      render: (_, record) => (
         <span className="text-slate-600 text-sm">
           {record.firstName || record.lastName ? formatVietnameseName(record.firstName, record.lastName) : "---"}
         </span>
@@ -88,7 +89,7 @@ export default function InvitationListPage() {
       title: "Thao tác",
       key: "actions",
       width: 120,
-      render: (_: any, record: InvitationResponse) => (
+      render: (_, record) => (
         <div className="flex items-center gap-2">
           {record.status === "pending" && hasPermission("employees:create") && (
             <BaseButton
@@ -142,7 +143,7 @@ export default function InvitationListPage() {
           currentPage={state.page}
           pageSize={state.size}
           onPageChange={(page, size) => setPagination({ page, size })}
-          onChange={(_, __, sorter: any) => {
+          onChange={(_, __, sorter) => {
             if (!Array.isArray(sorter) && (sorter.columnKey || sorter.field)) {
               setPagination({
                 sortBy: (sorter.columnKey || sorter.field) as string,

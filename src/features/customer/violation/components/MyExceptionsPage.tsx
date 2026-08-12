@@ -17,6 +17,7 @@ const reasonLabels: Record<string, string> = {
   location_fail: 'Vị trí không đạt',
   face_fail: 'Face ID không đạt',
   liveness_fail: 'Liveness không đạt',
+  face_verify_timeout: 'AI xác thực quá hạn',
 };
 
 export default function MyExceptionsPage() {

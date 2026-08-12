@@ -7,6 +7,13 @@ import { useEmployees } from "@/features/customer/employee/hooks/use-employee";
 import { useAssignMemberMutation } from "../hooks/use-workspace";
 import { AssignWorkspaceMemberRequest } from "../types";
 import { formatVietnameseName } from "@/utils/name.util";
+import { getApiErrorMessage } from "@/utils/api-error.util";
+import type { Employee } from "@/features/customer/employee/types/employee.type";
+
+interface AddMemberFormValues {
+  employeeId: string;
+  role: AssignWorkspaceMemberRequest["role"];
+}
 
 interface AddMemberModalProps {
   isOpen: boolean;
@@ -31,7 +38,7 @@ export default function AddMemberModal({
 
   const { mutateAsync: assignMember, isPending } = useAssignMemberMutation();
 
-  const handleFinish = async (values: any) => {
+  const handleFinish = async (values: AddMemberFormValues) => {
     try {
       if (!user?.tenantId) {
         message.error("Lỗi: Không xác định được Tenant ID");
@@ -52,8 +59,8 @@ export default function AddMemberModal({
       message.success("Thêm nhân sự thành công!");
       form.resetFields();
       onClose();
-    } catch (error: any) {
-      message.error(error.response?.data?.message || "Có lỗi xảy ra khi thêm nhân sự");
+    } catch (error: unknown) {
+      message.error(getApiErrorMessage(error, "Có lỗi xảy ra khi thêm nhân sự"));
     }
   };
 
@@ -85,7 +92,7 @@ export default function AddMemberModal({
             onSearch={setSearchTerm}
             filterOption={false} // Use backend search
             notFoundContent={isLoadingEmployees ? <Spin size="small" /> : "Không tìm thấy nhân viên"}
-            options={employeesData?.content?.map((emp: any) => ({
+            options={employeesData?.content?.map((emp: Employee) => ({
               value: emp.id,
               label: `${emp.employeeCode ? `[${emp.employeeCode}] ` : ""}${emp.fullName || formatVietnameseName(emp.firstName, emp.lastName)}`,
             })) || []}

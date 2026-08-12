@@ -1,6 +1,9 @@
 import type { PageResponse } from '@/types/api';
 
-export type ViolationType = 'no_response' | 'location_fail' | 'face_fail' | 'liveness_fail';
+// face_verify_timeout (2026-08-12, backend V89 migration): the async face/liveness AI callback
+// never arrived within the timeout window — likely an AI service outage, not necessarily a real
+// verification failure. Distinct from face_fail/liveness_fail so HR can tell the two apart.
+export type ViolationType = 'no_response' | 'location_fail' | 'face_fail' | 'liveness_fail' | 'face_verify_timeout';
 
 export interface ViolationListItem {
   id: string;

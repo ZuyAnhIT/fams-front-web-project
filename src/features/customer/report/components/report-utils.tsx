@@ -35,6 +35,7 @@ export const VIOLATION_LABELS = {
   location_fail: 'Sai vị trí',
   face_fail: 'Face ID không đạt',
   liveness_fail: 'Liveness không đạt',
+  face_verify_timeout: 'AI xác thực quá hạn',
 } as const;
 
 export const SEVERITY_LABELS = {

@@ -16,6 +16,19 @@ import {
   CHECKIN_POLICY_OPTIONS,
   type CheckinPolicy,
 } from "../../checkin/constants/checkin-policy";
+import { getApiErrorMessage } from "@/utils/api-error.util";
+
+interface UpdateSiteFormValues {
+  name?: string;
+  code?: string;
+  description?: string;
+  address?: string;
+  latitude?: number | string | null;
+  longitude?: number | string | null;
+  timezone?: string;
+  checkinPolicy?: CheckinPolicy;
+  status?: boolean;
+}
 
 interface UpdateSiteModalProps {
   isOpen: boolean;
@@ -50,7 +63,7 @@ export default function UpdateSiteModal({ isOpen, onClose, site }: UpdateSiteMod
     }
   };
 
-  const handleFinish = async (values: any) => {
+  const handleFinish = async (values: UpdateSiteFormValues) => {
     try {
       if (!user?.tenantId || !site?.id) {
         message.error("Lỗi: Không xác định được thông tin Tenant/Site");
@@ -84,11 +97,9 @@ export default function UpdateSiteModal({ isOpen, onClose, site }: UpdateSiteMod
 
       message.success("Cập nhật công trình thành công!");
       handleClose();
-    } catch (error: any) {
-      console.error("Update Site Error:", error.response?.data || error);
-      const errorMsg = error.response?.data?.message
-        || (error.response?.data?.details ? JSON.stringify(error.response.data.details) : "Có lỗi xảy ra khi cập nhật công trình");
-      message.error(errorMsg);
+    } catch (error: unknown) {
+      console.error("Update Site Error:", error);
+      message.error(getApiErrorMessage(error, "Có lỗi xảy ra khi cập nhật công trình"));
     }
   };
 
@@ -112,7 +123,7 @@ export default function UpdateSiteModal({ isOpen, onClose, site }: UpdateSiteMod
       }
       isOpen={isOpen}
       onClose={handleClose}
-      destroyOnClose
+      destroyOnHidden
       centered
       width={1000} // Increased width for 2-column layout
       footer={

@@ -1,8 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { roleService } from "../services/role.service";
-import type { CreateRolePayload, UpdateRolePayload } from "../types/role.type";
+import type { CreateRolePayload, RoleListParams, UpdateRolePayload } from "../types/role.type";
 
-export const useRoles = (params: any) => {
+export const useRoles = (params: RoleListParams) => {
   return useQuery({
     queryKey: ["roles", params],
     queryFn: () => roleService.listRoles(params),

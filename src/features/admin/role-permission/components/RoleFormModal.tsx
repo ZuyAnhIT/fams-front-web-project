@@ -2,16 +2,17 @@
 
 import React, { useEffect, useState } from "react";
 import { Alert, Form, Checkbox, Spin, message, Row, Col, Card } from "antd";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Shield } from "lucide-react";
-import { BaseButton, BaseInput, BaseTextArea, BaseSelect, BaseModal } from "@/components/ui";
+import { BaseInput, BaseTextArea, BaseSelect, BaseModal } from "@/components/ui";
 import { usePermissionsGroupedQuery, useCreateRoleMutation, useUpdateRoleMutation } from "../hooks/use-role-permission";
-import { RoleDetailResponse } from "../types";
+import type { PermissionGroupResponse, PermissionResponse, RoleDetailResponse } from "../types";
 import { formatResource, formatAction, formatDescription } from "../utils/permission.mapper";
 import { useAuthStore } from "@/stores/auth.store";
 import { SystemRole } from "@/features/customer/auth/types/auth.type";
+import { getApiErrorMessage } from "@/utils/api-error.util";
 
 
 const roleSchema = z.object({
@@ -38,11 +39,11 @@ export const RoleFormModal: React.FC<RoleFormModalProps> = ({ open, onClose, ten
   const updateRole = useUpdateRoleMutation();
 
   const isEdit = !!initialData;
-  const isSystemRole = isEdit && (initialData?.isSystem || (initialData as any)?.system);
+  const isSystemRole = isEdit && initialData?.isSystem;
 
   const [filterResources, setFilterResources] = useState<string[]>([]);
 
-  const { control, handleSubmit, reset, setValue, watch } = useForm<RoleFormValues>({
+  const { control, handleSubmit, reset, setValue } = useForm<RoleFormValues>({
     resolver: zodResolver(roleSchema),
     defaultValues: {
       name: "",
@@ -51,7 +52,7 @@ export const RoleFormModal: React.FC<RoleFormModalProps> = ({ open, onClose, ten
     },
   });
 
-  const selectedPermissionIds = watch("permissionIds") || [];
+  const selectedPermissionIds = useWatch({ control, name: "permissionIds" }) || [];
 
   useEffect(() => {
     if (open) {
@@ -93,8 +94,8 @@ export const RoleFormModal: React.FC<RoleFormModalProps> = ({ open, onClose, ten
         messageApi.success("Role created successfully");
       }
       onClose();
-    } catch (error: any) {
-      messageApi.error(error?.response?.data?.message || "Đã có lỗi xảy ra");
+    } catch (error: unknown) {
+      messageApi.error(getApiErrorMessage(error, "Đã có lỗi xảy ra"));
     }
   };
 
@@ -125,17 +126,17 @@ export const RoleFormModal: React.FC<RoleFormModalProps> = ({ open, onClose, ten
 
   // If response is just an array, permissionsResponse will be the array. 
   // If it's wrapped in ApiResponse, it will be permissionsResponse.data.
-  let permissionGroups = Array.isArray(permissionsResponse) 
+  let permissionGroups: PermissionGroupResponse[] = Array.isArray(permissionsResponse)
     ? permissionsResponse 
     : (permissionsResponse?.data || []);
 
   // Filter out platform-only permissions (tenants, plans) if caller is not PLATFORM_ADMIN
   if (user?.role !== SystemRole.PLATFORM_ADMIN) {
-    permissionGroups = permissionGroups.filter((g: any) => g.resource !== "tenants" && g.resource !== "plans");
+    permissionGroups = permissionGroups.filter((group) => group.resource !== "tenants" && group.resource !== "plans");
   }
 
   const filteredPermissionGroups = filterResources.length > 0 
-    ? permissionGroups.filter((g: any) => filterResources.includes(g.resource))
+    ? permissionGroups.filter((group) => filterResources.includes(group.resource))
     : permissionGroups;
 
   return (
@@ -184,7 +185,7 @@ export const RoleFormModal: React.FC<RoleFormModalProps> = ({ open, onClose, ten
               className="mb-5"
               type="warning"
               showIcon
-              message="Vai trò cấp nền tảng"
+              title="Vai trò cấp nền tảng"
               description="Role này không thuộc công ty nào và chỉ Platform Admin được tạo, sửa hoặc gán cho nhân sự FAMS."
             />
           )}
@@ -228,16 +229,16 @@ export const RoleFormModal: React.FC<RoleFormModalProps> = ({ open, onClose, ten
                   value={filterResources}
                   onChange={setFilterResources}
                   style={{ minWidth: 250, maxWidth: 400 }}
-                  options={permissionGroups.map((g: any) => ({
-                    label: formatResource(g.resource),
-                    value: g.resource,
+                  options={permissionGroups.map((group) => ({
+                    label: formatResource(group.resource),
+                    value: group.resource,
                   }))}
                   allowClear
                   maxTagCount="responsive"
                 />
               </div>
               <div className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm font-medium border border-blue-200 whitespace-nowrap">
-                Tổng quyền đã chọn: {selectedPermissionIds.length} / {permissionGroups.reduce((acc: number, group: any) => acc + group.permissions.length, 0)}
+                Tổng quyền đã chọn: {selectedPermissionIds.length} / {permissionGroups.reduce((count, group) => count + group.permissions.length, 0)}
               </div>
             </div>
             {isLoadingPermissions ? (
@@ -257,7 +258,7 @@ export const RoleFormModal: React.FC<RoleFormModalProps> = ({ open, onClose, ten
               </div>
             ) : (
               <div className="max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                {filteredPermissionGroups.map((group: any) => (
+                {filteredPermissionGroups.map((group) => (
                   <Card 
                     key={group.resource} 
                     size="small" 
@@ -266,10 +267,10 @@ export const RoleFormModal: React.FC<RoleFormModalProps> = ({ open, onClose, ten
                     extra={
                       <Checkbox
                         disabled={isSystemRole}
-                        checked={group.permissions.length > 0 && group.permissions.every((p: any) => selectedPermissionIds.includes(p.id))}
+                        checked={group.permissions.length > 0 && group.permissions.every((permission: PermissionResponse) => selectedPermissionIds.includes(permission.id))}
                         indeterminate={
-                          group.permissions.some((p: any) => selectedPermissionIds.includes(p.id))
-                          && !group.permissions.every((p: any) => selectedPermissionIds.includes(p.id))
+                          group.permissions.some((permission: PermissionResponse) => selectedPermissionIds.includes(permission.id))
+                          && !group.permissions.every((permission: PermissionResponse) => selectedPermissionIds.includes(permission.id))
                         }
                         onChange={(e) => handleSelectAllGroup(group.permissions, e.target.checked)}
                       >
@@ -278,7 +279,7 @@ export const RoleFormModal: React.FC<RoleFormModalProps> = ({ open, onClose, ten
                     }
                   >
                     <Row gutter={[16, 16]}>
-                      {group.permissions.map((permission: any) => (
+                      {group.permissions.map((permission: PermissionResponse) => (
                         <Col span={12} key={permission.id}>
                           <Checkbox
                             checked={selectedPermissionIds.includes(permission.id)}

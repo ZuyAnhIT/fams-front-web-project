@@ -1,8 +1,7 @@
 /**
  * Kiểu dữ liệu phản hồi tiêu chuẩn từ Backend
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   message: string;
   data: T;

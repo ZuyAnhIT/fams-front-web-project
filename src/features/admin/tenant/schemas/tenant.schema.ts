@@ -58,7 +58,7 @@ export const updateTenantSettingsSchema = z.object({
     .regex(/^[A-Za-z0-9-]*$/, "Chỉ dùng chữ, số và dấu gạch ngang")
     .optional()
     .or(z.literal("")),
-  employeeCodePadding: z.coerce.number().int().min(1).max(8),
+  employeeCodePadding: z.coerce.number<number>().int().min(1).max(8),
 });
 
 export type UpdateTenantSettingsFormData = z.infer<typeof updateTenantSettingsSchema>;

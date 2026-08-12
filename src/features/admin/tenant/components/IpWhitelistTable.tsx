@@ -57,9 +57,7 @@ export default function IpWhitelistTable({
     reset,
     formState: { errors, isSubmitting },
   } = useForm<CreateIpWhitelistFormData>({
-    // Zod input/output differ for defaults/coercion; RHF receives the parsed output.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    resolver: zodResolver(createIpWhitelistSchema) as any,
+    resolver: zodResolver(createIpWhitelistSchema),
     defaultValues: { ipAddress: "", label: "", scope: "all" },
   });
 
@@ -153,7 +151,7 @@ export default function IpWhitelistTable({
       <Alert
         showIcon
         type="error"
-        message="Không tải được danh sách IP"
+        title="Không tải được danh sách IP"
         description={errorMessage(error, "Vui lòng tải lại trang hoặc thử lại sau.")}
       />
     );
@@ -181,14 +179,14 @@ export default function IpWhitelistTable({
         <Alert
           showIcon
           type="warning"
-          message="Whitelist đang được áp dụng"
+          title="Whitelist đang được áp dụng"
           description="Chỉ các địa chỉ IP/mạng trong danh sách đang bật mới truy cập được API/hệ thống. Hãy chắc chắn IP hiện tại của bạn nằm trong danh sách trước khi rời trang này."
         />
       ) : (
         <Alert
           showIcon
           type="info"
-          message="Chưa giới hạn theo IP"
+          title="Chưa giới hạn theo IP"
           description="Khi không có entry active, mọi địa chỉ IP đều có thể truy cập. Whitelist bắt đầu được enforce ngay khi có ít nhất một entry active."
         />
       )}
@@ -224,7 +222,7 @@ export default function IpWhitelistTable({
               control={control}
               name="ipAddress"
               label="Địa chỉ IP hoặc CIDR"
-              placeholder="192.168.1.10 hoặc 10.0.0.0/24"
+              placeholder="192.168.1.15 hoặc 10.0.0.0/24"
               error={errors.ipAddress}
               required
             />
@@ -259,7 +257,7 @@ export default function IpWhitelistTable({
             <Alert
               type="warning"
               showIcon
-              message="Tránh tự khóa truy cập"
+              title="Tránh tự khóa truy cập"
               description="Entry active đầu tiên phải bao phủ IP hiện tại của bạn. Backend sẽ từ chối thay đổi không an toàn."
             />
 

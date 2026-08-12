@@ -12,6 +12,7 @@ import { useAuthStore } from "@/stores/auth.store";
 import { CUSTOMER_ROUTES } from "@/constants/routes";
 import { SystemRole } from "@/features/customer/auth/types/auth.type";
 import { useTenantDetail } from "@/features/admin/tenant/hooks/use-tenant";
+import Image from "next/image";
 
 interface SidebarProps {
   variant?: "desktop" | "mobile";
@@ -199,9 +200,12 @@ export default function Sidebar({ variant = "desktop", onNavigate }: SidebarProp
               }}
             >
               {user?.avatarUrl ? (
-                <img
+                <Image
                   src={user.avatarUrl}
                   alt={user?.displayName || "Avatar"}
+                  width={40}
+                  height={40}
+                  unoptimized
                   className="h-10 w-10 shrink-0 rounded-full bg-slate-100 border border-brand-700 object-cover shadow-sm"
                 />
               ) : (
@@ -233,7 +237,7 @@ export default function Sidebar({ variant = "desktop", onNavigate }: SidebarProp
           <div className="p-3 flex flex-col gap-3 items-center">
             <Tooltip title={user?.displayName || user?.email} placement="right">
               {user?.avatarUrl ? (
-                <img src={user.avatarUrl} alt="Avatar" className="h-8 w-8 rounded-full border border-brand-700 object-cover" />
+                <Image src={user.avatarUrl} alt="Avatar" width={32} height={32} unoptimized className="h-8 w-8 rounded-full border border-brand-700 object-cover" />
               ) : (
                 <div className="h-8 w-8 rounded-full bg-brand-800 border border-brand-700 flex items-center justify-center">
                   <Icons.User className="h-4 w-4 text-brand-400" aria-hidden="true" />

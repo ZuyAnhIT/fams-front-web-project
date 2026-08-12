@@ -1,9 +1,10 @@
-import { Alert, message, Table, Upload } from "antd";
+import { Alert, message, Table, Upload, type UploadProps } from "antd";
 import { InboxOutlined } from "@ant-design/icons";
 import { useState } from "react";
 import BaseModal from "@/components/ui/BaseModal";
 import { useImportEmployees } from "../hooks/use-employee";
 import type { EmployeeImportResult } from "../types/employee.type";
+import { getApiErrorMessage } from "@/utils/api-error.util";
 
 const { Dragger } = Upload;
 
@@ -32,16 +33,16 @@ export default function ImportEmployeeModal({ open, onClose }: ImportEmployeeMod
           `Đã tạo ${imported.successCount}/${imported.totalRows} hồ sơ; ${imported.failedCount} dòng lỗi.`,
         );
       }
-    } catch (error: any) {
-      message.error(error?.response?.data?.message || "Lỗi khi import dữ liệu.");
+    } catch (error: unknown) {
+      message.error(getApiErrorMessage(error, "Lỗi khi import dữ liệu."));
     }
   };
 
-  const uploadProps = {
+  const uploadProps: UploadProps = {
     name: "file",
     multiple: false,
     accept: ".xlsx",
-    beforeUpload: (file: File) => {
+    beforeUpload: (file) => {
       setResult(null);
       setFile(file);
       return false; // Prevent auto upload
@@ -50,7 +51,13 @@ export default function ImportEmployeeModal({ open, onClose }: ImportEmployeeMod
       setFile(null);
       setResult(null);
     },
-    fileList: file ? [file as any] : [],
+    fileList: file ? [{
+      uid: `${file.name}-${file.lastModified}`,
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      status: "done",
+    }] : [],
   };
 
   return (
@@ -71,7 +78,7 @@ export default function ImportEmployeeModal({ open, onClose }: ImportEmployeeMod
           className="mb-4"
           type="info"
           showIcon
-          message="Import chỉ tạo hồ sơ nhân sự, không tạo tài khoản và không gửi email"
+          title="Import chỉ tạo hồ sơ nhân sự, không tạo tài khoản và không gửi email"
           description="Sau khi import, dùng “Mời tham gia” cho những người cần đăng nhập Web/App. Hai luồng được tách riêng để tránh gửi nhầm email hàng loạt."
         />
         <Dragger {...uploadProps}>
@@ -90,7 +97,7 @@ export default function ImportEmployeeModal({ open, onClose }: ImportEmployeeMod
             <Alert
               showIcon
               type={result.failedCount ? "warning" : "success"}
-              message={`Kết quả: ${result.successCount} thành công, ${result.failedCount} lỗi / ${result.totalRows} dòng`}
+              title={`Kết quả: ${result.successCount} thành công, ${result.failedCount} lỗi / ${result.totalRows} dòng`}
             />
             {result.errors.length > 0 && (
               <Table

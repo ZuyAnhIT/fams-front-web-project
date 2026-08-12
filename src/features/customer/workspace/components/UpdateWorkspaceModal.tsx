@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { App } from "antd";
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import FormInput from "@/components/forms/FormInput";
 import FormSelect from "@/components/forms/FormSelect";
@@ -11,11 +11,19 @@ import { useUpdateWorkspaceMutation, useWorkspaceTreeQuery } from "../hooks/use-
 import { useAuthStore } from "@/stores/auth.store";
 import { WorkspaceResponse, WorkspaceTreeResponse } from "../types";
 import { Edit3 } from "lucide-react";
+import { getApiErrorMessage } from "@/utils/api-error.util";
 
 interface UpdateWorkspaceModalProps {
   workspace: WorkspaceResponse | null;
   isOpen: boolean;
   onClose: () => void;
+}
+
+interface WorkspaceTreeOption {
+  title: string;
+  value: string;
+  key: string;
+  children: WorkspaceTreeOption[];
 }
 
 export default function UpdateWorkspaceModal({ workspace, isOpen, onClose }: UpdateWorkspaceModalProps) {
@@ -72,14 +80,13 @@ export default function UpdateWorkspaceModal({ workspace, isOpen, onClose }: Upd
       });
       message.success("Cập nhật phòng ban thành công!");
       onClose();
-    } catch (error: any) {
-      const msg = error.response?.data?.message || "Có lỗi xảy ra khi cập nhật phòng ban";
-      message.error(msg);
+    } catch (error: unknown) {
+      message.error(getApiErrorMessage(error, "Có lỗi xảy ra khi cập nhật phòng ban"));
     }
   };
 
   // Convert TreeResponse to TreeSelect data format
-  const formatTreeData = (nodes: WorkspaceTreeResponse[]): any[] => {
+  const formatTreeData = (nodes: WorkspaceTreeResponse[]): WorkspaceTreeOption[] => {
     return nodes
       .filter((node) => node.id !== workspace?.id) // Prevent selecting itself as parent (Circular reference prevention at UI level)
       .map((node) => ({

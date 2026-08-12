@@ -7,6 +7,7 @@ import { BaseModal } from "@/components/ui";
 import { useGeofenceHistoryQuery } from "../hooks/use-geofence";
 import { GeofenceResponse } from "../../site/types/site.type";
 import { GeofenceMap } from "../../site/components/GeofenceMap";
+import type { ColumnsType } from "antd/es/table";
 
 interface GeofenceHistoryTabProps {
   tenantId?: string;
@@ -30,7 +31,7 @@ export default function GeofenceHistoryTab({ tenantId, siteId, siteLatitude, sit
   const history = historyRes?.content || [];
   const totalHistory = historyRes?.totalElements || 0;
 
-  const historyColumns = [
+  const historyColumns: ColumnsType<GeofenceResponse> = [
     {
       title: "Thời gian",
       dataIndex: "createdAt",
@@ -63,7 +64,7 @@ export default function GeofenceHistoryTab({ tenantId, siteId, siteLatitude, sit
     {
       title: "Thao tác",
       key: "action",
-      render: (_: any, record: GeofenceResponse) => (
+      render: (_, record) => (
         <BaseButton 
           type="text" 
           icon={<EyeOutlined className="text-blue-500" />} 
@@ -82,16 +83,16 @@ export default function GeofenceHistoryTab({ tenantId, siteId, siteLatitude, sit
         emptyTitle="Chưa có lịch sử geofence"
         emptyDescription="Phiên bản đầu tiên sẽ xuất hiện sau khi geofence được cấu hình."
         data={history} 
-        columns={historyColumns as any} 
+        columns={historyColumns}
         loading={isHistoryLoading}
         totalElements={totalHistory}
         currentPage={historyPage}
         pageSize={10}
         onPageChange={(p) => setHistoryPage(p)}
-        onChange={(pagination, filters, sorter: any) => {
-          if (sorter && (sorter.columnKey || sorter.field)) {
+        onChange={(_, __, sorter) => {
+          if (!Array.isArray(sorter) && (sorter.columnKey || sorter.field)) {
             setHistorySort({
-              sortBy: sorter.columnKey || sorter.field,
+              sortBy: String(sorter.columnKey || sorter.field),
               sortDir: sorter.order === 'ascend' ? 'asc' : 'desc'
             });
           } else {
@@ -110,7 +111,7 @@ export default function GeofenceHistoryTab({ tenantId, siteId, siteLatitude, sit
         onClose={() => setSelectedHistoryGeofence(null)}
         hideFooter
         width={1000}
-        destroyOnClose
+        destroyOnHidden
         centered
       >
         <div className="py-4 space-y-4">

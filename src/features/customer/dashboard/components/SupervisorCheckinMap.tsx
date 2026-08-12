@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import dayjs from "dayjs";
 import "leaflet/dist/leaflet.css";
 import type { SupervisorSiteSummary } from "../types/dashboard.type";
+import { mapConfig } from "@/config/map";
 
 const MapContainer = dynamic(() => import("react-leaflet").then((module) => module.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import("react-leaflet").then((module) => module.TileLayer), { ssr: false });
@@ -31,7 +32,7 @@ export default function SupervisorCheckinMap({ site }: { site: SupervisorSiteSum
       </div>
       <div className="h-64 overflow-hidden rounded-lg border border-slate-200">
         <MapContainer center={center} zoom={16} scrollWheelZoom={false} style={{ height: "100%", width: "100%", zIndex: 0 }}>
-          <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+          <TileLayer attribution={mapConfig.attribution} url={mapConfig.tileUrl} />
           {site.siteLatitude != null && site.siteLongitude != null && (
             <CircleMarker center={[site.siteLatitude, site.siteLongitude]} radius={10} pathOptions={{ color: "#1d4ed8", fillColor: "#3b82f6", fillOpacity: 0.75 }}>
               <LeafletTooltip permanent direction="top">Tâm site: {site.siteName}</LeafletTooltip>

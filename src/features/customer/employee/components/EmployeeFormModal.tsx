@@ -4,7 +4,6 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { App } from "antd";
-import { UserPlus } from "lucide-react";
 import FormInput from "@/components/forms/FormInput";
 import FormSelect from "@/components/forms/FormSelect";
 import BaseModal from "@/components/ui/BaseModal";
@@ -13,6 +12,8 @@ import { employeeSchema, type EmployeeFormData } from "../schemas/employee.schem
 import type { EmployeeDetailResponse } from "../types/employee.type";
 import { useWorkspacesQuery } from "@/features/customer/workspace/hooks/use-workspace";
 import { useAuthStore } from "@/stores/auth.store";
+import { getApiErrorMessage } from "@/utils/api-error.util";
+import type { CreateEmployeePayload } from "../types/employee.type";
 
 interface EmployeeFormModalProps {
   open: boolean;
@@ -90,12 +91,18 @@ export default function EmployeeFormModal({ open, onClose, initialData }: Employ
   const onSubmit = async (data: EmployeeFormData) => {
     try {
       // Clean up empty strings to undefined to avoid backend parsing errors
-      const payload: any = { ...data };
-      Object.keys(payload).forEach((key) => {
-        if (payload[key] === "") {
-          payload[key] = undefined;
-        }
-      });
+      const optional = (value?: string) => value === "" ? undefined : value;
+      const payload: CreateEmployeePayload = {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: optional(data.email),
+        phone: optional(data.phone),
+        employeeCode: optional(data.employeeCode),
+        position: optional(data.position),
+        department: optional(data.department),
+        departmentId: optional(data.departmentId),
+        hiredDate: optional(data.hiredDate),
+      };
 
       if (isEditMode && initialData) {
         await updateEmployee({ id: initialData.id, payload });
@@ -105,9 +112,8 @@ export default function EmployeeFormModal({ open, onClose, initialData }: Employ
         message.success("Thêm mới nhân viên thành công");
       }
       onClose();
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.message || "Đã xảy ra lỗi, vui lòng thử lại sau";
-      message.error(errorMessage);
+    } catch (error: unknown) {
+      message.error(getApiErrorMessage(error, "Đã xảy ra lỗi, vui lòng thử lại sau"));
     }
   };
 

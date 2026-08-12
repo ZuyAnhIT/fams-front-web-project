@@ -1,6 +1,6 @@
 import Image from "next/image";
-import { GoogleOAuthProvider } from "@react-oauth/google";
 import { CalendarCheck2, MapPinned, ShieldCheck } from "lucide-react";
+import OptionalGoogleOAuthProvider from "@/components/providers/OptionalGoogleOAuthProvider";
 
 /**
  * AuthLayout - Layout tối giản cho các trang xác thực (Login, Reset Password).
@@ -13,7 +13,7 @@ export default function AuthLayout({
 }) {
   return (
     <div className="flex min-h-screen bg-white">
-      <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ""}>
+      <OptionalGoogleOAuthProvider>
         {/* Cột trái: Brand Panel (Ẩn trên mobile) */}
         <div className="hidden lg:flex lg:w-1/2 relative bg-brand-900 flex-col justify-between p-12 overflow-hidden">
           {/* Background Image / Pattern */}
@@ -89,7 +89,7 @@ export default function AuthLayout({
             {children}
           </div>
         </div>
-      </GoogleOAuthProvider>
+      </OptionalGoogleOAuthProvider>
     </div>
   );
 }

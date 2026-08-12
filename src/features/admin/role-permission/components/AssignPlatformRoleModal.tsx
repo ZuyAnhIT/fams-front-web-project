@@ -10,6 +10,7 @@ import { useAssignPlatformRoleMutation, useRolesQuery } from "../hooks/use-role-
 import { useSearchUsers } from "@/hooks/use-user";
 import { useDebounce } from "@/hooks/useDebounce";
 import type { UserProfile } from "@/features/customer/auth/types/auth.type";
+import { getApiErrorMessage } from "@/utils/api-error.util";
 
 const schema = z.object({
   userId: z.uuid("User ID phải là UUID hợp lệ"),
@@ -57,8 +58,8 @@ export function AssignPlatformRoleModal({
       messageApi.success("Đã gán role cấp nền tảng");
       reset();
       onClose();
-    } catch (error: any) {
-      messageApi.error(error?.response?.data?.message || "Không thể gán role cấp nền tảng");
+    } catch (error: unknown) {
+      messageApi.error(getApiErrorMessage(error, "Không thể gán role cấp nền tảng"));
     }
   };
 
@@ -78,7 +79,7 @@ export function AssignPlatformRoleModal({
           className="mb-5"
           type="warning"
           showIcon
-          message="Quyền áp dụng trên toàn hệ thống"
+          title="Quyền áp dụng trên toàn hệ thống"
           description="Chỉ gán cho nhân sự FAMS đã có tài khoản. Backend sẽ chặn role thuộc một công ty hoặc lượt gán trùng."
         />
         <Form layout="vertical">

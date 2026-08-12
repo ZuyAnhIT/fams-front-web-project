@@ -6,7 +6,6 @@ import { BaseModal } from "@/components/ui";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import FormInput from "@/components/forms/FormInput";
-import BaseButton from "@/components/ui/BaseButton";
 import { useCreatePlan, useUpdatePlan } from "../hooks/use-subscription";
 import { planSchema, type PlanFormData } from "../schemas/subscription.schema";
 import type { PlanResponse } from "../types/subscription.type";
@@ -31,8 +30,7 @@ export default function PlanFormModal({ open, onClose, initialData }: PlanFormMo
     reset,
     formState: { errors, isDirty },
   } = useForm<PlanFormData>({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    resolver: zodResolver(planSchema) as any,
+    resolver: zodResolver(planSchema),
     defaultValues: {
       name: "",
       displayName: "",
@@ -73,7 +71,14 @@ export default function PlanFormModal({ open, onClose, initialData }: PlanFormMo
   const onSubmit = async (data: PlanFormData) => {
     try {
       if (isEditMode && initialData) {
-        const { name: _immutableName, ...payload } = data;
+        const payload = {
+          displayName: data.displayName,
+          description: data.description,
+          priceMonthly: data.priceMonthly,
+          priceYearly: data.priceYearly,
+          isActive: data.isActive,
+          sortOrder: data.sortOrder,
+        };
         await updatePlan({ id: initialData.id, payload });
         message.success("Cập nhật gói dịch vụ thành công!");
       } else {
@@ -93,7 +98,7 @@ export default function PlanFormModal({ open, onClose, initialData }: PlanFormMo
       title={isEditMode ? "Chỉnh sửa gói dịch vụ" : "Thêm gói dịch vụ mới"}
       isOpen={open}
       onClose={onClose}
-      destroyOnClose
+      destroyOnHidden
       centered
       width={600}
       confirmText={isEditMode ? "Lưu thay đổi" : "Tạo gói mới"}

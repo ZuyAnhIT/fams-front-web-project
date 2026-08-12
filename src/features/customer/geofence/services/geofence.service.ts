@@ -1,7 +1,7 @@
 import { apiClient } from "@/services/api-client";
 import { ApiResponse, PageResponse } from "@/types/api";
 import { GeofenceResponse } from "../../site/types/site.type";
-import { CreateGeofenceRequest, UpdateGeofenceRequest } from "../types/geofence.type";
+import { CreateGeofenceRequest, GeofenceHistoryParams, UpdateGeofenceRequest } from "../types/geofence.type";
 
 export const geofenceService = {
   createGeofence: async (tenantId: string, siteId: string, data: CreateGeofenceRequest): Promise<GeofenceResponse> => {
@@ -23,12 +23,7 @@ export const geofenceService = {
   listGeofenceHistory: async (
     tenantId: string,
     siteId: string,
-    params: {
-      page?: number;
-      size?: number;
-      sortBy?: string;
-      sortDir?: "asc" | "desc";
-    },
+    params: GeofenceHistoryParams,
   ): Promise<PageResponse<GeofenceResponse>> => {
     const response = await apiClient.get<ApiResponse<PageResponse<GeofenceResponse>>>(
       `/tenants/${tenantId}/sites/${siteId}/geofences`,

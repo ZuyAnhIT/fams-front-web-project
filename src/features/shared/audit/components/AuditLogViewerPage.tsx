@@ -86,8 +86,8 @@ export default function AuditLogViewerPage({ platformMode }: { platformMode: boo
         <p className="mt-1 text-sm text-slate-500">Truy vết ai đã thao tác, dữ liệu trước/sau và chuỗi hành động cùng request.</p>
       </div>
 
-      {!platformMode && <Alert showIcon type="info" message="Dữ liệu được giới hạn theo công ty đang chọn" description="Web luôn gửi tenantId hiện tại để tài khoản thuộc nhiều công ty không gặp lỗi mơ hồ hoặc xem nhầm phạm vi." />}
-      {params.requestId && <Alert showIcon type="warning" message="Đang ở chế độ trace request" description={<code>{params.requestId}</code>} action={<BaseButton type="text" icon={<X className="h-4 w-4" />} onClick={clearFilters}>Thoát trace</BaseButton>} />}
+      {!platformMode && <Alert showIcon type="info" title="Dữ liệu được giới hạn theo công ty đang chọn" description="Web luôn gửi tenantId hiện tại để tài khoản thuộc nhiều công ty không gặp lỗi mơ hồ hoặc xem nhầm phạm vi." />}
+      {params.requestId && <Alert showIcon type="warning" title="Đang ở chế độ trace request" description={<code>{params.requestId}</code>} action={<BaseButton type="text" icon={<X className="h-4 w-4" />} onClick={clearFilters}>Thoát trace</BaseButton>} />}
 
       <ContentCard className="space-y-4 p-5">
         <div className="flex items-center gap-2 font-semibold text-slate-800"><Filter className="h-4 w-4 text-blue-600" />Bộ lọc điều tra</div>
@@ -103,7 +103,7 @@ export default function AuditLogViewerPage({ platformMode }: { platformMode: boo
         <div className="flex justify-end gap-2"><BaseButton type="default" onClick={clearFilters}>Đặt lại</BaseButton><BaseButton icon={<Search className="h-4 w-4" />} onClick={applyFilters}>Tìm kiếm</BaseButton></div>
       </ContentCard>
 
-      {query.isError && <Alert showIcon type="error" message="Không thể tải nhật ký audit" description={errorMessage(query.error)} />}
+      {query.isError && <Alert showIcon type="error" title="Không thể tải nhật ký audit" description={errorMessage(query.error)} />}
       <DataTable
         ariaLabel="Danh sách nhật ký audit"
         columns={columns}
@@ -120,7 +120,7 @@ export default function AuditLogViewerPage({ platformMode }: { platformMode: boo
       />
 
       <Modal title="Chi tiết thay đổi" open={Boolean(selectedId)} width={1100} footer={null} onCancel={() => setSelectedId(null)} destroyOnHidden>
-        {detailQuery.isLoading ? <div className="flex min-h-64 items-center justify-center"><Spin /></div> : detailQuery.isError || !detailQuery.data ? <Alert showIcon type="error" message="Không thể tải chi tiết" description={errorMessage(detailQuery.error)} /> : <div className="space-y-5 pt-3">
+        {detailQuery.isLoading ? <div className="flex min-h-64 items-center justify-center"><Spin /></div> : detailQuery.isError || !detailQuery.data ? <Alert showIcon type="error" title="Không thể tải chi tiết" description={errorMessage(detailQuery.error)} /> : <div className="space-y-5 pt-3">
           <Descriptions bordered size="small" column={{ xs: 1, md: 2 }}>
             <Descriptions.Item label="Người thao tác">{detailQuery.data.actorEmail || 'Hệ thống tự động'}</Descriptions.Item>
             <Descriptions.Item label="Hành động"><Tag color={actionColor(detailQuery.data.action)}>{detailQuery.data.action}</Tag></Descriptions.Item>

@@ -3,6 +3,7 @@
 import { TreeSelect, type TreeSelectProps } from "antd";
 import { DownOutlined } from "@ant-design/icons";
 import { cn } from "@/utils/cn";
+import type { AntTreeNodeProps } from "antd/es/tree/Tree";
 
 /**
  * BaseTreeSelect - Component nền tảng bọc TreeSelect của Ant Design.
@@ -34,7 +35,7 @@ export default function BaseTreeSelect({ className, ...props }: BaseTreeSelectPr
         "[&_.ant-select-tree-switcher-line-icon_svg]:!stroke-[2px] [&_.ant-select-tree-switcher-line-icon_svg]:!stroke-slate-400",
         props.popupClassName
       )}
-      switcherIcon={({ expanded }: any) => (
+      switcherIcon={({ expanded }: AntTreeNodeProps) => (
         <DownOutlined
           className={`transition-transform duration-200 ${
             expanded ? "" : "-rotate-90"

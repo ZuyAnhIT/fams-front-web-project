@@ -1,14 +1,13 @@
 "use client";
 
 import React from "react";
-import { Control, Controller, FieldError, FieldValues, Path } from "react-hook-form";
+import { Controller, type Control, type FieldError, type FieldValues, type Path } from "react-hook-form";
 import BaseInput from "@/components/ui/BaseInput";
 import BaseInputPassword from "@/components/ui/BaseInputPassword";
 import { cn } from "@/utils/cn";
 
 export interface FormInputProps<T extends FieldValues = FieldValues> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  control: any;
+  control: Control<T>;
   name: Path<T>;
   label?: React.ReactNode;
   placeholder?: string;

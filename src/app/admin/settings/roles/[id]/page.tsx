@@ -3,8 +3,10 @@
 import { use } from "react";
 import RoleForm from "@/features/admin/role/components/RoleForm";
 import { useRoleDetail } from "@/features/admin/role/hooks/use-role";
+import RoleGuard from "@/components/guards/RoleGuard";
+import { SystemRole } from "@/features/customer/auth/types/auth.type";
 
-export default function EditRolePage({ params }: { params: Promise<{ id: string }> }) {
+function EditRoleContent({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const { data, isLoading } = useRoleDetail(resolvedParams.id);
 
@@ -24,9 +26,13 @@ export default function EditRolePage({ params }: { params: Promise<{ id: string 
     );
   }
 
+  return <div className="py-2"><RoleForm isEditMode={true} initialData={data} /></div>;
+}
+
+export default function EditRolePage({ params }: { params: Promise<{ id: string }> }) {
   return (
-    <div className="py-2">
-      <RoleForm isEditMode={true} initialData={data} />
-    </div>
+    <RoleGuard allowedRoles={[SystemRole.PLATFORM_ADMIN]}>
+      <EditRoleContent params={params} />
+    </RoleGuard>
   );
 }

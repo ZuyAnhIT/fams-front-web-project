@@ -5,7 +5,7 @@ import { SiteListParams, CreateSiteRequest, UpdateSiteRequest } from "../types/s
 export const siteKeys = {
   all: ["sites"] as const,
   lists: () => [...siteKeys.all, "list"] as const,
-  list: (params: any) => [...siteKeys.lists(), params] as const,
+  list: (params: SiteListParams) => [...siteKeys.lists(), params] as const,
   details: () => [...siteKeys.all, "detail"] as const,
   detail: (id: string) => [...siteKeys.details(), id] as const,
 };

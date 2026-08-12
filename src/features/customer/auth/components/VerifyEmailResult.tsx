@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, CheckCircle2, CircleAlert, LoaderCircle, RotateCcw } from "lucide-react";
 import { CUSTOMER_ROUTES, ROUTES } from "@/constants/routes";
+import { publicEnv } from "@/config/env";
 
 type VerifyState = "loading" | "success" | "error";
 
@@ -54,7 +55,7 @@ export default function VerifyEmailResult() {
   const [state, setState] = useState<VerifyState>("loading");
   const [detail, setDetail] = useState("Đang xác thực email của bạn...");
   const [attempt, setAttempt] = useState(0);
-  const mobileAppScheme = process.env.NEXT_PUBLIC_MOBILE_APP_SCHEME || "famsfrontappproject";
+  const mobileAppScheme = publicEnv.NEXT_PUBLIC_MOBILE_APP_SCHEME;
   const mobileAppUrl = `${mobileAppScheme}://${mode === "email-change" ? "profile" : "login"}`;
 
   useEffect(() => {

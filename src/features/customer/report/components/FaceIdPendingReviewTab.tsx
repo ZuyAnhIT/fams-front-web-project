@@ -276,7 +276,7 @@ export default function FaceIdPendingReviewTab({
       <Alert
         type="info"
         showIcon
-        message="Đối chiếu ảnh trước khi quyết định"
+        title="Đối chiếu ảnh trước khi quyết định"
         description="Bấm vào ảnh để xem lớn và xác minh đúng nhân viên. Ảnh tạm sẽ bị Backend xóa ngay sau khi duyệt hoặc từ chối."
       />
 

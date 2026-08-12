@@ -42,6 +42,7 @@ import {
 } from "../hooks/use-workspace";
 import type {
   WorkspaceMemberResponse,
+  WorkspaceListParams,
   WorkspaceResponse,
   WorkspaceTreeResponse,
 } from "../types";
@@ -49,6 +50,8 @@ import AddMemberModal from "./AddMemberModal";
 import CreateWorkspaceModal from "./CreateWorkspaceModal";
 import TransferMemberModal from "./TransferMemberModal";
 import UpdateWorkspaceModal from "./UpdateWorkspaceModal";
+import { getApiErrorMessage } from "@/utils/api-error.util";
+import type { DataNode } from "antd/es/tree";
 
 type ViewMode = "tree" | "list";
 
@@ -105,8 +108,8 @@ export default function WorkspacePage() {
   const [viewMode, setViewMode] = useState<ViewMode>("tree");
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>();
-  const [typeFilter, setTypeFilter] = useState<string>();
+  const [statusFilter, setStatusFilter] = useState<WorkspaceListParams["status"]>();
+  const [typeFilter, setTypeFilter] = useState<WorkspaceListParams["type"]>();
   const [listPage, setListPage] = useState(0);
   const [listSize, setListSize] = useState(20);
   const [memberPage, setMemberPage] = useState(0);
@@ -198,10 +201,8 @@ export default function WorkspacePage() {
             setSelectedKeys([]);
           }
           message.success("Đã xóa workspace");
-        } catch (error: any) {
-          message.error(
-            error.response?.data?.message || "Không thể xóa workspace",
-          );
+        } catch (error: unknown) {
+          message.error(getApiErrorMessage(error, "Không thể xóa workspace"));
           throw error;
         }
       },
@@ -225,17 +226,15 @@ export default function WorkspacePage() {
             memberId: member.id,
           });
           message.success("Đã gỡ nhân sự khỏi workspace");
-        } catch (error: any) {
-          message.error(
-            error.response?.data?.message || "Không thể gỡ nhân sự",
-          );
+        } catch (error: unknown) {
+          message.error(getApiErrorMessage(error, "Không thể gỡ nhân sự"));
           throw error;
         }
       },
     });
   };
 
-  const formatTreeData = (nodes: WorkspaceTreeResponse[]): any[] =>
+  const formatTreeData = (nodes: WorkspaceTreeResponse[]): DataNode[] =>
     nodes.map((node) => ({
       key: node.id,
       title: (
@@ -490,7 +489,7 @@ export default function WorkspacePage() {
               ) : (
                 <Tree
                   showLine={{ showLeafIcon: false }}
-                  switcherIcon={({ expanded }: any) => (
+                  switcherIcon={({ expanded }: { expanded?: boolean }) => (
                     <DownOutlined
                       className={expanded ? "" : "-rotate-90"}
                     />
@@ -567,7 +566,7 @@ export default function WorkspacePage() {
                   <Alert
                     type="warning"
                     showIcon
-                    message="Workspace đã ngừng hoạt động"
+                    title="Workspace đã ngừng hoạt động"
                     description={
                       (selectedWorkspace.activeMemberCount ?? 0) > 0
                         ? `Không thể thêm hoặc chuyển nhân sự vào đây. Workspace vẫn còn ${selectedWorkspace.activeMemberCount} nhân viên; bạn có thể chuyển họ sang đơn vị đang hoạt động.`

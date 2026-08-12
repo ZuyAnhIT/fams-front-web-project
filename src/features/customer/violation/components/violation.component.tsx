@@ -69,7 +69,7 @@ export default function ViolationManagementPage() {
   ), [params]);
 
   const applySavedFilter = useCallback((stored: SavedFilterParams) => {
-    const allowedTypes: ViolationType[] = ['no_response', 'location_fail', 'face_fail', 'liveness_fail'];
+    const allowedTypes: ViolationType[] = ['no_response', 'location_fail', 'face_fail', 'liveness_fail', 'face_verify_timeout'];
     const allowedSort = ['checkDate', 'createdAt', 'violationType', 'employeeId', 'siteId'] as const;
     setParams((current) => ({
       page: 0,

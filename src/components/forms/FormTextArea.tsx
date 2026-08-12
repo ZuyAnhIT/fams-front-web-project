@@ -1,20 +1,18 @@
 import React from "react";
-import { Input } from "antd";
-import { Controller } from "react-hook-form";
+import { Controller, type Control, type FieldValues, type Path } from "react-hook-form";
 import BaseTextArea from "@/components/ui/BaseTextArea";
 import { TextAreaProps } from "antd/es/input";
 
-interface FormTextAreaProps extends Omit<TextAreaProps, 'name'> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  control: any;
-  name: string;
+interface FormTextAreaProps<T extends FieldValues> extends Omit<TextAreaProps, 'name'> {
+  control: Control<T>;
+  name: Path<T>;
   label?: string;
-  error?: any;
+  error?: { message?: string };
   helperText?: React.ReactNode;
   required?: boolean;
 }
 
-export default function FormTextArea({
+export default function FormTextArea<T extends FieldValues>({
   control,
   name,
   label,
@@ -22,7 +20,7 @@ export default function FormTextArea({
   helperText,
   required,
   ...textAreaProps
-}: FormTextAreaProps) {
+}: FormTextAreaProps<T>) {
   const inputId = textAreaProps.id || name;
   const messageId = `${inputId}-${error ? "error" : "help"}`;
 

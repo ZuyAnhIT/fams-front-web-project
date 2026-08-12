@@ -14,7 +14,7 @@ export function MyPermissionsPage() {
   }
 
   if (isError) {
-    return <Alert type="error" showIcon message="Không thể tải quyền hiện tại" description="Vui lòng tải lại trang hoặc đăng nhập lại." />;
+    return <Alert type="error" showIcon title="Không thể tải quyền hiện tại" description="Vui lòng tải lại trang hoặc đăng nhập lại." />;
   }
 
   return (
@@ -30,7 +30,7 @@ export function MyPermissionsPage() {
       <Alert
         type="info"
         showIcon
-        message="Phạm vi không giới hạn được ưu tiên"
+        title="Phạm vi không giới hạn được ưu tiên"
         description="Nếu một trong các role áp dụng toàn công ty, quyền tương ứng không còn bị giới hạn bởi site ở các role khác."
       />
 

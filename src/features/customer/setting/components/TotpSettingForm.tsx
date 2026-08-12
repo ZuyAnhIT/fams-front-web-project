@@ -135,7 +135,7 @@ export default function TotpSettingForm() {
       <Alert
         showIcon
         type="info"
-        message="Thêm một lớp bảo vệ sau mật khẩu"
+        title="Thêm một lớp bảo vệ sau mật khẩu"
         description="Sau khi bật, mỗi lần đăng nhập bằng mật khẩu bạn cần mã 6 số hoặc một mã dự phòng. Google Sign-In không đi qua bước TOTP theo chính sách hiện tại."
       />
 
@@ -237,7 +237,7 @@ export default function TotpSettingForm() {
           className="mb-4"
           type="warning"
           showIcon
-          message="Tắt 2FA làm giảm mức bảo vệ tài khoản"
+          title="Tắt 2FA làm giảm mức bảo vệ tài khoản"
           description="Bạn phải xác thực lại bằng đúng một phương thức."
         />
         <Radio.Group

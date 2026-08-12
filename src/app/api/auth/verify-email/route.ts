@@ -2,6 +2,14 @@ import { NextResponse, type NextRequest } from "next/server";
 
 const backendApiUrl = process.env.FAMS_BACKEND_URL || "http://localhost:8080/api/v1";
 
+function getBackendUrl() {
+  try {
+    return new URL(backendApiUrl);
+  } catch {
+    throw new Error("FAMS_BACKEND_URL_INVALID");
+  }
+}
+
 /** BFF endpoint để trang kết quả verify gọi backend mà không lặp qua Proxy email-link. */
 export async function GET(request: NextRequest) {
   const token = request.nextUrl.searchParams.get("token");
@@ -21,8 +29,10 @@ export async function GET(request: NextRequest) {
     const endpoint = mode === "email-change"
       ? "/auth/profile/email/confirm-change"
       : "/auth/verify-email";
+    const targetUrl = new URL(`${getBackendUrl().pathname.replace(/\/$/, "")}${endpoint}`, getBackendUrl());
+    targetUrl.searchParams.set("token", token);
     const backendResponse = await fetch(
-      `${backendApiUrl}${endpoint}?token=${encodeURIComponent(token)}`,
+      targetUrl,
       {
         cache: "no-store",
         headers: { Accept: "application/json" },

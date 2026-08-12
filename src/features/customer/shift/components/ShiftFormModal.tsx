@@ -198,7 +198,7 @@ export default function ShiftFormModal({
       }
       isOpen={isOpen}
       onClose={onClose}
-      destroyOnClose
+      destroyOnHidden
       confirmText={isUpdate ? "Lưu thay đổi" : "Tạo ca"}
       cancelText="Hủy bỏ"
       confirmLoading={isLoading}

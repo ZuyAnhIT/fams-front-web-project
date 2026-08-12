@@ -5,8 +5,14 @@ import BaseSelect from "@/components/ui/BaseSelect";
 import { useAuthStore } from "@/stores/auth.store";
 import { useWorkspacesQuery, useTransferMemberMutation } from "../hooks/use-workspace";
 import { TransferWorkspaceMemberRequest } from "../types";
+import { getApiErrorMessage } from "@/utils/api-error.util";
 
 const { Text } = Typography;
+
+interface TransferMemberFormValues {
+  targetWorkspaceId: string;
+  role?: TransferWorkspaceMemberRequest["role"];
+}
 
 interface TransferMemberModalProps {
   isOpen: boolean;
@@ -37,7 +43,7 @@ export default function TransferMemberModal({
 
   const { mutateAsync: transferMember, isPending } = useTransferMemberMutation();
 
-  const handleFinish = async (values: any) => {
+  const handleFinish = async (values: TransferMemberFormValues) => {
     try {
       if (!user?.tenantId) {
         message.error("Lỗi: Không xác định được Tenant ID");
@@ -59,8 +65,8 @@ export default function TransferMemberModal({
       message.success("Chuyển phòng ban thành công!");
       form.resetFields();
       onClose();
-    } catch (error: any) {
-      message.error(error.response?.data?.message || "Có lỗi xảy ra khi chuyển phòng ban");
+    } catch (error: unknown) {
+      message.error(getApiErrorMessage(error, "Có lỗi xảy ra khi chuyển phòng ban"));
     }
   };
 

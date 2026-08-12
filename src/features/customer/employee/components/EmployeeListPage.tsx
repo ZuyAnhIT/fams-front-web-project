@@ -22,6 +22,8 @@ import { EMPLOYEE_STATUS } from "@/constants/status";
 import { formatVietnameseName } from "@/utils/name.util";
 import MaskedValue from "@/components/security/MaskedValue";
 import { SystemRole } from "@/features/customer/auth/types/auth.type";
+import type { ColumnsType } from "antd/es/table";
+import Image from "next/image";
 
 export default function EmployeeListPage() {
   const hasPermission = useAuthStore((state) => state.hasPermission);
@@ -131,17 +133,20 @@ export default function EmployeeListPage() {
     tenantMemberships.length > 0 &&
     tenantMemberships.every((membership) => (membership.siteIds?.length ?? 0) > 0);
 
-  const columns = [
+  const columns: ColumnsType<Employee> = [
     {
       title: "Nhân viên",
       key: "firstName",
       sorter: true,
-      render: (_: any, record: Employee) => (
+      render: (_, record) => (
         <div className="flex items-center gap-3 py-1">
           {record.avatarUrl ? (
-            <img
+            <Image
               src={record.avatarUrl}
               alt={record.firstName}
+              width={36}
+              height={36}
+              unoptimized
               className="h-9 w-9 rounded-lg ring-1 ring-slate-200 object-cover bg-white shadow-sm"
             />
           ) : (
@@ -194,7 +199,7 @@ export default function EmployeeListPage() {
     {
       title: "Face ID",
       key: "faceId",
-      render: (_: any, record: Employee) => {
+      render: (_, record) => {
         const status = record.faceId?.status;
         if (status === "enrolled") {
           return <Tag color="success" className="font-medium m-0">Đã đăng ký</Tag>;
@@ -221,7 +226,7 @@ export default function EmployeeListPage() {
       title: "Thao tác",
       key: "actions",
       width: 120,
-      render: (_: any, record: Employee) => (
+      render: (_, record) => (
         <BaseButton
           type="default"
           icon={<ChevronRight className="h-4 w-4" />}
@@ -243,7 +248,7 @@ export default function EmployeeListPage() {
         <Alert
           type="info"
           showIcon
-          message="Bạn đang xem dữ liệu theo phạm vi công trường"
+          title="Bạn đang xem dữ liệu theo phạm vi công trường"
           description="Danh sách, chi tiết và file xuất chỉ gồm nhân viên thuộc các site bạn được phân công."
         />
       )}
@@ -251,7 +256,7 @@ export default function EmployeeListPage() {
         <Alert
           type="info"
           showIcon
-          message="Thông tin liên hệ được bảo vệ theo quyền"
+          title="Thông tin liên hệ được bảo vệ theo quyền"
           description="Email và số điện thoại có thể được che một phần. File Excel xuất ra áp dụng cùng quy tắc; Web không có chức năng giải che dữ liệu."
         />
       )}
@@ -346,7 +351,7 @@ export default function EmployeeListPage() {
         currentPage={state.page}
         pageSize={state.size}
         onPageChange={(page, size) => setPagination({ page, size })}
-        onChange={(_, __, sorter: any) => {
+        onChange={(_, __, sorter) => {
           if (!Array.isArray(sorter) && (sorter.columnKey || sorter.field)) {
             setPagination({
               sortBy: (sorter.columnKey || sorter.field) as string,

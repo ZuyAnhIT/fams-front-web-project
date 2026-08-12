@@ -13,6 +13,7 @@ import type {
   CreateGeofenceRequest,
   UpdateGeofenceRequest,
 } from "../types/geofence.type";
+import { getApiErrorMessage } from "@/utils/api-error.util";
 
 interface EditGeofenceModalProps {
   isOpen: boolean;
@@ -118,10 +119,8 @@ export default function EditGeofenceModal({
         message.success("Lưu cấu hình vùng chấm công thành công!");
         onClose();
       },
-      onError: (err: any) => {
-        message.error(
-          err.response?.data?.message || "Có lỗi xảy ra khi lưu cấu hình.",
-        );
+      onError: (error: unknown) => {
+        message.error(getApiErrorMessage(error, "Có lỗi xảy ra khi lưu cấu hình."));
       },
     };
     if (isUpdate) {
@@ -156,7 +155,7 @@ export default function EditGeofenceModal({
       onClose={onClose}
       width={1000}
       centered
-      destroyOnClose
+      destroyOnHidden
       footer={
         <div className="flex justify-end gap-3 w-full">
           <BaseButton onClick={onClose} disabled={isLoading} className="!bg-white !text-slate-700 !border-slate-300 hover:!bg-slate-50 hover:!text-slate-900 h-10 px-6 rounded-lg font-semibold transition-all">
@@ -170,7 +169,7 @@ export default function EditGeofenceModal({
     >
       <div className="space-y-4 py-4">
         <Alert
-          message="Click lên bản đồ để khoanh vùng khu vực chấm công. Hệ thống tự động khép kín đa giác. Nhấn Hoàn tác để xóa điểm vừa vẽ."
+          title="Click lên bản đồ để khoanh vùng khu vực chấm công. Hệ thống tự động khép kín đa giác. Nhấn Hoàn tác để xóa điểm vừa vẽ."
           type="info"
           showIcon
         />

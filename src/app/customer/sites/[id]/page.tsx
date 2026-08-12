@@ -252,7 +252,7 @@ function SiteDetailsContent() {
         <Alert
           type="warning"
           showIcon
-          message="Công trình đã ngừng hoạt động"
+          title="Công trình đã ngừng hoạt động"
           description="Giữ nguyên dữ liệu lịch sử để audit. Hãy kiểm tra và kết thúc các phân công còn hiệu lực trước khi xóa."
         />
       )}

@@ -19,7 +19,7 @@ export default function TenantConfigurationPage() {
       <Alert
         type="error"
         showIcon
-        message="Không xác định được công ty"
+        title="Không xác định được công ty"
         description="Phiên đăng nhập hiện tại chưa có công ty đang hoạt động. Vui lòng chọn công ty hoặc đăng nhập lại."
       />
     );
@@ -58,7 +58,7 @@ export default function TenantConfigurationPage() {
                   type="success"
                   showIcon
                   className="mb-5"
-                  message="Bạn là chủ sở hữu công ty"
+                  title="Bạn là chủ sở hữu công ty"
                   description="Chỉ các trường thực sự thay đổi được gửi lên backend."
                 />
                 <UpdateTenantForm tenant={tenant} tenantId={tenantId} />

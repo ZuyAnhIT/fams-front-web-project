@@ -250,6 +250,10 @@ test("role không có employees permission bị chặn trước khi gọi API", 
   await page.goto("/customer/employees");
   await expect(page.getByText("403 Access Denied")).toBeVisible();
   expect(employeeApiCalls).toBe(0);
+
+  await page.goto("/customer/employees/create");
+  await expect(page.getByText("403 Access Denied")).toBeVisible();
+  expect(employeeApiCalls).toBe(0);
 });
 
 test("Help Center hiển thị hướng dẫn đúng vai trò Company Admin và Employee", async ({ page }) => {
@@ -258,7 +262,7 @@ test("Help Center hiển thị hướng dẫn đúng vai trò Company Admin và 
   await expect(page.getByRole("heading", { name: "Hướng dẫn sử dụng theo vai trò" })).toBeVisible();
   await expect(page.getByRole("tab", { name: "Company Admin / HR" })).toBeVisible();
   await page.getByText("Bảo vệ dữ liệu cá nhân").click();
-  await expect(page.getByText(/Email\/SĐT có thể hiển thị dạng che/)).toBeVisible();
+  await expect(page.getByText(/Backend trả `piiMasked=true` khi email\/SĐT bị che/)).toBeVisible();
   await page.getByRole("tab", { name: "Hỗ trợ nhân viên" }).click();
   await expect(page.getByText("Đăng ký Face ID")).toBeVisible();
   await page.screenshot({ path: `${evidenceDir}/03-role-user-guide.png`, fullPage: true });

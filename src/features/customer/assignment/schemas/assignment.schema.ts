@@ -1,11 +1,12 @@
 import { z } from "zod";
+import dayjs, { type Dayjs } from "dayjs";
 
 export const assignmentSchema = z.object({
   employeeId: z.string().min(1, "Vui lòng chọn nhân viên"),
   shiftId: z.string().optional().nullable(),
   role: z.enum(["worker", "supervisor"], "Vui lòng chọn vai trò"),
-  startDate: z.any().refine((val) => val != null, "Vui lòng chọn ngày bắt đầu"),
-  endDate: z.any().optional().nullable(),
+  startDate: z.custom<Dayjs>((value) => dayjs.isDayjs(value), "Vui lòng chọn ngày bắt đầu"),
+  endDate: z.custom<Dayjs>((value) => dayjs.isDayjs(value)).optional().nullable(),
   daysOfWeek: z
     .array(
       z.enum([

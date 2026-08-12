@@ -25,7 +25,7 @@ export interface ScheduledCheckResponse {
 
 export interface ScheduledCheckViolationSummary {
   id: string;
-  violationType: 'no_response' | 'location_fail' | 'face_fail' | 'liveness_fail';
+  violationType: 'no_response' | 'location_fail' | 'face_fail' | 'liveness_fail' | 'face_verify_timeout';
   resolved: boolean;
   resolution: 'confirmed' | 'dismissed' | null;
   description: string | null;
