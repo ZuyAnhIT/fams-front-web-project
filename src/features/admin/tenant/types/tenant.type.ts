@@ -78,7 +78,8 @@ export interface IpWhitelistResponse {
   tenantId: string;
   ipAddress: string;
   label?: string | null;
-  scope: string;
+  /** Role bị entry này giới hạn. Rỗng = áp dụng cho mọi role. */
+  applicableRoleNames: string[];
   isActive: boolean;
   createdAt: string;
 }
@@ -122,11 +123,11 @@ export interface UpdateTenantSettingsPayload {
 export interface CreateIpWhitelistPayload {
   ipAddress: string;
   label?: string;
-  scope?: string;
+  applicableRoleNames?: string[];
 }
 
 export interface UpdateIpWhitelistPayload {
   label?: string;
-  scope?: string;
+  applicableRoleNames?: string[];
   isActive?: boolean;
 }
