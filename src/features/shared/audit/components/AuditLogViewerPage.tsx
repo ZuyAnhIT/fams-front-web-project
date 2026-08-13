@@ -10,6 +10,9 @@ import DataTable from '@/components/tables/DataTable';
 import { BaseButton, BaseSelect } from '@/components/ui';
 import { useAuthStore } from '@/stores/auth.store';
 import { useTenants } from '@/features/admin/tenant/hooks/use-tenant';
+import { useSearchUsers } from '@/hooks/use-user';
+import { useEmployees } from '@/features/customer/employee/hooks/use-employee';
+import { useDebounce } from '@/hooks/useDebounce';
 import { useAuditLogDetail, useAuditLogs } from '../hooks/use-audit-logs';
 import type { AuditLogEntry, AuditLogListParams } from '../types/audit-log.type';
 import JsonDiffViewer from './JsonDiffViewer';
@@ -44,6 +47,26 @@ export default function AuditLogViewerPage({ platformMode }: { platformMode: boo
   const [draft, setDraft] = useState<AuditLogListParams>({ tenantId: initialTenantId, page: 0, size: 20 });
   const [params, setParams] = useState<AuditLogListParams>({ tenantId: initialTenantId, page: 0, size: 20 });
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [actorLabel, setActorLabel] = useState<string | null>(null);
+
+  // Actor filter is a name/email search-to-select, not a raw UUID field — nobody remembers a
+  // UUID to type it correctly. Platform mode searches the platform-wide user directory (only
+  // Platform Admin can call GET /users); company mode searches this tenant's own employees
+  // (Employee.userId is the same ID audit entries are keyed by).
+  const [actorSearch, setActorSearch] = useState('');
+  const debouncedActorSearch = useDebounce(actorSearch, 300);
+  const { data: platformUserResults, isFetching: isSearchingPlatformUsers } = useSearchUsers(
+    { search: debouncedActorSearch, size: 8, sortBy: 'displayName', sortDir: 'asc' },
+    platformMode,
+  );
+  const { data: employeeResults, isFetching: isSearchingEmployees } = useEmployees(
+    { search: debouncedActorSearch, size: 8, sortBy: 'fullName', sortDir: 'asc' },
+    { enabled: !platformMode && debouncedActorSearch.length >= 2 },
+  );
+  const actorOptions = platformMode
+    ? (platformUserResults?.content || []).map((u) => ({ value: u.id, label: `${u.displayName || 'Chưa đặt tên'} — ${u.email || 'không có email'}` }))
+    : (employeeResults?.content || []).map((e) => ({ value: e.userId, label: `${e.fullName} — ${e.email || 'không có email'}` }));
+  const isSearchingActor = platformMode ? isSearchingPlatformUsers : isSearchingEmployees;
   // Auth state hydrates client-side. Overlay the current tenant at request time so
   // a tenant admin can never issue an unscoped query during that hydration window.
   const scopedParams = platformMode ? params : { ...params, tenantId: currentTenantId };
@@ -57,6 +80,8 @@ export default function AuditLogViewerPage({ platformMode }: { platformMode: boo
     const clean = { tenantId: initialTenantId, page: 0, size: params.size || 20 };
     setDraft(clean);
     setParams(clean);
+    setActorLabel(null);
+    setActorSearch('');
   };
   const trace = (requestId: string, tenantId?: string) => {
     const traced = { tenantId: platformMode ? tenantId : currentTenantId, requestId, page: 0, size: 200 };
@@ -93,7 +118,23 @@ export default function AuditLogViewerPage({ platformMode }: { platformMode: boo
         <div className="flex items-center gap-2 font-semibold text-slate-800"><Filter className="h-4 w-4 text-blue-600" />Bộ lọc điều tra</div>
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           {platformMode && <BaseSelect allowClear showSearch optionFilterProp="label" placeholder="Tất cả công ty" value={draft.tenantId} onChange={(tenantId) => setDraft((current) => ({ ...current, tenantId }))} options={(tenantsQuery.data?.content || []).map((tenant) => ({ value: tenant.id, label: tenant.name }))} />}
-          <Input placeholder="Actor UUID" value={draft.actorId} onChange={(event) => setDraft((current) => ({ ...current, actorId: event.target.value || undefined }))} />
+          <BaseSelect
+            allowClear
+            showSearch
+            filterOption={false}
+            value={draft.actorId}
+            onSearch={setActorSearch}
+            onChange={(value, option) => {
+              setDraft((current) => ({ ...current, actorId: value || undefined }));
+              setActorLabel(value ? (Array.isArray(option) ? option[0]?.label : option?.label) as string : null);
+            }}
+            loading={isSearchingActor}
+            placeholder="Tìm người thao tác theo tên hoặc email"
+            notFoundContent={debouncedActorSearch.length < 2 ? 'Nhập ít nhất 2 ký tự để tìm' : 'Không tìm thấy'}
+            options={draft.actorId && actorLabel && !actorOptions.some((o) => o.value === draft.actorId)
+              ? [{ value: draft.actorId, label: actorLabel }, ...actorOptions]
+              : actorOptions}
+          />
           <Input placeholder="Loại đối tượng, ví dụ Employee" value={draft.entityType} onChange={(event) => setDraft((current) => ({ ...current, entityType: event.target.value || undefined }))} />
           <Input placeholder="Entity ID" value={draft.entityId} onChange={(event) => setDraft((current) => ({ ...current, entityId: event.target.value || undefined }))} />
           <BaseSelect allowClear placeholder="Hành động" value={draft.action} onChange={(action) => setDraft((current) => ({ ...current, action }))} options={['CREATE', 'UPDATE', 'DELETE', 'SUSPEND', 'REACTIVATE', 'CANCEL', 'LOGIN', 'LOGOUT'].map((value) => ({ value, label: value }))} />

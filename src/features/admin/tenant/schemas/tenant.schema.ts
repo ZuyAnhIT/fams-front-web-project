@@ -66,7 +66,8 @@ export type UpdateTenantSettingsFormData = z.infer<typeof updateTenantSettingsSc
 export const createIpWhitelistSchema = z.object({
   ipAddress: z.string().min(1, "Vui lòng nhập địa chỉ IP/CIDR"),
   label: z.string().max(100, "Nhãn tối đa 100 ký tự").optional().or(z.literal("")),
-  scope: z.enum(["all", "web_admin", "api"]),
+  /** Rỗng = áp dụng cho mọi role trong tenant. */
+  applicableRoleNames: z.array(z.string()).optional(),
 });
 
 export type CreateIpWhitelistFormData = z.infer<typeof createIpWhitelistSchema>;

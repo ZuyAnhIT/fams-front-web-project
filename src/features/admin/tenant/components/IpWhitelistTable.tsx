@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Alert, App, Modal, Popconfirm, Switch } from "antd";
+import { Alert, App, Modal, Popconfirm, Switch, Tag } from "antd";
 import { format } from "date-fns";
 import { Globe, Plus, Trash2 } from "lucide-react";
 import DataTable from "@/components/tables/DataTable";
@@ -11,6 +11,7 @@ import BaseButton from "@/components/ui/BaseButton";
 import BaseSelect from "@/components/ui/BaseSelect";
 import FormInput from "@/components/forms/FormInput";
 import ContentCard from "@/components/shared/layout/ContentCard";
+import { useRolesQuery } from "@/features/admin/role-permission/hooks/use-role-permission";
 import {
   useAddIpWhitelist,
   useDeleteIpWhitelist,
@@ -26,12 +27,6 @@ function errorMessage(error: unknown, fallback: string) {
   }).response;
   return response?.data?.userMessage || response?.data?.message || fallback;
 }
-
-const scopeLabels: Record<string, string> = {
-  all: "Toàn hệ thống",
-  web_admin: "Web quản trị",
-  api: "API",
-};
 
 export default function IpWhitelistTable({
   tenantId,
@@ -50,6 +45,12 @@ export default function IpWhitelistTable({
   const { mutateAsync: addIp } = useAddIpWhitelist();
   const { mutateAsync: updateIp, isPending: isUpdating } = useUpdateIpWhitelist();
   const { mutateAsync: deleteIp, isPending: isDeleting } = useDeleteIpWhitelist();
+  // System roles + this tenant's own custom roles — the full set an entry can be scoped to.
+  const { data: rolesData } = useRolesQuery({ tenantId, isActive: true, size: 100 });
+  const roleOptions = (rolesData?.data?.content || []).map((role) => ({
+    value: role.name,
+    label: role.name,
+  }));
 
   const {
     control,
@@ -58,14 +59,14 @@ export default function IpWhitelistTable({
     formState: { errors, isSubmitting },
   } = useForm<CreateIpWhitelistFormData>({
     resolver: zodResolver(createIpWhitelistSchema),
-    defaultValues: { ipAddress: "", label: "", scope: "all" },
+    defaultValues: { ipAddress: "", label: "", applicableRoleNames: [] },
   });
 
   const handleAdd = async (data: CreateIpWhitelistFormData) => {
     try {
       await addIp({ payload: data, id: tenantId });
       message.success("Đã thêm mạng được phép truy cập");
-      reset({ ipAddress: "", label: "", scope: "all" });
+      reset({ ipAddress: "", label: "", applicableRoleNames: [] });
       setIsModalOpen(false);
     } catch (submitError: unknown) {
       message.error(errorMessage(submitError, "Không thể thêm địa chỉ IP."));
@@ -105,10 +106,19 @@ export default function IpWhitelistTable({
       render: (text: string) => text || "—",
     },
     {
-      title: "Phạm vi",
-      dataIndex: "scope",
-      key: "scope",
-      render: (scope: string) => scopeLabels[scope] || scope,
+      title: "Áp dụng cho role",
+      dataIndex: "applicableRoleNames",
+      key: "applicableRoleNames",
+      render: (roleNames: string[]) =>
+        !roleNames || roleNames.length === 0 ? (
+          <Tag>Tất cả role</Tag>
+        ) : (
+          <div className="flex flex-wrap gap-1">
+            {roleNames.map((name) => (
+              <Tag key={name} color="blue">{name}</Tag>
+            ))}
+          </div>
+        ),
     },
     {
       title: "Đang áp dụng",
@@ -234,31 +244,35 @@ export default function IpWhitelistTable({
               error={errors.label}
             />
             <div>
-              <label htmlFor="ip-scope" className="mb-2 block text-sm font-medium text-slate-700">
-                Phạm vi áp dụng
+              <label htmlFor="ip-roles" className="mb-2 block text-sm font-medium text-slate-700">
+                Áp dụng cho role
               </label>
               <Controller
-                name="scope"
+                name="applicableRoleNames"
                 control={control}
                 render={({ field }) => (
                   <BaseSelect
                     {...field}
-                    id="ip-scope"
-                    options={[
-                      { value: "all", label: "Toàn hệ thống" },
-                      { value: "web_admin", label: "Web quản trị" },
-                      { value: "api", label: "API" },
-                    ]}
+                    id="ip-roles"
+                    mode="multiple"
+                    allowClear
+                    placeholder="Để trống = áp dụng cho mọi role"
+                    options={roleOptions}
                   />
                 )}
               />
+              <p className="mt-1 text-xs text-slate-500">
+                Để trống nếu muốn giới hạn IP cho TẤT CẢ role. Chọn cụ thể (VD: Company Admin, HR)
+                nếu chỉ muốn giới hạn nhóm quản trị/văn phòng — nhân viên hiện trường (không được
+                chọn) vẫn check-in được từ bất kỳ đâu.
+              </p>
             </div>
 
             <Alert
               type="warning"
               showIcon
               title="Tránh tự khóa truy cập"
-              description="Entry active đầu tiên phải bao phủ IP hiện tại của bạn. Backend sẽ từ chối thay đổi không an toàn."
+              description="Nếu entry này áp dụng cho role của chính bạn, entry active đầu tiên phải bao phủ IP hiện tại của bạn. Backend sẽ từ chối thay đổi không an toàn."
             />
 
             <div className="flex justify-end gap-3 border-t border-slate-100 pt-4">
