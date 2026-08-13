@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Alert, App, Checkbox, Input, Modal, Radio } from "antd";
+import { Alert, App, Checkbox, Input, Modal, QRCode, Radio } from "antd";
 import { Copy, Download, KeyRound, ShieldCheck, ShieldOff } from "lucide-react";
 import BaseButton from "@/components/ui/BaseButton";
 import {
@@ -24,6 +24,18 @@ const totpSchema = z.object({
 type TotpFormData = z.infer<typeof totpSchema>;
 type DisableMethod = "password" | "code" | "backupCode";
 
+function getRemainingSeconds(expiresAt: string): number | null {
+  const timestamp = Date.parse(expiresAt);
+  if (Number.isNaN(timestamp)) return null;
+  return Math.max(0, Math.ceil((timestamp - Date.now()) / 1000));
+}
+
+function formatRemainingTime(seconds: number): string {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
+}
+
 function getErrorMessage(error: unknown, fallback: string) {
   const response = (error as { response?: { data?: { userMessage?: string; message?: string } } }).response;
   return response?.data?.userMessage || response?.data?.message || fallback;
@@ -37,6 +49,7 @@ export default function TotpSettingForm() {
   const [disableOpen, setDisableOpen] = useState(false);
   const [disableMethod, setDisableMethod] = useState<DisableMethod>("password");
   const [disableCredential, setDisableCredential] = useState("");
+  const [expiresInSeconds, setExpiresInSeconds] = useState<number | null>(null);
 
   const { mutateAsync: setupTotp, isPending: isSettingUp } = useSetupTotp();
   const { mutateAsync: verifyTotp, isPending: isVerifying } = useVerifyTotp();
@@ -51,11 +64,23 @@ export default function TotpSettingForm() {
     defaultValues: { code: "" },
   });
 
+  useEffect(() => {
+    if (!setupData) return;
+
+    const intervalId = window.setInterval(() => {
+      setExpiresInSeconds(getRemainingSeconds(setupData.expiresAt));
+    }, 1000);
+    return () => window.clearInterval(intervalId);
+  }, [setupData]);
+
   const handleSetup = async () => {
     try {
-      setSetupData(await setupTotp());
+      const result = await setupTotp();
+      setSetupData(result);
+      setExpiresInSeconds(getRemainingSeconds(result.expiresAt));
       setBackupCodes([]);
       setBackupConfirmed(false);
+      reset();
     } catch (error: unknown) {
       const status = (error as { response?: { status?: number } }).response?.status;
       message[status === 409 ? "warning" : "error"](
@@ -68,10 +93,15 @@ export default function TotpSettingForm() {
 
   const handleVerify = async (data: TotpFormData) => {
     if (!setupData) return;
+    if (expiresInSeconds === 0) {
+      message.warning("Phiên thiết lập đã hết hạn. Vui lòng tạo mã QR mới.");
+      return;
+    }
     try {
       const result = await verifyTotp({ setupToken: setupData.setupToken, code: data.code });
       setBackupCodes(result.backupCodes);
       setSetupData(null);
+      setExpiresInSeconds(null);
       reset();
       message.success("Đã bật xác thực hai lớp.");
     } catch (error: unknown) {
@@ -160,14 +190,25 @@ export default function TotpSettingForm() {
       {setupData && (
         <section className="rounded-2xl border border-blue-200 bg-blue-50/40 p-5" aria-label="Thiết lập ứng dụng Authenticator">
           <h3 className="font-semibold text-slate-900">1. Quét QR hoặc nhập khóa thủ công</h3>
-          <p className="mt-1 text-sm text-slate-600">Phiên thiết lập có hiệu lực 10 phút.</p>
+          <p className="mt-1 text-sm text-slate-600" aria-live="polite">
+            {expiresInSeconds === null
+              ? "Phiên thiết lập có hiệu lực trong thời gian giới hạn."
+              : expiresInSeconds > 0
+                ? `Mã QR hết hạn sau ${formatRemainingTime(expiresInSeconds)}.`
+                : "Phiên thiết lập đã hết hạn. Hãy tạo mã QR mới."}
+          </p>
           <div className="mt-4 grid gap-5 md:grid-cols-[240px_1fr]">
-            <iframe
-              title="QR thiết lập TOTP"
-              src={setupData.qrCodeUrl}
-              className="h-60 w-full rounded-xl border border-slate-200 bg-white"
-              sandbox="allow-same-origin"
-            />
+            <div className="flex min-h-60 items-center justify-center rounded-xl border border-slate-200 bg-white p-2">
+              <QRCode
+                aria-label="Mã QR thiết lập TOTP"
+                value={setupData.otpauthUri}
+                type="svg"
+                size={220}
+                errorLevel="M"
+                status={expiresInSeconds === 0 ? "expired" : "active"}
+                onRefresh={handleSetup}
+              />
+            </div>
             <div className="space-y-4">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Khóa nhập thủ công</p>
@@ -185,7 +226,12 @@ export default function TotpSettingForm() {
                   )}
                 />
                 {errors.code && <p className="text-xs text-red-600">{errors.code.message}</p>}
-                <BaseButton htmlType="submit" type="primary" loading={isVerifying}>
+                <BaseButton
+                  htmlType="submit"
+                  type="primary"
+                  loading={isVerifying}
+                  disabled={expiresInSeconds === 0}
+                >
                   Xác nhận và bật
                 </BaseButton>
               </form>

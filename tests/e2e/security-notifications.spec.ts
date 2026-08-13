@@ -78,12 +78,14 @@ test("bật TOTP hiển thị backup codes một lần và tắt bắt buộc x�
   await seedUser(page);
   let verifyBody: Record<string, unknown> = {};
   let disableBody: Record<string, unknown> = {};
+  const setupExpiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
   await page.route("**/api/v1/auth/totp/setup", (route) => route.fulfill({
     json: api({
       setupToken: "55555555-5555-4555-8555-555555555555",
-      qrCodeUrl: "http://localhost:8080/api/v1/auth/totp/qr?token=setup",
+      otpauthUri: "otpauth://totp/FAMS:security%40example.com?secret=JBSWY3DPEHPK3PXP&issuer=FAMS&algorithm=SHA1&digits=6&period=30",
       manualEntryKey: "JBSWY3DPEHPK3PXP",
+      expiresAt: setupExpiresAt,
     }),
   }));
   await page.route("**/api/v1/auth/totp/verify", (route) => {
@@ -97,6 +99,10 @@ test("bật TOTP hiển thị backup codes một lần và tắt bắt buộc x�
 
   await page.goto("/customer/settings/totp");
   await page.getByRole("button", { name: "Bật xác thực hai lớp" }).click();
+  const qrCode = page.getByRole("img", { name: "Mã QR thiết lập TOTP" });
+  await expect(qrCode).toBeVisible();
+  await expect(qrCode).toHaveJSProperty("tagName", "svg");
+  await expect(page.locator("iframe")).toHaveCount(0);
   await expect(page.getByText("JBSWY3DPEHPK3PXP")).toBeVisible();
   const otpInputs = page.locator(".ant-otp input");
   for (const [index, digit] of [..."123456"].entries()) await otpInputs.nth(index).fill(digit);

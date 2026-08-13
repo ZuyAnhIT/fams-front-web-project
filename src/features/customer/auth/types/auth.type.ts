@@ -165,8 +165,11 @@ export interface AuthSession {
 /** Phản hồi từ API khởi tạo TOTP */
 export interface TotpSetupResponse {
   setupToken: string;
-  qrCodeUrl: string;
+  otpauthUri: string;
   manualEntryKey: string;
+  expiresAt: string;
+  /** @deprecated Client mới phải tự render QR từ otpauthUri. */
+  qrCodeUrl?: string;
 }
 
 /** Dữ liệu gửi lên khi xác nhận TOTP để bật 2FA */
