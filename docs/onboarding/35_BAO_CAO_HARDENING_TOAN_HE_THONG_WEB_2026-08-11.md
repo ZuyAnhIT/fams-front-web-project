@@ -60,6 +60,13 @@ Kết quả kiểm chứng cuối:
 - Ảnh động chuyển sang `next/image` với `unoptimized` để không khóa domain Backend/MinIO; placeholder Face ID không tồn tại được thay bằng icon vector nội bộ.
 - Regression cuối: 86 pass, 3 live-integration skip ở chế độ CI; production build 48/48 route thành công.
 
+### TOTP QR — cập nhật 12/08/2026
+
+- Bỏ iframe `qrCodeUrl` vì Backend giữ đúng `X-Frame-Options: DENY`; Web tự render QR SVG từ contract `otpauthUri`.
+- Hiển thị đếm ngược theo `expiresAt`, khóa xác nhận khi phiên hết hạn và cho phép tạo QR mới.
+- Giữ khóa Base32 để nhập thủ công; `qrCodeUrl` chỉ còn trong type dưới dạng field deprecated để tương thích ngược.
+- Regression kiểm tra QR SVG hiện hữu và xác nhận màn hình không còn iframe.
+
 ## 3. Phạm vi chưa tự quyết định
 
 Các mục sau cần quyết định kiến trúc hoặc Backend contract trước khi triển khai; không nên vá riêng ở Web:
