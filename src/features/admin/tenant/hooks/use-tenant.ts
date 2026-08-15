@@ -7,6 +7,7 @@ import type {
   CreateIpWhitelistPayload,
   UpdateIpWhitelistPayload,
   TenantListParams,
+  TransferOwnerPayload,
 } from "../types/tenant.type";
 
 export const useTenants = (params: TenantListParams, enabled: boolean = true) => {
@@ -49,6 +50,26 @@ export const useUpdateTenant = () => {
       queryClient.invalidateQueries({ queryKey: ["tenants"] });
       queryClient.invalidateQueries({ queryKey: ["tenant-detail"] });
     },
+  });
+};
+
+export const useTransferOwner = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ payload, id }: { payload: TransferOwnerPayload; id?: string }) =>
+      tenantService.transferOwner(payload, id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tenants"] });
+      queryClient.invalidateQueries({ queryKey: ["tenant-detail"] });
+    },
+  });
+};
+
+export const useTenantMembers = (id?: string, enabled: boolean = true) => {
+  return useQuery({
+    queryKey: ["tenant-members", id],
+    queryFn: () => tenantService.getTenantMembers(id),
+    enabled: enabled && Boolean(id),
   });
 };
 

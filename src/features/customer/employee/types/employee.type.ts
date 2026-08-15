@@ -19,6 +19,10 @@ export interface EmployeeResponse {
   /** Metadata authoritative from Backend; never infer masking from the string value. */
   piiMasked: boolean;
   faceId?: FaceIdStatus;
+  /** Role hệ thống (TENANT_ADMIN/HR_MANAGER/SITE_SUPERVISOR/EMPLOYEE hoặc role tùy chỉnh) mà
+   *  tài khoản của nhân viên này đang giữ trong tenant — rỗng nếu chưa liên kết tài khoản hoặc
+   *  chưa được gán role nào. */
+  roleNames?: string[];
 }
 
 export interface FaceIdStatus {

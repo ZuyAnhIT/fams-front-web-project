@@ -35,6 +35,7 @@ export const CUSTOMER_ROUTES = {
   REPORTS: "/customer/reports",
   SETTINGS: "/customer/settings",
   TENANT_SETTINGS: "/customer/settings/tenant",
+  TENANT_MEMBERS: "/customer/settings/members",
   ROLES: "/customer/settings/roles",
   MY_PERMISSIONS: "/customer/settings/permissions",
   WORKSPACES: "/customer/workspaces",

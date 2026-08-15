@@ -110,6 +110,28 @@ export interface UpdateTenantPayload {
   currencyCode?: string;
 }
 
+export interface TransferOwnerPayload {
+  newOwnerUserId?: string;
+  newOwnerEmail?: string;
+}
+
+/** Một người giữ ít nhất 1 role trong tenant — chủ sở hữu, admin, HR, giám sát công trình,
+ *  hay nhân viên thường — kể cả khi chưa có hồ sơ Employee (VD chủ mới nhận chuyển giao). */
+export interface TenantMember {
+  userId: string;
+  displayName?: string | null;
+  contact?: string | null;
+  isOwner: boolean;
+  roleNames: string[];
+  /** Cùng thứ tự với roleNames — dùng để thu hồi từng role riêng lẻ. */
+  userRoleIds: string[];
+  hasEmployeeProfile: boolean;
+  employeeId?: string | null;
+  position?: string | null;
+  department?: string | null;
+  memberSince?: string | null;
+}
+
 export interface UpdateTenantSettingsPayload {
   dateFormat?: string;
   timeFormat?: string;

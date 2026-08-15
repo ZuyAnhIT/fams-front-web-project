@@ -3,19 +3,24 @@
 import React, { useState } from "react";
 import { Alert, Space, Tag, message, Tooltip, App } from "antd";
 import { useAuthStore } from "@/stores/auth.store";
-import { EditOutlined, DeleteOutlined, EyeOutlined, PauseCircleOutlined, PlayCircleOutlined } from "@ant-design/icons";
+import { EditOutlined, DeleteOutlined, EyeOutlined, PauseCircleOutlined, PlayCircleOutlined, CopyOutlined } from "@ant-design/icons";
 import { useRolesQuery, useDeleteRoleMutation, useUpdateRoleMutation } from "../hooks/use-role-permission";
 import { RoleFormModal } from "./RoleFormModal";
 import { AssignPlatformRoleModal } from "./AssignPlatformRoleModal";
+import { CloneRoleModal } from "./CloneRoleModal";
+import { BulkAssignRoleModal } from "./BulkAssignRoleModal";
+import { RoleMembersModal } from "./RoleMembersModal";
 import { RoleResponse, RoleDetailResponse } from "../types";
 import { format } from "date-fns";
 import { rolePermissionService } from "../services/role-permission.service";
+import { useTenants } from "@/features/admin/tenant/hooks/use-tenant";
+import { matchesVietnameseSearch } from "@/utils/vietnamese-search.util";
 import ListHeader from "@/components/shared/layout/ListHeader";
 import ContentCard from "@/components/shared/layout/ContentCard";
 import BaseButton from "@/components/ui/BaseButton";
 import BaseSelect from "@/components/ui/BaseSelect";
 import DataTable from "@/components/tables/DataTable";
-import { Plus } from "lucide-react";
+import { Plus, Users, Building2 } from "lucide-react";
 import { useDebounce } from "@/hooks/useDebounce";
 import { getApiErrorMessage } from "@/utils/api-error.util";
 import type { ColumnsType } from "antd/es/table";
@@ -45,11 +50,25 @@ export const RoleManagementPage: React.FC<RoleManagementPageProps> = ({ scope })
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPlatformAssignOpen, setIsPlatformAssignOpen] = useState(false);
+  const [isBulkAssignOpen, setIsBulkAssignOpen] = useState(false);
+  const [cloneSourceRole, setCloneSourceRole] = useState<RoleResponse | undefined>(undefined);
+  const [membersRole, setMembersRole] = useState<RoleResponse | undefined>(undefined);
   const [selectedRole, setSelectedRole] = useState<RoleDetailResponse | undefined>(undefined);
   const [isFetchingRole, setIsFetchingRole] = useState(false);
 
+  // Platform Admin support view: inspect one company's custom roles by picking it explicitly —
+  // backend already scopes this correctly (GET /roles?tenantId=X, Platform Admin bypasses the
+  // membership check), this just exposes it in the UI. Without a company picked, the platform
+  // page only ever shows global roles (system + platform-scoped custom), same as before.
+  const [supportTenantId, setSupportTenantId] = useState<string | undefined>(undefined);
+  const isPlatformAdminCaller = user?.role === "PLATFORM_ADMIN";
+  const tenantsQuery = useTenants(
+    { page: 0, size: 100, sortBy: "name", sortDir: "asc" },
+    scope === "platform" && isPlatformAdminCaller,
+  );
+
   const { data: rolesResponse, isLoading, isFetching } = useRolesQuery({
-    tenantId: scope === "tenant" ? (tenantId || undefined) : undefined,
+    tenantId: scope === "tenant" ? (tenantId || undefined) : supportTenantId,
     search: debouncedSearch,
     isSystem: isSystemFilter,
     isActive: isActiveFilter,
@@ -169,8 +188,14 @@ export const RoleManagementPage: React.FC<RoleManagementPageProps> = ({ scope })
       title: "Người đang giữ",
       dataIndex: "assignmentCount",
       key: "assignmentCount",
-      render: (count: number = 0) => (
-        <Tag color={count > 0 ? "gold" : "default"}>{count} người</Tag>
+      render: (count: number = 0, record: RoleResponse) => (
+        <Tag
+          color={count > 0 ? "gold" : "default"}
+          className={count > 0 ? "cursor-pointer" : undefined}
+          onClick={() => count > 0 && setMembersRole(record)}
+        >
+          {count} người{count > 0 ? " · Xem" : ""}
+        </Tag>
       ),
     },
     {
@@ -185,8 +210,20 @@ export const RoleManagementPage: React.FC<RoleManagementPageProps> = ({ scope })
       key: "action",
       render: (_, record) => {
         const isSystemRole = record.isSystem;
+        const canClone = scope === "platform" ? user?.role === "PLATFORM_ADMIN" : hasPermission("roles:create");
         return (
           <Space size="middle">
+            {canClone && (
+              <Tooltip title="Sao chép role — tạo role mới với đúng permission này, sửa độc lập">
+                <BaseButton
+                  type="text"
+                  aria-label={`Sao chép ${record.name}`}
+                  icon={<CopyOutlined />}
+                  onClick={() => setCloneSourceRole(record)}
+                  className="text-slate-600 hover:text-slate-800"
+                />
+              </Tooltip>
+            )}
             {isSystemRole ? (
               <Tooltip title="Xem chi tiết">
                 <BaseButton
@@ -270,6 +307,11 @@ export const RoleManagementPage: React.FC<RoleManagementPageProps> = ({ scope })
           {scope === "platform" && (
             <BaseButton onClick={() => setIsPlatformAssignOpen(true)}>Gán role nền tảng</BaseButton>
           )}
+          {scope === "tenant" && tenantId && hasPermission("roles:update") && (
+            <BaseButton icon={<Users className="h-4.5 w-4.5" />} onClick={() => setIsBulkAssignOpen(true)}>
+              Gán role hàng loạt
+            </BaseButton>
+          )}
           {(scope === "platform" ? user?.role === "PLATFORM_ADMIN" : hasPermission("roles:create")) && (
             <BaseButton
               type="primary"
@@ -292,6 +334,45 @@ export const RoleManagementPage: React.FC<RoleManagementPageProps> = ({ scope })
             : "Role hệ thống chỉ được xem. Vô hiệu hóa role không thu hồi quyền của người đang giữ, nhưng ngăn các lượt gán mới."
         }
       />
+
+      {scope === "platform" && isPlatformAdminCaller && (
+        <ContentCard className="space-y-3 p-5">
+          <div className="flex items-center gap-2 font-semibold text-slate-800">
+            <Building2 className="h-4 w-4 text-blue-600" />
+            Xem role của một công ty (hỗ trợ khách hàng)
+          </div>
+          <p className="text-sm text-slate-500">
+            Mặc định danh sách bên dưới chỉ hiện role dùng chung toàn hệ thống. Chọn 1 công ty để
+            xem thêm role tùy chỉnh riêng của công ty đó — dùng khi hỗ trợ khách hàng, không ảnh
+            hưởng công ty khác.
+          </p>
+          <BaseSelect
+            allowClear
+            showSearch
+            filterOption={(input, option) =>
+              matchesVietnameseSearch(String(option?.label ?? ""), input)
+            }
+            placeholder="Tìm và chọn công ty... (gõ có dấu hoặc không dấu đều được)"
+            className="max-w-md"
+            value={supportTenantId}
+            onChange={(value) => {
+              setSupportTenantId(value);
+              setPage(0);
+            }}
+            loading={tenantsQuery.isLoading}
+            options={(tenantsQuery.data?.content || []).map((t) => ({ value: t.id, label: t.name }))}
+          />
+          {supportTenantId && (
+            <Alert
+              showIcon
+              type="warning"
+              title={`Đang xem thêm role riêng của: ${
+                tenantsQuery.data?.content.find((t) => t.id === supportTenantId)?.name || supportTenantId
+              }`}
+            />
+          )}
+        </ContentCard>
+      )}
 
       <ContentCard noPadding>
         <ListHeader
@@ -361,8 +442,8 @@ export const RoleManagementPage: React.FC<RoleManagementPageProps> = ({ scope })
       <RoleFormModal
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        tenantId={scope === "tenant" ? (tenantId || undefined) : undefined}
-        scope={scope}
+        tenantId={scope === "tenant" ? (tenantId || undefined) : supportTenantId}
+        scope={scope === "platform" && supportTenantId ? "tenant" : scope}
         initialData={selectedRole}
       />
       {scope === "platform" && (
@@ -371,6 +452,26 @@ export const RoleManagementPage: React.FC<RoleManagementPageProps> = ({ scope })
           onClose={() => setIsPlatformAssignOpen(false)}
         />
       )}
+      <CloneRoleModal
+        open={Boolean(cloneSourceRole)}
+        onClose={() => setCloneSourceRole(undefined)}
+        sourceRole={cloneSourceRole}
+        tenantId={scope === "tenant" ? (tenantId || undefined) : supportTenantId}
+      />
+      {scope === "tenant" && tenantId && (
+        <BulkAssignRoleModal
+          open={isBulkAssignOpen}
+          onClose={() => setIsBulkAssignOpen(false)}
+          tenantId={tenantId}
+        />
+      )}
+      <RoleMembersModal
+        open={Boolean(membersRole)}
+        onClose={() => setMembersRole(undefined)}
+        role={membersRole}
+        tenantId={scope === "tenant" ? (tenantId || undefined) : supportTenantId}
+        canRevoke={scope === "tenant" ? hasPermission("roles:update") : isPlatformAdminCaller}
+      />
     </div>
   );
 };

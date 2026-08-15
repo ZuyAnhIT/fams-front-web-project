@@ -65,6 +65,42 @@ export interface AssignPlatformRoleRequest {
   roleId: string;
 }
 
+export interface CloneRoleRequest {
+  name: string;
+  description?: string;
+  tenantId?: string;
+}
+
+export interface BulkAssignRoleRequest {
+  tenantId: string;
+  roleId: string;
+  revokeRoleId?: string;
+  userIds: string[];
+  siteIds?: string[];
+}
+
+export interface BulkAssignRoleResult {
+  userId: string;
+  success: boolean;
+  userRoleId?: string;
+  message?: string;
+}
+
+export interface BulkAssignRoleResponse {
+  results: BulkAssignRoleResult[];
+  successCount: number;
+  failureCount: number;
+}
+
+export interface RoleMember {
+  userRoleId: string;
+  userId: string;
+  displayName: string | null;
+  contact: string | null;
+  assignedAt: string;
+  siteIds: string[];
+}
+
 export interface UserRoleResponse {
   id: string;
   userId: string;
