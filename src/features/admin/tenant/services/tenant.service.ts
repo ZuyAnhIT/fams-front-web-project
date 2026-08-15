@@ -11,6 +11,8 @@ import type {
   UpdateIpWhitelistPayload,
   TenantListParams,
   TenantOperationalDetail,
+  TransferOwnerPayload,
+  TenantMember,
 } from "../types/tenant.type";
 import { useAuthStore } from "@/stores/auth.store";
 
@@ -52,6 +54,15 @@ export const tenantService = {
   async updateTenant(payload: UpdateTenantPayload, id?: string): Promise<Tenant> {
     const tenantId = id || getTenantId();
     const response = await apiClient.patch<ApiResponse<Tenant>>(`/tenants/${tenantId}`, payload);
+    return response.data.data;
+  },
+
+  /**
+   * Chuyển quyền chủ sở hữu công ty — chỉ chủ sở hữu hiện tại (hoặc Platform Admin) gọi được.
+   */
+  async transferOwner(payload: TransferOwnerPayload, id?: string): Promise<Tenant> {
+    const tenantId = id || getTenantId();
+    const response = await apiClient.post<ApiResponse<Tenant>>(`/tenants/${tenantId}/transfer-owner`, payload);
     return response.data.data;
   },
 
@@ -110,6 +121,16 @@ export const tenantService = {
     const tenantId = id || getTenantId();
     await apiClient.delete(`/tenants/${tenantId}/ip-whitelists/${entryId}`);
   },
+  /**
+   * Lấy danh sách toàn bộ thành viên công ty (owner, admin, HR, giám sát, nhân viên...) —
+   * rộng hơn danh sách Employee vì bao gồm cả người chưa có hồ sơ HR.
+   */
+  async getTenantMembers(id?: string): Promise<TenantMember[]> {
+    const tenantId = id || getTenantId();
+    const response = await apiClient.get<ApiResponse<TenantMember[]>>(`/tenants/${tenantId}/members`);
+    return response.data.data;
+  },
+
   /**
    * Đình chỉ (Suspend) Tenant
    */

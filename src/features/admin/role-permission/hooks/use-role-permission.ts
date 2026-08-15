@@ -1,6 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { rolePermissionService } from "../services/role-permission.service";
-import { AssignPlatformRoleRequest, AssignRoleRequest, CreateRoleRequest, UpdateRoleRequest } from "../types";
+import {
+  AssignPlatformRoleRequest,
+  AssignRoleRequest,
+  BulkAssignRoleRequest,
+  CloneRoleRequest,
+  CreateRoleRequest,
+  UpdateRoleRequest,
+} from "../types";
 
 export const rolePermissionKeys = {
   all: ["roles"] as const,
@@ -23,6 +30,14 @@ export const useRolesQuery = (params: {
   return useQuery({
     queryKey: rolePermissionKeys.list(JSON.stringify(params)),
     queryFn: () => rolePermissionService.getRoles(params),
+  });
+};
+
+export const useRoleMembersQuery = (roleId: string | undefined, tenantId: string | undefined, enabled: boolean) => {
+  return useQuery({
+    queryKey: [...rolePermissionKeys.all, "members", roleId, tenantId],
+    queryFn: () => rolePermissionService.getRoleMembers(roleId as string, tenantId),
+    enabled: enabled && Boolean(roleId),
   });
 };
 
@@ -54,6 +69,17 @@ export const useUpdateRoleMutation = () => {
   });
 };
 
+export const useCloneRoleMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ sourceRoleId, data }: { sourceRoleId: string; data: CloneRoleRequest }) =>
+      rolePermissionService.cloneRole(sourceRoleId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: rolePermissionKeys.lists() });
+    },
+  });
+};
+
 export const useDeleteRoleMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -74,6 +100,12 @@ export const useAssignPlatformRoleMutation = () => {
   return useMutation({
     mutationFn: (data: AssignPlatformRoleRequest) =>
       rolePermissionService.assignPlatformRole(data),
+  });
+};
+
+export const useBulkAssignRoleMutation = () => {
+  return useMutation({
+    mutationFn: (data: BulkAssignRoleRequest) => rolePermissionService.bulkAssignRole(data),
   });
 };
 

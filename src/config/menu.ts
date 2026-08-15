@@ -148,6 +148,13 @@ export const SIDEBAR_MENU: MenuItem[] = [
     allowedRoles: [SystemRole.TENANT_ADMIN]
   },
   {
+    title: "Thành viên công ty",
+    path: CUSTOMER_ROUTES.TENANT_MEMBERS,
+    icon: "Users",
+    allowedRoles: [SystemRole.TENANT_ADMIN],
+    allowedPermissions: ["roles:read", "roles:update", "employees:list"],
+  },
+  {
     title: "Vai trò & Phân quyền",
     path: CUSTOMER_ROUTES.ROLES,
     icon: "ShieldCheck",

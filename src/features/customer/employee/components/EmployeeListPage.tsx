@@ -180,6 +180,21 @@ export default function EmployeeListPage() {
       render: (text: string) => <span className="font-medium text-slate-600 text-sm">{text || "---"}</span>,
     },
     {
+      title: "Vai trò",
+      dataIndex: "roleNames",
+      key: "roleNames",
+      render: (roleNames: string[] | undefined) =>
+        !roleNames || roleNames.length === 0 ? (
+          <span className="text-xs text-slate-400 italic">Chưa có role</span>
+        ) : (
+          <div className="flex flex-wrap gap-1">
+            {roleNames.map((name) => (
+              <Tag key={name} color="blue">{name}</Tag>
+            ))}
+          </div>
+        ),
+    },
+    {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",

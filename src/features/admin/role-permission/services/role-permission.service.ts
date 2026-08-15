@@ -3,9 +3,13 @@ import { ApiResponse, PageResponse } from "@/types/api";
 import {
   AssignRoleRequest,
   AssignPlatformRoleRequest,
+  BulkAssignRoleRequest,
+  BulkAssignRoleResponse,
+  CloneRoleRequest,
   CreateRoleRequest,
   PermissionGroupResponse,
   RoleDetailResponse,
+  RoleMember,
   RoleResponse,
   UpdateRoleRequest,
   UserRoleResponse,
@@ -37,6 +41,14 @@ export const rolePermissionService = {
     return response.data;
   },
 
+  getRoleMembers: async (id: string, tenantId?: string): Promise<ApiResponse<RoleMember[]>> => {
+    const response = await apiClient.get<ApiResponse<RoleMember[]>>(
+      `/roles/${id}/members`,
+      { params: tenantId ? { tenantId } : undefined }
+    );
+    return response.data;
+  },
+
 
   createRole: async (
     data: CreateRoleRequest
@@ -61,6 +73,17 @@ export const rolePermissionService = {
 
   deleteRole: async (id: string): Promise<ApiResponse<void>> => {
     const response = await apiClient.delete<ApiResponse<void>>(`/roles/${id}`);
+    return response.data;
+  },
+
+  cloneRole: async (
+    sourceRoleId: string,
+    data: CloneRoleRequest
+  ): Promise<ApiResponse<RoleDetailResponse>> => {
+    const response = await apiClient.post<ApiResponse<RoleDetailResponse>>(
+      `/roles/${sourceRoleId}/clone`,
+      data
+    );
     return response.data;
   },
 
@@ -98,6 +121,16 @@ export const rolePermissionService = {
   revokeRole: async (id: string): Promise<ApiResponse<void>> => {
     const response = await apiClient.delete<ApiResponse<void>>(
       `/user-roles/${id}`
+    );
+    return response.data;
+  },
+
+  bulkAssignRole: async (
+    data: BulkAssignRoleRequest
+  ): Promise<ApiResponse<BulkAssignRoleResponse>> => {
+    const response = await apiClient.post<ApiResponse<BulkAssignRoleResponse>>(
+      "/user-roles/bulk-assign",
+      data
     );
     return response.data;
   },
