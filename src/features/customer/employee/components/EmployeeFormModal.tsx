@@ -57,6 +57,7 @@ export default function EmployeeFormModal({ open, onClose, initialData }: Employ
       email: "",
       phone: "",
       employeeCode: "",
+      nationalId: "",
       position: "",
       department: "",
       departmentId: "",
@@ -74,6 +75,7 @@ export default function EmployeeFormModal({ open, onClose, initialData }: Employ
           email: initialData.email || "",
           phone: initialData.phone || "",
           employeeCode: initialData.employeeCode || "",
+          nationalId: initialData.nationalId || "",
           position: initialData.position || "",
           department: initialData.department || "",
           departmentId: initialData.departmentId || "",
@@ -87,6 +89,7 @@ export default function EmployeeFormModal({ open, onClose, initialData }: Employ
           email: "",
           phone: "",
           employeeCode: "",
+          nationalId: "",
           position: "",
           department: "",
           departmentId: "",
@@ -107,6 +110,7 @@ export default function EmployeeFormModal({ open, onClose, initialData }: Employ
         email: optional(data.email),
         phone: optional(data.phone),
         employeeCode: optional(data.employeeCode),
+        nationalId: optional(data.nationalId),
         position: optional(data.position),
         department: optional(data.department),
         departmentId: optional(data.departmentId),
@@ -209,6 +213,15 @@ export default function EmployeeFormModal({ open, onClose, initialData }: Employ
               label="Mã nhân viên (Tùy chọn)"
               placeholder="Ví dụ: NV001"
               error={errors.employeeCode}
+              labelClassName="!text-slate-700 !font-semibold !text-sm"
+            />
+
+            <FormInput
+              control={control}
+              name="nationalId"
+              label="Số CCCD/CMND (Tùy chọn)"
+              placeholder="Ví dụ: 001234567890"
+              error={errors.nationalId}
               labelClassName="!text-slate-700 !font-semibold !text-sm"
             />
 

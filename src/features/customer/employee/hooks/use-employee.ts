@@ -124,6 +124,12 @@ export const useImportEmployees = () => {
   });
 };
 
+export const useExportImportErrors = () => {
+  return useMutation({
+    mutationFn: (file: File) => employeeService.exportImportErrors(file),
+  });
+};
+
 export const useCancelInvitation = () => {
   const queryClient = useQueryClient();
   return useMutation({

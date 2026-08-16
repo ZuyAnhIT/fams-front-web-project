@@ -2,6 +2,7 @@
 
 import { use } from "react";
 import { Tabs, Tag } from "antd";
+import { format } from "date-fns";
 import { User, ShieldCheck, ScanFace, BriefcaseBusiness } from "lucide-react";
 import EmployeeForm from "@/features/customer/employee/components/EmployeeForm";
 import EmployeeRolesTab from "@/features/customer/employee/components/EmployeeRolesTab";
@@ -92,9 +93,14 @@ function EmployeeDetailContent({ params }: { params: Promise<{ id: string }> }) 
         avatarUrl={data.avatarUrl}
         avatarFallback={formatVietnameseName(data.firstName, data.lastName).charAt(0)}
         tags={
-          <Tag color={data.status === "active" ? "success" : data.status === "inactive" ? "warning" : "error"}>
-            {data.status === "active" ? "Hoạt động" : data.status === "inactive" ? "Tạm nghỉ" : "Đã nghỉ"}
-          </Tag>
+          <>
+            <Tag color={data.status === "active" ? "success" : data.status === "inactive" ? "warning" : "error"}>
+              {data.status === "active" ? "Hoạt động" : data.status === "inactive" ? "Tạm nghỉ" : "Đã nghỉ"}
+            </Tag>
+            {data.status === "terminated" && data.terminatedAt && (
+              <Tag>Từ {format(new Date(data.terminatedAt), "dd/MM/yyyy")}</Tag>
+            )}
+          </>
         }
       />
 

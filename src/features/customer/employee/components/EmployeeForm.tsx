@@ -53,6 +53,7 @@ export default function EmployeeForm({ initialData, isEditMode = false }: Employ
       email: "",
       phone: "",
       employeeCode: "",
+      nationalId: "",
       position: "",
       department: "",
       departmentId: "",
@@ -70,6 +71,7 @@ export default function EmployeeForm({ initialData, isEditMode = false }: Employ
         email: piiMasked ? "" : initialData.email || "",
         phone: piiMasked ? "" : initialData.phone || "",
         employeeCode: initialData.employeeCode || "",
+        nationalId: piiMasked ? "" : initialData.nationalId || "",
         position: initialData.position || "",
         department: initialData.department || "",
         departmentId: initialData.departmentId || "",
@@ -152,6 +154,15 @@ export default function EmployeeForm({ initialData, isEditMode = false }: Employ
               placeholder="Ví dụ: 0912345678"
               error={errors.phone}
               helpText={piiMasked && initialData?.phone ? `Giá trị hiện tại: ${initialData.phone}. Để trống nếu không thay đổi.` : undefined}
+            />
+
+            <FormInput
+              control={control}
+              name="nationalId"
+              label="Số CCCD/CMND (Tùy chọn)"
+              placeholder="Ví dụ: 001234567890"
+              error={errors.nationalId}
+              helpText={piiMasked && initialData?.nationalId ? `Giá trị hiện tại: ${initialData.nationalId}. Để trống nếu không thay đổi.` : undefined}
             />
 
           </div>

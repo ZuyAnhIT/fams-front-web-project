@@ -8,6 +8,9 @@ export interface EmployeeResponse {
   fullName: string;
   phone?: string;
   employeeCode?: string;
+  /** National ID (CCCD/CMND). Masked (e.g. "abcdef***") unless caller has employees:pii:read —
+   *  same convention as email/phone, see piiMasked. */
+  nationalId?: string;
   position?: string;
   department?: string;
   departmentId?: string;
@@ -18,6 +21,9 @@ export interface EmployeeResponse {
   hiredDate?: string;
   avatarUrl?: string;
   status: string; // 'active' | 'inactive' | 'terminated'
+  /** When this employee's status last became "terminated" (null if never terminated, or if
+   *  reversed since). */
+  terminatedAt?: string | null;
   createdAt: string;
   updatedAt: string;
   /** Metadata authoritative from Backend; never infer masking from the string value. */
@@ -107,6 +113,7 @@ export interface CreateEmployeePayload {
   lastName: string;
   phone?: string;
   employeeCode?: string;
+  nationalId?: string;
   position?: string;
   department?: string;
   departmentId?: string;

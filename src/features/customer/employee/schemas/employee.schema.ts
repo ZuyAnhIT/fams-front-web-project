@@ -6,6 +6,7 @@ export const employeeSchema = z.object({
   email: z.string().email("Email không hợp lệ").optional().or(z.literal("")),
   phone: z.string().optional().or(z.literal("")),
   employeeCode: z.string().optional().or(z.literal("")),
+  nationalId: z.string().max(50, "Tối đa 50 ký tự").optional().or(z.literal("")),
   position: z.string().optional().or(z.literal("")),
   department: z.string().optional().or(z.literal("")),
   departmentId: z.string().optional().or(z.literal("")),

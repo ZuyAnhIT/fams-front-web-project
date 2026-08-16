@@ -185,6 +185,27 @@ export const employeeService = {
   },
 
   /**
+   * Tải file Excel chỉ chứa các dòng lỗi từ lần import gần nhất (dùng lại đúng file đã import).
+   */
+  async exportImportErrors(file: File): Promise<Blob> {
+    const tenantId = getTenantId();
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await apiClient.post(
+      `/tenants/${tenantId}/employees/import/errors-export`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        responseType: "blob",
+      }
+    );
+    return response.data;
+  },
+
+  /**
    * Hủy lời mời
    */
   async cancelInvitation(invitationId: string, payload?: CancelInvitationPayload): Promise<InvitationResponse> {
