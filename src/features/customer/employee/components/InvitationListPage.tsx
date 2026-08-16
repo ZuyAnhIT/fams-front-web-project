@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Tooltip } from "antd";
 import BaseSelect from "@/components/ui/BaseSelect";
 import DataTable from "@/components/tables/DataTable";
 import BaseButton from "@/components/ui/BaseButton";
@@ -62,7 +63,13 @@ export default function InvitationListPage() {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
-      render: (status: string) => <StatusBadge status={status} variant="tag" configMap={INVITATION_STATUS} />,
+      render: (status: string, record) => {
+        const badge = <StatusBadge status={status} variant="tag" configMap={INVITATION_STATUS} />;
+        if (status === "cancelled" && record.cancelReason) {
+          return <Tooltip title={`Lý do: ${record.cancelReason}`}>{badge}</Tooltip>;
+        }
+        return badge;
+      },
     },
     {
       title: "Ngày gửi",

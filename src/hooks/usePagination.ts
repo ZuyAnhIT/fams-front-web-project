@@ -14,6 +14,8 @@ export interface PaginationState {
   department?: string;
   industry?: string;
   countryCode?: string;
+  workspaceId?: string;
+  faceRegistered?: boolean;
 }
 
 export function usePagination(defaultSize = 20) {
@@ -30,6 +32,11 @@ export function usePagination(defaultSize = 20) {
     return searchParams.get(key) || defaultVal;
   };
 
+  const getBooleanParam = (key: string): boolean | undefined => {
+    const val = searchParams.get(key);
+    return val === null ? undefined : val === "true";
+  };
+
   const state: PaginationState = {
     page: getNumberParam("page", 0), // Default 0 for backend
     size: getNumberParam("size", defaultSize),
@@ -41,6 +48,8 @@ export function usePagination(defaultSize = 20) {
     department: getStringParam("department"),
     industry: getStringParam("industry"),
     countryCode: getStringParam("countryCode"),
+    workspaceId: getStringParam("workspaceId"),
+    faceRegistered: getBooleanParam("faceRegistered"),
   };
 
   const setPagination = useCallback(
