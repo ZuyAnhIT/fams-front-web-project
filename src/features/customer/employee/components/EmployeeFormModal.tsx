@@ -11,6 +11,7 @@ import { useCreateEmployee, useUpdateEmployee } from "../hooks/use-employee";
 import { employeeSchema, type EmployeeFormData } from "../schemas/employee.schema";
 import type { EmployeeDetailResponse } from "../types/employee.type";
 import { useWorkspacesQuery } from "@/features/customer/workspace/hooks/use-workspace";
+import { useRolesQuery } from "@/features/admin/role-permission/hooks/use-role-permission";
 import { useAuthStore } from "@/stores/auth.store";
 import { getApiErrorMessage } from "@/utils/api-error.util";
 import type { CreateEmployeePayload } from "../types/employee.type";
@@ -34,6 +35,11 @@ export default function EmployeeFormModal({ open, onClose, initialData }: Employ
     sortDir: "asc",
     size: 100,
   });
+  const { data: rolesData, isLoading: isLoadingRoles } = useRolesQuery({
+    tenantId,
+    isActive: true,
+    size: 100,
+  });
 
   const isEditMode = !!initialData;
   const isPending = isCreating || isUpdating;
@@ -54,6 +60,7 @@ export default function EmployeeFormModal({ open, onClose, initialData }: Employ
       position: "",
       department: "",
       departmentId: "",
+      plannedRoleId: "",
       hiredDate: "",
     },
   });
@@ -70,6 +77,7 @@ export default function EmployeeFormModal({ open, onClose, initialData }: Employ
           position: initialData.position || "",
           department: initialData.department || "",
           departmentId: initialData.departmentId || "",
+          plannedRoleId: initialData.plannedRoleId || "",
           hiredDate: initialData.hiredDate || "",
         });
       } else {
@@ -82,6 +90,7 @@ export default function EmployeeFormModal({ open, onClose, initialData }: Employ
           position: "",
           department: "",
           departmentId: "",
+          plannedRoleId: "",
           hiredDate: "",
         });
       }
@@ -101,6 +110,7 @@ export default function EmployeeFormModal({ open, onClose, initialData }: Employ
         position: optional(data.position),
         department: optional(data.department),
         departmentId: optional(data.departmentId),
+        plannedRoleId: optional(data.plannedRoleId),
         hiredDate: optional(data.hiredDate),
       };
 
@@ -235,6 +245,23 @@ export default function EmployeeFormModal({ open, onClose, initialData }: Employ
               placeholder="Ví dụ: Developer"
               error={errors.position}
               labelClassName="!text-slate-700 !font-semibold !text-sm"
+            />
+
+            <FormSelect
+              control={control}
+              name="plannedRoleId"
+              label="Vai trò dự kiến (Tùy chọn)"
+              placeholder="Chọn vai trò sẽ gán khi mời"
+              allowClear
+              showSearch
+              optionFilterProp="label"
+              loading={isLoadingRoles}
+              error={errors.plannedRoleId}
+              options={(rolesData?.data?.content ?? []).map((role) => ({
+                value: role.id,
+                label: role.name,
+              }))}
+              helperText="Hồ sơ này chưa có tài khoản nên chưa gán quyền ngay — vai trò chọn ở đây sẽ tự áp dụng khi bạn mời (gửi email) người này sau, thay vì mặc định EMPLOYEE."
             />
           </div>
         </div>

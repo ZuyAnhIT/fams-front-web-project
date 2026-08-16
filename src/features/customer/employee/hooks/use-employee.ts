@@ -127,7 +127,8 @@ export const useImportEmployees = () => {
 export const useCancelInvitation = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (invitationId: string) => employeeService.cancelInvitation(invitationId),
+    mutationFn: ({ invitationId, reason }: { invitationId: string; reason?: string }) =>
+      employeeService.cancelInvitation(invitationId, reason ? { reason } : undefined),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["invitations"] });
     },

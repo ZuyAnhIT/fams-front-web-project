@@ -11,6 +11,10 @@ export interface EmployeeResponse {
   position?: string;
   department?: string;
   departmentId?: string;
+  /** Intended role for this person once invited/linked to a login account (null/undefined if
+   *  none set) — not a real role assignment, this profile has no account yet. */
+  plannedRoleId?: string | null;
+  plannedRoleName?: string | null;
   hiredDate?: string;
   avatarUrl?: string;
   status: string; // 'active' | 'inactive' | 'terminated'
@@ -43,6 +47,10 @@ export interface EmployeeListParams {
   search?: string;
   status?: string; // 'active' | 'inactive' | 'terminated'
   department?: string;
+  /** true = only employees with an enrolled Face ID; false = not enrolled/revoked. */
+  faceRegistered?: boolean;
+  /** Filter to employees with an active WorkspaceMember in this workspace. */
+  workspaceId?: string;
   sortBy?: string;
   sortDir?: "asc" | "desc";
   page?: number;
@@ -103,6 +111,10 @@ export interface CreateEmployeePayload {
   department?: string;
   departmentId?: string;
   hiredDate?: string;
+  /** Intended role once this person is invited/linked to a login account — no real role
+   *  assignment happens yet (this profile has no account), but a later invite to the same email
+   *  uses this instead of defaulting to EMPLOYEE. */
+  plannedRoleId?: string;
 }
 
 export type UpdateEmployeePayload = Partial<CreateEmployeePayload>;
@@ -117,19 +129,34 @@ export interface InviteEmployeePayload {
   firstName?: string;
   lastName?: string;
   roleId?: string;
+  /** Default workspace the invitee is added to (as a WorkspaceMember) once they accept. */
+  workspaceId?: string;
+}
+
+export interface CancelInvitationPayload {
+  /** Optional free-text reason, shown later in the invitation list/audit trail. */
+  reason?: string;
 }
 
 export interface InvitationResponse {
   id: string;
   email: string;
+  phone?: string | null;
   tenantId: string;
   status: string;
+  invitedBy?: string;
+  roleId?: string | null;
+  workspaceId?: string | null;
   /** Bearer credential: only present on the POST response, never on list/cancel. */
   token?: string | null;
   firstName?: string;
   lastName?: string;
   createdAt: string;
+  updatedAt?: string;
   expiresAt: string;
+  cancelledBy?: string | null;
+  cancelReason?: string | null;
+  cancelledAt?: string | null;
 }
 
 export interface ValidateInvitationResponse {

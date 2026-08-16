@@ -9,6 +9,7 @@ export const employeeSchema = z.object({
   position: z.string().optional().or(z.literal("")),
   department: z.string().optional().or(z.literal("")),
   departmentId: z.string().optional().or(z.literal("")),
+  plannedRoleId: z.string().optional().or(z.literal("")),
   hiredDate: z.string().optional().or(z.literal("")),
 });
 
@@ -24,6 +25,7 @@ export const inviteEmployeeSchema = z.object({
   firstName: z.string().optional().or(z.literal("")),
   lastName: z.string().optional().or(z.literal("")),
   roleId: z.string().optional().or(z.literal("")),
+  workspaceId: z.string().optional().or(z.literal("")),
 });
 
 export type InviteEmployeeFormData = z.infer<typeof inviteEmployeeSchema>;

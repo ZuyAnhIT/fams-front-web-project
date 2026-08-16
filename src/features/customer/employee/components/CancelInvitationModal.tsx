@@ -1,5 +1,7 @@
+import { useState, useEffect } from "react";
 import { message } from "antd";
 import BaseModal from "@/components/ui/BaseModal";
+import BaseTextArea from "@/components/ui/BaseTextArea";
 import { useCancelInvitation } from "../hooks/use-employee";
 import type { InvitationResponse } from "../types/employee.type";
 import { AlertCircle } from "lucide-react";
@@ -13,11 +15,16 @@ interface CancelInvitationModalProps {
 
 export default function CancelInvitationModal({ open, onClose, invitation }: CancelInvitationModalProps) {
   const { mutateAsync: cancelInvitation, isPending } = useCancelInvitation();
+  const [reason, setReason] = useState("");
+
+  useEffect(() => {
+    if (open) setReason("");
+  }, [open]);
 
   const handleCancel = async () => {
     if (!invitation?.id) return;
     try {
-      await cancelInvitation(invitation.id);
+      await cancelInvitation({ invitationId: invitation.id, reason: reason.trim() || undefined });
       message.success("Hủy lời mời thành công.");
       onClose();
     } catch (error: unknown) {
@@ -50,9 +57,20 @@ export default function CancelInvitationModal({ open, onClose, invitation }: Can
         <p className="mb-2 text-slate-600 text-[15px]">
           Bạn có chắc chắn muốn hủy lời mời đã gửi đến email <span className="font-semibold text-slate-900">{invitation?.email}</span> không?
         </p>
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-slate-500 mb-3">
           Sau khi hủy, đường link đăng ký trong email sẽ không còn hiệu lực.
         </p>
+        <label htmlFor="cancel-invitation-reason" className="text-sm font-medium text-slate-700">
+          Lý do hủy (Tùy chọn)
+        </label>
+        <BaseTextArea
+          id="cancel-invitation-reason"
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          placeholder="Ví dụ: Ứng viên đã từ chối offer"
+          rows={2}
+          className="mt-1"
+        />
       </div>
     </BaseModal>
   );

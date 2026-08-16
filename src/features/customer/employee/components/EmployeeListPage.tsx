@@ -10,6 +10,7 @@ import BaseButton from "@/components/ui/BaseButton";
 import { usePagination } from "@/hooks/usePagination";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useEmployees, useChangeEmployeeStatus, useExportEmployees } from "../hooks/use-employee";
+import { useWorkspacesQuery } from "@/features/customer/workspace/hooks/use-workspace";
 import InviteEmployeeModal from "./InviteEmployeeModal";
 import EmployeeFormModal from "./EmployeeFormModal";
 import { useAuthStore } from "@/stores/auth.store";
@@ -51,6 +52,15 @@ export default function EmployeeListPage() {
   const { data: pageData, isLoading } = useEmployees(state);
   const { mutate: changeStatus } = useChangeEmployeeStatus();
   const { mutateAsync: exportEmployees, isPending: isExporting } = useExportEmployees();
+  const { data: workspacesData } = useWorkspacesQuery({
+    tenantId: user?.tenantId || "",
+    status: "active",
+    size: 100,
+  });
+  const workspaceFilterOptions = workspacesData?.data?.content?.map((w) => ({
+    label: w.name,
+    value: w.id,
+  })) || [];
 
   const handleStatusChange = (
     record: Employee,
@@ -304,6 +314,38 @@ export default function EmployeeListPage() {
               onChange={(event) =>
                 setPagination({ department: event.target.value || undefined, page: 0 })
               }
+            />
+            <BaseSelect
+              aria-label="Lọc nhân viên theo workspace"
+              placeholder="Tất cả workspace"
+              className="w-full sm:w-48"
+              allowClear
+              value={state.workspaceId}
+              onChange={(val) => setPagination({ workspaceId: val, page: 0 })}
+              options={workspaceFilterOptions}
+            />
+            <BaseSelect
+              aria-label="Lọc nhân viên theo trạng thái Face ID"
+              placeholder="Tất cả Face ID"
+              className="w-full sm:w-44"
+              allowClear
+              value={
+                state.faceRegistered === undefined
+                  ? undefined
+                  : state.faceRegistered
+                    ? "registered"
+                    : "not_registered"
+              }
+              onChange={(val) =>
+                setPagination({
+                  faceRegistered: val === undefined ? undefined : val === "registered",
+                  page: 0,
+                })
+              }
+              options={[
+                { label: "Đã đăng ký", value: "registered" },
+                { label: "Chưa đăng ký", value: "not_registered" },
+              ]}
             />
           </Space>
         }

@@ -10,6 +10,7 @@ import { useSendInvitation } from "../hooks/use-employee";
 import { inviteEmployeeSchema, type InviteEmployeeFormData } from "../schemas/employee.schema";
 import { useEffect } from "react";
 import { useRolesQuery } from "@/features/admin/role-permission/hooks/use-role-permission";
+import { useWorkspacesQuery } from "@/features/customer/workspace/hooks/use-workspace";
 import { useAuthStore } from "@/stores/auth.store";
 import { getApiErrorMessage } from "@/utils/api-error.util";
 
@@ -20,8 +21,17 @@ interface InviteEmployeeModalProps {
 
 export default function InviteEmployeeModal({ open, onClose }: InviteEmployeeModalProps) {
   const { mutateAsync: sendInvitation, isPending } = useSendInvitation();
-  const tenantId = useAuthStore((state) => state.user?.tenantId);
-  const { data: rolesData, isLoading: isLoadingRoles } = useRolesQuery({ size: 100 });
+  const tenantId = useAuthStore((state) => state.user?.tenantId ?? undefined);
+  const { data: rolesData, isLoading: isLoadingRoles } = useRolesQuery({
+    tenantId,
+    isActive: true,
+    size: 100,
+  });
+  const { data: workspacesData, isLoading: isLoadingWorkspaces } = useWorkspacesQuery({
+    tenantId: tenantId || "",
+    status: "active",
+    size: 100,
+  });
 
   const {
     control,
@@ -36,6 +46,7 @@ export default function InviteEmployeeModal({ open, onClose }: InviteEmployeeMod
       firstName: "",
       lastName: "",
       roleId: "",
+      workspaceId: "",
     },
   });
 
@@ -60,20 +71,18 @@ export default function InviteEmployeeModal({ open, onClose }: InviteEmployeeMod
     }
   };
 
-  const roleOptions = rolesData?.data?.content
-    ?.filter(
-      (role) =>
-        role.isActive &&
-        (role.tenantId === tenantId ||
-          (role.tenantId === null &&
-            ["TENANT_ADMIN", "HR_MANAGER", "SITE_SUPERVISOR", "EMPLOYEE"].includes(
-              role.name,
-            ))),
-    )
-    ?.map((role) => ({
-      label: role.name,
-      value: role.id,
-    })) || [];
+  // Server already scopes this to: shared tenant-tier system roles (TENANT_ADMIN/HR_MANAGER/
+  // SITE_SUPERVISOR/EMPLOYEE) + this tenant's own active custom roles (RoleSpecification, given
+  // tenantId + isActive=true) — no client-side re-filtering needed now that tenantId is passed.
+  const roleOptions = rolesData?.data?.content?.map((role) => ({
+    label: role.name,
+    value: role.id,
+  })) || [];
+
+  const workspaceOptions = workspacesData?.data?.content?.map((workspace) => ({
+    label: workspace.name,
+    value: workspace.id,
+  })) || [];
 
   return (
     <BaseModal
@@ -142,6 +151,17 @@ export default function InviteEmployeeModal({ open, onClose }: InviteEmployeeMod
           options={roleOptions}
           loading={isLoadingRoles}
           error={errors.roleId}
+          allowClear
+        />
+
+        <FormSelect
+          control={control}
+          name="workspaceId"
+          label="Phòng ban / Workspace (Tùy chọn)"
+          placeholder="Chọn workspace mặc định"
+          options={workspaceOptions}
+          loading={isLoadingWorkspaces}
+          error={errors.workspaceId}
           allowClear
         />
 

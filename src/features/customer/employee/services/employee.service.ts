@@ -7,6 +7,7 @@ import type {
   UpdateEmployeePayload,
   ChangeEmployeeStatusPayload,
   InviteEmployeePayload,
+  CancelInvitationPayload,
   InvitationResponse,
   AcceptInvitationPayload,
   InvitationListParams,
@@ -41,6 +42,8 @@ export const employeeService = {
     sortDir?: "asc" | "desc";
     status?: string;
     department?: string;
+    faceRegistered?: boolean;
+    workspaceId?: string;
   }): Promise<PageResponse<Employee>> {
     const tenantId = getTenantId();
     const response = await apiClient.get<ApiResponse<PageResponse<Employee>>>(
@@ -184,10 +187,11 @@ export const employeeService = {
   /**
    * Hủy lời mời
    */
-  async cancelInvitation(invitationId: string): Promise<InvitationResponse> {
+  async cancelInvitation(invitationId: string, payload?: CancelInvitationPayload): Promise<InvitationResponse> {
     const tenantId = getTenantId();
     const response = await apiClient.delete<ApiResponse<InvitationResponse>>(
-      `/tenants/${tenantId}/invitations/${invitationId}`
+      `/tenants/${tenantId}/invitations/${invitationId}`,
+      { data: payload }
     );
     return response.data.data;
   },
