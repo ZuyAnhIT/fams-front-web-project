@@ -182,10 +182,11 @@ export const useCancelPlatformInvitation = () => {
 export const useRevokeFaceId = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (employeeId: string) => employeeService.revokeFaceId(employeeId),
+    mutationFn: ({ employeeId, reason }: { employeeId: string; reason?: string }) =>
+      employeeService.revokeFaceId(employeeId, reason),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["employees"] });
-      queryClient.invalidateQueries({ queryKey: ["employees", variables] });
+      queryClient.invalidateQueries({ queryKey: ["employees", variables.employeeId] });
     },
   });
 };

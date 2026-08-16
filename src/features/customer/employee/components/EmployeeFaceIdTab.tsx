@@ -26,6 +26,8 @@ export default function EmployeeFaceIdTab({ employee }: EmployeeFaceIdTabProps) 
   const { message } = App.useApp();
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
+  const [revokeModalOpen, setRevokeModalOpen] = useState(false);
+  const [revokeReason, setRevokeReason] = useState("");
   const { mutateAsync: revokeFaceId, isPending } = useRevokeFaceId();
   const hasPermission = useAuthStore((state) => state.hasPermission);
   const currentUserId = useAuthStore((state) => state.user?.id);
@@ -51,22 +53,15 @@ export default function EmployeeFaceIdTab({ employee }: EmployeeFaceIdTabProps) 
     );
   };
 
-  const handleRevoke = () => {
-    Modal.confirm({
-      title: "Xác nhận thu hồi Face ID",
-      content: "Bạn có chắc chắn muốn thu hồi hồ sơ khuôn mặt của nhân viên này không? Dữ liệu khuôn mặt sẽ bị xóa và không thể khôi phục.",
-      okText: "Thu hồi",
-      okType: "danger",
-      cancelText: "Hủy",
-      onOk: async () => {
-        try {
-          await revokeFaceId(employee.id);
-          message.success("Đã thu hồi hồ sơ Face ID thành công.");
-        } catch (error: unknown) {
-          message.error(errorMessage(error, "Lỗi khi thu hồi Face ID"));
-        }
-      },
-    });
+  const handleRevoke = async () => {
+    try {
+      await revokeFaceId({ employeeId: employee.id, reason: revokeReason.trim() || undefined });
+      message.success("Đã thu hồi hồ sơ Face ID thành công.");
+      setRevokeModalOpen(false);
+      setRevokeReason("");
+    } catch (error: unknown) {
+      message.error(errorMessage(error, "Lỗi khi thu hồi Face ID"));
+    }
   };
 
   const handleApprove = () => {
@@ -134,7 +129,9 @@ export default function EmployeeFaceIdTab({ employee }: EmployeeFaceIdTabProps) 
               <div className="text-sm font-semibold text-slate-500 w-32">Cấp quyền thu thập:</div>
               <div className="text-sm font-medium text-slate-800">
                 {faceId?.consentGiven ? (
-                  <span className="text-emerald-600 font-semibold">Đã đồng ý</span>
+                  <span className="text-emerald-600 font-semibold">
+                    Đã đồng ý{faceId.consentVersion ? ` (phiên bản ${faceId.consentVersion})` : ""}
+                  </span>
                 ) : (
                   <span className="text-slate-400">Chưa xác nhận</span>
                 )}
@@ -155,6 +152,18 @@ export default function EmployeeFaceIdTab({ employee }: EmployeeFaceIdTabProps) 
                 <div className="text-sm font-semibold text-slate-500 w-32">Ngày thu hồi:</div>
                 <div className="text-sm font-medium text-slate-800">
                   {format(new Date(faceId.revokedAt), "dd/MM/yyyy HH:mm")}
+                </div>
+              </div>
+            )}
+
+            {faceId?.revokedAt && (
+              <div className="flex items-center gap-3">
+                <div className="text-sm font-semibold text-slate-500 w-32">Lý do thu hồi:</div>
+                <div className="text-sm font-medium text-slate-800">
+                  {faceId.deletedReason || <span className="text-slate-400">Không ghi lý do</span>}
+                  {!faceId.deletedBy && (
+                    <span className="ml-2 text-xs text-slate-400">(hệ thống tự thu hồi)</span>
+                  )}
                 </div>
               </div>
             )}
@@ -265,7 +274,7 @@ export default function EmployeeFaceIdTab({ employee }: EmployeeFaceIdTabProps) 
               type="primary"
               danger
               icon={<UserX className="w-4 h-4" />}
-              onClick={handleRevoke}
+              onClick={() => setRevokeModalOpen(true)}
               loading={isPending}
               className="font-bold shadow-sm"
             >
@@ -296,6 +305,34 @@ export default function EmployeeFaceIdTab({ employee }: EmployeeFaceIdTabProps) 
           value={rejectReason}
           onChange={(event) => setRejectReason(event.target.value)}
           placeholder="Nêu rõ vấn đề để nhân viên có thể đăng ký lại..."
+        />
+      </BaseModal>
+
+      <BaseModal
+        title="Xác nhận thu hồi Face ID"
+        isOpen={revokeModalOpen}
+        onClose={() => {
+          setRevokeModalOpen(false);
+          setRevokeReason("");
+        }}
+        onConfirm={handleRevoke}
+        confirmText="Thu hồi"
+        cancelText="Hủy"
+        confirmLoading={isPending}
+        confirmButtonProps={{ danger: true }}
+      >
+        <p className="mb-3 text-sm text-slate-600">
+          Bạn có chắc chắn muốn thu hồi hồ sơ khuôn mặt của nhân viên này không? Dữ liệu khuôn mặt
+          sẽ bị xóa và không thể khôi phục.
+        </p>
+        <BaseTextArea
+          aria-label="Lý do thu hồi Face ID"
+          rows={3}
+          maxLength={500}
+          showCount
+          value={revokeReason}
+          onChange={(event) => setRevokeReason(event.target.value)}
+          placeholder="Lý do thu hồi (tùy chọn) — ví dụ: nghỉ việc, nhân viên yêu cầu rút consent..."
         />
       </BaseModal>
     </div>
