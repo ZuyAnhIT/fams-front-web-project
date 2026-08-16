@@ -1,10 +1,12 @@
 import { Alert, message, Table, Upload, type UploadProps } from "antd";
-import { InboxOutlined } from "@ant-design/icons";
+import { InboxOutlined, DownloadOutlined } from "@ant-design/icons";
 import { useState } from "react";
 import BaseModal from "@/components/ui/BaseModal";
-import { useImportEmployees } from "../hooks/use-employee";
+import BaseButton from "@/components/ui/BaseButton";
+import { useImportEmployees, useExportImportErrors } from "../hooks/use-employee";
 import type { EmployeeImportResult } from "../types/employee.type";
 import { getApiErrorMessage } from "@/utils/api-error.util";
+import { downloadBlob } from "@/features/customer/report/components/report-utils";
 
 const { Dragger } = Upload;
 
@@ -15,6 +17,7 @@ interface ImportEmployeeModalProps {
 
 export default function ImportEmployeeModal({ open, onClose }: ImportEmployeeModalProps) {
   const { mutateAsync: importEmployees, isPending } = useImportEmployees();
+  const { mutateAsync: exportImportErrors, isPending: isExportingErrors } = useExportImportErrors();
   const [file, setFile] = useState<File | null>(null);
   const [result, setResult] = useState<EmployeeImportResult | null>(null);
 
@@ -35,6 +38,16 @@ export default function ImportEmployeeModal({ open, onClose }: ImportEmployeeMod
       }
     } catch (error: unknown) {
       message.error(getApiErrorMessage(error, "Lỗi khi import dữ liệu."));
+    }
+  };
+
+  const handleDownloadErrors = async () => {
+    if (!file) return;
+    try {
+      const blob = await exportImportErrors(file);
+      downloadBlob(blob, "import-errors.xlsx");
+    } catch (error: unknown) {
+      message.error(getApiErrorMessage(error, "Lỗi khi tải file lỗi."));
     }
   };
 
@@ -99,6 +112,15 @@ export default function ImportEmployeeModal({ open, onClose }: ImportEmployeeMod
               type={result.failedCount ? "warning" : "success"}
               title={`Kết quả: ${result.successCount} thành công, ${result.failedCount} lỗi / ${result.totalRows} dòng`}
             />
+            {result.failedCount > 0 && (
+              <BaseButton
+                icon={<DownloadOutlined />}
+                loading={isExportingErrors}
+                onClick={handleDownloadErrors}
+              >
+                Tải file lỗi (.xlsx)
+              </BaseButton>
+            )}
             {result.errors.length > 0 && (
               <Table
                 size="small"
