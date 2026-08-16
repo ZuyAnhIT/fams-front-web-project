@@ -34,7 +34,10 @@ export default function EmployeeWorkTab({ employee }: { employee: EmployeeDetail
               <div key={workspace.id} className="rounded-lg bg-slate-50 p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <div className="font-semibold text-slate-800">{workspace.workspaceName}</div>
+                    <div className="font-semibold text-slate-800 flex items-center gap-2">
+                      {workspace.workspaceName}
+                      {workspace.isPrimary && <Tag color="gold" className="m-0">Chính</Tag>}
+                    </div>
                     <div className="mt-1 text-xs text-slate-500">
                       Tham gia {format(new Date(workspace.assignedAt), "dd/MM/yyyy")}
                     </div>

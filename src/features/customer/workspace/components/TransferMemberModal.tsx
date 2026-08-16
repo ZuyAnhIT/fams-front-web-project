@@ -1,5 +1,6 @@
 import React from "react";
-import { Form, message, Spin, Typography } from "antd";
+import { DatePicker, Form, message, Spin, Typography } from "antd";
+import type { Dayjs } from "dayjs";
 import BaseModal from "@/components/ui/BaseModal";
 import BaseSelect from "@/components/ui/BaseSelect";
 import { useAuthStore } from "@/stores/auth.store";
@@ -9,9 +10,13 @@ import { getApiErrorMessage } from "@/utils/api-error.util";
 
 const { Text } = Typography;
 
+const INHERIT = "inherit";
+
 interface TransferMemberFormValues {
   targetWorkspaceId: string;
   role?: TransferWorkspaceMemberRequest["role"];
+  effectiveFrom?: Dayjs;
+  isPrimary: typeof INHERIT | "true" | "false";
 }
 
 interface TransferMemberModalProps {
@@ -53,6 +58,10 @@ export default function TransferMemberModal({
       const payload: TransferWorkspaceMemberRequest = {
         targetWorkspaceId: values.targetWorkspaceId,
         role: values.role,
+        effectiveFrom: values.effectiveFrom?.format("YYYY-MM-DD"),
+        // "inherit" (default) omits the field so the backend carries over the isPrimary flag
+        // from the membership being transferred, instead of forcing true/false.
+        isPrimary: values.isPrimary === INHERIT ? undefined : values.isPrimary === "true",
       };
 
       await transferMember({
@@ -94,7 +103,7 @@ export default function TransferMemberModal({
         form={form}
         layout="vertical"
         onFinish={handleFinish}
-        initialValues={{ role: currentRole || "member" }}
+        initialValues={{ role: currentRole || "member", isPrimary: INHERIT }}
         className="mt-4"
       >
         <Form.Item
@@ -123,6 +132,29 @@ export default function TransferMemberModal({
               { value: "member", label: "Nhân viên (Member)" },
               { value: "lead", label: "Trưởng nhóm (Lead)" },
               { value: "manager", label: "Quản lý (Manager)" },
+            ]}
+            className="h-10"
+          />
+        </Form.Item>
+
+        <Form.Item
+          name="effectiveFrom"
+          label={<span className="font-medium text-slate-700">Ngày hiệu lực (Tùy chọn)</span>}
+          extra="Để trống nếu áp dụng ngay hôm nay."
+        >
+          <DatePicker className="h-10 w-full" format="DD/MM/YYYY" />
+        </Form.Item>
+
+        <Form.Item
+          name="isPrimary"
+          label={<span className="font-medium text-slate-700">Workspace chính</span>}
+          tooltip="Mặc định giữ nguyên trạng thái 'chính' như ở phòng ban cũ sau khi chuyển."
+        >
+          <BaseSelect
+            options={[
+              { value: INHERIT, label: "Giữ nguyên như hiện tại" },
+              { value: "true", label: "Đặt làm workspace chính" },
+              { value: "false", label: "Không phải workspace chính" },
             ]}
             className="h-10"
           />

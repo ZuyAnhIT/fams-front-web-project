@@ -88,6 +88,7 @@ export interface EmployeeWorkspaceMembership {
   workspaceId: string;
   workspaceName: string;
   role: string;
+  isPrimary: boolean;
   assignedAt: string;
 }
 
