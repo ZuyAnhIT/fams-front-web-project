@@ -57,6 +57,12 @@ export interface WorkspaceMemberResponse {
   tenantId: string;
   role: "member" | "lead" | "manager";
   assignedBy: string;
+  /** True if this is the employee's primary workspace — at most one active primary per employee. */
+  isPrimary: boolean;
+  /** Date this membership starts (may be back- or future-dated by HR). */
+  effectiveFrom: string | null;
+  /** When this membership ended (transfer or removal), null while active. */
+  leftAt: string | null;
   createdAt: string;
   updatedAt: string;
   // Bổ sung thêm thông tin nhân viên để hiển thị trên UI
@@ -75,9 +81,18 @@ export interface WorkspaceMemberResponse {
 export interface AssignWorkspaceMemberRequest {
   employeeId: string;
   role: "member" | "lead" | "manager";
+  /** Optional, default: today. */
+  effectiveFrom?: string;
+  /** Optional — if omitted, defaults to true only when the employee has no other active primary
+   *  workspace yet. */
+  isPrimary?: boolean;
 }
 
 export interface TransferWorkspaceMemberRequest {
   targetWorkspaceId: string;
   role?: "member" | "lead" | "manager";
+  /** Optional, default: today. */
+  effectiveFrom?: string;
+  /** Optional — if omitted, carries over the isPrimary flag from the membership being transferred. */
+  isPrimary?: boolean;
 }

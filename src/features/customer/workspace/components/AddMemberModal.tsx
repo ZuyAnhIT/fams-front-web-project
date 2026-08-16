@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Form, message, Spin } from "antd";
+import { DatePicker, Form, message, Spin, Switch } from "antd";
+import type { Dayjs } from "dayjs";
 import BaseModal from "@/components/ui/BaseModal";
 import BaseSelect from "@/components/ui/BaseSelect";
 import { useAuthStore } from "@/stores/auth.store";
@@ -13,6 +14,8 @@ import type { Employee } from "@/features/customer/employee/types/employee.type"
 interface AddMemberFormValues {
   employeeId: string;
   role: AssignWorkspaceMemberRequest["role"];
+  effectiveFrom?: Dayjs;
+  isPrimary: boolean;
 }
 
 interface AddMemberModalProps {
@@ -48,6 +51,11 @@ export default function AddMemberModal({
       const payload: AssignWorkspaceMemberRequest = {
         employeeId: values.employeeId,
         role: values.role,
+        effectiveFrom: values.effectiveFrom?.format("YYYY-MM-DD"),
+        // Only sent when explicitly turned on — omitted (undefined) otherwise so the backend's
+        // own default applies (auto-primary only when the employee has no other active primary
+        // workspace yet), instead of the switch's "off" state overriding that auto-detection.
+        isPrimary: values.isPrimary ? true : undefined,
       };
 
       await assignMember({
@@ -77,7 +85,7 @@ export default function AddMemberModal({
         form={form}
         layout="vertical"
         onFinish={handleFinish}
-        initialValues={{ role: "member" }}
+        initialValues={{ role: "member", isPrimary: false }}
         className="mt-4"
       >
         <Form.Item
@@ -113,6 +121,23 @@ export default function AddMemberModal({
             ]}
             className="h-10"
           />
+        </Form.Item>
+
+        <Form.Item
+          name="effectiveFrom"
+          label={<span className="font-medium text-slate-700">Ngày hiệu lực (Tùy chọn)</span>}
+          extra="Để trống nếu áp dụng ngay hôm nay. Có thể chọn ngày trong quá khứ hoặc tương lai."
+        >
+          <DatePicker className="h-10 w-full" format="DD/MM/YYYY" />
+        </Form.Item>
+
+        <Form.Item
+          name="isPrimary"
+          label={<span className="font-medium text-slate-700">Đặt làm workspace chính</span>}
+          valuePropName="checked"
+          extra="Nếu đây là workspace đầu tiên của nhân viên, hệ thống sẽ tự động đặt làm chính dù không bật ở đây. Bật lên nếu muốn thay thế workspace chính hiện tại."
+        >
+          <Switch />
         </Form.Item>
 
       </Form>

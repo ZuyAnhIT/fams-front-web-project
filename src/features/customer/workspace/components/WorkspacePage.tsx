@@ -618,8 +618,11 @@ export default function WorkspacePage() {
                       key: "employee",
                       render: (_, member: WorkspaceMemberResponse) => (
                         <div>
-                          <div className="font-medium text-slate-800">
+                          <div className="font-medium text-slate-800 flex items-center gap-2">
                             {employeeName(member)}
+                            {member.isPrimary && (
+                              <Tag color="gold" className="m-0">Chính</Tag>
+                            )}
                           </div>
                           <div className="text-xs text-slate-500">
                             {member.employee?.email || member.employee?.position || "-"}
