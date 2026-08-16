@@ -39,8 +39,14 @@ export interface FaceIdStatus {
   status: "not_enrolled" | "enrolled" | "revoked";
   consentGiven: boolean;
   consentGivenAt?: string | null;
+  /** Consent text version the employee agreed to — a policy bump invalidates older consents. */
+  consentVersion?: string | null;
   enrolledAt?: string | null;
   revokedAt?: string | null;
+  /** Why Face ID was revoked, null if not revoked or reason wasn't captured. */
+  deletedReason?: string | null;
+  /** Who revoked this Face ID — null if system-triggered (e.g. auto-revoke on termination). */
+  deletedBy?: string | null;
   reviewStatus: "none" | "pending" | "rejected";
   pendingPhotoCount?: number | null;
   submittedAt?: string | null;

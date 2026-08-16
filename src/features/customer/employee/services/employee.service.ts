@@ -220,10 +220,11 @@ export const employeeService = {
   /**
    * Thu hồi Face ID
    */
-  async revokeFaceId(employeeId: string) {
+  async revokeFaceId(employeeId: string, reason?: string) {
     const tenantId = getTenantId();
     const response = await apiClient.delete<ApiResponse<unknown>>(
-      `/tenants/${tenantId}/employees/${employeeId}/face-id`
+      `/tenants/${tenantId}/employees/${employeeId}/face-id`,
+      { params: reason ? { reason } : undefined }
     );
     return response.data.data;
   },
