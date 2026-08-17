@@ -180,7 +180,7 @@ export default function ShiftManagementTab({
           </div>
           <div>
             Sớm {shift.earlyCheckinMinutes} phút · muộn{" "}
-            {shift.lateCheckoutMinutes} phút
+            {shift.lateCheckoutMinutes} phút · ân hạn {shift.graceMinutes} phút
           </div>
           <div>
             Cảnh báo OT: {shift.maxOtMinutesPerDay == null ? "không giới hạn ngày" : `${shift.maxOtMinutesPerDay} phút/ngày`}
