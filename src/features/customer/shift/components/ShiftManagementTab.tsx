@@ -15,7 +15,7 @@ import {
   SettingOutlined,
 } from "@ant-design/icons";
 import { isAxiosError } from "axios";
-import { BaseButton, BaseSelect } from "@/components/ui";
+import { BaseButton, BaseInput, BaseSelect } from "@/components/ui";
 import DataTable from "@/components/tables/DataTable";
 import {
   useDeleteShiftMutation,
@@ -56,6 +56,7 @@ export default function ShiftManagementTab({
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [status, setStatus] = useState<"active" | "inactive" | undefined>();
+  const [search, setSearch] = useState("");
   const [isShiftModalOpen, setIsShiftModalOpen] = useState(false);
   const [isOtModalOpen, setIsOtModalOpen] = useState(false);
   const [activeShift, setActiveShift] = useState<ShiftResponse | null>(null);
@@ -66,6 +67,7 @@ export default function ShiftManagementTab({
     page,
     size: pageSize,
     status,
+    search: search.trim() || undefined,
   });
 
   const shifts = data?.content ?? [];
@@ -142,6 +144,12 @@ export default function ShiftManagementTab({
       dataIndex: "name",
       key: "name",
       className: "font-medium text-slate-700",
+      render: (value: string, shift) => (
+        <span className="flex items-center gap-2">
+          {value}
+          {shift.isDefault && <Tag color="gold">Mặc định</Tag>}
+        </span>
+      ),
     },
     {
       title: "Thời gian",
@@ -313,6 +321,18 @@ export default function ShiftManagementTab({
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <BaseInput
+            id="shift-search"
+            aria-label="Tìm ca theo tên"
+            className="min-w-52"
+            allowClear
+            placeholder="Tìm theo tên ca..."
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(0);
+            }}
+          />
           <BaseSelect
             id="shift-status-filter"
             aria-label="Lọc ca theo trạng thái"
