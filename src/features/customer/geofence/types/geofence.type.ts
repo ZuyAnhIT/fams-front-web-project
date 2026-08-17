@@ -6,6 +6,7 @@ export interface CreateGeofenceRequest {
 export interface UpdateGeofenceRequest {
   coordinates?: number[][];
   bufferMeters?: number;
+  changeReason?: string;
 }
 
 export interface GeofenceHistoryParams {

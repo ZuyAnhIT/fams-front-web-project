@@ -23,8 +23,14 @@ export interface GeofenceResponse {
   tenantId: string;
   coordinates: number[][]; // [longitude, latitude] pairs
   bufferMeters: number;
+  /** Computed polygon area in square metres (approximate — null if it could not be computed). */
+  areaSqm?: number | null;
+  /** Optional reason provided for this change. Null for the initial creation. */
+  changeReason?: string | null;
   status: "active" | "superseded";
   createdBy: string;
+  /** Display name of the user who created this version, resolved from createdBy. */
+  createdByName?: string | null;
   createdAt: string;
   updatedAt: string;
 }

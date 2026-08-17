@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { InputNumber, message, Alert } from "antd";
+import { Input, InputNumber, message, Alert } from "antd";
 import BaseModal from "@/components/ui/BaseModal";
 import BaseButton from "@/components/ui/BaseButton";
 import { MapPin } from "lucide-react";
@@ -56,6 +56,7 @@ export default function EditGeofenceModal({
     activeGeofence?.bufferMeters ?? 0,
   );
   const [coordinates, setCoordinates] = useState<[number, number][]>(initialMapCoords);
+  const [changeReason, setChangeReason] = useState<string>("");
 
   const createMutation = useCreateGeofenceMutation();
   const updateMutation = useUpdateGeofenceMutation();
@@ -111,6 +112,7 @@ export default function EditGeofenceModal({
       data = {
         ...(coordinatesChanged ? { coordinates: backendCoords } : {}),
         ...(bufferChanged ? { bufferMeters } : {}),
+        ...(changeReason.trim() ? { changeReason: changeReason.trim() } : {}),
       };
     }
 
@@ -185,6 +187,22 @@ export default function EditGeofenceModal({
             addonAfter="mét"
           />
         </div>
+
+        {activeGeofence && (
+          <div className="pt-1">
+            <div className="font-medium text-slate-700 mb-1">
+              Lý do thay đổi (Tùy chọn)
+            </div>
+            <Input.TextArea
+              aria-label="Lý do thay đổi geofence"
+              value={changeReason}
+              onChange={(e) => setChangeReason(e.target.value)}
+              placeholder="VD: Điều chỉnh theo ranh giới thực tế đo đạc lại"
+              maxLength={500}
+              rows={2}
+            />
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div className="lg:col-span-2">
