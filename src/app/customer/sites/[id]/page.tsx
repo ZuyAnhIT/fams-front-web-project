@@ -293,6 +293,20 @@ function SiteDetailsContent() {
               <Descriptions.Item label="Mô tả">
                 {site.description || "Chưa có mô tả"}
               </Descriptions.Item>
+              <Descriptions.Item label="Người phụ trách">
+                {site.supervisors && site.supervisors.length > 0 ? (
+                  <span className="flex flex-wrap gap-1">
+                    {site.supervisors.map((sup) => (
+                      <Tag key={sup.id} color="purple">
+                        {sup.fullName}
+                        {sup.employeeCode ? ` (${sup.employeeCode})` : ""}
+                      </Tag>
+                    ))}
+                  </span>
+                ) : (
+                  "Chưa gán supervisor"
+                )}
+              </Descriptions.Item>
               <Descriptions.Item label="Nhân sự active">
                 <span className="inline-flex items-center gap-1">
                   <Users className="h-4 w-4" />

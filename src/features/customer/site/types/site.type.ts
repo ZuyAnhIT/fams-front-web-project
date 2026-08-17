@@ -31,10 +31,18 @@ export interface GeofenceResponse {
 
 
 
+export interface SiteSupervisorSummary {
+  id: string;
+  employeeCode?: string;
+  fullName: string;
+}
+
 export interface SiteDetailResponse extends SiteResponse {
   geofence: GeofenceResponse | null;
   shifts: ShiftResponse[];
   activeAssignmentCount: number;
+  /** Employees currently assigned to this site with role=supervisor — empty array if none. */
+  supervisors: SiteSupervisorSummary[];
 }
 
 export interface CreateSiteRequest {

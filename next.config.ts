@@ -6,7 +6,7 @@ try {
 } catch {
   throw new Error("FAMS_BACKEND_URL phải là URL tuyệt đối hợp lệ, ví dụ http://localhost:8080/api/v1");
 }
-const allowedDevOrigins = (process.env.FAMS_DEV_ORIGINS || "192.168.1.14")
+const allowedDevOrigins = (process.env.FAMS_DEV_ORIGINS || "192.168.1.13")
   .split(",")
   .map((origin) => origin.trim())
   .filter(Boolean);
