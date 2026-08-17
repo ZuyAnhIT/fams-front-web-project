@@ -44,6 +44,7 @@ export default function ShiftOtConfigModal({
         allowOvertime: activeShift.allowOvertime,
         earlyCheckinMinutes: activeShift.earlyCheckinMinutes,
         lateCheckoutMinutes: activeShift.lateCheckoutMinutes,
+        graceMinutes: activeShift.graceMinutes,
         maxOtMinutesPerDay: activeShift.maxOtMinutesPerDay,
         maxOtMinutesPerWeek: activeShift.maxOtMinutesPerWeek,
       });
@@ -54,6 +55,7 @@ export default function ShiftOtConfigModal({
     allowOvertime?: boolean;
     earlyCheckinMinutes?: number | null;
     lateCheckoutMinutes?: number | null;
+    graceMinutes?: number | null;
     maxOtMinutesPerDay?: number | null;
     maxOtMinutesPerWeek?: number | null;
   }) => {
@@ -68,6 +70,7 @@ export default function ShiftOtConfigModal({
           allowOvertime: values.allowOvertime,
           earlyCheckinMinutes: values.earlyCheckinMinutes ?? 0,
           lateCheckoutMinutes: values.lateCheckoutMinutes ?? 0,
+          graceMinutes: values.graceMinutes ?? 0,
           maxOtMinutesPerDay: values.maxOtMinutesPerDay ?? undefined,
           clearMaxOtMinutesPerDay: values.maxOtMinutesPerDay == null,
           maxOtMinutesPerWeek: values.maxOtMinutesPerWeek ?? undefined,
@@ -142,7 +145,7 @@ export default function ShiftOtConfigModal({
           Giới hạn thời gian chấm công (Tolerance)
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-3 gap-4">
           <Form.Item
             name="earlyCheckinMinutes"
             label={
@@ -176,9 +179,27 @@ export default function ShiftOtConfigModal({
               placeholder="VD: 15"
             />
           </Form.Item>
+
+          <Form.Item
+            name="graceMinutes"
+            label={
+              <div className="flex items-center gap-2">
+                <ClockCircleOutlined className="text-blue-500" />
+                <span className="font-medium text-slate-700">Ân hạn trước khi tính muộn</span>
+              </div>
+            }
+          >
+            <InputNumber
+              className="w-full"
+              suffix="phút"
+              min={0}
+              placeholder="VD: 5"
+            />
+          </Form.Item>
         </div>
         <div className="text-xs text-slate-400 bg-blue-50 p-3 rounded text-blue-800 border border-blue-100">
           <strong>Lưu ý:</strong> Nhân viên check-in/out trong khoảng thời gian châm chước này sẽ được tính là đúng giờ.
+          Check-in trong khoảng ân hạn (grace) sẽ không bị tính muộn; vượt ân hạn sẽ tính đủ số phút trễ thực tế.
         </div>
 
         <div className="mt-6 text-slate-500 font-medium mb-4">

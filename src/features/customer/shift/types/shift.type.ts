@@ -11,6 +11,7 @@ export interface ShiftResponse {
   allowOvertime: boolean;
   earlyCheckinMinutes: number;
   lateCheckoutMinutes: number;
+  graceMinutes: number;
   maxOtMinutesPerDay: number | null;
   maxOtMinutesPerWeek: number | null;
   status: "active" | "inactive";
@@ -47,6 +48,7 @@ export interface ConfigureShiftOtRequest {
   allowOvertime?: boolean;
   earlyCheckinMinutes?: number;
   lateCheckoutMinutes?: number;
+  graceMinutes?: number;
   maxOtMinutesPerDay?: number;
   clearMaxOtMinutesPerDay?: boolean;
   maxOtMinutesPerWeek?: number;
