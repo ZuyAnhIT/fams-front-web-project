@@ -79,6 +79,9 @@ export default function ActiveGeofenceCard({ site, siteId }: ActiveGeofenceCardP
             <div className="flex items-center justify-between rounded-lg bg-blue-50 px-3 py-2 text-sm">
               <span className="font-medium text-blue-800">
                 Sai số GPS cho phép: {site.geofence.bufferMeters} mét
+                {site.geofence.areaSqm != null && (
+                  <> · Diện tích: ~{site.geofence.areaSqm.toLocaleString("vi-VN")} m²</>
+                )}
               </span>
               <Tag color="success" className="m-0">Đang áp dụng</Tag>
             </div>

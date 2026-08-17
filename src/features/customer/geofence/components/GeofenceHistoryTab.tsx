@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { Badge } from "antd";
-import { EyeOutlined } from "@ant-design/icons";
+import { Badge, Tooltip } from "antd";
+import { EyeOutlined, InfoCircleOutlined } from "@ant-design/icons";
 import DataTable from "@/components/tables/DataTable";
 import BaseButton from "@/components/ui/BaseButton";
 import { BaseModal } from "@/components/ui";
@@ -46,12 +46,39 @@ export default function GeofenceHistoryTab({ tenantId, siteId, siteLatitude, sit
       render: (val: number) => `${val}m`,
     },
     {
+      title: "Diện tích",
+      dataIndex: "areaSqm",
+      key: "areaSqm",
+      render: (val: number | null | undefined) =>
+        val != null ? `~${val.toLocaleString("vi-VN")} m²` : "—",
+    },
+    {
       title: "Người thay đổi",
-      dataIndex: "createdBy",
-      key: "createdBy",
-      render: (value: string) => (
-        <span className="font-mono text-xs text-slate-600">{value || "—"}</span>
+      dataIndex: "createdByName",
+      key: "createdByName",
+      render: (value: string | null | undefined, record) => (
+        <span className="text-xs text-slate-600">
+          {value || (
+            <span className="font-mono">{record.createdBy || "—"}</span>
+          )}
+        </span>
       ),
+    },
+    {
+      title: "Lý do thay đổi",
+      dataIndex: "changeReason",
+      key: "changeReason",
+      render: (value: string | null | undefined) =>
+        value ? (
+          <Tooltip title={value}>
+            <span className="inline-flex items-center gap-1 text-xs text-slate-600 max-w-[160px] truncate">
+              <InfoCircleOutlined className="text-slate-400" />
+              {value}
+            </span>
+          </Tooltip>
+        ) : (
+          <span className="text-xs text-slate-400">—</span>
+        ),
     },
     {
       title: "Trạng thái",
@@ -65,9 +92,9 @@ export default function GeofenceHistoryTab({ tenantId, siteId, siteLatitude, sit
       title: "Thao tác",
       key: "action",
       render: (_, record) => (
-        <BaseButton 
-          type="text" 
-          icon={<EyeOutlined className="text-blue-500" />} 
+        <BaseButton
+          type="text"
+          icon={<EyeOutlined className="text-blue-500" />}
           onClick={() => setSelectedHistoryGeofence(record)}
         >
           Xem bản đồ
@@ -115,10 +142,28 @@ export default function GeofenceHistoryTab({ tenantId, siteId, siteLatitude, sit
         centered
       >
         <div className="py-4 space-y-4">
-          <div className="flex gap-6 bg-slate-50 p-4 rounded-lg border border-slate-200 text-sm">
+          <div className="flex flex-wrap gap-6 bg-slate-50 p-4 rounded-lg border border-slate-200 text-sm">
             <div className="text-slate-600">
               <span className="font-semibold text-slate-700">Bán kính cho phép:</span> {selectedHistoryGeofence?.bufferMeters} mét
             </div>
+            <div className="text-slate-600">
+              <span className="font-semibold text-slate-700">Diện tích:</span>{" "}
+              {selectedHistoryGeofence?.areaSqm != null
+                ? `~${selectedHistoryGeofence.areaSqm.toLocaleString("vi-VN")} m²`
+                : "—"}
+            </div>
+            <div className="text-slate-600">
+              <span className="font-semibold text-slate-700">Người thay đổi:</span>{" "}
+              {selectedHistoryGeofence?.createdByName || (
+                <span className="font-mono text-xs">{selectedHistoryGeofence?.createdBy || "—"}</span>
+              )}
+            </div>
+            {selectedHistoryGeofence?.changeReason && (
+              <div className="text-slate-600">
+                <span className="font-semibold text-slate-700">Lý do:</span>{" "}
+                {selectedHistoryGeofence.changeReason}
+              </div>
+            )}
             <div className="text-slate-600">
               <span className="font-semibold text-slate-700">Trạng thái:</span>{" "}
               {selectedHistoryGeofence?.status === "active" ? (
