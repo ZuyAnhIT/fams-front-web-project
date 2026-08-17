@@ -78,6 +78,18 @@ function getColorClass(color: string): string {
   return colorMap[color] || colorMap.gray;
 }
 
+// #89 (2026-08-17): priority is now a real backend-decided field (see NotificationEventTypeCatalog
+// defaultPriorityFor) — only surfaced for high/critical to avoid cluttering every card, since
+// normal/low is the common case and doesn't need a badge.
+const PRIORITY_LABEL: Record<string, string> = {
+  critical: "Khẩn cấp",
+  high: "Quan trọng",
+};
+const PRIORITY_BADGE_CLASS: Record<string, string> = {
+  critical: "bg-red-500 text-white",
+  high: "bg-amber-500 text-white",
+};
+
 interface NotificationCardProps {
   notification: Notification;
   onMarkAsRead: (id: string) => void;
@@ -135,6 +147,13 @@ function NotificationCard({ notification, onMarkAsRead, onOpen, selected, onSele
                   >
                     {typeInfo.label}
                   </span>
+                  {PRIORITY_LABEL[notification.priority] && (
+                    <span
+                      className={`text-xs font-medium px-2 py-0.5 rounded-full ${PRIORITY_BADGE_CLASS[notification.priority]}`}
+                    >
+                      {PRIORITY_LABEL[notification.priority]}
+                    </span>
+                  )}
                 </div>
                 <h4 className="text-base font-semibold text-slate-900 mb-1">
                   {notification.title}

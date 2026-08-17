@@ -165,7 +165,7 @@ test("owner sửa settings, thấy usage và nhận nguyên văn cảnh báo sel
       content: [{
         id: "ip-entry-1",
         tenantId,
-        ipAddress: "192.168.1.13/24",
+        ipAddress: "192.168.1.14/24",
         label: "Văn phòng",
         scope: "all",
         isActive: true,
@@ -207,7 +207,7 @@ test("owner sửa settings, thấy usage và nhận nguyên văn cảnh báo sel
 
   await page.getByRole("tab", { name: /Bảo mật IP/ }).click();
   await expect(page.getByText("Whitelist đang được áp dụng")).toBeVisible();
-  await page.getByRole("switch", { name: "Bật hoặc tắt 192.168.1.13/24" }).click();
+  await page.getByRole("switch", { name: "Bật hoặc tắt 192.168.1.14/24" }).click();
   await expect(page.getByText(selfLockMessage)).toBeVisible();
 
   await page.getByRole("tab", { name: /Gói & mức sử dụng/ }).click();

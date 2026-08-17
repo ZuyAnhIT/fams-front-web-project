@@ -8,6 +8,7 @@ export interface Notification {
   title: string;
   body: string | null;
   metadata: Record<string, unknown> | null;
+  priority: "low" | "normal" | "high" | "critical";
   isRead: boolean;
   readAt: string | null;
   createdAt: string;
