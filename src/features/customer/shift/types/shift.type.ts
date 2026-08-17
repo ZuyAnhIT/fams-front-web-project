@@ -14,6 +14,7 @@ export interface ShiftResponse {
   maxOtMinutesPerDay: number | null;
   maxOtMinutesPerWeek: number | null;
   status: "active" | "inactive";
+  isDefault: boolean;
   checkinPolicyOverride: CheckinPolicy | null;
   createdBy: string;
   createdAt: string;
@@ -28,6 +29,7 @@ export interface CreateShiftRequest {
   endTime: string;
   allowOvernight: boolean;
   checkinPolicyOverride?: CheckinPolicy | null;
+  isDefault?: boolean;
 }
 
 export interface UpdateShiftRequest {
@@ -38,6 +40,7 @@ export interface UpdateShiftRequest {
   status?: "active" | "inactive";
   checkinPolicyOverride?: CheckinPolicy;
   clearCheckinPolicyOverride?: boolean;
+  isDefault?: boolean;
 }
 
 export interface ConfigureShiftOtRequest {
@@ -52,6 +55,8 @@ export interface ConfigureShiftOtRequest {
 
 export interface ShiftListParams {
   status?: "active" | "inactive";
+  search?: string;
+  isDefault?: boolean;
   page?: number;
   size?: number;
 }

@@ -71,6 +71,7 @@ export default function ShiftFormModal({
           checkinPolicyOverride:
             activeShift.checkinPolicyOverride || "gps_only",
           status: activeShift.status === "active",
+          isDefault: activeShift.isDefault,
         });
       } else {
         form.resetFields();
@@ -79,6 +80,7 @@ export default function ShiftFormModal({
           inheritPolicy: true,
           checkinPolicyOverride: "gps_only",
           status: true,
+          isDefault: false,
         });
       }
     }
@@ -92,6 +94,7 @@ export default function ShiftFormModal({
     inheritPolicy: boolean;
     checkinPolicyOverride?: CheckinPolicy;
     status?: boolean;
+    isDefault?: boolean;
   }) => {
     if (!tenantId) return;
 
@@ -125,6 +128,7 @@ export default function ShiftFormModal({
               values.inheritPolicy &&
               Boolean(activeShift.checkinPolicyOverride),
             status: values.status ? "active" : "inactive",
+            isDefault: values.isDefault,
           },
         },
         {
@@ -152,6 +156,7 @@ export default function ShiftFormModal({
             checkinPolicyOverride: values.inheritPolicy
               ? undefined
               : values.checkinPolicyOverride,
+            isDefault: values.isDefault,
           },
         },
         {
@@ -322,6 +327,20 @@ export default function ShiftFormModal({
             </Form.Item>
           </div>
         )}
+
+        <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-lg mb-4">
+          <div>
+            <div className="font-medium text-slate-700">Đặt làm ca mặc định</div>
+            <div className="text-xs text-slate-500">
+              Được chọn sẵn khi tạo phân công mới cho công trình này. Mỗi công
+              trình chỉ có 1 ca mặc định — bật ca này sẽ tự bỏ mặc định ở ca
+              khác.
+            </div>
+          </div>
+          <Form.Item name="isDefault" valuePropName="checked" noStyle>
+            <BaseSwitch aria-label="Đặt làm ca mặc định" />
+          </Form.Item>
+        </div>
 
       </Form>
     </BaseModal>
