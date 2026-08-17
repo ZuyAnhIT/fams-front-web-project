@@ -3,11 +3,13 @@ import {
   Alert,
   App,
   Badge,
+  DatePicker,
   Tag,
   Tooltip,
   type TableColumnsType,
   type TableProps,
 } from "antd";
+import dayjs from "dayjs";
 import { isAxiosError } from "axios";
 import { EditOutlined, DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import { BaseButton, BaseSelect, BaseModal } from "@/components/ui";
@@ -31,6 +33,8 @@ interface AssignmentManagementTabProps {
   siteStatus: "active" | "inactive";
   shifts: ShiftResponse[];
 }
+
+const { RangePicker } = DatePicker;
 
 const DAY_LABELS: Record<AssignmentDayOfWeek, string> = {
   MONDAY: "T2",
@@ -69,6 +73,8 @@ export default function AssignmentManagementTab({
     role: undefined as "worker" | "supervisor" | undefined,
     shiftId: undefined as string | undefined,
     employeeId: undefined as string | undefined,
+    dateRangeFrom: undefined as string | undefined,
+    dateRangeTo: undefined as string | undefined,
   });
 
   const [isAssignmentModalOpen, setIsAssignmentModalOpen] = useState(false);
@@ -235,13 +241,25 @@ export default function AssignmentManagementTab({
       dataIndex: "status",
       key: "status",
       sorter: true,
-      render: (val: string) => (
-        <Badge
-          status={val === "active" ? "success" : "default"}
-          text={val === "active" ? "Đang làm việc" : "Đã hủy"}
-          className="text-slate-600"
-        />
-      ),
+      render: (val: string, record) => {
+        const badge = (
+          <Badge
+            status={val === "active" ? "success" : "default"}
+            text={val === "active" ? "Đang làm việc" : "Đã hủy"}
+            className="text-slate-600"
+          />
+        );
+        if (val === "cancelled" && record.cancelledAt) {
+          return (
+            <Tooltip
+              title={`Hủy lúc ${new Date(record.cancelledAt).toLocaleString("vi-VN")}`}
+            >
+              {badge}
+            </Tooltip>
+          );
+        }
+        return badge;
+      },
     },
     ...((canUpdate || canDelete) ? [{
       title: "Thao tác",
@@ -252,9 +270,11 @@ export default function AssignmentManagementTab({
           {canUpdate && (
             <Tooltip
               title={
-                siteAcceptsAssignments
-                  ? "Sửa phân công"
-                  : "Không thể sửa phân công khi công trình đã ngừng hoạt động"
+                record.status === "cancelled"
+                  ? "Không thể sửa phân công đã hủy — đây là bản ghi đóng, chỉ giữ lại để tra cứu lịch sử"
+                  : siteAcceptsAssignments
+                    ? "Sửa phân công"
+                    : "Không thể sửa phân công khi công trình đã ngừng hoạt động"
               }
             >
               <span>
@@ -263,7 +283,7 @@ export default function AssignmentManagementTab({
                   type="text"
                   size="small"
                   icon={<EditOutlined className="text-blue-500" />}
-                  disabled={!siteAcceptsAssignments}
+                  disabled={!siteAcceptsAssignments || record.status === "cancelled"}
                   onClick={() => {
                     setActiveAssignment(record);
                     setIsAssignmentModalOpen(true);
@@ -351,7 +371,7 @@ export default function AssignmentManagementTab({
         </div>
       )}
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
         {/* Filters */}
         <div className="flex flex-col gap-1">
           <label htmlFor="assignment-employee-filter" className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Nhân viên</label>
@@ -431,9 +451,30 @@ export default function AssignmentManagementTab({
             ]}
           />
         </div>
+
+        <div className="flex flex-col gap-1">
+          <label htmlFor="assignment-date-range-filter" className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Khoảng ngày</label>
+          <RangePicker
+            id="assignment-date-range-filter"
+            aria-label="Lọc phân công theo khoảng ngày"
+            className="w-full"
+            value={[
+              assignmentFilters.dateRangeFrom ? dayjs(assignmentFilters.dateRangeFrom) : null,
+              assignmentFilters.dateRangeTo ? dayjs(assignmentFilters.dateRangeTo) : null,
+            ]}
+            onChange={(_, dateStrings) => {
+              setAssignmentFilters((prev) => ({
+                ...prev,
+                dateRangeFrom: dateStrings[0] || undefined,
+                dateRangeTo: dateStrings[1] || undefined,
+              }));
+              setAssignmentPage(0);
+            }}
+          />
+        </div>
       </div>
-      
-      <DataTable 
+
+      <DataTable
         data={assignments} 
         columns={assignmentColumns}
         loading={isAssignmentsLoading}

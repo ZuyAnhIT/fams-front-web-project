@@ -35,6 +35,8 @@ export interface AssignmentResponse {
   daysOfWeek: AssignmentDayOfWeek[] | null;
   role: "worker" | "supervisor";
   status: "active" | "cancelled";
+  cancelledBy: string | null;
+  cancelledAt: string | null;
   notes?: string;
   createdBy: string;
   createdAt: string;
@@ -48,6 +50,9 @@ export interface AssignmentListParams {
   role?: "worker" | "supervisor";
   employeeId?: string;
   shiftId?: string;
+  /** Overlap filter: matches assignments active on any day within [dateRangeFrom, dateRangeTo]. */
+  dateRangeFrom?: string; // yyyy-MM-dd
+  dateRangeTo?: string; // yyyy-MM-dd
   sortBy?: "startDate" | "endDate" | "role" | "status" | "createdAt";
   sortDir?: "asc" | "desc";
   page?: number;
