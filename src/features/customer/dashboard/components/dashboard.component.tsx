@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import { Alert, Progress, Spin, Tag } from 'antd';
 import dayjs from 'dayjs';
-import { AlertTriangle, Bell, Building2, CalendarCheck, Clock3, MapPin, Users } from 'lucide-react';
+import { AlertTriangle, Bell, Building2, CalendarCheck, Clock3, MapPin, ShieldAlert, Users } from 'lucide-react';
 import Link from 'next/link';
 import StatCard from '@/components/charts/StatCard';
 import EmptyState from '@/components/feedback/EmptyState';
@@ -103,7 +103,7 @@ function SupervisorDashboardView({ tenantId }: { tenantId: string }) {
   return <div className="grid gap-5 xl:grid-cols-2">{sites.map((site) => {
     const attendanceRate = site.expectedToday > 0 ? Math.min(100, Math.round(site.onSiteNow * 100 / site.expectedToday)) : 0;
     return <section key={site.siteId} className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-      <div className="border-b border-slate-100 p-5"><div className="flex items-start justify-between gap-4"><div><h2 className="flex items-center gap-2 font-semibold text-slate-900"><MapPin className="h-4 w-4 text-blue-600" />{site.siteName}</h2><p className="mt-1 text-sm text-slate-500">{site.onSiteNow}/{site.expectedToday} nhân viên đang có mặt</p></div><Tag color="processing">Số liệu làm mới mỗi phút</Tag></div><Progress className="mt-3" percent={attendanceRate} strokeColor="#2563eb" /></div>
+      <div className="border-b border-slate-100 p-5"><div className="flex items-start justify-between gap-4"><div><h2 className="flex items-center gap-2 font-semibold text-slate-900"><MapPin className="h-4 w-4 text-blue-600" />{site.siteName}</h2><p className="mt-1 text-sm text-slate-500">{site.onSiteNow}/{site.expectedToday} nhân viên đang có mặt</p></div><Tag color="processing">Số liệu làm mới mỗi phút</Tag></div><Progress className="mt-3" percent={attendanceRate} strokeColor="#2563eb" /><div className="mt-3 flex flex-wrap gap-2">{site.randomCheckPending > 0 && <Tag icon={<AlertTriangle className="h-3 w-3" />} color="orange">{site.randomCheckPending} random check chờ phản hồi</Tag>}{site.unresolvedViolations > 0 && <Tag icon={<ShieldAlert className="h-3 w-3" />} color="error">{site.unresolvedViolations} vi phạm chưa xử lý</Tag>}</div></div>
       <SupervisorCheckinMap site={site} />
       <div className="p-5"><h3 className="mb-3 text-sm font-semibold text-slate-700">Đang có mặt</h3>{site.onSiteEmployees.length ? <div className="space-y-2">{site.onSiteEmployees.map((employee) => <div key={employee.employeeId} className="flex items-center gap-3 rounded-lg bg-slate-50 p-3"><span className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 font-semibold text-blue-700">{(employee.lastName || employee.firstName || 'N').charAt(0)}</span><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-slate-800">{employee.lastName} {employee.firstName}</p><p className="text-xs text-slate-500">{employee.employeeCode || 'Chưa có mã'} · vào {dayjs(employee.checkInAt).format('HH:mm')}</p>{employee.checkInLat != null && employee.checkInLon != null && <p className="mt-1 text-xs text-amber-700">Vị trí lúc check-in {dayjs(employee.checkInAt).format('HH:mm DD/MM/YYYY')} · {employee.checkInLat.toFixed(5)}, {employee.checkInLon.toFixed(5)}</p>}</div></div>)}</div> : <p className="text-sm text-slate-500">Chưa có nhân viên check-in hôm nay.</p>}</div>
     </section>;
