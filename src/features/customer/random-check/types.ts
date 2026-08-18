@@ -17,6 +17,8 @@ export interface ScheduledCheckResponse {
   configSnapshot?: string;
   manualReason?: string | null;
   triggeredBy?: string | null;
+  /** 'auto' or 'manual_hr' — derived from triggeredBy (#108/#109, 2026-08-18). */
+  triggerType?: "auto" | "manual_hr" | null;
   outcome?: "pass" | "fail" | null;
   failureReason?: string | null;
   /** Soft signal returned by POST /manual; never a hard rate limit. */
@@ -68,6 +70,7 @@ export interface ScheduledCheckListParams {
   siteId?: string;
   employeeId?: string;
   status?: string;
+  triggerType?: "auto" | "manual_hr";
   dateFrom?: string;
   dateTo?: string;
   page?: number;
