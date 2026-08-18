@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Alert, App, Card, Space, Statistic, Tabs, Tag, Tooltip } from "antd";
+import { Alert, App, Card, Input, Modal, Space, Statistic, Tabs, Tag, Tooltip } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import { Eye, RadioTower, Send, UserRoundSearch, XCircle } from "lucide-react";
@@ -63,7 +63,7 @@ function getErrorMessage(error: unknown, fallback: string) {
 
 export function ScheduledChecksPage() {
   const searchParams = useSearchParams();
-  const { message, modal } = App.useApp();
+  const { message } = App.useApp();
   const user = useAuthStore((state) => state.user);
   const hasPermission = useAuthStore((state) => state.hasPermission);
   const tenantId = user?.tenantId || "";
@@ -132,6 +132,8 @@ export function ScheduledChecksPage() {
   );
   const cancelMutation = useCancelScheduledCheck();
   const dispatchMutation = useDispatchScheduledCheck();
+  const [cancellingCheckId, setCancellingCheckId] = useState<string | null>(null);
+  const [cancelReason, setCancelReason] = useState("");
   const canConfigure = hasPermission("randomchecks:configure");
 
   const runDispatch = async (checkId: string) => {
@@ -144,22 +146,23 @@ export function ScheduledChecksPage() {
   };
 
   const confirmCancel = (checkId: string) => {
-    modal.confirm({
-      title: "Hủy lượt kiểm tra?",
-      content: "Chỉ lượt đang chờ gửi hoặc đã gửi nhưng chưa phản hồi mới có thể hủy.",
-      okText: "Hủy lượt kiểm tra",
-      okType: "danger",
-      cancelText: "Quay lại",
-      onOk: async () => {
-        try {
-          await cancelMutation.mutateAsync({ tenantId, checkId });
-          message.success("Đã hủy lượt kiểm tra.");
-        } catch (cancelError: unknown) {
-          message.error(getErrorMessage(cancelError, "Không thể hủy lượt kiểm tra."));
-          throw cancelError;
-        }
-      },
-    });
+    setCancellingCheckId(checkId);
+    setCancelReason("");
+  };
+
+  const submitCancel = async () => {
+    if (!cancellingCheckId) return;
+    try {
+      await cancelMutation.mutateAsync({
+        tenantId,
+        checkId: cancellingCheckId,
+        reason: cancelReason.trim() || undefined,
+      });
+      message.success("Đã hủy lượt kiểm tra.");
+      setCancellingCheckId(null);
+    } catch (cancelError: unknown) {
+      message.error(getErrorMessage(cancelError, "Không thể hủy lượt kiểm tra."));
+    }
   };
 
   const columns: ColumnsType<ScheduledCheckResponse> = [
@@ -398,6 +401,29 @@ export function ScheduledChecksPage() {
         siteName={selectedCheck?.siteName || (selectedCheck ? siteNames.get(selectedCheck.siteId) : undefined)}
         onClose={() => { setSelectedCheck(null); setDeepLinkedCheckId(null); }}
       />
+      <Modal
+        title="Hủy lượt kiểm tra?"
+        open={Boolean(cancellingCheckId)}
+        onCancel={() => setCancellingCheckId(null)}
+        onOk={submitCancel}
+        okText="Hủy lượt kiểm tra"
+        okType="danger"
+        cancelText="Quay lại"
+        confirmLoading={cancelMutation.isPending}
+      >
+        <p className="mb-3 text-sm text-slate-600">
+          Chỉ lượt đang chờ gửi hoặc đã gửi nhưng chưa phản hồi mới có thể hủy.
+        </p>
+        <label className="mb-1 block text-sm font-medium text-slate-700">
+          Lý do hủy (không bắt buộc)
+        </label>
+        <Input.TextArea
+          rows={3}
+          value={cancelReason}
+          onChange={(e) => setCancelReason(e.target.value)}
+          placeholder="VD: Nhân viên đã nghỉ việc trước ca này"
+        />
+      </Modal>
     </div>
   );
 }

@@ -81,8 +81,8 @@ export function useTriggerManualCheck() {
 export function useCancelScheduledCheck() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ tenantId, checkId }: { tenantId: string; checkId: string }) =>
-      scheduledCheckService.cancel(tenantId, checkId),
+    mutationFn: ({ tenantId, checkId, reason }: { tenantId: string; checkId: string; reason?: string }) =>
+      scheduledCheckService.cancel(tenantId, checkId, reason),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: scheduledCheckKeys.all }),
   });
 }
