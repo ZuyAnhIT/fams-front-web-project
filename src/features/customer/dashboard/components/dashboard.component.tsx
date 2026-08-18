@@ -1,13 +1,16 @@
 'use client';
 
+import { useMemo, useState } from 'react';
 import { Alert, Progress, Spin, Tag } from 'antd';
 import dayjs from 'dayjs';
 import { AlertTriangle, Bell, Building2, CalendarCheck, Clock3, MapPin, Users } from 'lucide-react';
 import Link from 'next/link';
 import StatCard from '@/components/charts/StatCard';
 import EmptyState from '@/components/feedback/EmptyState';
+import { BaseSelect } from '@/components/ui';
 import { CUSTOMER_ROUTES } from '@/constants/routes';
 import { SystemRole } from '@/features/customer/auth/types/auth.type';
+import { useSitesQuery } from '@/features/customer/site/hooks/use-site';
 import { useAuthStore } from '@/stores/auth.store';
 import { useEmployeeDashboard, useHrDashboard, useSupervisorDashboard } from '../hooks/use-dashboard';
 import SupervisorCheckinMap from './SupervisorCheckinMap';
@@ -35,7 +38,10 @@ function LoadingDashboard() {
 }
 
 function HrDashboardView({ tenantId }: { tenantId: string }) {
-  const query = useHrDashboard(tenantId);
+  const [siteId, setSiteId] = useState<string>();
+  const { data: sitePage } = useSitesQuery({ tenantId, page: 0, size: 100, sortBy: 'name', sortDir: 'asc' });
+  const sites = useMemo(() => sitePage?.data?.content ?? [], [sitePage?.data?.content]);
+  const query = useHrDashboard(tenantId, siteId);
   const data = query.data;
   if (query.isLoading) return <LoadingDashboard />;
   if (query.isError || !data) return <Alert type="error" showIcon title="Không thể tải Dashboard HR" description="Bạn có thể chưa có quyền employees:list hoặc dữ liệu công ty hiện không khả dụng." />;
@@ -44,11 +50,28 @@ function HrDashboardView({ tenantId }: { tenantId: string }) {
   const maxViolation = Math.max(1, ...types.map((type) => data.violations.unresolvedByType[type] ?? 0));
   return (
     <div className="space-y-6">
+      <div className="flex justify-end">
+        <BaseSelect
+          aria-label="Lọc theo công trình"
+          placeholder="Toàn bộ công ty"
+          allowClear
+          showSearch
+          optionFilterProp="label"
+          className="w-full sm:w-64"
+          value={siteId}
+          onChange={setSiteId}
+          options={sites.map((site) => ({ value: site.id, label: site.name }))}
+        />
+      </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard title="Tổng nhân viên" value={data.personnel.totalEmployees} description={`+${data.personnel.newThisMonth} trong tháng này`} icon={Users} href={CUSTOMER_ROUTES.EMPLOYEES} />
         <StatCard title="Có mặt hôm nay" value={data.attendance.presentToday} description={`${data.attendance.onSiteNow} người đang tại công trình · ${data.attendance.lateToday} đi muộn`} icon={CalendarCheck} tone="emerald" href={CUSTOMER_ROUTES.ATTENDANCE} />
         <StatCard title="Vi phạm chưa xử lý" value={data.violations.unresolved} description={`${data.violations.resolvedThisMonth} đã xử lý trong tháng`} icon={AlertTriangle} tone="amber" href={`${CUSTOMER_ROUTES.VIOLATIONS}?resolved=false`} />
         <StatCard title="Công trình" value={data.sites.totalSites} description={`${data.sites.employeesOnSiteNow} nhân viên đang có mặt`} icon={Building2} tone="violet" href={CUSTOMER_ROUTES.SITES} />
+      </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <StatCard title="Chờ HR duyệt" value={data.attendance.pendingReview} description="Check-in bị đánh dấu lỗi, chờ xử lý" icon={AlertTriangle} tone="amber" href={CUSTOMER_ROUTES.ATTENDANCE} />
+        <StatCard title="Quên check-out hôm nay" value={data.attendance.missingCheckoutToday} description="Chưa kết thúc ca dù đã hết giờ" icon={Clock3} tone="amber" href={CUSTOMER_ROUTES.ATTENDANCE} />
       </div>
 
       <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm" aria-labelledby="violation-overview-title">

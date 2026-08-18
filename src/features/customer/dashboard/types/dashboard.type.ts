@@ -29,7 +29,15 @@ export interface EmployeeDashboard {
 
 export interface HrDashboard {
   personnel: { totalEmployees: number; newThisMonth: number };
-  attendance: { presentToday: number; lateToday: number; onSiteNow: number };
+  attendance: {
+    presentToday: number;
+    lateToday: number;
+    onSiteNow: number;
+    /** #120 (2026-08-18): checkins today still flagged pending_review, awaiting HR override. */
+    pendingReview: number;
+    /** #120 (2026-08-18): attendance summaries today flagged missingCheckout. */
+    missingCheckoutToday: number;
+  };
   violations: {
     unresolved: number;
     resolvedThisMonth: number;

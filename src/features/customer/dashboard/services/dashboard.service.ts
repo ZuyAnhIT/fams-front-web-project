@@ -10,8 +10,10 @@ export const customerDashboardService = {
     const response = await apiClient.get<ApiResponse<EmployeeDashboard>>(endpoint(tenantId, 'employee'));
     return response.data.data;
   },
-  async hr(tenantId: string) {
-    const response = await apiClient.get<ApiResponse<HrDashboard>>(endpoint(tenantId, 'hr'));
+  async hr(tenantId: string, siteId?: string) {
+    const response = await apiClient.get<ApiResponse<HrDashboard>>(endpoint(tenantId, 'hr'), {
+      params: siteId ? { siteId } : undefined,
+    });
     return response.data.data;
   },
   async supervisor(tenantId: string) {
