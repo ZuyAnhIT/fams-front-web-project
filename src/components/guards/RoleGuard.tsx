@@ -24,7 +24,12 @@ export default function RoleGuard({ children, allowedRoles = [], allowedPermissi
   const hasPermission = Boolean(
     user?.permissions?.some((permission) => allowedPermissions.includes(permission)),
   );
-  const hasAccess = hasRole || hasPermission;
+  // Platform Admin bypasses per-permission gating everywhere — mirrors the backend's
+  // callerIsPlatformAdmin bypass and auth.store's hasPermission(). Found via #91-95 UI test
+  // (2026-08-18): a Platform Admin got a hard 403 on pages gated by allowedPermissions (e.g.
+  // "Kiểm tra ngẫu nhiên") despite the backend allowing the action.
+  const isPlatformAdmin = user?.role === SystemRole.PLATFORM_ADMIN;
+  const hasAccess = isPlatformAdmin || hasRole || hasPermission;
 
   if (!isInitialized) {
     return (
