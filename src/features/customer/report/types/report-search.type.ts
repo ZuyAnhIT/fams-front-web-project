@@ -8,6 +8,7 @@ import type { ViolationListItem, ViolationType } from '@/features/customer/viola
 export interface DailyAttendanceReportParams {
   date: string;
   siteId?: string;
+  workspaceId?: string;
   page?: number;
   size?: number;
 }
@@ -36,6 +37,7 @@ export interface MonthlyAttendanceReportParams {
   year: number;
   month: number;
   siteId?: string;
+  workspaceId?: string;
   page?: number;
   size?: number;
 }
@@ -63,6 +65,7 @@ export interface ViolationReportParams {
   from?: string;
   to?: string;
   siteId?: string;
+  workspaceId?: string;
   employeeId?: string;
   violationType?: ViolationType;
   page?: number;
@@ -128,5 +131,6 @@ export interface AttendanceExportParams {
   year: number;
   month: number;
   siteId?: string;
+  workspaceId?: string;
   confirmDespiteWarnings?: boolean;
 }

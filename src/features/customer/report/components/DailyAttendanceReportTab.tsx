@@ -10,6 +10,7 @@ import DataTable from '@/components/tables/DataTable';
 import StatCard from '@/components/charts/StatCard';
 import { useAuthStore } from '@/stores/auth.store';
 import { useSitesQuery } from '@/features/customer/site/hooks/use-site';
+import { useWorkspacesQuery } from '@/features/customer/workspace/hooks/use-workspace';
 import type { AttendanceSummaryResponse } from '@/features/customer/attendance/types/attendance.type';
 import { useDailyAttendanceReport } from '../hooks/use-report-search';
 import type { DailyAttendanceReportParams } from '../types/report-search.type';
@@ -19,12 +20,14 @@ export default function DailyAttendanceReportTab() {
   const tenantId = useAuthStore((state) => state.user?.tenantId ?? undefined);
   const [date, setDate] = useState<Dayjs>(dayjs());
   const [siteId, setSiteId] = useState<string>();
+  const [workspaceId, setWorkspaceId] = useState<string>();
   const [page, setPage] = useState(0);
   const [size, setSize] = useState(20);
-  const params: DailyAttendanceReportParams = { date: date.format('YYYY-MM-DD'), siteId, page, size };
+  const params: DailyAttendanceReportParams = { date: date.format('YYYY-MM-DD'), siteId, workspaceId, page, size };
   const query = useDailyAttendanceReport(tenantId, params);
   const report = query.data;
   const { data: sitePage } = useSitesQuery({ tenantId, status: 'active', sortBy: 'name', sortDir: 'asc', page: 0, size: 100 });
+  const { data: workspacePage } = useWorkspacesQuery({ tenantId, status: 'active', size: 100 });
 
   const columns: TableColumnsType<AttendanceSummaryResponse> = [
     { title: 'Nhân viên', key: 'employee', render: (_, row) => row.employeeName || row.employeeId },
@@ -38,9 +41,10 @@ export default function DailyAttendanceReportTab() {
   ];
 
   return <div className="space-y-5">
-    <div className="grid gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 md:grid-cols-2">
+    <div className="grid gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 md:grid-cols-3">
       <BaseDatePicker aria-label="Chọn ngày báo cáo" value={date} allowClear={false} onChange={(value) => { if (value && !Array.isArray(value)) { setDate(value); setPage(0); } }} />
       <BaseSelect aria-label="Lọc báo cáo ngày theo công trình" allowClear placeholder="Toàn bộ công trình được phép xem" value={siteId} onChange={(value) => { setSiteId(value); setPage(0); }} options={(sitePage?.data?.content ?? []).map((site) => ({ value: site.id, label: site.name }))} />
+      <BaseSelect aria-label="Lọc báo cáo ngày theo workspace" allowClear placeholder="Tất cả workspace" value={workspaceId} onChange={(value) => { setWorkspaceId(value); setPage(0); }} options={(workspacePage?.data?.content ?? []).map((workspace) => ({ value: workspace.id, label: workspace.name }))} />
     </div>
     {query.isError && <ReportError error={query.error} title="Không thể tải báo cáo công ngày" />}
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">

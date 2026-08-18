@@ -13,6 +13,7 @@ import { CUSTOMER_ROUTES } from '@/constants/routes';
 import { useAuthStore } from '@/stores/auth.store';
 import { useEmployees } from '@/features/customer/employee/hooks/use-employee';
 import { useSitesQuery } from '@/features/customer/site/hooks/use-site';
+import { useWorkspacesQuery } from '@/features/customer/workspace/hooks/use-workspace';
 import type { ViolationListItem, ViolationType } from '@/features/customer/violation/types/violation.type';
 import { useExportViolationReport, useViolationReport } from '../hooks/use-report-search';
 import type { ViolationReportParams } from '../types/report-search.type';
@@ -35,6 +36,7 @@ export default function ViolationReportTab() {
   const exportMutation = useExportViolationReport();
   const report = query.data;
   const { data: sitePage } = useSitesQuery({ tenantId, sortBy: 'name', sortDir: 'asc', page: 0, size: 100 });
+  const { data: workspacePage } = useWorkspacesQuery({ tenantId, status: 'active', size: 100 });
   const { data: employeePage } = useEmployees({ page: 0, size: 100, sortBy: 'firstName', sortDir: 'asc' }, { enabled: Boolean(tenantId) });
   const sites = useMemo(() => sitePage?.data?.content ?? [], [sitePage?.data?.content]);
   const employees = useMemo(() => employeePage?.content ?? [], [employeePage?.content]);
@@ -66,9 +68,10 @@ export default function ViolationReportTab() {
   ];
 
   return <div className="space-y-5">
-    <div className="grid gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 md:grid-cols-2 xl:grid-cols-5">
+    <div className="grid gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 md:grid-cols-2 xl:grid-cols-6">
       <RangePicker aria-label="Chọn kỳ báo cáo vi phạm" value={[params.from ? dayjs(params.from) : null, params.to ? dayjs(params.to) : null]} onChange={(_, values) => setParams((current) => ({ ...current, from: values[0] || undefined, to: values[1] || undefined, page: 0 }))} />
       <BaseSelect aria-label="Lọc vi phạm theo công trình" allowClear placeholder="Tất cả công trình" value={params.siteId} onChange={(siteId) => setParams((current) => ({ ...current, siteId, page: 0 }))} options={sites.map((site) => ({ value: site.id, label: site.name }))} />
+      <BaseSelect aria-label="Lọc vi phạm theo workspace" allowClear placeholder="Tất cả workspace" value={params.workspaceId} onChange={(workspaceId) => setParams((current) => ({ ...current, workspaceId, page: 0 }))} options={(workspacePage?.data?.content ?? []).map((workspace) => ({ value: workspace.id, label: workspace.name }))} />
       <BaseSelect aria-label="Lọc vi phạm theo nhân viên" showSearch optionFilterProp="label" allowClear placeholder="Tất cả nhân viên" value={params.employeeId} onChange={(employeeId) => setParams((current) => ({ ...current, employeeId, page: 0 }))} options={employees.map((employee) => ({ value: employee.id, label: employeeNames.get(employee.id) }))} />
       <BaseSelect aria-label="Lọc theo loại vi phạm" allowClear placeholder="Tất cả loại" value={params.violationType} onChange={(violationType) => setParams((current) => ({ ...current, violationType, page: 0 }))} options={Object.entries(VIOLATION_LABELS).map(([value, label]) => ({ value, label }))} />
       {canExport && <BaseButton type="primary" icon={<Download className="h-4 w-4" />} loading={exportMutation.isPending} onClick={() => void handleExport()}>Xuất Excel</BaseButton>}

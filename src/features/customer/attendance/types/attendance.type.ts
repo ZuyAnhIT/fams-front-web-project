@@ -49,6 +49,7 @@ export interface AttendanceHrMonthlyResponse {
   daysWithRejectedSession: number;
   daysWithRandomCheckFailure: number;
   exceedsRandomCheckFailureThreshold: boolean;
+  violationCount: number;
 }
 
 export interface AdjustAttendanceSummaryRequest {

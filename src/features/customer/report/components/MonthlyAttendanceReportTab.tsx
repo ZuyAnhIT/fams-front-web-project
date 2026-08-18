@@ -11,6 +11,7 @@ import DataTable from '@/components/tables/DataTable';
 import StatCard from '@/components/charts/StatCard';
 import { useAuthStore } from '@/stores/auth.store';
 import { useSitesQuery } from '@/features/customer/site/hooks/use-site';
+import { useWorkspacesQuery } from '@/features/customer/workspace/hooks/use-workspace';
 import type { AttendanceHrMonthlyResponse } from '@/features/customer/attendance/types/attendance.type';
 import { useExportAttendanceReport, useMonthlyAttendanceReport } from '../hooks/use-report-search';
 import type { AttendanceExportParams, MonthlyAttendanceReportParams } from '../types/report-search.type';
@@ -23,18 +24,20 @@ export default function MonthlyAttendanceReportTab() {
   const canExport = user?.role === 'PLATFORM_ADMIN' || Boolean(user?.permissions?.includes('attendance:export'));
   const [month, setMonth] = useState<Dayjs>(dayjs());
   const [siteId, setSiteId] = useState<string>();
+  const [workspaceId, setWorkspaceId] = useState<string>();
   const [page, setPage] = useState(0);
   const [size, setSize] = useState(20);
-  const params: MonthlyAttendanceReportParams = { year: month.year(), month: month.month() + 1, siteId, page, size };
+  const params: MonthlyAttendanceReportParams = { year: month.year(), month: month.month() + 1, siteId, workspaceId, page, size };
   const query = useMonthlyAttendanceReport(tenantId, params);
   const exportMutation = useExportAttendanceReport();
   const report = query.data;
   const { data: sitePage } = useSitesQuery({ tenantId, status: 'active', sortBy: 'name', sortDir: 'asc', page: 0, size: 100 });
+  const { data: workspacePage } = useWorkspacesQuery({ tenantId, status: 'active', size: 100 });
   const warningRows = (report?.totalRowsWithPendingReview ?? 0) + (report?.totalRowsWithRejectedSession ?? 0) + (report?.totalRowsWithRandomCheckFailure ?? 0);
 
   const exportFile = async (confirmDespiteWarnings: boolean) => {
     if (!tenantId) return;
-    const exportParams: AttendanceExportParams = { year: params.year, month: params.month, siteId, confirmDespiteWarnings };
+    const exportParams: AttendanceExportParams = { year: params.year, month: params.month, siteId, workspaceId, confirmDespiteWarnings };
     const blob = await exportMutation.mutateAsync({ tenantId, params: exportParams });
     downloadBlob(blob, `BangCong_${month.format('MM_YYYY')}.xlsx`);
     message.success('Đã xuất báo cáo công tháng.');
@@ -71,12 +74,14 @@ export default function MonthlyAttendanceReportTab() {
     { title: 'Về sớm', key: 'early', width: 140, render: (_, row) => row.earlyLeaveDays ? `${row.earlyLeaveDays} ngày · ${row.totalEarlyLeaveMinutes} phút` : '—' },
     { title: 'Thiếu check-out', dataIndex: 'missingCheckoutDays', width: 135, render: (value) => value ? <Tag color="error">{value} ngày</Tag> : '—' },
     { title: 'Cảnh báo trước payroll', key: 'warnings', width: 230, render: (_, row) => <div className="flex flex-wrap gap-1">{row.daysWithPendingReview > 0 && <Tag color="warning">Chờ duyệt {row.daysWithPendingReview}</Tag>}{row.daysWithRejectedSession > 0 && <Tag color="error">Từ chối {row.daysWithRejectedSession}</Tag>}{row.daysWithRandomCheckFailure > 0 && <Tag color="orange">Random check {row.daysWithRandomCheckFailure}</Tag>}{!row.daysWithPendingReview && !row.daysWithRejectedSession && !row.daysWithRandomCheckFailure && <Tag color="success">Sẵn sàng</Tag>}</div> },
+    { title: 'Vi phạm', dataIndex: 'violationCount', width: 110, render: (value) => value > 0 ? <Tag color="error">{value}</Tag> : '—' },
   ];
 
   return <div className="space-y-5">
-    <div className="grid gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 md:grid-cols-3">
+    <div className="grid gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 md:grid-cols-4">
       <BaseDatePicker aria-label="Chọn tháng báo cáo" picker="month" value={month} allowClear={false} onChange={(value) => { if (value && !Array.isArray(value)) { setMonth(value); setPage(0); } }} />
       <BaseSelect aria-label="Lọc báo cáo tháng theo công trình" allowClear placeholder="Toàn bộ công trình được phép xem" value={siteId} onChange={(value) => { setSiteId(value); setPage(0); }} options={(sitePage?.data?.content ?? []).map((site) => ({ value: site.id, label: site.name }))} />
+      <BaseSelect aria-label="Lọc báo cáo tháng theo workspace" allowClear placeholder="Tất cả workspace" value={workspaceId} onChange={(value) => { setWorkspaceId(value); setPage(0); }} options={(workspacePage?.data?.content ?? []).map((workspace) => ({ value: workspace.id, label: workspace.name }))} />
       {canExport && <BaseButton type="primary" icon={<Download className="h-4 w-4" />} loading={exportMutation.isPending} onClick={() => void handleExport()}>Xuất Excel</BaseButton>}
     </div>
     {query.isError && <ReportError error={query.error} title="Không thể tải báo cáo công tháng" />}
@@ -88,6 +93,6 @@ export default function MonthlyAttendanceReportTab() {
       <StatCard title="OT" value={formatMinutes(report?.totalOtMinutes ?? 0)} description="Đã nằm trong tổng giờ" icon={Clock3} tone="violet" loading={query.isLoading} />
       <StatCard title="Thiếu check-out" value={report?.totalMissingCheckoutDays ?? 0} icon={TimerOff} tone="amber" loading={query.isLoading} />
     </div>
-    <DataTable ariaLabel="Báo cáo công theo tháng" columns={columns} data={report?.records.content ?? []} rowKey={(row) => `${row.employeeId}-${row.siteId}`} loading={query.isLoading} currentPage={page} pageSize={size} totalElements={report?.records.totalElements ?? 0} onPageChange={(nextPage, nextSize) => { setPage(nextPage); setSize(nextSize); }} scroll={{ x: 1300 }} emptyTitle="Chưa có dữ liệu công tháng" emptyDescription="Chọn tháng hoặc công trình khác để kiểm tra." />
+    <DataTable ariaLabel="Báo cáo công theo tháng" columns={columns} data={report?.records.content ?? []} rowKey={(row) => `${row.employeeId}-${row.siteId}`} loading={query.isLoading} currentPage={page} pageSize={size} totalElements={report?.records.totalElements ?? 0} onPageChange={(nextPage, nextSize) => { setPage(nextPage); setSize(nextSize); }} scroll={{ x: 1410 }} emptyTitle="Chưa có dữ liệu công tháng" emptyDescription="Chọn tháng hoặc công trình khác để kiểm tra." />
   </div>;
 }

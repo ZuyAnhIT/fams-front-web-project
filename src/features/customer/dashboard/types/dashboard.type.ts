@@ -64,6 +64,8 @@ export interface SupervisorSiteSummary {
   onSiteNow: number;
   siteLatitude: number | null;
   siteLongitude: number | null;
+  randomCheckPending: number;
+  unresolvedViolations: number;
   onSiteEmployees: SupervisorOnSiteEmployee[];
 }
 
