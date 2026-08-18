@@ -52,6 +52,15 @@ export interface CheckResponseDetail {
 export interface ScheduledCheckDetailResponse extends ScheduledCheckResponse {
   response: CheckResponseDetail | null;
   violations?: ScheduledCheckViolationSummary[];
+  /** #100 (2026-08-18): when the check was actually dispatched — null if never sent. */
+  sentAt?: string | null;
+  /** #100: the Notification row created for this check's dispatch, if any. */
+  notificationId?: string | null;
+  /** #99 (2026-08-18): who/when/why this check was cancelled — null unless status=cancelled.
+   *  cancelledBy is null for system-triggered cancellation (e.g. assignment cancelled). */
+  cancelledBy?: string | null;
+  cancelledAt?: string | null;
+  cancelledReason?: string | null;
 }
 
 export interface ScheduledCheckListParams {

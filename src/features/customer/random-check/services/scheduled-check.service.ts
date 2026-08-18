@@ -52,9 +52,14 @@ export const scheduledCheckService = {
     return response.data;
   },
 
-  async cancel(tenantId: string, checkId: string): Promise<ApiResponse<{ checkId: string; cancelled: boolean }>> {
+  async cancel(
+    tenantId: string,
+    checkId: string,
+    reason?: string,
+  ): Promise<ApiResponse<{ checkId: string; cancelled: boolean }>> {
     const response = await apiClient.post<ApiResponse<{ checkId: string; cancelled: boolean }>>(
       `/tenants/${tenantId}/scheduled-checks/${checkId}/cancel`,
+      reason ? { reason } : undefined,
     );
     return response.data;
   },

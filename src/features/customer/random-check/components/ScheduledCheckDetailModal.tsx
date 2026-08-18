@@ -97,11 +97,28 @@ export default function ScheduledCheckDetailModal({
               description={`Lý do: ${manualReason}${triggeredBy ? ` · Người kích hoạt: ${triggeredBy}` : ""}`}
             />
           )}
+          {data.status === "cancelled" && (
+            <Alert
+              type="info"
+              showIcon
+              title="Lượt kiểm tra đã bị hủy"
+              description={
+                <>
+                  {data.cancelledAt ? `Lúc: ${dayjs(data.cancelledAt).format("DD/MM/YYYY HH:mm:ss")}` : ""}
+                  {data.cancelledBy ? ` · Người hủy: ${data.cancelledBy}` : " · Hệ thống tự động hủy"}
+                  {data.cancelledReason ? ` · Lý do: ${data.cancelledReason}` : ""}
+                </>
+              }
+            />
+          )}
           <Descriptions bordered size="small" column={{ xs: 1, sm: 2 }}>
             <Descriptions.Item label="Nhân viên">{employeeName || data.employeeId}</Descriptions.Item>
             <Descriptions.Item label="Công trình">{siteName || data.siteId}</Descriptions.Item>
             <Descriptions.Item label="Ngày">{dayjs(data.checkDate).format("DD/MM/YYYY")}</Descriptions.Item>
             <Descriptions.Item label="Giờ dự kiến">{dayjs(data.scheduledAt).format("DD/MM/YYYY HH:mm:ss")}</Descriptions.Item>
+            <Descriptions.Item label="Giờ gửi thực tế">
+              {data.sentAt ? dayjs(data.sentAt).format("DD/MM/YYYY HH:mm:ss") : "—"}
+            </Descriptions.Item>
             <Descriptions.Item label="Hạn phản hồi">{data.expiresAt ? dayjs(data.expiresAt).format("DD/MM/YYYY HH:mm:ss") : "—"}</Descriptions.Item>
             <Descriptions.Item label="Trạng thái"><Tag>{data.status}</Tag></Descriptions.Item>
             <Descriptions.Item label="Mode theo snapshot" span={2}>{mode || "Không đọc được snapshot"}</Descriptions.Item>
