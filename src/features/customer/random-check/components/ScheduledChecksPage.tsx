@@ -33,6 +33,11 @@ const statusOptions = [
   { value: "cancelled", label: "Đã hủy" },
 ];
 
+const triggerTypeOptions = [
+  { value: "auto", label: "Tự động" },
+  { value: "manual_hr", label: "Thủ công (HR)" },
+];
+
 const statusMeta: Record<string, { label: string; color: string }> = {
   pending: { label: "Chờ gửi", color: "gold" },
   sent: { label: "Đã gửi", color: "blue" },
@@ -70,6 +75,7 @@ export function ScheduledChecksPage() {
   const [siteId, setSiteId] = useState<string>();
   const [employeeId, setEmployeeId] = useState<string>();
   const [status, setStatus] = useState<string>();
+  const [triggerType, setTriggerType] = useState<string>();
   const [dateFrom, setDateFrom] = useState(dayjs().startOf("month").format("YYYY-MM-DD"));
   const [dateTo, setDateTo] = useState(dayjs().endOf("month").format("YYYY-MM-DD"));
   const [page, setPage] = useState(0);
@@ -119,6 +125,7 @@ export function ScheduledChecksPage() {
     siteId: effectiveSiteId,
     employeeId,
     status,
+    triggerType: triggerType as "auto" | "manual_hr" | undefined,
     dateFrom: dateFrom || undefined,
     dateTo: dateTo || undefined,
     page,
@@ -201,8 +208,10 @@ export function ScheduledChecksPage() {
       title: "Loại",
       key: "source",
       width: 135,
-      render: (_, check) => check.manualReason ? (
-        <Tooltip title={check.manualReason}><Tag color="purple">Thủ công</Tag></Tooltip>
+      render: (_, check) => check.triggerType === "manual_hr" ? (
+        check.manualReason
+          ? <Tooltip title={check.manualReason}><Tag color="purple">Thủ công</Tag></Tooltip>
+          : <Tag color="purple">Thủ công</Tag>
       ) : <Tag>Tự động</Tag>,
     },
     {
@@ -297,7 +306,7 @@ export function ScheduledChecksPage() {
       </div>
 
       <ContentCard className="p-5">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-6">
           <BaseSelect
             aria-label="Lọc theo công trình"
             placeholder={isRestrictedToSites ? "Chọn công trình bắt buộc" : "Tất cả công trình"}
@@ -324,6 +333,14 @@ export function ScheduledChecksPage() {
             value={status}
             onChange={(value) => { setStatus(value); setPage(0); }}
             options={statusOptions}
+          />
+          <BaseSelect
+            aria-label="Lọc theo loại (tự động/thủ công)"
+            placeholder="Tất cả loại"
+            allowClear
+            value={triggerType}
+            onChange={(value) => { setTriggerType(value); setPage(0); }}
+            options={triggerTypeOptions}
           />
           <BaseInput aria-label="Từ ngày" type="date" value={dateFrom} onChange={(event) => { setDateFrom(event.target.value); setPage(0); }} />
           <BaseInput aria-label="Đến ngày" type="date" value={dateTo} onChange={(event) => { setDateTo(event.target.value); setPage(0); }} />
