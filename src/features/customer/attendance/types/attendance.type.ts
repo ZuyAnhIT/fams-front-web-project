@@ -87,6 +87,12 @@ export interface AttendanceMonthlyParams {
   month: number;
   employeeId?: string;
   siteId?: string;
+  /** #86 (2026-08-17): keep only employee+site rows with at least one day this month matching
+   *  this status. */
+  status?: "present" | "incomplete";
+  /** #86: sort the aggregate by one of these columns — omit for default stable order. */
+  sortBy?: "totalWorkMinutes" | "totalLateMinutes" | "totalOtMinutes" | "missingCheckoutDays" | "presentDays";
+  sortDir?: "asc" | "desc";
   page?: number;
   size?: number;
 }

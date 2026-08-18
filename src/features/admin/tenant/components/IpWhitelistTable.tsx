@@ -232,7 +232,7 @@ export default function IpWhitelistTable({
               control={control}
               name="ipAddress"
               label="Địa chỉ IP hoặc CIDR"
-              placeholder="192.168.1.13 hoặc 10.0.0.0/24"
+              placeholder="192.168.1.14 hoặc 10.0.0.0/24"
               error={errors.ipAddress}
               required
             />

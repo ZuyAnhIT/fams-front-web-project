@@ -98,6 +98,15 @@ function NotificationItem({ notification, onClick, isMarking }: NotificationItem
             {!notification.isRead && (
               <span className="flex-shrink-0 w-2 h-2 rounded-full bg-blue-500" aria-hidden="true" />
             )}
+            {(notification.priority === "critical" || notification.priority === "high") && (
+              <span
+                className={`flex-shrink-0 w-2 h-2 rounded-full ${
+                  notification.priority === "critical" ? "bg-red-500" : "bg-amber-500"
+                }`}
+                title={notification.priority === "critical" ? "Khẩn cấp" : "Quan trọng"}
+                aria-hidden="true"
+              />
+            )}
           </div>
           <span className="flex-shrink-0 text-xs text-slate-400 whitespace-nowrap">
             {formatTimeAgo(notification.createdAt)}

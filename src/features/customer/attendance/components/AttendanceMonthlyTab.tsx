@@ -38,6 +38,9 @@ export default function AttendanceMonthlyTab() {
   const [selectedMonth, setSelectedMonth] = useState<Dayjs>(dayjs());
   const [employeeId, setEmployeeId] = useState<string>();
   const [siteId, setSiteId] = useState<string>();
+  const [status, setStatus] = useState<AttendanceMonthlyParams["status"]>();
+  const [sortBy, setSortBy] = useState<AttendanceMonthlyParams["sortBy"]>();
+  const [sortDir, setSortDir] = useState<AttendanceMonthlyParams["sortDir"]>("desc");
   const [page, setPage] = useState(0);
   const [size, setSize] = useState(20);
   const [checkingReadiness, setCheckingReadiness] = useState(false);
@@ -64,6 +67,9 @@ export default function AttendanceMonthlyTab() {
     month: selectedMonth.month() + 1,
     employeeId,
     siteId: effectiveSiteId,
+    status,
+    sortBy,
+    sortDir: sortBy ? sortDir : undefined,
     page,
     size,
   };
@@ -254,7 +260,7 @@ export default function AttendanceMonthlyTab() {
         title="Một nhân viên có thể xuất hiện ở nhiều dòng"
         description="Bảng được gộp theo nhân viên + công trình. Tổng giờ đã bao gồm OT; cột OT chỉ là phần phân tích."
       />
-      <div className="grid gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3 sm:grid-cols-2 xl:grid-cols-4 sm:p-4">
+      <div className="grid gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3 sm:grid-cols-2 xl:grid-cols-6 sm:p-4">
         <BaseDatePicker
           aria-label="Chọn tháng lập bảng công"
           picker="month"
@@ -288,6 +294,42 @@ export default function AttendanceMonthlyTab() {
             label: `${formatVietnameseName(employee.firstName, employee.lastName)}${employee.employeeCode ? ` (${employee.employeeCode})` : ""}`,
           }))}
         />
+        <BaseSelect
+          aria-label="Lọc bảng công tháng theo trạng thái ngày"
+          allowClear
+          placeholder="Tất cả trạng thái"
+          value={status}
+          onChange={(value) => { setStatus(value); setPage(0); }}
+          options={[
+            { value: "present", label: "Có ngày đủ công (present)" },
+            { value: "incomplete", label: "Có ngày thiếu checkout (incomplete)" },
+          ]}
+        />
+        <BaseSelect
+          aria-label="Sắp xếp bảng công tháng theo"
+          allowClear
+          placeholder="Sắp xếp mặc định"
+          value={sortBy}
+          onChange={(value) => { setSortBy(value); setPage(0); }}
+          options={[
+            { value: "totalWorkMinutes", label: "Tổng giờ làm" },
+            { value: "totalLateMinutes", label: "Số phút đi muộn" },
+            { value: "totalOtMinutes", label: "Số phút OT" },
+            { value: "missingCheckoutDays", label: "Số ngày thiếu check-out" },
+            { value: "presentDays", label: "Số ngày công" },
+          ]}
+        />
+        {sortBy && (
+          <BaseSelect
+            aria-label="Chiều sắp xếp"
+            value={sortDir}
+            onChange={(value) => { setSortDir(value); setPage(0); }}
+            options={[
+              { value: "desc", label: "Giảm dần" },
+              { value: "asc", label: "Tăng dần" },
+            ]}
+          />
+        )}
         {canExport && (
           <BaseButton
             type="primary"
