@@ -156,6 +156,21 @@ export default function ViolationDetailModal({ tenantId, violationId, employeeNa
               <Alert type="info" showIcon title="Không có bằng chứng phản hồi" description="Nhân viên không phản hồi trong thời hạn nên không có GPS hoặc ảnh khuôn mặt cho lượt này." />
             ) : null}
 
+            {data.checkin && (
+              <Descriptions title="Bằng chứng check-in" bordered size="small" column={{ xs: 1, sm: 2 }}>
+                <Descriptions.Item label="Thời điểm check-in">{dayjs(data.checkin.checkInAt).format('DD/MM/YYYY HH:mm:ss')}</Descriptions.Item>
+                <Descriptions.Item label="Trạng thái check-in">{data.checkin.status}</Descriptions.Item>
+                <Descriptions.Item label="GPS">
+                  <a href={`https://www.google.com/maps?q=${data.checkin.checkInLat},${data.checkin.checkInLon}`} target="_blank" rel="noreferrer">{data.checkin.checkInLat}, {data.checkin.checkInLon}</a>
+                </Descriptions.Item>
+                <Descriptions.Item label="Độ chính xác">{data.checkin.checkInAccuracy != null ? `${data.checkin.checkInAccuracy} m` : '—'}</Descriptions.Item>
+                <Descriptions.Item label="Trong geofence">{booleanTag(data.checkin.checkInInsideGeofence)}</Descriptions.Item>
+                <Descriptions.Item label="Face ID">{booleanTag(data.checkin.faceVerified)}</Descriptions.Item>
+                <Descriptions.Item label="Liveness">{booleanTag(data.checkin.livenessVerified, 'Không áp dụng/đang xử lý')}</Descriptions.Item>
+                <Descriptions.Item label="Điểm khớp mặt">{data.checkin.faceVerifyScore == null ? '—' : `${(data.checkin.faceVerifyScore * 100).toFixed(1)}%`}</Descriptions.Item>
+              </Descriptions>
+            )}
+
             <div className="rounded-xl border border-slate-200 p-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>

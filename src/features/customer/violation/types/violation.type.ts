@@ -44,6 +44,20 @@ export interface ViolationCheckResponseEvidence {
   failureReason: string | null;
 }
 
+/** Evidence from the regular check-in this violation came from (#115, 2026-08-18). */
+export interface ViolationCheckinEvidence {
+  id: string;
+  status: string;
+  checkInAt: string;
+  checkInLat: number;
+  checkInLon: number;
+  checkInAccuracy: number | null;
+  checkInInsideGeofence: boolean;
+  faceVerified: boolean | null;
+  livenessVerified: boolean | null;
+  faceVerifyScore: number | null;
+}
+
 export interface ViolationDetail extends ViolationListItem {
   tenantId: string;
   scheduledCheckId: string | null;
@@ -53,6 +67,7 @@ export interface ViolationDetail extends ViolationListItem {
   resolutionReason: string | null;
   scheduledCheck: ViolationScheduledCheckSummary | null;
   checkResponse: ViolationCheckResponseEvidence | null;
+  checkin: ViolationCheckinEvidence | null;
 }
 
 export interface ViolationListParams {
@@ -60,6 +75,8 @@ export interface ViolationListParams {
   siteId?: string;
   violationType?: ViolationType;
   resolved?: boolean;
+  /** Whether the violation affects the employee's attendance summary (#114, 2026-08-18). */
+  affectsAttendance?: boolean;
   from?: string;
   to?: string;
   scheduledCheckId?: string;

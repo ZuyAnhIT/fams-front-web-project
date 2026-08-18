@@ -60,6 +60,7 @@ export default function ViolationManagementPage() {
       siteId: params.siteId,
       violationType: params.violationType,
       resolved: params.resolved,
+      affectsAttendance: params.affectsAttendance,
       from: params.from,
       to: params.to,
       scheduledCheckId: params.scheduledCheckId,
@@ -80,6 +81,7 @@ export default function ViolationManagementPage() {
         ? stored.violationType as ViolationType
         : undefined,
       resolved: typeof stored.resolved === 'boolean' ? stored.resolved : undefined,
+      affectsAttendance: typeof stored.affectsAttendance === 'boolean' ? stored.affectsAttendance : undefined,
       from: typeof stored.from === 'string' ? stored.from : undefined,
       to: typeof stored.to === 'string' ? stored.to : undefined,
       scheduledCheckId: typeof stored.scheduledCheckId === 'string' ? stored.scheduledCheckId : undefined,
@@ -146,11 +148,12 @@ export default function ViolationManagementPage() {
             skipDefault={Boolean(initialScheduledCheckId || resolvedQuery)}
           />
         </div>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-6">
           <BaseSelect allowClear showSearch optionFilterProp="label" placeholder="Tất cả nhân viên" value={params.employeeId} onChange={(employeeId) => setParams((current) => ({ ...current, employeeId, page: 0 }))} options={employees.map((employee) => ({ value: employee.id, label: formatVietnameseName(employee.firstName, employee.lastName) }))} />
           <BaseSelect allowClear showSearch optionFilterProp="label" placeholder="Tất cả công trình" value={params.siteId} onChange={(siteId) => setParams((current) => ({ ...current, siteId, page: 0 }))} options={sites.map((site) => ({ value: site.id, label: site.name }))} />
           <BaseSelect allowClear placeholder="Tất cả loại vi phạm" value={params.violationType} onChange={(violationType) => setParams((current) => ({ ...current, violationType, page: 0 }))} options={Object.entries(VIOLATION_META).map(([value, meta]) => ({ value, label: meta.label }))} />
           <BaseSelect allowClear placeholder="Tất cả trạng thái" value={params.resolved == null ? undefined : String(params.resolved)} onChange={(value) => setParams((current) => ({ ...current, resolved: value == null ? undefined : value === 'true', page: 0 }))} options={[{ value: 'false', label: 'Chưa xử lý' }, { value: 'true', label: 'Đã xử lý' }]} />
+          <BaseSelect allowClear placeholder="Ảnh hưởng công" value={params.affectsAttendance == null ? undefined : String(params.affectsAttendance)} onChange={(value) => setParams((current) => ({ ...current, affectsAttendance: value == null ? undefined : value === 'true', page: 0 }))} options={[{ value: 'true', label: 'Có ảnh hưởng' }, { value: 'false', label: 'Không ảnh hưởng' }]} />
           <RangePicker className="w-full" onChange={(_, values) => setParams((current) => ({ ...current, from: values[0] || undefined, to: values[1] || undefined, page: 0 }))} />
         </div>
       </ContentCard>
