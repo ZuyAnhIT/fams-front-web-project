@@ -32,7 +32,7 @@ export default function ViolationResolutionModal({ action, note, loading, onNote
           showIcon
           title={dismiss ? 'Lý do là bắt buộc và sẽ được lưu audit' : 'Vi phạm chỉ có thể xử lý một lần'}
           description={dismiss
-            ? 'Chỉ bỏ qua khi đã đối chiếu đủ bằng chứng và xác định đây là false positive.'
+            ? 'Chỉ bỏ qua khi đã đối chiếu đủ bằng chứng và xác định đây là false positive. Bảng công sẽ tự động không còn tính vi phạm này là ảnh hưởng nữa, và nhân viên sẽ nhận được thông báo.'
             : 'Sau khi xác nhận, hệ thống không cung cấp thao tác hoàn tác.'}
         />
         <div>
