@@ -12,6 +12,8 @@ export interface SiteResponse {
   longitude?: number;
   timezone: string;
   checkinPolicy: CheckinPolicy;
+  /** When true, the employee-facing check-in map omits the geofence polygon shape (#130, 2026-08-18). */
+  hidePolygonFromEmployee: boolean;
   status: "active" | "inactive";
   createdAt: string;
   updatedAt: string;
@@ -60,6 +62,7 @@ export interface CreateSiteRequest {
   longitude?: number;
   timezone?: string;
   checkinPolicy?: CheckinPolicy;
+  hidePolygonFromEmployee?: boolean;
 }
 
 export interface UpdateSiteRequest {
@@ -72,6 +75,7 @@ export interface UpdateSiteRequest {
   longitude?: number;
   timezone?: string;
   checkinPolicy?: CheckinPolicy;
+  hidePolygonFromEmployee?: boolean;
   status?: "active" | "inactive";
 }
 
