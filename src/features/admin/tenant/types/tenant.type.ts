@@ -13,6 +13,10 @@ export interface Tenant {
   ownerId?: string | null;
   ownerName?: string | null;
   ownerEmail?: string | null;
+  /** #16 (2026-08-19): null nếu tenant chưa có subscription row nào. */
+  planName?: string | null;
+  planId?: string | null;
+  subscriptionStatus?: string | null;
   createdAt: string;
   updatedAt: string;
 }
