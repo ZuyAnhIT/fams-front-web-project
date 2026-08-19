@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Mail, FileDown, FileUp, ChevronRight } from "lucide-react";
 import { Tag, Dropdown, MenuProps, App, Alert, Input, Space } from "antd";
@@ -25,6 +25,8 @@ import MaskedValue from "@/components/security/MaskedValue";
 import { SystemRole } from "@/features/customer/auth/types/auth.type";
 import type { ColumnsType } from "antd/es/table";
 import Image from "next/image";
+import SavedFilterToolbar from "@/features/shared/saved-filter/components/SavedFilterToolbar";
+import type { SavedFilterParams } from "@/features/shared/saved-filter/types/saved-filter.type";
 
 export default function EmployeeListPage() {
   const hasPermission = useAuthStore((state) => state.hasPermission);
@@ -61,6 +63,25 @@ export default function EmployeeListPage() {
     label: w.name,
     value: w.id,
   })) || [];
+
+  const savedParams = useMemo<SavedFilterParams>(() => Object.fromEntries(
+    Object.entries({
+      status: state.status,
+      department: state.department,
+      workspaceId: state.workspaceId,
+      faceRegistered: state.faceRegistered,
+    }).filter(([, value]) => value !== undefined),
+  ), [state.status, state.department, state.workspaceId, state.faceRegistered]);
+
+  const applySavedFilter = useCallback((stored: SavedFilterParams) => {
+    setPagination({
+      page: 0,
+      status: typeof stored.status === "string" ? stored.status : undefined,
+      department: typeof stored.department === "string" ? stored.department : undefined,
+      workspaceId: typeof stored.workspaceId === "string" ? stored.workspaceId : undefined,
+      faceRegistered: typeof stored.faceRegistered === "boolean" ? stored.faceRegistered : undefined,
+    });
+  }, [setPagination]);
 
   const handleStatusChange = (
     record: Employee,
@@ -285,6 +306,12 @@ export default function EmployeeListPage() {
           description="Email và số điện thoại có thể được che một phần. File Excel xuất ra áp dụng cùng quy tắc; Web không có chức năng giải che dữ liệu."
         />
       )}
+      <SavedFilterToolbar
+        tenantId={user?.tenantId || ""}
+        resourceType="employees"
+        currentParams={savedParams}
+        onApply={applySavedFilter}
+      />
       <ListHeader
         searchValue={searchInput}
         onSearchChange={setSearchInput}

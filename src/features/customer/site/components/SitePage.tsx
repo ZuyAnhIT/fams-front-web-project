@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Tag, Tooltip, type TableProps } from "antd";
 import { Plus, Edit3, Eye } from "lucide-react";
 import Link from "next/link";
@@ -18,6 +18,8 @@ import {
   CHECKIN_POLICY_META,
   normalizeCheckinPolicy,
 } from "../../checkin/constants/checkin-policy";
+import SavedFilterToolbar from "@/features/shared/saved-filter/components/SavedFilterToolbar";
+import type { SavedFilterParams } from "@/features/shared/saved-filter/types/saved-filter.type";
 
 export default function SitePage() {
   const user = useAuthStore((state) => state.user);
@@ -34,6 +36,15 @@ export default function SitePage() {
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingSite, setEditingSite] = useState<SiteResponse | null>(null);
+
+  const savedParams = useMemo<SavedFilterParams>(() => Object.fromEntries(
+    Object.entries({ status: statusFilter }).filter(([, value]) => value !== undefined),
+  ), [statusFilter]);
+
+  const applySavedFilter = useCallback((stored: SavedFilterParams) => {
+    setStatusFilter(typeof stored.status === "string" ? stored.status : undefined);
+    setPage(0);
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -199,6 +210,12 @@ export default function SitePage() {
         )}
       </div>
 
+      <SavedFilterToolbar
+        tenantId={tenantId || ""}
+        resourceType="sites"
+        currentParams={savedParams}
+        onApply={applySavedFilter}
+      />
       <ContentCard noPadding>
           <ListHeader
           className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-5 border-b border-slate-100"
