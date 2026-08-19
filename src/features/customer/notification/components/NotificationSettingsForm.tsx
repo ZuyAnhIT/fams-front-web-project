@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
-import { Alert, App, Skeleton, Switch } from "antd";
-import { Bell, BellRing, Smartphone } from "lucide-react";
+import { Alert, App, Skeleton, Switch, Tooltip } from "antd";
+import { Bell, BellRing, Lock, Smartphone } from "lucide-react";
 import {
   useNotificationSettings,
   useUpdateNotificationSetting,
@@ -83,7 +83,14 @@ export default function NotificationSettingsForm() {
             return (
               <div key={eventType} className="grid gap-4 border-t border-slate-100 px-5 py-4 first:border-t-0 sm:grid-cols-[1fr_150px_150px] sm:items-center">
                 <div>
-                  <p className="font-semibold text-slate-900">{label}</p>
+                  <p className="flex items-center gap-1.5 font-semibold text-slate-900">
+                    {label}
+                    {current.mandatory && (
+                      <Tooltip title="Thông báo bắt buộc — không thể tắt.">
+                        <Lock className="h-3.5 w-3.5 text-slate-400" />
+                      </Tooltip>
+                    )}
+                  </p>
                   {current.label && (
                     <p className="mt-0.5 font-mono text-xs text-slate-400">{eventType}</p>
                   )}
@@ -97,6 +104,7 @@ export default function NotificationSettingsForm() {
                     aria-label={`Thông báo trong hộp thư cho ${label}`}
                     checked={current.inAppEnabled}
                     loading={isSaving}
+                    disabled={current.mandatory}
                     onChange={(enabled) => updateChannel(eventType, "inAppEnabled", enabled)}
                   />
                 </label>
@@ -106,6 +114,7 @@ export default function NotificationSettingsForm() {
                     aria-label={`Push di động cho ${label}`}
                     checked={current.pushEnabled}
                     loading={isSaving}
+                    disabled={current.mandatory}
                     onChange={(enabled) => updateChannel(eventType, "pushEnabled", enabled)}
                   />
                 </label>

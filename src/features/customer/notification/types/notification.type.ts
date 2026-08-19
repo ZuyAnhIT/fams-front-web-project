@@ -39,6 +39,10 @@ export interface NotificationSetting {
   inAppEnabled: boolean;
   pushEnabled: boolean;
   customized: boolean;
+  /** #141 (2026-08-19): true for priority=critical eventTypes (e.g. RANDOM_CHECK_SENT) — backend
+   *  rejects any attempt to disable inAppEnabled/pushEnabled for these with 422
+   *  MANDATORY_NOTIFICATION, so the toggle should be disabled rather than let the user hit it. */
+  mandatory: boolean;
   updatedAt: string | null;
 }
 
