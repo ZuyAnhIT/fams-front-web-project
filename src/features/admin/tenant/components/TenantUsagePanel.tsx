@@ -90,7 +90,11 @@ export default function TenantUsagePanel({ tenant }: { tenant: TenantOperational
             current={tenant.currentMonthRandomChecks}
             maximum={tenant.maxRandomChecksPerMonth}
           />
-          <UsageMetric label="Dung lượng lưu trữ (GB)" maximum={tenant.maxStorageGb} />
+          <UsageMetric
+            label="Dung lượng lưu trữ (GB)"
+            current={Math.round(tenant.currentStorageGb * 1000) / 1000}
+            maximum={tenant.maxStorageGb}
+          />
         </div>
       </div>
 
@@ -115,7 +119,9 @@ export default function TenantUsagePanel({ tenant }: { tenant: TenantOperational
       />
 
       <p className="text-xs text-slate-500">
-        Giới hạn dung lượng hiện chỉ để tham khảo vì backend chưa tổng hợp usage lưu trữ theo tenant.
+        Dung lượng đã dùng chỉ tính file avatar và bằng chứng giải trình vi phạm (S3/MinIO) — CHƯA
+        gồm ảnh đăng ký/chấm công Face ID (lưu ở hệ thống AI riêng), nên số liệu là mức tối thiểu,
+        không phải tổng chính xác.
       </p>
     </div>
   );

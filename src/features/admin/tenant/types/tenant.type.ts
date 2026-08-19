@@ -58,6 +58,10 @@ export interface TenantOperationalDetail {
   currentEmployeeCount: number;
   currentSiteCount: number;
   currentMonthRandomChecks: number;
+  /** Best-effort usage in GB (#134, 2026-08-19) — covers avatars + violation-explanation
+   *  evidence (S3/MinIO) only. Does NOT include Face ID photos (separate system) — a floor, not
+   *  the true total. */
+  currentStorageGb: number;
 }
 
 export interface TenantSettingsResponse {

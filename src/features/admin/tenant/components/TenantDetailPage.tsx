@@ -88,8 +88,16 @@ export default function TenantDetailPage({ id }: { id: string }) {
           <Usage label="Nhân viên" current={tenant.currentEmployeeCount} maximum={tenant.maxEmployees} />
           <Usage label="Công trình" current={tenant.currentSiteCount} maximum={tenant.maxSites} />
           <Usage label="Kiểm tra ngẫu nhiên tháng này" current={tenant.currentMonthRandomChecks} maximum={tenant.maxRandomChecksPerMonth} />
-          <Usage label="Dung lượng lưu trữ (GB)" maximum={tenant.maxStorageGb} />
+          <Usage
+            label="Dung lượng lưu trữ (GB)"
+            current={Math.round(tenant.currentStorageGb * 1000) / 1000}
+            maximum={tenant.maxStorageGb}
+          />
         </div>
+        <p className="mt-2 text-xs text-slate-500">
+          Dung lượng đã dùng chỉ tính avatar và bằng chứng giải trình vi phạm (S3/MinIO) — CHƯA
+          gồm ảnh Face ID (hệ thống AI riêng), là mức tối thiểu chứ không phải tổng chính xác.
+        </p>
       </div>
 
       <Descriptions bordered column={{ xs: 1, md: 2 }} size="small" title="Subscription hiện tại">
