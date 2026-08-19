@@ -30,6 +30,16 @@ export const faceIdReportService = {
     return response.data.data;
   },
 
+  /** #127 (2026-08-18): export not-yet-enrolled employees to Excel. */
+  async exportNotEnrolled(params: { departmentId?: string; siteId?: string }): Promise<Blob> {
+    const tenantId = getTenantId();
+    const response = await apiClient.get<Blob>(
+      `/tenants/${tenantId}/reports/face-id/enrollment/export`,
+      { params, responseType: "blob" },
+    );
+    return response.data;
+  },
+
   async getPendingReviews(): Promise<FaceIdReviewItem[]> {
     const tenantId = getTenantId();
     const response = await apiClient.get<ApiResponse<FaceIdReviewItem[]>>(

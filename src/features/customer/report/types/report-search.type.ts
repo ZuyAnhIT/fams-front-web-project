@@ -100,6 +100,7 @@ export interface SitePresenceEntry {
   assignedCount: number;
   presentCount: number;
   absentCount: number;
+  unresolvedViolations: number;
   presentEmployees: EmployeeRef[];
   absentEmployees: EmployeeRef[];
 }
@@ -110,11 +111,13 @@ export interface SitePresenceReport {
   totalPresent: number;
   totalAssigned: number;
   totalAbsent: number;
+  totalUnresolvedViolations: number;
   sites: PageResponse<SitePresenceEntry>;
 }
 
 export interface SitePresenceParams {
   siteId?: string;
+  workspaceId?: string;
   page?: number;
   size?: number;
 }
@@ -125,6 +128,7 @@ export interface GlobalSearchResponse {
   employees: EmployeeResponse[];
   sites: SiteResponse[];
   checkins: CheckinResponse[];
+  violations: ViolationListItem[];
 }
 
 export interface AttendanceExportParams {

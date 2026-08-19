@@ -18,6 +18,12 @@ export const useFaceIdEnrollmentReport = (
   });
 };
 
+export const useExportFaceIdNotEnrolled = () =>
+  useMutation({
+    mutationFn: (params: { departmentId?: string; siteId?: string }) =>
+      faceIdReportService.exportNotEnrolled(params),
+  });
+
 export const usePendingFaceIdReviews = (enabled = true) =>
   useQuery({
     queryKey: ["face-id-pending-reviews"],

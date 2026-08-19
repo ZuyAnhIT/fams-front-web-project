@@ -17,6 +17,7 @@ export interface FaceIdReportRow {
   reviewStatus: FaceIdReviewStatus;
   submittedAt: string | null;
   rejectionReason: string | null;
+  qualityScore: number | null;
 }
 
 export interface FaceIdReportResponse {
@@ -27,6 +28,7 @@ export interface FaceIdReportResponse {
   revokedCount: number;
   statusFilter: FaceIdStatusFilter | null;
   departmentId: string | null;
+  siteId: string | null;
   search: string | null;
   records: {
     content: FaceIdReportRow[];
@@ -40,6 +42,7 @@ export interface FaceIdReportResponse {
 export interface FaceIdReportParams {
   status?: FaceIdStatusFilter;
   departmentId?: string;
+  siteId?: string;
   search?: string;
   page?: number;
   size?: number;

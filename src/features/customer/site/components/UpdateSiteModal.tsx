@@ -27,6 +27,7 @@ interface UpdateSiteFormValues {
   longitude?: number | string | null;
   timezone?: string;
   checkinPolicy?: CheckinPolicy;
+  hidePolygonFromEmployee?: boolean;
   status?: boolean;
 }
 
@@ -86,6 +87,7 @@ export default function UpdateSiteModal({ isOpen, onClose, site }: UpdateSiteMod
             : undefined,
         timezone: values.timezone,
         checkinPolicy: values.checkinPolicy,
+        hidePolygonFromEmployee: values.hidePolygonFromEmployee,
         status: values.status ? "active" : "inactive",
       };
 
@@ -154,6 +156,7 @@ export default function UpdateSiteModal({ isOpen, onClose, site }: UpdateSiteMod
           longitude: site.longitude,
           timezone: site.timezone,
           checkinPolicy: site.checkinPolicy || "gps_only",
+          hidePolygonFromEmployee: site.hidePolygonFromEmployee || false,
           status: site.status === "active",
         } : undefined}
         layout="vertical"
@@ -233,6 +236,15 @@ export default function UpdateSiteModal({ isOpen, onClose, site }: UpdateSiteMod
                 description="Hãy bảo đảm nhân viên tại công trình đã có Face ID được duyệt trước khi lưu chính sách này."
               />
             )}
+
+            <Form.Item
+              name="hidePolygonFromEmployee"
+              label={<span className="font-medium text-slate-700">Ẩn vùng geofence khỏi nhân viên</span>}
+              extra="Bật khi cần giữ kín ranh giới chính xác của công trình (vd: an ninh cao) — nhân viên vẫn thấy vị trí của mình và tâm công trình, chỉ không thấy hình dạng vùng geofence."
+              valuePropName="checked"
+            >
+              <BaseSwitch />
+            </Form.Item>
 
             <Form.Item
               name="address"

@@ -13,6 +13,7 @@ import {
   RefreshCcw,
   ChevronRight,
   ScanLine,
+  Download,
 } from "lucide-react";
 import { format } from "date-fns";
 import BaseButton from "@/components/ui/BaseButton";
@@ -22,7 +23,7 @@ import ListHeader from "@/components/shared/layout/ListHeader";
 import ContentCard from "@/components/shared/layout/ContentCard";
 import { usePagination } from "@/hooks/usePagination";
 import { useDebounce } from "@/hooks/useDebounce";
-import { useFaceIdEnrollmentReport } from "../hooks/use-face-id-report";
+import { useFaceIdEnrollmentReport, useExportFaceIdNotEnrolled } from "../hooks/use-face-id-report";
 import type {
   FaceIdReportRow,
   FaceIdStatus,
@@ -33,6 +34,8 @@ import { formatVietnameseName } from "@/utils/name.util";
 import { useAuthStore } from "@/stores/auth.store";
 import FaceIdPendingReviewTab from "./FaceIdPendingReviewTab";
 import { useWorkspacesQuery } from "@/features/customer/workspace/hooks/use-workspace";
+import { useSitesQuery } from "@/features/customer/site/hooks/use-site";
+import { downloadBlob } from "./report-utils";
 
 type StatusFilter = FaceIdStatusFilter | "all";
 type ViewMode = "overview" | "pending";
@@ -139,7 +142,9 @@ export default function FaceIdEnrollmentReportPage() {
     canViewReport ? "overview" : "pending",
   );
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [siteId, setSiteId] = useState<string>();
   const [searchInput, setSearchInput] = useState(state.search || "");
+  const exportMutation = useExportFaceIdNotEnrolled();
   const debouncedSearch = useDebounce(searchInput, 500);
 
   useEffect(() => {
@@ -162,16 +167,24 @@ export default function FaceIdEnrollmentReportPage() {
     size: 100,
   });
   const departments = departmentPage?.data?.content ?? [];
+  const { data: sitePage } = useSitesQuery({ tenantId, status: "active", sortBy: "name", sortDir: "asc", page: 0, size: 100 });
+  const sites = sitePage?.data?.content ?? [];
 
   const { data, isLoading, isFetching, refetch } = useFaceIdEnrollmentReport({
     status: apiStatus,
     departmentId: state.department,
+    siteId,
     search: debouncedSearch.trim() || undefined,
     page: state.page,
     size: state.size,
   }, {
     enabled: canViewReport && viewMode === "overview",
   });
+
+  const handleExportNotEnrolled = async () => {
+    const blob = await exportMutation.mutateAsync({ departmentId: state.department, siteId });
+    downloadBlob(blob, "face-id-chua-dang-ky.xlsx");
+  };
 
   const rows = data?.records?.content ?? [];
   const total = data?.records.totalElements ?? 0;
@@ -302,6 +315,20 @@ export default function FaceIdEnrollmentReportPage() {
         ),
     },
     {
+      title: "Chất lượng",
+      dataIndex: "qualityScore",
+      key: "qualityScore",
+      width: 110,
+      render: (val: number | null) =>
+        val != null ? (
+          <span className="font-mono font-medium text-slate-600 text-sm">
+            {Math.round(val * 100)}%
+          </span>
+        ) : (
+          <span className="text-slate-400 text-sm">—</span>
+        ),
+    },
+    {
       title: "Thao tác",
       key: "actions",
       width: 130,
@@ -363,6 +390,16 @@ export default function FaceIdEnrollmentReportPage() {
               className="!bg-white !text-slate-700 !border-slate-200 hover:!bg-slate-50 font-semibold shadow-sm"
             >
               Tải lại
+            </BaseButton>
+          )}
+          {viewMode === "overview" && canViewReport && (
+            <BaseButton
+              type="primary"
+              icon={<Download className="h-4 w-4" />}
+              loading={exportMutation.isPending}
+              onClick={() => void handleExportNotEnrolled()}
+            >
+              Xuất DS chưa đăng ký
             </BaseButton>
           )}
         </div>
@@ -436,6 +473,15 @@ export default function FaceIdEnrollmentReportPage() {
                 value={state.department}
                 onChange={(department) => setPagination({ department })}
                 options={departments.map((department) => ({ value: department.id, label: department.name }))}
+              />
+              <BaseSelect
+                aria-label="Lọc báo cáo theo công trình"
+                className="!w-full sm:!w-56"
+                allowClear
+                placeholder="Tất cả công trình"
+                value={siteId}
+                onChange={setSiteId}
+                options={sites.map((site) => ({ value: site.id, label: site.name }))}
               />
               <BaseSelect
                 aria-label="Lọc báo cáo theo trạng thái Face ID"
