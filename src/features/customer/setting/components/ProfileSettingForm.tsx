@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { message, Avatar } from "antd";
-import { Camera, Trash2 } from "lucide-react";
+import { Camera, ShieldCheck, ShieldOff, Trash2 } from "lucide-react";
+import Link from "next/link";
 import dayjs from "dayjs";
 import FormInput from "@/components/forms/FormInput";
 import FormSelect from "@/components/forms/FormSelect";
@@ -130,6 +131,27 @@ export default function ProfileSettingForm() {
       <div className="border-b border-gray-300 pb-4 mb-6">
         <h3 className="text-xl font-semibold text-brand-950">Thông tin cá nhân</h3>
         <p className="text-sm text-gray-500 mt-1">Quản lý thông tin cá nhân cơ bản của bạn</p>
+      </div>
+
+      {/* #10 (2026-08-19): AC yêu cầu hiển thị trạng thái 2FA trên màn hồ sơ — trước đây không
+          có ở đâu trong Web Admin, dù trang bật/tắt TOTP riêng đã tồn tại. */}
+      <div className="mb-6 flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
+        <div className="flex items-center gap-2.5">
+          {user?.totpEnabled ? (
+            <ShieldCheck className="h-5 w-5 text-green-600" aria-hidden="true" />
+          ) : (
+            <ShieldOff className="h-5 w-5 text-gray-400" aria-hidden="true" />
+          )}
+          <div>
+            <p className="text-sm font-medium text-slate-800">
+              Xác thực 2 lớp (2FA): {user?.totpEnabled ? "Đã bật" : "Chưa bật"}
+            </p>
+            <p className="text-xs text-gray-500">Bảo vệ tài khoản bằng mã xác thực khi đăng nhập</p>
+          </div>
+        </div>
+        <Link href="/customer/settings/totp" className="text-sm font-medium text-blue-600 hover:text-blue-700">
+          {user?.totpEnabled ? "Quản lý" : "Bật ngay"}
+        </Link>
       </div>
 
       <div className="mb-6 flex items-center gap-4">

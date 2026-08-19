@@ -77,6 +77,15 @@ export interface UserProfile {
   active: boolean;
   /** Directory-only fields returned by GET /users. */
   platformAdmin?: boolean;
+  /** #10 (2026-08-19): whether TOTP 2FA is enabled for this account. */
+  totpEnabled?: boolean;
+  /** #10 (2026-08-19): primary tenant — same one login/switch-tenant would place this user in.
+   *  Null if the user holds no active tenant role anywhere. Prefer the JWT-derived tenantId
+   *  (AuthUser.tenantId, set from the actual active session) for permission/UI-gating logic —
+   *  these are for display only (e.g. showing the tenant name, which the JWT doesn't carry). */
+  currentTenantId?: string | null;
+  currentTenantName?: string | null;
+  currentTenantRole?: string | null;
   lastLoginAt?: string | null;
   createdAt: string;
   updatedAt: string;

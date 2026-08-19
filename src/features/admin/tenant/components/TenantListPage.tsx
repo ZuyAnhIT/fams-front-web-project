@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Plus, Building2, ChevronRight, MoreVertical, Ban, PlayCircle } from "lucide-react";
-import { Dropdown, MenuProps, Modal, message } from "antd";
+import { Dropdown, MenuProps, Modal, Tag, message } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import DataTable from "@/components/tables/DataTable";
 import { BaseButton, BaseSelect } from "@/components/ui";
@@ -232,6 +232,35 @@ export default function TenantListPage() {
       render: (status: string) => (
         <StatusBadge status={status} variant="dot" configMap={TENANT_STATUS} />
       ),
+    },
+    {
+      // #16 (2026-08-19): gói dịch vụ trước đây phải mở trang chi tiết mới xem được — AC yêu cầu
+      // thấy ngay trong danh sách, backend nay đã trả kèm planName/subscriptionStatus.
+      title: "Gói dịch vụ",
+      key: "plan",
+      render: (_: unknown, record: Tenant) => {
+        if (!record.planName) {
+          return <span className="text-xs text-slate-400">Chưa gán</span>;
+        }
+        const statusColor =
+          record.subscriptionStatus === "ACTIVE"
+            ? "success"
+            : record.subscriptionStatus === "TRIAL"
+              ? "processing"
+              : record.subscriptionStatus === "EXPIRED"
+                ? "error"
+                : "default";
+        return (
+          <div className="flex flex-col gap-0.5">
+            <span className="text-sm font-medium text-slate-800 capitalize">{record.planName}</span>
+            {record.subscriptionStatus && (
+              <Tag color={statusColor} className="w-fit text-[11px]">
+                {record.subscriptionStatus}
+              </Tag>
+            )}
+          </div>
+        );
+      },
     },
     {
       title: "Quốc gia",
