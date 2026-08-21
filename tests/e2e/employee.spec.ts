@@ -163,7 +163,7 @@ test("HR mời nhân viên và gửi đủ email, điện thoại, role", async 
   await page.getByRole("button", { name: /Mời tham gia/ }).click();
   await page.getByLabel("Địa chỉ Email").fill("new.employee@example.com");
   await page.getByLabel("Số điện thoại (Tùy chọn)").fill("0912345678");
-  const roleSelect = page.getByRole("dialog").getByRole("combobox").last();
+  const roleSelect = page.getByRole("dialog").getByLabel("Vai trò (Role)");
   await roleSelect.click();
   await page.getByText("EMPLOYEE", { exact: true }).last().click();
   await page.getByRole("button", { name: "Gửi lời mời" }).click();

@@ -4,8 +4,28 @@ import { useEffect } from "react";
 import { ConfigProvider, App } from "antd";
 import { useTenantSettings } from "@/features/admin/tenant/hooks/use-tenant";
 import { COLORS } from "@/constants/colors";
+import { APP_EVENTS } from "@/constants/events";
 
 import { useAuthStore } from "@/stores/auth.store";
+
+function SessionExpiredNotifier() {
+  const { message } = App.useApp();
+
+  useEffect(() => {
+    const notifySessionExpired = () => {
+      message.error({
+        content: "Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại!",
+        duration: 3,
+        key: "session-expired",
+      });
+    };
+
+    window.addEventListener(APP_EVENTS.SESSION_EXPIRED, notifySessionExpired);
+    return () => window.removeEventListener(APP_EVENTS.SESSION_EXPIRED, notifySessionExpired);
+  }, [message]);
+
+  return null;
+}
 
 export function TenantThemeProvider({ children }: { children: React.ReactNode }) {
   const tenantId = useAuthStore((state) => state.user?.tenantId);
@@ -65,6 +85,7 @@ export function TenantThemeProvider({ children }: { children: React.ReactNode })
       }}
     >
       <App>
+        <SessionExpiredNotifier />
         {children}
       </App>
     </ConfigProvider>

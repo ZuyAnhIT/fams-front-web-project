@@ -32,7 +32,16 @@ export default function Sidebar({ variant = "desktop", onNavigate }: SidebarProp
   const pathname = usePathname();
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
-  const shouldCheckOwner = user?.role === SystemRole.TENANT_ADMIN && Boolean(user.tenantId);
+  const shouldCheckOwner = Boolean(
+    user?.tenantId && (
+      user.role === SystemRole.TENANT_ADMIN ||
+      user.memberships?.some(
+        (membership) =>
+          membership.tenantId === user.tenantId &&
+          membership.roleName === SystemRole.TENANT_ADMIN,
+      )
+    ),
+  );
   const { data: activeTenantDetail } = useTenantDetail(user?.tenantId || "", shouldCheckOwner);
   const isActiveTenantOwner = Boolean(
     activeTenantDetail && user?.id && activeTenantDetail.ownerId === user.id,
@@ -130,10 +139,16 @@ export default function Sidebar({ variant = "desktop", onNavigate }: SidebarProp
         !isMobile && isCollapsed ? "px-2" : "px-4"
       )}>
         {SIDEBAR_MENU.filter((item) => {
+          if (item.requiresTenant && !user?.tenantId) return false;
           if (user?.role && item.excludedRoles?.includes(user.role)) return false;
+          const isOwnerMenu = [
+            CUSTOMER_ROUTES.TENANT_SETTINGS,
+            CUSTOMER_ROUTES.TENANT_MEMBERS,
+          ].includes(item.path);
           if (item.path === CUSTOMER_ROUTES.TENANT_SETTINGS && !isActiveTenantOwner) {
             return false;
           }
+          if (isOwnerMenu && isActiveTenantOwner) return true;
           // Platform Admin bypasses per-permission gating everywhere except excludedRoles above —
           // mirrors the backend's callerIsPlatformAdmin bypass and auth.store's hasPermission().
           // Found via #91-95 UI test (2026-08-18): a Platform Admin acting inside a tenant they
@@ -221,7 +236,7 @@ export default function Sidebar({ variant = "desktop", onNavigate }: SidebarProp
               )}
               <div className="flex flex-col truncate">
                 <span className="text-sm font-bold text-white truncate">{user?.displayName || user?.email}</span>
-                <span className="text-xs text-slate-400 truncate">{ROLE_LABELS[user?.role || ""] || "Người dùng"}</span>
+                <span className="text-xs text-slate-400 truncate">{ROLE_LABELS[user?.role || ""] || user?.role || "Người dùng"}</span>
               </div>
             </button>
             

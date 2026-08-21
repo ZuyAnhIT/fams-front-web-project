@@ -185,7 +185,8 @@ export function UserDirectoryPage() {
               setPage(nextPage);
               setSize(nextSize);
             }}
-            onChange={(_, __, sorter) => {
+            onChange={(_, __, sorter, extra) => {
+              if (extra.action !== "sort") return;
               if (!Array.isArray(sorter) && sorter.order) {
                 const key = sorter.columnKey === "user" ? "displayName" : sorter.columnKey;
                 if (typeof key === "string" && ["email", "displayName", "createdAt", "lastLoginAt"].includes(key)) {

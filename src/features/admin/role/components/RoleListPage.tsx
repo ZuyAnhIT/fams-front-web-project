@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Shield, Trash2, Edit } from "lucide-react";
-import { Tag, message, Popconfirm } from "antd";
+import { App, Popconfirm, Tag } from "antd";
 import DataTable from "@/components/tables/DataTable";
 import BaseButton from "@/components/ui/BaseButton";
 import ListHeader from "@/components/shared/layout/ListHeader";
@@ -15,8 +15,10 @@ import type { Role } from "../types/role.type";
 import { format } from "date-fns";
 import type { ColumnsType } from "antd/es/table";
 import { getApiErrorMessage } from "@/utils/api-error.util";
+import { ADMIN_ROUTES } from "@/constants/routes";
 
 export default function RoleListPage() {
+  const { message } = App.useApp();
   const router = useRouter();
   const { state, setPagination } = usePagination(20);
   const [searchInput, setSearchInput] = useState(state.search || "");
@@ -80,7 +82,7 @@ export default function RoleListPage() {
         <div className="flex gap-2">
           <BaseButton
             size="small"
-            onClick={() => router.push(`/settings/roles/${record.id}`)}
+            onClick={() => router.push(`${ADMIN_ROUTES.ROLES}/${record.id}`)}
             icon={<Edit className="h-4 w-4" />}
           >
             Sửa
@@ -112,7 +114,7 @@ export default function RoleListPage() {
           <BaseButton
             type="primary"
             icon={<Plus className="h-4.5 w-4.5" />}
-            onClick={() => router.push("/settings/roles/create")}
+            onClick={() => router.push(`${ADMIN_ROUTES.ROLES}/create`)}
             className="!bg-blue-600 !text-white hover:!bg-blue-700 !border-0 shadow-lg shadow-blue-500/25 h-11 px-5 rounded-xl font-bold hover:-translate-y-0.5 transition-all flex items-center gap-2"
           >
             Thêm vai trò mới

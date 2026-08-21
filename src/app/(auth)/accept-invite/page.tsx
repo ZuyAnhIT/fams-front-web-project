@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useForm, useWatch, type SubmitHandler } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Checkbox, message } from "antd";
+import { App, Checkbox } from "antd";
 import { useAcceptInvitation, useValidateInvitation } from "@/features/customer/employee/hooks/use-employee";
 import FormInput from "@/components/forms/FormInput";
 import BaseButton from "@/components/ui/BaseButton";
@@ -61,6 +61,7 @@ const acceptSchema = z.object({
 type AcceptFormData = z.infer<typeof acceptSchema>;
 
 function AcceptInviteForm() {
+  const { message } = App.useApp();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
   const invitationType: InvitationType =

@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { Alert, Form, message } from "antd";
+import React, { useState } from "react";
+import { Alert, App, Form } from "antd";
 import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -27,7 +27,7 @@ interface TransferOwnerModalProps {
 }
 
 export const TransferOwnerModal: React.FC<TransferOwnerModalProps> = ({ open, onClose, tenant, tenantId }) => {
-  const [messageApi, contextHolder] = message.useMessage();
+  const { message } = App.useApp();
   const transferOwner = useTransferOwner();
   const setActiveTenant = useTenantStore((state) => state.setActiveTenant);
   const [employeeSearch, setEmployeeSearch] = useState("");
@@ -43,12 +43,11 @@ export const TransferOwnerModal: React.FC<TransferOwnerModalProps> = ({ open, on
     defaultValues: { newOwnerUserId: "" },
   });
 
-  useEffect(() => {
-    if (open) {
-      reset({ newOwnerUserId: "" });
-      setEmployeeSearch("");
-    }
-  }, [open, reset]);
+  const closeModal = () => {
+    reset({ newOwnerUserId: "" });
+    setEmployeeSearch("");
+    onClose();
+  };
 
   const selectedUserId = useWatch({ control, name: "newOwnerUserId" });
   // Chủ sở hữu hiện tại không thể tự chuyển cho chính mình.
@@ -63,21 +62,19 @@ export const TransferOwnerModal: React.FC<TransferOwnerModalProps> = ({ open, on
         payload: { newOwnerUserId: values.newOwnerUserId },
         id: tenantId,
       });
-      messageApi.success("Đã chuyển quyền chủ sở hữu — bạn sẽ không còn quản trị được hồ sơ công ty này nữa.");
+      message.success("Đã chuyển quyền chủ sở hữu — bạn sẽ không còn quản trị được hồ sơ công ty này nữa.");
       setActiveTenant(updated);
-      onClose();
+      closeModal();
     } catch (error: unknown) {
-      messageApi.error(getApiErrorMessage(error, "Không thể chuyển quyền chủ sở hữu"));
+      message.error(getApiErrorMessage(error, "Không thể chuyển quyền chủ sở hữu"));
     }
   };
 
   return (
-    <>
-      {contextHolder}
-      <BaseModal
+    <BaseModal
         title="Chuyển quyền chủ sở hữu công ty"
         isOpen={open}
-        onClose={onClose}
+        onClose={closeModal}
         centered
         width={520}
         confirmText="Xác nhận chuyển"
@@ -121,7 +118,6 @@ export const TransferOwnerModal: React.FC<TransferOwnerModalProps> = ({ open, on
             <Alert type="info" showIcon title={`Sẽ chuyển quyền chủ sở hữu cho: ${selectedLabel}`} />
           )}
         </Form>
-      </BaseModal>
-    </>
+    </BaseModal>
   );
 };

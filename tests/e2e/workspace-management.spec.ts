@@ -276,6 +276,7 @@ test("chuyển/gỡ nhân sự và xóa workspace dùng đúng endpoint, đúng 
 test("form nhân viên lấy phòng ban active từ Workspace và gửi departmentId", async ({ page }) => {
   await seedTenantAdmin(page);
   let createBody: Record<string, unknown> = {};
+  let requestedActiveDepartments = false;
 
   await page.route(`**/api/v1/tenants/${tenantId}/employees?*`, (route) =>
     route.fulfill({ json: api(pageData([])) }),
@@ -289,8 +290,9 @@ test("form nhân viên lấy phòng ban active từ Workspace và gửi departme
   });
   await page.route(`**/api/v1/tenants/${tenantId}/workspaces?*`, (route) => {
     const params = new URL(route.request().url()).searchParams;
-    expect(params.get("type")).toBe("department");
-    expect(params.get("status")).toBe("active");
+    if (params.get("type") === "department") {
+      requestedActiveDepartments = params.get("status") === "active";
+    }
     return route.fulfill({ json: api(pageData([operations])) });
   });
 
@@ -308,6 +310,7 @@ test("form nhân viên lấy phòng ban active từ Workspace và gửi departme
     lastName: "Trần",
     departmentId: operationsId,
   });
+  expect(requestedActiveDepartments).toBe(true);
   expect(createBody).not.toHaveProperty("department");
   await page.screenshot({
     path: `${evidenceDir}/03-employee-department-workspace.png`,

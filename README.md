@@ -5,7 +5,7 @@ FAMS (Field Attendance Management System) là web portal quản lý chấm công
 - Platform Admin: quản lý công ty, gói dịch vụ, vai trò và quyền.
 - Customer/Tenant: quản lý nhân viên, phòng ban, công trình, chấm công, Face ID và cấu hình công ty.
 
-> Trạng thái tại ngày 11/08/2026: dự án có CI, kiểm tra dependency production, TypeScript, lint, production build và 89 kịch bản Playwright. Các tích hợp email/SMS/Google/FCM/Face ID vẫn phải được UAT trên staging hoặc thiết bị thật trước khi phát hành production.
+> Trạng thái tại ngày 19/08/2026: dự án có CI, kiểm tra dependency production, TypeScript, lint, production build và 93 kịch bản Playwright. Lần kiểm chứng gần nhất đạt 90/90 kịch bản độc lập với dịch vụ thật; ba kịch bản live-integration được skip theo cấu hình. Các tích hợp email/SMS/Google/FCM/Face ID vẫn phải được UAT trên staging hoặc thiết bị thật trước khi phát hành production.
 
 ## Tài liệu dự án
 
@@ -21,7 +21,7 @@ Tài liệu đầy đủ về kiến trúc, cấu trúc thư mục, thư viện,
 
 ## Công nghệ chính
 
-- Next.js 16.2.9, App Router, React 19.2.4, TypeScript strict.
+- Next.js 16.3.0, App Router, React 19.2.4, TypeScript strict.
 - Tailwind CSS 4 và Ant Design 6.
 - TanStack React Query 5 cho server state; Zustand 5 cho client/global state.
 - Axios 1.18 với access-token interceptor và refresh-token queue.
@@ -87,7 +87,8 @@ Repository có CI cho audit dependency, lint, typecheck, production build và Pl
 | `npm ls --depth=0` | Pass, dependency tree hợp lệ |
 | `npm run typecheck` | Pass |
 | `npm run lint` | Pass, không có error; warning kỹ thuật được theo dõi riêng |
-| `npm run build -- --webpack` | Pass; 48 route được build thành công ở lần kiểm chứng gần nhất |
-| `LIVE_BACKEND=true npm run test:e2e -- --workers=1` | 89 kịch bản; 88 pass, 1 Face ID live phụ thuộc credential riêng được skip ở lần kiểm chứng gần nhất |
+| `npm run audit` | Pass; không có lỗ hổng production được phát hiện |
+| `npm run build -- --webpack` | Pass; 49 route được build thành công ở lần kiểm chứng gần nhất |
+| `npm run test:e2e -- --workers=1` | 93 kịch bản; 90 pass, 3 live-integration skip, 0 fail |
 
 Xem nguyên nhân, mức ưu tiên và kế hoạch khắc phục trong [tài liệu kiến trúc](docs/FAMS_FRONTEND_ARCHITECTURE.md#12-kế-hoạch-khắc-phục-đề-xuất).

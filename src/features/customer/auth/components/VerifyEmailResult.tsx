@@ -58,6 +58,22 @@ export default function VerifyEmailResult() {
   const mobileAppScheme = publicEnv.NEXT_PUBLIC_MOBILE_APP_SCHEME;
   const mobileAppUrl = `${mobileAppScheme}://${mode === "email-change" ? "profile" : "login"}`;
 
+  const navigateBackWithinApp = () => {
+    const fallback = mode === "email-change" ? CUSTOMER_ROUTES.SETTINGS : ROUTES.LOGIN;
+    const referrer = document.referrer;
+    let isSameOrigin = false;
+    try {
+      isSameOrigin = Boolean(referrer && new URL(referrer).origin === window.location.origin);
+    } catch {
+      isSameOrigin = false;
+    }
+    if (isSameOrigin && window.history.length > 1) {
+      router.back();
+    } else {
+      router.push(fallback);
+    }
+  };
+
   useEffect(() => {
     let active = true;
 
@@ -141,7 +157,7 @@ export default function VerifyEmailResult() {
           )}
           <button
             type="button"
-            onClick={() => router.back()}
+            onClick={navigateBackWithinApp}
             className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-slate-300 px-4 font-semibold text-slate-600 hover:bg-slate-50"
           >
             <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Quay lại trang trước

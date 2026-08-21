@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { DatePicker, Form, message, Spin, Switch } from "antd";
+import { App, DatePicker, Form, Spin, Switch } from "antd";
 import type { Dayjs } from "dayjs";
 import BaseModal from "@/components/ui/BaseModal";
 import BaseSelect from "@/components/ui/BaseSelect";
@@ -29,6 +29,7 @@ export default function AddMemberModal({
   onClose,
   workspaceId,
 }: AddMemberModalProps) {
+  const { message } = App.useApp();
   const [form] = Form.useForm();
   const user = useAuthStore((state) => state.user);
   const [searchTerm, setSearchTerm] = useState("");

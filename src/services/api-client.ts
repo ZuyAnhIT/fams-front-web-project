@@ -1,7 +1,7 @@
 import axios, { AxiosInstance } from "axios";
 import { authTokenService } from "./auth-token.service";
-import { message } from "antd";
 import { publicEnv } from "@/config/env";
+import { APP_EVENTS } from "@/constants/events";
 
 export const apiClient: AxiosInstance = axios.create({
   baseURL: publicEnv.NEXT_PUBLIC_API_URL,
@@ -55,11 +55,7 @@ function forceLogout() {
   if (!isRedirectingToLogin && typeof window !== "undefined" && !window.location.pathname.includes("/login")) {
     isRedirectingToLogin = true;
     authTokenService.clearTokens();
-    message.error({
-      content: "Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại!",
-      duration: 3,
-      key: "session-expired",
-    });
+    window.dispatchEvent(new Event(APP_EVENTS.SESSION_EXPIRED));
     setTimeout(() => {
       isRedirectingToLogin = false;
       // A hard replace is intentional here: this module lives outside React,

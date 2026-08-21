@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Input, InputNumber, message, Alert } from "antd";
+import { Alert, App, Input, InputNumber } from "antd";
 import BaseModal from "@/components/ui/BaseModal";
 import BaseButton from "@/components/ui/BaseButton";
 import { MapPin } from "lucide-react";
@@ -32,6 +32,7 @@ export default function EditGeofenceModal({
   longitude,
   activeGeofence,
 }: EditGeofenceModalProps) {
+  const { message } = App.useApp();
   const user = useAuthStore((state) => state.user);
   const tenantId = user?.tenantId;
 

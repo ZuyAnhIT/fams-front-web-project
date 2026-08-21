@@ -38,6 +38,10 @@ const PAGE_TITLES: Array<{ match: (path: string) => boolean; title: string; area
   { match: (path) => path === "/admin/tenants", title: "Danh sách công ty", area: "Quản trị nền tảng" },
   { match: (path) => path === "/admin/plans", title: "Gói dịch vụ", area: "Quản trị nền tảng" },
   { match: (path) => path.startsWith("/admin/settings/roles"), title: "Vai trò và phân quyền", area: "Cài đặt" },
+  { match: (path) => path === "/admin/users", title: "Nhân sự FAMS", area: "Quản trị nền tảng" },
+  { match: (path) => path === "/admin/audit-logs", title: "Audit toàn hệ thống", area: "An toàn & tuân thủ" },
+  { match: (path) => path === "/admin/system-status", title: "Vận hành hệ thống", area: "An toàn & vận hành" },
+  { match: (path) => path === "/admin/help", title: "Hướng dẫn sử dụng", area: "Trợ giúp" },
   { match: (path) => path === "/customer/dashboard", title: "Tổng quan hoạt động", area: "Không gian làm việc" },
   { match: (path) => path.startsWith("/customer/employees/"), title: "Hồ sơ nhân viên", area: "Nhân sự" },
   { match: (path) => path === "/customer/employees", title: "Quản lý nhân sự", area: "Nhân sự" },
@@ -45,10 +49,24 @@ const PAGE_TITLES: Array<{ match: (path: string) => boolean; title: string; area
   { match: (path) => path.startsWith("/customer/sites/"), title: "Chi tiết công trình", area: "Vận hành" },
   { match: (path) => path === "/customer/sites", title: "Quản lý công trình", area: "Vận hành" },
   { match: (path) => path === "/customer/attendance", title: "Quản lý chấm công", area: "Vận hành" },
+  { match: (path) => path === "/customer/random-checks", title: "Kiểm tra ngẫu nhiên", area: "Vận hành" },
+  { match: (path) => path === "/customer/violations", title: "Quản lý vi phạm", area: "Vận hành" },
+  { match: (path) => path === "/customer/audit-logs", title: "Nhật ký audit", area: "An toàn & tuân thủ" },
+  { match: (path) => path === "/customer/exceptions", title: "Cần giải thích", area: "Cá nhân" },
+  { match: (path) => path === "/customer/help", title: "Hướng dẫn sử dụng", area: "Trợ giúp" },
+  { match: (path) => path === "/customer/select-company", title: "Chọn công ty", area: "Không gian làm việc" },
   { match: (path) => path === "/customer/notifications", title: "Thông báo", area: "Tài khoản" },
   { match: (path) => path === "/customer/reports", title: "Báo cáo vận hành", area: "Báo cáo" },
   { match: (path) => path.startsWith("/customer/reports/face-id"), title: "Quản lý Face ID", area: "Báo cáo" },
   { match: (path) => path.includes("tenant-settings") || path === "/customer/settings/tenant", title: "Cấu hình công ty", area: "Cài đặt" },
+  { match: (path) => path === "/customer/settings/members", title: "Thành viên công ty", area: "Cài đặt" },
+  { match: (path) => path === "/customer/settings/roles", title: "Vai trò và phân quyền", area: "Cài đặt" },
+  { match: (path) => path === "/customer/settings/notification-templates", title: "Mẫu thông báo", area: "Cài đặt" },
+  { match: (path) => path === "/customer/settings/permissions", title: "Quyền của tôi", area: "Tài khoản" },
+  { match: (path) => path === "/customer/settings/password", title: "Đổi mật khẩu", area: "Tài khoản" },
+  { match: (path) => path === "/customer/settings/totp", title: "Xác thực hai lớp", area: "Tài khoản" },
+  { match: (path) => path === "/customer/settings/sessions", title: "Thiết bị và phiên", area: "Tài khoản" },
+  { match: (path) => path === "/customer/settings/notifications", title: "Cài đặt thông báo", area: "Tài khoản" },
   { match: (path) => path.startsWith("/customer/settings"), title: "Cài đặt tài khoản", area: "Tài khoản" },
 ];
 
@@ -154,7 +172,7 @@ export default function Header({ onOpenMenu }: HeaderProps) {
             <span className="hidden min-w-0 flex-col md:flex">
               <span className="max-w-40 truncate text-sm font-semibold text-slate-800">{displayName}</span>
               <span className="max-w-40 truncate text-xs text-slate-500">
-                {user?.role ? ROLE_LABELS[user.role] : "Người dùng"}
+                {user?.role ? ROLE_LABELS[user.role] || user.role : "Người dùng"}
               </span>
             </span>
             <ChevronDown className="hidden h-4 w-4 text-slate-400 sm:block" aria-hidden="true" />

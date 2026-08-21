@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { Alert, Form, List, Tag, message } from "antd";
+import React, { useState } from "react";
+import { Alert, App, Form, List, Tag } from "antd";
 import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -28,7 +28,7 @@ interface BulkAssignRoleModalProps {
 }
 
 export const BulkAssignRoleModal: React.FC<BulkAssignRoleModalProps> = ({ open, onClose, tenantId }) => {
-  const [messageApi, contextHolder] = message.useMessage();
+  const { message } = App.useApp();
   const bulkAssign = useBulkAssignRoleMutation();
   const [result, setResult] = useState<BulkAssignRoleResponse | null>(null);
   const [employeeSearch, setEmployeeSearch] = useState("");
@@ -49,13 +49,12 @@ export const BulkAssignRoleModal: React.FC<BulkAssignRoleModalProps> = ({ open, 
     defaultValues: { roleId: "", revokeRoleId: undefined, userIds: [] },
   });
 
-  useEffect(() => {
-    if (open) {
-      reset({ roleId: "", revokeRoleId: undefined, userIds: [] });
-      setResult(null);
-      setEmployeeSearch("");
-    }
-  }, [open, reset]);
+  const closeModal = () => {
+    reset({ roleId: "", revokeRoleId: undefined, userIds: [] });
+    setResult(null);
+    setEmployeeSearch("");
+    onClose();
+  };
 
   const assignableRoles = (rolesData?.data?.content || []).filter(
     (role) => role.isActive !== false && !["PLATFORM_ADMIN", "PLATFORM_STAFF"].includes(role.name),
@@ -84,31 +83,29 @@ export const BulkAssignRoleModal: React.FC<BulkAssignRoleModalProps> = ({ open, 
       setResult(response.data);
       const data = response.data;
       if (data.failureCount === 0) {
-        messageApi.success(`Đã gán role cho ${data.successCount} người thành công`);
+        message.success(`Đã gán role cho ${data.successCount} người thành công`);
       } else {
-        messageApi.warning(`Thành công ${data.successCount}/${data.successCount + data.failureCount} người — xem chi tiết bên dưới`);
+        message.warning(`Thành công ${data.successCount}/${data.successCount + data.failureCount} người — xem chi tiết bên dưới`);
       }
     } catch (error: unknown) {
-      messageApi.error(getApiErrorMessage(error, "Không thể gán role hàng loạt"));
+      message.error(getApiErrorMessage(error, "Không thể gán role hàng loạt"));
     }
   };
 
   const employeesById = new Map((employeesData?.content || []).map((e) => [e.userId, e]));
 
   return (
-    <>
-      {contextHolder}
-      <BaseModal
+    <BaseModal
         title="Gán Role Hàng Loạt"
         isOpen={open}
-        onClose={onClose}
+        onClose={closeModal}
         centered
         width={560}
         confirmText={result ? "Đóng" : "Gán role"}
         cancelText={result ? undefined : "Hủy"}
-        onConfirm={result ? onClose : undefined}
+        onConfirm={result ? closeModal : undefined}
         confirmLoading={bulkAssign.isPending}
-        confirmButtonProps={result ? { onClick: onClose } : { onClick: handleSubmit(onSubmit) }}
+        confirmButtonProps={result ? { onClick: closeModal } : { onClick: handleSubmit(onSubmit) }}
         cancelButtonProps={{ disabled: bulkAssign.isPending, className: result ? "hidden" : "" }}
       >
         {result ? (
@@ -198,7 +195,6 @@ export const BulkAssignRoleModal: React.FC<BulkAssignRoleModalProps> = ({ open, 
             />
           </Form>
         )}
-      </BaseModal>
-    </>
+    </BaseModal>
   );
 };
