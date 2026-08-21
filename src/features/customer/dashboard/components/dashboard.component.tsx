@@ -15,6 +15,15 @@ import { useAuthStore } from '@/stores/auth.store';
 import { useEmployeeDashboard, useHrDashboard, useSupervisorDashboard } from '../hooks/use-dashboard';
 import SupervisorCheckinMap from './SupervisorCheckinMap';
 
+const CUSTOM_ROLE_SHORTCUTS = [
+  { permissions: ['employees:list', 'employees:read'], title: 'Nhân viên', description: 'Xem hồ sơ nhân sự trong phạm vi được cấp.', href: CUSTOMER_ROUTES.EMPLOYEES, icon: Users, tone: 'blue' as const },
+  { permissions: ['attendance:list', 'checkins:list'], title: 'Chấm công', description: 'Theo dõi dữ liệu chấm công được phép truy cập.', href: CUSTOMER_ROUTES.ATTENDANCE, icon: CalendarCheck, tone: 'emerald' as const },
+  { permissions: ['sites:list', 'sites:read'], title: 'Công trình', description: 'Mở danh sách công trình trong phạm vi vai trò.', href: CUSTOMER_ROUTES.SITES, icon: MapPin, tone: 'violet' as const },
+  { permissions: ['violations:list', 'violations:read'], title: 'Vi phạm', description: 'Xem và xử lý vi phạm theo quyền được giao.', href: CUSTOMER_ROUTES.VIOLATIONS, icon: AlertTriangle, tone: 'amber' as const },
+  { permissions: ['reports:list'], title: 'Báo cáo', description: 'Mở trung tâm báo cáo nghiệp vụ.', href: CUSTOMER_ROUTES.REPORTS, icon: Building2, tone: 'blue' as const },
+  { permissions: ['randomchecks:list', 'randomchecks:configure'], title: 'Kiểm tra ngẫu nhiên', description: 'Theo dõi lịch và cấu hình kiểm tra.', href: CUSTOMER_ROUTES.RANDOM_CHECKS, icon: ShieldAlert, tone: 'amber' as const },
+] as const;
+
 const VIOLATION_LABELS = {
   no_response: 'Không phản hồi',
   location_fail: 'Sai vị trí',
@@ -121,12 +130,46 @@ function EmployeeDashboardView({ tenantId }: { tenantId: string }) {
   </div>;
 }
 
+function CustomRoleDashboardView({ permissions }: { permissions: string[] }) {
+  const shortcuts = CUSTOM_ROLE_SHORTCUTS.filter((shortcut) =>
+    shortcut.permissions.some((permission) => permissions.includes(permission)),
+  );
+
+  if (!shortcuts.length) {
+    return (
+      <EmptyState
+        title="Vai trò chưa có module nghiệp vụ"
+        description="Bạn vẫn có thể quản lý hồ sơ, bảo mật tài khoản và xem thông báo. Liên hệ quản trị công ty nếu cần thêm quyền."
+        action={<Link className="font-semibold text-blue-700" href={CUSTOMER_ROUTES.NOTIFICATIONS}>Mở thông báo</Link>}
+      />
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      {shortcuts.map((shortcut) => (
+        <StatCard
+          key={shortcut.href}
+          title={shortcut.title}
+          value="Mở"
+          description={shortcut.description}
+          href={shortcut.href}
+          icon={shortcut.icon}
+          tone={shortcut.tone}
+        />
+      ))}
+    </div>
+  );
+}
+
 export default function CustomerDashboard() {
   const user = useAuthStore((state) => state.user);
   const tenantId = user?.tenantId || '';
   const role = user?.role;
-  const hasPermission = useAuthStore((state) => state.hasPermission);
-  const isHr = role === SystemRole.TENANT_ADMIN || role === SystemRole.HR_MANAGER || hasPermission('employees:list');
+  const permissions = user?.permissions ?? [];
+  const isHr = role === SystemRole.TENANT_ADMIN || role === SystemRole.HR_MANAGER;
   const isSupervisor = role === SystemRole.SITE_SUPERVISOR;
-  return <div className="mx-auto w-full max-w-[1600px] space-y-6"><header><p className="text-sm font-medium text-blue-700">Tổng quan theo vai trò</p><h1 className="mt-1 text-2xl font-bold text-slate-900 sm:text-3xl">Xin chào, {user?.displayName || 'bạn'}</h1><p className="mt-2 text-sm text-slate-600">Số liệu hôm nay được backend tính theo múi giờ công ty/công trình.</p></header>{isSupervisor ? <SupervisorDashboardView tenantId={tenantId} /> : isHr ? <HrDashboardView tenantId={tenantId} /> : <EmployeeDashboardView tenantId={tenantId} />}</div>;
+  const isEmployee = role === SystemRole.EMPLOYEE;
+
+  return <div className="mx-auto w-full max-w-[1600px] space-y-6"><header><p className="text-sm font-medium text-blue-700">Tổng quan theo vai trò</p><h1 className="mt-1 text-2xl font-bold text-slate-900 sm:text-3xl">Xin chào, {user?.displayName || 'bạn'}</h1><p className="mt-2 text-sm text-slate-600">Số liệu hôm nay được backend tính theo múi giờ công ty/công trình.</p></header>{!tenantId ? <Alert type="warning" showIcon title="Chưa chọn công ty làm việc" description={<span>Chọn một công ty trước khi mở dữ liệu nghiệp vụ. <Link className="font-semibold text-blue-700" href={CUSTOMER_ROUTES.SELECT_COMPANY}>Đi đến màn chọn công ty</Link>.</span>} /> : isSupervisor ? <SupervisorDashboardView tenantId={tenantId} /> : isHr ? <HrDashboardView tenantId={tenantId} /> : isEmployee ? <EmployeeDashboardView tenantId={tenantId} /> : <CustomRoleDashboardView permissions={permissions} />}</div>;
 }

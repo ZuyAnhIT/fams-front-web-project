@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { App, Tag, Modal, Alert } from "antd";
+import { Alert, App, Tag } from "antd";
 import { format } from "date-fns";
 import { UserX, CheckCircle2, XCircle, Clock, ShieldCheck } from "lucide-react";
 import { isAxiosError } from "axios";
@@ -23,7 +23,7 @@ interface EmployeeFaceIdTabProps {
 }
 
 export default function EmployeeFaceIdTab({ employee }: EmployeeFaceIdTabProps) {
-  const { message } = App.useApp();
+  const { message, modal } = App.useApp();
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   const [revokeModalOpen, setRevokeModalOpen] = useState(false);
@@ -65,7 +65,7 @@ export default function EmployeeFaceIdTab({ employee }: EmployeeFaceIdTabProps) 
   };
 
   const handleApprove = () => {
-    Modal.confirm({
+    modal.confirm({
       title: "Duyệt hồ sơ Face ID",
       content:
         "Mẫu đang chờ sẽ trở thành Face ID dùng khi chấm công. Chỉ duyệt sau khi đã đối chiếu đúng nhân viên.",

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { message, Avatar } from "antd";
+import { App, Avatar } from "antd";
 import { Camera, ShieldCheck, ShieldOff, Trash2 } from "lucide-react";
 import Link from "next/link";
 import dayjs from "dayjs";
@@ -27,6 +27,7 @@ const AVATAR_ACCEPT = "image/jpeg,image/png,image/webp";
 const AVATAR_MAX_MB = 5;
 
 export default function ProfileSettingForm() {
+  const { message } = App.useApp();
   const { user, updateUser } = useAuthStore();
   const { mutateAsync: updateProfile, isPending } = useUpdateProfile();
   const { mutateAsync: uploadAvatar, isPending: isUploadingAvatar } = useUploadAvatar();

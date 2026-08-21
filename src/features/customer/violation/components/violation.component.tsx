@@ -176,7 +176,8 @@ export default function ViolationManagementPage() {
         currentPage={params.page || 0}
         pageSize={params.size || 20}
         onPageChange={(page, size) => setParams((current) => ({ ...current, page, size }))}
-        onChange={(_, __, sorter) => {
+        onChange={(_, __, sorter, extra) => {
+          if (extra.action !== "sort") return;
           const item = Array.isArray(sorter) ? sorter[0] : sorter;
           const sortBy = item?.columnKey as ViolationListParams['sortBy'] | undefined;
           if (!item?.order || !sortBy) return;

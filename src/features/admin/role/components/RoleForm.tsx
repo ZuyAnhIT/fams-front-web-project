@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { message, Alert } from "antd";
+import { Alert, App } from "antd";
 import { ArrowLeft, Save } from "lucide-react";
 import GlassCard from "@/components/ui/GlassCard";
 import FormInput from "@/components/forms/FormInput";
@@ -13,6 +13,7 @@ import { useCreateRole, useUpdateRole } from "../hooks/use-role";
 import { roleSchema, type RoleFormData } from "../schemas/role.schema";
 import type { RoleDetailResponse } from "../types/role.type";
 import PermissionMatrix from "./PermissionMatrix";
+import { ADMIN_ROUTES } from "@/constants/routes";
 
 interface RoleFormProps {
   initialData?: RoleDetailResponse;
@@ -20,6 +21,7 @@ interface RoleFormProps {
 }
 
 export default function RoleForm({ initialData, isEditMode = false }: RoleFormProps) {
+  const { message } = App.useApp();
   const router = useRouter();
   const { mutateAsync: createRole, isPending: isCreating } = useCreateRole();
   const { mutateAsync: updateRole, isPending: isUpdating } = useUpdateRole();
@@ -66,7 +68,7 @@ export default function RoleForm({ initialData, isEditMode = false }: RoleFormPr
       } else {
         await createRole(data);
         message.success("Thêm mới vai trò thành công");
-        router.push("/settings/roles");
+        router.push(ADMIN_ROUTES.ROLES);
       }
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
@@ -80,11 +82,13 @@ export default function RoleForm({ initialData, isEditMode = false }: RoleFormPr
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <button 
-            onClick={() => router.back()}
+          <button
+            type="button"
+            aria-label="Quay lại danh sách vai trò"
+            onClick={() => router.push(ADMIN_ROUTES.ROLES)}
             className="p-2 rounded-lg hover:bg-brand-200 text-brand-700 transition-colors cursor-pointer"
           >
-            <ArrowLeft className="h-5 w-5" />
+            <ArrowLeft className="h-5 w-5" aria-hidden="true" />
           </button>
           <div>
             <h1 className="text-2xl font-bold text-brand-950">

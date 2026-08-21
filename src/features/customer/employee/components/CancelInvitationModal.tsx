@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { message } from "antd";
+import { useState } from "react";
+import { App } from "antd";
 import BaseModal from "@/components/ui/BaseModal";
 import BaseTextArea from "@/components/ui/BaseTextArea";
 import { useCancelInvitation } from "../hooks/use-employee";
@@ -14,19 +14,21 @@ interface CancelInvitationModalProps {
 }
 
 export default function CancelInvitationModal({ open, onClose, invitation }: CancelInvitationModalProps) {
+  const { message } = App.useApp();
   const { mutateAsync: cancelInvitation, isPending } = useCancelInvitation();
   const [reason, setReason] = useState("");
 
-  useEffect(() => {
-    if (open) setReason("");
-  }, [open]);
+  const closeModal = () => {
+    setReason("");
+    onClose();
+  };
 
   const handleCancel = async () => {
     if (!invitation?.id) return;
     try {
       await cancelInvitation({ invitationId: invitation.id, reason: reason.trim() || undefined });
       message.success("Hủy lời mời thành công.");
-      onClose();
+      closeModal();
     } catch (error: unknown) {
       message.error(getApiErrorMessage(error, "Lỗi khi hủy lời mời."));
     }
@@ -41,7 +43,7 @@ export default function CancelInvitationModal({ open, onClose, invitation }: Can
         </div>
       }
       isOpen={open}
-      onClose={onClose}
+      onClose={closeModal}
       onConfirm={handleCancel}
       confirmText="Hủy lời mời"
       cancelText="Đóng"

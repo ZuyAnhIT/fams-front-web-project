@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { format } from "date-fns";
 import { CreditCard, Edit, Plus, AlertCircle, Package } from "lucide-react";
-import { Modal, message, Tag, Spin } from "antd";
+import { App, Modal, Tag, Spin } from "antd";
 import { useForm, Controller } from "react-hook-form";
 import BaseButton from "@/components/ui/BaseButton";
 import BaseSelect from "@/components/ui/BaseSelect";
@@ -25,6 +25,7 @@ export default function SubscriptionManager({
   tenantId: string;
   canManage?: boolean;
 }) {
+  const { message } = App.useApp();
   const { data: currentSub, isLoading: isLoadingSub } = useTenantSubscription(tenantId);
   const { data: plansData, isLoading: isLoadingPlans } = usePlans(true, { page: 0, size: 100 });
   const plans = Array.isArray(plansData) ? plansData : (plansData?.content || []);

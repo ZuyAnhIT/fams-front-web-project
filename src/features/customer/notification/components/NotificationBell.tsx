@@ -8,9 +8,8 @@ import {
   type Notification,
 } from "../types/notification.type";
 import { notificationService } from "../services/notification.service";
-import { Badge, Popover, Spin } from "antd";
+import { App, Badge, Popover, Spin } from "antd";
 import { useRouter } from "next/navigation";
-import { message } from "antd";
 import { useNotificationStore, notificationEventBus } from "../stores/notification.store";
 import { getNotificationHref } from "../utils/notification.mapper";
 
@@ -205,6 +204,7 @@ function NotificationPopoverContent({
 }
 
 export default function NotificationBell() {
+  const { message } = App.useApp();
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [markingId, setMarkingId] = useState<string | null>(null);

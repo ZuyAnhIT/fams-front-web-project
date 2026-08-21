@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { message } from "antd";
+import { App } from "antd";
 import { Save, Building2, Globe, Settings2 } from "lucide-react";
 import FormInput from "@/components/forms/FormInput";
 import BaseButton from "@/components/ui/BaseButton";
@@ -22,6 +22,7 @@ export default function UpdateTenantForm({
   tenantId?: string;
   tenantName?: string;
 }) {
+  const { message } = App.useApp();
   const { mutateAsync: updateTenant, isPending } = useUpdateTenant();
   const setActiveTenant = useTenantStore((state) => state.setActiveTenant);
 

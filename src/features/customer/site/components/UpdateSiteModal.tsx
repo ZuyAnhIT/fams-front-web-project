@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Alert, Form, message } from "antd";
+import { Alert, App, Form } from "antd";
 import { useAuthStore } from "@/stores/auth.store";
 import { useUpdateSiteMutation } from "../hooks/use-site";
 import { SiteResponse, UpdateSiteRequest } from "../types/site.type";
@@ -38,6 +38,7 @@ interface UpdateSiteModalProps {
 }
 
 export default function UpdateSiteModal({ isOpen, onClose, site }: UpdateSiteModalProps) {
+  const { message } = App.useApp();
   const [form] = Form.useForm();
   const checkinPolicy = Form.useWatch("checkinPolicy", form) as
     | CheckinPolicy

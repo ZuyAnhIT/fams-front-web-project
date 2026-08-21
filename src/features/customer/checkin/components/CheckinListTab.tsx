@@ -424,7 +424,8 @@ export default function CheckinListTab() {
         onPageChange={(page, size) =>
           setParams((current) => ({ ...current, page, size }))
         }
-        onChange={(_, __, sorter) => {
+        onChange={(_, __, sorter, extra) => {
+          if (extra.action !== "sort") return;
           const item = Array.isArray(sorter) ? sorter[0] : sorter;
           setParams((current) => ({
             ...current,

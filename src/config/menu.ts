@@ -9,6 +9,7 @@ export interface MenuItem {
   allowedRoles?: SystemRole[]; // Các role được phép xem menu này
   allowedPermissions?: string[];
   excludedRoles?: SystemRole[];
+  requiresTenant?: boolean;
 }
 
 export const SIDEBAR_MENU: MenuItem[] = [
@@ -71,7 +72,8 @@ export const SIDEBAR_MENU: MenuItem[] = [
     title: "Tổng quan",
     path: CUSTOMER_ROUTES.DASHBOARD,
     icon: "LayoutDashboard",
-    allowedRoles: [SystemRole.TENANT_ADMIN, SystemRole.HR_MANAGER, SystemRole.SITE_SUPERVISOR, SystemRole.EMPLOYEE]
+    excludedRoles: [SystemRole.PLATFORM_ADMIN, SystemRole.PLATFORM_STAFF],
+    requiresTenant: true,
   },
 
   // -- DÀNH CHO TENANT ADMIN & HR (CUSTOMER) --
@@ -81,12 +83,14 @@ export const SIDEBAR_MENU: MenuItem[] = [
     icon: "Users",
     allowedRoles: [SystemRole.PLATFORM_ADMIN],
     allowedPermissions: ["employees:list", "employees:read"],
+    requiresTenant: true,
   },
   {
     title: "Phòng ban",
     path: CUSTOMER_ROUTES.WORKSPACES,
     icon: "Network",
     allowedPermissions: ["workspaces:list", "workspaces:read"],
+    requiresTenant: true,
   },
   {
     title: "Chấm công",
@@ -94,24 +98,28 @@ export const SIDEBAR_MENU: MenuItem[] = [
     icon: "CalendarCheck",
     allowedRoles: [SystemRole.PLATFORM_ADMIN],
     allowedPermissions: ["checkins:list", "attendance:list"],
+    requiresTenant: true,
   },
   {
     title: "Công trình",
     path: CUSTOMER_ROUTES.SITES,
     icon: "MapPin",
     allowedPermissions: ["sites:list", "sites:read"],
+    requiresTenant: true,
   },
   {
     title: "Báo cáo",
     path: CUSTOMER_ROUTES.REPORTS,
     icon: "ChartNoAxesCombined",
     allowedPermissions: ["reports:list"],
+    requiresTenant: true,
   },
   {
     title: "Kiểm tra ngẫu nhiên",
     path: CUSTOMER_ROUTES.RANDOM_CHECKS,
     icon: "RadioTower",
-    allowedPermissions: ["randomchecks:list", "randomchecks:configure"]
+    allowedPermissions: ["randomchecks:list", "randomchecks:configure"],
+    requiresTenant: true,
   },
   {
     title: "Vi phạm",
@@ -119,6 +127,7 @@ export const SIDEBAR_MENU: MenuItem[] = [
     icon: "AlertTriangle",
     allowedPermissions: ["violations:list", "violations:read"],
     allowedRoles: [SystemRole.PLATFORM_ADMIN],
+    requiresTenant: true,
   },
   {
     title: "Nhật ký audit",
@@ -126,18 +135,21 @@ export const SIDEBAR_MENU: MenuItem[] = [
     icon: "ScrollText",
     allowedPermissions: ["audit:list"],
     excludedRoles: [SystemRole.PLATFORM_ADMIN],
+    requiresTenant: true,
   },
   {
     title: "Cần giải thích",
     path: CUSTOMER_ROUTES.EXCEPTIONS,
     icon: "MessageSquareText",
-    allowedRoles: [SystemRole.EMPLOYEE, SystemRole.SITE_SUPERVISOR, SystemRole.HR_MANAGER, SystemRole.TENANT_ADMIN],
+    excludedRoles: [SystemRole.PLATFORM_ADMIN, SystemRole.PLATFORM_STAFF],
+    requiresTenant: true,
   },
   {
     title: "Hướng dẫn sử dụng",
     path: CUSTOMER_ROUTES.HELP,
     icon: "BookOpenCheck",
-    allowedRoles: [SystemRole.TENANT_ADMIN, SystemRole.HR_MANAGER, SystemRole.SITE_SUPERVISOR, SystemRole.EMPLOYEE],
+    excludedRoles: [SystemRole.PLATFORM_ADMIN, SystemRole.PLATFORM_STAFF],
+    requiresTenant: true,
   },
 
   // -- CẤU HÌNH HỆ THỐNG (CUSTOMER) --
@@ -145,7 +157,7 @@ export const SIDEBAR_MENU: MenuItem[] = [
     title: "Cấu hình Công ty",
     path: CUSTOMER_ROUTES.TENANT_SETTINGS,
     icon: "Building",
-    allowedRoles: [SystemRole.TENANT_ADMIN]
+    requiresTenant: true,
   },
   {
     title: "Thành viên công ty",
@@ -153,12 +165,14 @@ export const SIDEBAR_MENU: MenuItem[] = [
     icon: "Users",
     allowedRoles: [SystemRole.TENANT_ADMIN],
     allowedPermissions: ["roles:read", "roles:update", "employees:list"],
+    requiresTenant: true,
   },
   {
     title: "Vai trò & Phân quyền",
     path: CUSTOMER_ROUTES.ROLES,
     icon: "ShieldCheck",
-    allowedPermissions: ["roles:read", "roles:create", "roles:update", "roles:delete"]
+    allowedPermissions: ["roles:read", "roles:create", "roles:update", "roles:delete"],
+    requiresTenant: true,
   },
   {
     title: "Mẫu thông báo",
@@ -166,6 +180,7 @@ export const SIDEBAR_MENU: MenuItem[] = [
     icon: "MessagesSquare",
     allowedRoles: [SystemRole.PLATFORM_ADMIN],
     allowedPermissions: ["notifications:manage", "tenant:admin"],
+    requiresTenant: true,
   },
 
 ];

@@ -22,6 +22,21 @@ export default function ResetPasswordForm() {
   const token = searchParams.get("token");
   const mobileAppScheme = publicEnv.NEXT_PUBLIC_MOBILE_APP_SCHEME;
 
+  const navigateBackWithinApp = (fallback: string) => {
+    const referrer = document.referrer;
+    let isSameOrigin = false;
+    try {
+      isSameOrigin = Boolean(referrer && new URL(referrer).origin === window.location.origin);
+    } catch {
+      isSameOrigin = false;
+    }
+    if (isSameOrigin && window.history.length > 1) {
+      router.back();
+    } else {
+      router.push(fallback);
+    }
+  };
+
   const [isSuccess, setIsSuccess] = useState(false);
 
   const {
@@ -78,7 +93,7 @@ export default function ResetPasswordForm() {
           </div>
           <button
             type="button"
-            onClick={() => router.back()}
+            onClick={() => navigateBackWithinApp(ROUTES.FORGOT_PASSWORD)}
             className="mt-4 inline-flex w-full items-center justify-center gap-2 text-sm font-semibold text-slate-500 hover:text-brand-600"
           >
             <ArrowLeftOutlined /> Quay lại trang trước
@@ -136,7 +151,7 @@ export default function ResetPasswordForm() {
           </Link>
           <button
             type="button"
-            onClick={() => router.back()}
+            onClick={() => navigateBackWithinApp(ROUTES.LOGIN)}
             className="mt-4 inline-flex w-full items-center justify-center gap-2 text-sm font-semibold text-slate-500 hover:text-brand-600"
           >
             <ArrowLeftOutlined /> Quay lại trang trước
@@ -194,7 +209,7 @@ export default function ResetPasswordForm() {
         </form>
         <button
           type="button"
-          onClick={() => router.back()}
+          onClick={() => navigateBackWithinApp(ROUTES.FORGOT_PASSWORD)}
           className="mt-6 inline-flex w-full items-center justify-center gap-2 text-sm font-semibold text-slate-500 hover:text-brand-600"
         >
           <ArrowLeftOutlined /> Quay lại trang trước

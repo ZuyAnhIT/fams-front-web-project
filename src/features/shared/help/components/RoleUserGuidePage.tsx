@@ -37,6 +37,32 @@ const employeeSections: GuideSection[] = [
   { title: "Bảo mật tài khoản", content: <p>Bật TOTP 2FA, lưu backup codes ở nơi an toàn và đăng xuất thiết bị lạ. Có thể bật/tắt độc lập thông báo hộp thư và push.</p> },
 ];
 
+const supervisorSections: GuideSection[] = [
+  { title: "Công trình trong phạm vi giám sát", content: <p>Chỉ mở các công trình/site được Backend trả theo assignment supervisor. Nếu phụ trách nhiều site, chọn site trước khi tải check-in, bảng công hoặc lịch random check để tránh xem nhầm phạm vi.</p> },
+  { title: "Theo dõi check-in hiện trường", content: <p>Đối chiếu vị trí, geofence, thời gian và bằng chứng xác thực của nhân viên tại site được giao. Dữ liệu ngoài phạm vi phải trả 403, không được hiểu là danh sách rỗng.</p> },
+  { title: "Kiểm tra ngẫu nhiên", content: <p>Tạo và theo dõi random check tại site được phân công, kiểm tra thời hạn phản hồi và bằng chứng GPS/Face ID trước khi kết luận.</p> },
+  { title: "Ghi nhận vi phạm", content: <p>Có thể xem hoặc ghi nhận theo quyền được cấp; không tự duyệt, sửa hay dismiss vi phạm của người khác khi phiên đăng nhập không có quyền tương ứng.</p> },
+];
+
+function customRoleSections(permissions: string[]): GuideSection[] {
+  const hasAny = (...required: string[]) => required.some((permission) => permissions.includes(permission));
+  const sections: GuideSection[] = [];
+
+  if (hasAny("employees:list", "employees:read")) sections.push({ title: "Nhân sự theo phạm vi được cấp", content: <p>Tìm kiếm và xem hồ sơ nhân viên trong phạm vi Backend cho phép. Các thao tác mời, tạo, sửa, import hoặc đổi trạng thái chỉ xuất hiện khi có permission ghi tương ứng.</p> });
+  if (hasAny("workspaces:list", "workspaces:read")) sections.push({ title: "Phòng ban và workspace", content: <p>Xem cơ cấu tổ chức, thành viên và quan hệ cha–con theo quyền hiện tại; nút tạo, sửa, chuyển hoặc xóa chỉ hiển thị khi có quyền ghi tương ứng.</p> });
+  if (hasAny("sites:list", "sites:read")) sections.push({ title: "Công trình theo phạm vi", content: <p>Mở danh sách và chi tiết công trình được Backend trả về. Quyền xem không tự mở các chức năng sửa site, geofence, ca hoặc phân công.</p> });
+  if (hasAny("checkins:list", "attendance:list")) sections.push({ title: "Chấm công được phép truy cập", content: <p>Dùng đúng tab check-in hoặc bảng công mà permission hiện tại cho phép; các bộ lọc site và nhân viên vẫn chịu site-scope từ Backend.</p> });
+  if (hasAny("randomchecks:list", "randomchecks:configure")) sections.push({ title: "Kiểm tra ngẫu nhiên", content: <p>Quyền xem lịch sử và quyền cấu hình là hai quyền riêng. Giao diện chỉ mở thao tác tạo/cấu hình khi phiên có permission ghi tương ứng.</p> });
+  if (hasAny("violations:list", "violations:read")) sections.push({ title: "Vi phạm", content: <p>Xem bằng chứng và trạng thái trong phạm vi được cấp; xử lý hoặc dismiss chỉ thực hiện khi có permission cập nhật và phải lưu lý do audit.</p> });
+  if (hasAny("reports:list")) sections.push({ title: "Báo cáo", content: <p>Xem số liệu đã được Backend giới hạn theo tenant/site. Nút export là quyền riêng và không xuất hiện chỉ vì có quyền xem báo cáo.</p> });
+  if (hasAny("roles:read", "roles:create", "roles:update", "roles:delete")) sections.push({ title: "Vai trò và phân quyền", content: <p>Role hệ thống chỉ đọc; custom role thuộc công ty mới có thể tạo hoặc cập nhật theo permission được cấp. Kiểm tra phạm vi tenant/site trước khi gán cho người dùng.</p> });
+  if (hasAny("audit:list")) sections.push({ title: "Nhật ký audit", content: <p>Dùng actor, hành động, khoảng thời gian và request ID để trace. Dữ liệu nhạy cảm đã được Backend che và không thể giải che từ Web.</p> });
+
+  return sections.length > 0 ? sections : [
+    { title: "Tài khoản và thông báo", content: <p>Vai trò hiện tại chưa có module nghiệp vụ trên Web. Bạn vẫn có thể cập nhật hồ sơ, bảo mật tài khoản, quản lý phiên và xem thông báo cá nhân.</p> },
+  ];
+}
+
 const faq = [
   { key: "checkin", label: "Tại sao tôi không chấm công được?", children: "Kiểm tra phân công, site/ca đang active, thời gian cho phép, geofence và trạng thái Face ID nếu policy yêu cầu." },
   { key: "masking", label: "Tại sao email hoặc số điện thoại bị che?", children: "Đây là kiểm soát dữ liệu cá nhân theo quyền do Backend áp dụng, không phải lỗi giao diện. Web không thể và không nên tự giải che." },
@@ -52,14 +78,30 @@ export default function RoleUserGuidePage() {
   const user = useAuthStore((state) => state.user);
   const isPlatform = user?.role === SystemRole.PLATFORM_ADMIN || user?.role === SystemRole.PLATFORM_STAFF;
   const isEmployee = user?.role === SystemRole.EMPLOYEE;
+  const isSupervisor = user?.role === SystemRole.SITE_SUPERVISOR;
+  const isCompanyAdmin = user?.role === SystemRole.TENANT_ADMIN || user?.role === SystemRole.HR_MANAGER;
+  const permissions = user?.permissions ?? [];
+  const canOpenEmployees = user?.role === SystemRole.PLATFORM_ADMIN ||
+    user?.role === SystemRole.TENANT_ADMIN ||
+    user?.role === SystemRole.HR_MANAGER ||
+    permissions.some((permission) => ["employees:list", "employees:read"].includes(permission));
+  const canOpenSystemStatus = user?.role === SystemRole.PLATFORM_ADMIN ||
+    permissions.some((permission) => ["system:read", "golive:manage"].includes(permission));
   const items = isPlatform
     ? [{ key: "platform", label: "Platform Admin/Ops", children: <GuideContent sections={platformSections} /> }]
     : isEmployee
       ? [{ key: "employee", label: "Nhân viên", children: <GuideContent sections={employeeSections} /> }]
-      : [
+      : isSupervisor
+        ? [
+            { key: "supervisor", label: "Giám sát công trình", children: <GuideContent sections={supervisorSections} /> },
+            { key: "employee", label: "Hỗ trợ nhân viên", children: <GuideContent sections={employeeSections} /> },
+          ]
+        : isCompanyAdmin
+          ? [
           { key: "admin", label: "Company Admin / HR", children: <GuideContent sections={adminSections} /> },
           { key: "employee", label: "Hỗ trợ nhân viên", children: <GuideContent sections={employeeSections} /> },
-        ];
+            ]
+          : [{ key: "custom", label: "Theo quyền được cấp", children: <GuideContent sections={customRoleSections(permissions)} /> }];
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
@@ -75,8 +117,8 @@ export default function RoleUserGuidePage() {
       </ContentCard>
 
       <div className="grid gap-4 md:grid-cols-3">
-        {isPlatform ? <Link href={ADMIN_ROUTES.SYSTEM_STATUS} className="rounded-xl border border-slate-200 bg-white p-4 hover:border-blue-300"><ShieldCheck className="h-5 w-5 text-blue-600" /><p className="mt-3 font-semibold">Vận hành & Go-live</p><p className="mt-1 text-sm text-slate-500">Health, job, UAT và delivery log</p></Link> : <>
-          <Link href={CUSTOMER_ROUTES.EMPLOYEES} className="rounded-xl border border-slate-200 bg-white p-4 hover:border-blue-300"><Users className="h-5 w-5 text-blue-600" /><p className="mt-3 font-semibold">Quản lý nhân viên</p><p className="mt-1 text-sm text-slate-500">Hồ sơ, lời mời và phân công</p></Link>
+        {isPlatform ? <>{canOpenSystemStatus && <Link href={ADMIN_ROUTES.SYSTEM_STATUS} className="rounded-xl border border-slate-200 bg-white p-4 hover:border-blue-300"><ShieldCheck className="h-5 w-5 text-blue-600" /><p className="mt-3 font-semibold">Vận hành & Go-live</p><p className="mt-1 text-sm text-slate-500">Health, job, UAT và delivery log</p></Link>}<Link href={CUSTOMER_ROUTES.SETTINGS} className="rounded-xl border border-slate-200 bg-white p-4 hover:border-blue-300"><Smartphone className="h-5 w-5 text-blue-600" /><p className="mt-3 font-semibold">Cài đặt tài khoản</p><p className="mt-1 text-sm text-slate-500">2FA, phiên và thông báo</p></Link></> : <>
+          {canOpenEmployees && <Link href={CUSTOMER_ROUTES.EMPLOYEES} className="rounded-xl border border-slate-200 bg-white p-4 hover:border-blue-300"><Users className="h-5 w-5 text-blue-600" /><p className="mt-3 font-semibold">Quản lý nhân viên</p><p className="mt-1 text-sm text-slate-500">Hồ sơ, lời mời và phân công</p></Link>}
           <Link href={CUSTOMER_ROUTES.SETTINGS} className="rounded-xl border border-slate-200 bg-white p-4 hover:border-blue-300"><Smartphone className="h-5 w-5 text-blue-600" /><p className="mt-3 font-semibold">Cài đặt tài khoản</p><p className="mt-1 text-sm text-slate-500">2FA, phiên và thông báo</p></Link>
         </>}
         <a href="#faq" className="rounded-xl border border-slate-200 bg-white p-4 hover:border-blue-300"><HelpCircle className="h-5 w-5 text-blue-600" /><p className="mt-3 flex items-center gap-1 font-semibold">Câu hỏi thường gặp <ExternalLink className="h-3.5 w-3.5" /></p><p className="mt-1 text-sm text-slate-500">Xử lý các tình huống phổ biến</p></a>

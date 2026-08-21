@@ -1,5 +1,6 @@
 "use client";
 import { getDashboardRoute } from "@/utils/route.util";
+import { CUSTOMER_ROUTES } from "@/constants/routes";
 
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth.store";
@@ -49,7 +50,13 @@ export default function RoleGuard({ children, allowedRoles = [], allowedPermissi
           extra={
             <BaseButton
               customVariant="default"
-              onClick={() => router.push(getDashboardRoute(user?.role))}
+              onClick={() => router.push(
+                !user?.tenantId &&
+                user?.role !== SystemRole.PLATFORM_ADMIN &&
+                user?.role !== SystemRole.PLATFORM_STAFF
+                  ? CUSTOMER_ROUTES.SELECT_COMPANY
+                  : getDashboardRoute(user?.role),
+              )}
             >
               Về Trang chủ
             </BaseButton>

@@ -1,4 +1,4 @@
-import { Alert, message, Table, Upload, type UploadProps } from "antd";
+import { Alert, App, Table, Upload, type UploadProps } from "antd";
 import { InboxOutlined, DownloadOutlined } from "@ant-design/icons";
 import { useState } from "react";
 import BaseModal from "@/components/ui/BaseModal";
@@ -16,6 +16,7 @@ interface ImportEmployeeModalProps {
 }
 
 export default function ImportEmployeeModal({ open, onClose }: ImportEmployeeModalProps) {
+  const { message } = App.useApp();
   const { mutateAsync: importEmployees, isPending } = useImportEmployees();
   const { mutateAsync: exportImportErrors, isPending: isExportingErrors } = useExportImportErrors();
   const [file, setFile] = useState<File | null>(null);

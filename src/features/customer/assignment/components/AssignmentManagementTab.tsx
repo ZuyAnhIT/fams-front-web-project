@@ -312,7 +312,8 @@ export default function AssignmentManagementTab({
 
   const handleTableChange: NonNullable<
     TableProps<AssignmentResponse>["onChange"]
-  > = (_, __, sorter) => {
+  > = (_, __, sorter, extra) => {
+    if (extra.action !== "sort") return;
     if (
       !Array.isArray(sorter) &&
       sorter.columnKey &&
@@ -327,6 +328,7 @@ export default function AssignmentManagementTab({
     } else {
       setAssignmentSort({ sortBy: "startDate", sortDir: "desc" });
     }
+    setAssignmentPage(0);
   };
 
   return (

@@ -39,12 +39,16 @@ export default function DataTable<T extends object>({
     pageSize: pageSize,
     total: totalElements,
     showSizeChanger: totalElements > 10,
-    pageSizeOptions: [10, 20, 50],
+    pageSizeOptions: [10, 20, 50, 100],
     responsive: true,
     showLessItems: true,
     showTotal: (total, range) => `Hiển thị ${range[0]}–${range[1]} trên ${total}`,
     onChange: (page, size) => {
-      if (onPageChange) onPageChange(page - 1, size); // Trả về 0-indexed cho backend
+      if (onPageChange) {
+        // Khi đổi số dòng/trang, luôn quay về trang đầu để không yêu cầu một
+        // trang không còn tồn tại với page size mới.
+        onPageChange(size === pageSize ? page - 1 : 0, size);
+      }
     },
   } : false;
 

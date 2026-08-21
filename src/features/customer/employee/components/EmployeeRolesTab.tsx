@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Alert, message, Tag } from "antd";
+import { Alert, App, Tag } from "antd";
 import { Trash2, ShieldCheck, Plus } from "lucide-react";
 import { format } from "date-fns";
 import DataTable from "@/components/tables/DataTable";
@@ -20,6 +20,7 @@ interface EmployeeRolesTabProps {
 }
 
 export default function EmployeeRolesTab({ employee }: EmployeeRolesTabProps) {
+  const { message } = App.useApp();
   const canManage = useAuthStore((state) => state.hasPermission("roles:update"));
   const [isAssignOpen, setIsAssignOpen] = useState(false);
   const [revokeRoleId, setRevokeRoleId] = useState<string | null>(null);

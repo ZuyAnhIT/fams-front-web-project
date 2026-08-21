@@ -5,9 +5,10 @@ import type { UserRoleResponse } from "@/features/admin/role-permission/types";
 import { countDistinctTenants } from "@/features/customer/tenant/utils/tenant-membership.util";
 
 export function getDashboardRoute(role?: SystemRole | string): string {
-  if (role === SystemRole.PLATFORM_ADMIN || role === SystemRole.PLATFORM_STAFF) {
+  if (role === SystemRole.PLATFORM_ADMIN) {
     return ADMIN_ROUTES.DASHBOARD;
   }
+  if (role === SystemRole.PLATFORM_STAFF) return ADMIN_ROUTES.HELP;
   return CUSTOMER_ROUTES.DASHBOARD;
 }
 

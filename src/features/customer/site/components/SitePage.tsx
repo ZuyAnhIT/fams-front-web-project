@@ -258,7 +258,8 @@ export default function SitePage() {
               setPage(p);
               setSize(s);
             }}
-            onChange={(_, __, sorter) => {
+            onChange={(_, __, sorter, extra) => {
+              if (extra.action !== "sort") return;
               if (!Array.isArray(sorter) && (sorter.columnKey || sorter.field)) {
                 setSortBy((sorter.columnKey || sorter.field) as string);
                 setSortDir(sorter.order === "ascend" ? "asc" : sorter.order === "descend" ? "desc" : undefined);
@@ -266,6 +267,7 @@ export default function SitePage() {
                 setSortBy(undefined);
                 setSortDir(undefined);
               }
+              setPage(0);
             }}
             onRow={() => ({
               className: "hover:bg-blue-50/50 transition-colors duration-200 group",

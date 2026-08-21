@@ -150,7 +150,8 @@ export default function InvitationListPage() {
           currentPage={state.page}
           pageSize={state.size}
           onPageChange={(page, size) => setPagination({ page, size })}
-          onChange={(_, __, sorter) => {
+          onChange={(_, __, sorter, extra) => {
+            if (extra.action !== "sort") return;
             if (!Array.isArray(sorter) && (sorter.columnKey || sorter.field)) {
               setPagination({
                 sortBy: (sorter.columnKey || sorter.field) as string,

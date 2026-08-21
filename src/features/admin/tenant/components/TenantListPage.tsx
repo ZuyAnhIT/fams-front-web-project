@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Plus, Building2, ChevronRight, MoreVertical, Ban, PlayCircle } from "lucide-react";
-import { Dropdown, MenuProps, Modal, Tag, message } from "antd";
+import { App, Dropdown, MenuProps, Tag } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import DataTable from "@/components/tables/DataTable";
 import { BaseButton, BaseSelect } from "@/components/ui";
@@ -27,6 +27,7 @@ import { getApiErrorMessage } from "@/utils/api-error.util";
 import Image from "next/image";
 
 export default function TenantListPage() {
+  const { message, modal } = App.useApp();
   const router = useRouter();
   const setActiveTenant = useTenantStore((state) => state.setActiveTenant);
   const user = useAuthStore((authState) => authState.user);
@@ -72,7 +73,7 @@ export default function TenantListPage() {
   }
 
   const handleSuspend = (tenant: Tenant) => {
-    Modal.confirm({
+    modal.confirm({
       title: "Xác nhận đình chỉ",
       content: `Bạn có chắc chắn muốn đình chỉ công ty "${tenant.name}" không? Toàn bộ truy cập của công ty này sẽ bị chặn ngay lập tức.`,
       okText: "Đình chỉ",
@@ -96,7 +97,7 @@ export default function TenantListPage() {
   };
 
   const handleReactivate = (tenant: Tenant) => {
-    Modal.confirm({
+    modal.confirm({
       title: "Xác nhận kích hoạt",
       content: `Bạn có chắc chắn muốn kích hoạt lại công ty "${tenant.name}" không?`,
       okText: "Kích hoạt",
@@ -119,7 +120,7 @@ export default function TenantListPage() {
   };
 
   const handleCancel = (tenant: Tenant) => {
-    Modal.confirm({
+    modal.confirm({
       title: "Xác nhận hủy bỏ vĩnh viễn",
       content: `Bạn có chắc chắn muốn hủy bỏ vĩnh viễn công ty "${tenant.name}" không? Hành động này không thể hoàn tác và toàn bộ dữ liệu truy cập sẽ bị chặn vĩnh viễn.`,
       okText: "Hủy bỏ vĩnh viễn",
@@ -376,7 +377,8 @@ export default function TenantListPage() {
               currentPage={state.page}
               pageSize={state.size}
               onPageChange={(page, size) => setPagination({ page, size })}
-              onChange={(_, __, sorter) => {
+              onChange={(_, __, sorter, extra) => {
+                if (extra.action !== "sort") return;
                 if (!Array.isArray(sorter) && (sorter.field || sorter.columnKey)) {
                   setPagination({
                     sortBy: (sorter.field || sorter.columnKey) as string,

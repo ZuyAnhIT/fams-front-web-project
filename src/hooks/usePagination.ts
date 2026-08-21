@@ -23,9 +23,11 @@ export function usePagination(defaultSize = 20) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const getNumberParam = (key: string, defaultVal: number) => {
+  const getNumberParam = (key: string, defaultVal: number, min: number) => {
     const val = searchParams.get(key);
-    return val ? parseInt(val, 10) : defaultVal;
+    if (val === null || !/^\d+$/.test(val)) return defaultVal;
+    const parsed = Number(val);
+    return Number.isSafeInteger(parsed) && parsed >= min ? parsed : defaultVal;
   };
 
   const getStringParam = (key: string, defaultVal?: string) => {
@@ -34,16 +36,24 @@ export function usePagination(defaultSize = 20) {
 
   const getBooleanParam = (key: string): boolean | undefined => {
     const val = searchParams.get(key);
-    return val === null ? undefined : val === "true";
+    if (val === "true") return true;
+    if (val === "false") return false;
+    return undefined;
   };
 
+  const requestedSize = getNumberParam("size", defaultSize, 1);
+  const size = [10, 20, 50, 100].includes(requestedSize)
+    ? requestedSize
+    : defaultSize;
+  const requestedSortDir = getStringParam("sortDir", "desc");
+
   const state: PaginationState = {
-    page: getNumberParam("page", 0), // Default 0 for backend
-    size: getNumberParam("size", defaultSize),
+    page: getNumberParam("page", 0, 0), // Default 0 for backend
+    size,
     search: getStringParam("search"),
     email: getStringParam("email"),
     sortBy: getStringParam("sortBy", "createdAt"),
-    sortDir: getStringParam("sortDir", "desc") as "asc" | "desc",
+    sortDir: requestedSortDir === "asc" ? "asc" : "desc",
     status: getStringParam("status"),
     department: getStringParam("department"),
     industry: getStringParam("industry"),
@@ -69,7 +79,8 @@ export function usePagination(defaultSize = 20) {
         params.delete("page"); 
       }
 
-      router.push(`${pathname}?${params.toString()}`);
+      const query = params.toString();
+      router.push(query ? `${pathname}?${query}` : pathname);
     },
     [pathname, router, searchParams]
   );

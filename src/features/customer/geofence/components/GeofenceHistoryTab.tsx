@@ -18,6 +18,7 @@ interface GeofenceHistoryTabProps {
 
 export default function GeofenceHistoryTab({ tenantId, siteId, siteLatitude, siteLongitude }: GeofenceHistoryTabProps) {
   const [historyPage, setHistoryPage] = useState(0);
+  const [historySize, setHistorySize] = useState(10);
   const [historySort, setHistorySort] = useState({ sortBy: "createdAt", sortDir: "desc" as "asc" | "desc" | undefined });
 
   const [selectedHistoryGeofence, setSelectedHistoryGeofence] = useState<GeofenceResponse | null>(null);
@@ -25,7 +26,7 @@ export default function GeofenceHistoryTab({ tenantId, siteId, siteLatitude, sit
   const { data: historyRes, isLoading: isHistoryLoading } = useGeofenceHistoryQuery(
     tenantId,
     siteId,
-    { page: historyPage, size: 10, sortBy: historySort.sortBy, sortDir: historySort.sortDir }
+    { page: historyPage, size: historySize, sortBy: historySort.sortBy, sortDir: historySort.sortDir }
   );
   
   const history = historyRes?.content || [];
@@ -114,9 +115,13 @@ export default function GeofenceHistoryTab({ tenantId, siteId, siteLatitude, sit
         loading={isHistoryLoading}
         totalElements={totalHistory}
         currentPage={historyPage}
-        pageSize={10}
-        onPageChange={(p) => setHistoryPage(p)}
-        onChange={(_, __, sorter) => {
+        pageSize={historySize}
+        onPageChange={(page, size) => {
+          setHistoryPage(page);
+          setHistorySize(size);
+        }}
+        onChange={(_, __, sorter, extra) => {
+          if (extra.action !== "sort") return;
           if (!Array.isArray(sorter) && (sorter.columnKey || sorter.field)) {
             setHistorySort({
               sortBy: String(sorter.columnKey || sorter.field),
@@ -125,6 +130,7 @@ export default function GeofenceHistoryTab({ tenantId, siteId, siteLatitude, sit
           } else {
             setHistorySort({ sortBy: "createdAt", sortDir: "desc" });
           }
+          setHistoryPage(0);
         }}
       />
 

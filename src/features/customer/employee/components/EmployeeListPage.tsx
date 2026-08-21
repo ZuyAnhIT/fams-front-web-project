@@ -98,7 +98,7 @@ export default function EmployeeListPage() {
         newStatus === "active"
           ? "Nhân viên sẽ được phép sử dụng các chức năng theo vai trò hiện có."
           : newStatus === "terminated"
-            ? "Nhân viên sẽ bị ngăn truy cập/chấm công. Mọi Random Check đang chờ hoặc đã gửi chưa phản hồi, cùng các phân công công trình đang active của nhân viên này, sẽ tự động bị hủy. Dữ liệu lịch sử vẫn được giữ."
+            ? "Nhân viên sẽ bị ngăn truy cập/chấm công. Random Check đang chờ hoặc đã gửi chưa phản hồi sẽ tự động bị hủy; các phân công hiện có không tự kết thúc, HR cần rà soát để kết thúc hoặc chuyển giao. Dữ liệu lịch sử vẫn được giữ."
             : "Nhân viên sẽ bị ngăn truy cập/chấm công trong tenant này. Dữ liệu lịch sử vẫn được giữ.",
       okText: "Xác nhận",
       cancelText: "Hủy",
@@ -352,7 +352,7 @@ export default function EmployeeListPage() {
               options={workspaceFilterOptions}
             />
             <BaseSelect
-              aria-label="Lọc nhân viên theo trạng thái Face ID"
+              aria-label="Lọc trạng thái đăng ký Face ID"
               placeholder="Tất cả Face ID"
               className="w-full sm:w-44"
               allowClear
@@ -435,7 +435,8 @@ export default function EmployeeListPage() {
         currentPage={state.page}
         pageSize={state.size}
         onPageChange={(page, size) => setPagination({ page, size })}
-        onChange={(_, __, sorter) => {
+        onChange={(_, __, sorter, extra) => {
+          if (extra.action !== "sort") return;
           if (!Array.isArray(sorter) && (sorter.columnKey || sorter.field)) {
             setPagination({
               sortBy: (sorter.columnKey || sorter.field) as string,

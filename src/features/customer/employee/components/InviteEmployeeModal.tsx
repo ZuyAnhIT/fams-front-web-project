@@ -1,6 +1,6 @@
 "use client";
 
-import { message } from "antd";
+import { App } from "antd";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import FormInput from "@/components/forms/FormInput";
@@ -20,6 +20,7 @@ interface InviteEmployeeModalProps {
 }
 
 export default function InviteEmployeeModal({ open, onClose }: InviteEmployeeModalProps) {
+  const { message } = App.useApp();
   const { mutateAsync: sendInvitation, isPending } = useSendInvitation();
   const tenantId = useAuthStore((state) => state.user?.tenantId ?? undefined);
   const { data: rolesData, isLoading: isLoadingRoles } = useRolesQuery({
