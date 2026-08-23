@@ -9,12 +9,12 @@ import { isAxiosError } from "axios";
 import BaseButton from "@/components/ui/BaseButton";
 import { ROUTES } from "@/constants/routes";
 import {
-  useConfirmPhoneChange,
+  useConfirmPhoneChangeWithFirebase,
   useLinkGoogle,
   useRequestEmailChange,
-  useRequestPhoneChange,
   useUnlinkGoogle,
 } from "@/features/customer/auth/hooks/use-auth";
+import { useFirebasePhoneAuth } from "@/features/customer/auth/hooks/use-firebase-phone-auth";
 import type { AuthUser, UserProfile } from "@/features/customer/auth/types/auth.type";
 import { useAuthStore } from "@/stores/auth.store";
 import { isGoogleConfigured } from "@/config/env";
@@ -36,8 +36,8 @@ function AccountIdentifiersContent() {
   const [unlinkNeedsPassword, setUnlinkNeedsPassword] = useState(false);
 
   const requestEmail = useRequestEmailChange();
-  const requestPhone = useRequestPhoneChange();
-  const confirmPhone = useConfirmPhoneChange();
+  const confirmPhoneFirebase = useConfirmPhoneChangeWithFirebase();
+  const firebasePhone = useFirebasePhoneAuth("recaptcha-phone-change");
   const linkGoogle = useLinkGoogle();
   const unlinkGoogle = useUnlinkGoogle();
 
@@ -62,17 +62,17 @@ function AccountIdentifiersContent() {
 
   const handlePhoneRequest = async () => {
     const normalized = phone.trim();
-    if (!/^\+?[1-9]\d{7,14}$/.test(normalized)) {
+    if (!/^\+[1-9]\d{7,14}$/.test(normalized)) {
       message.error("Số điện thoại chưa đúng định dạng E.164, ví dụ +84912345678.");
       return;
     }
     try {
-      await requestPhone.mutateAsync({ phone: normalized });
+      await firebasePhone.sendCode(normalized);
       setOtpCode("");
       setIsWaitingForPhoneOtp(true);
-      message.success("OTP đã được gửi tới số điện thoại mới và có hiệu lực 5 phút.");
+      message.success("OTP đã được gửi tới số điện thoại qua Firebase.");
     } catch (error) {
-      message.error(errorText(error, "Không thể gửi OTP tới số điện thoại mới."));
+      message.error(errorText(error, "Không thể gửi OTP tới số điện thoại."));
     }
   };
 
@@ -82,10 +82,12 @@ function AccountIdentifiersContent() {
       return;
     }
     try {
-      const profile = await confirmPhone.mutateAsync({ phone: phone.trim(), otpCode });
+      const firebaseIdToken = await firebasePhone.confirmCode(otpCode);
+      const profile = await confirmPhoneFirebase.mutateAsync({ firebaseIdToken });
       persistProfile(profile);
       setIsWaitingForPhoneOtp(false);
       setOtpCode("");
+      firebasePhone.reset();
       message.success("Số điện thoại đã được xác thực và cập nhật.");
     } catch (error) {
       message.error(errorText(error, "OTP không đúng hoặc đã hết hạn."));
@@ -152,14 +154,15 @@ function AccountIdentifiersContent() {
           </div>
           <div className="flex flex-col gap-3 sm:flex-row">
             <Input id="profile-phone" value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="+84912345678" />
-            <BaseButton loading={requestPhone.isPending} onClick={() => void handlePhoneRequest()} className="sm:min-w-36">
+            <BaseButton loading={firebasePhone.isSending} onClick={() => void handlePhoneRequest()} className="sm:min-w-36">
               {isWaitingForPhoneOtp ? "Gửi lại OTP" : user?.phone ? "Đổi số" : "Thêm số"}
             </BaseButton>
           </div>
+          <div id="recaptcha-phone-change" />
           {isWaitingForPhoneOtp && (
             <div className="mt-4 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
               <Input.OTP aria-label="Mã OTP đổi số điện thoại" length={6} value={otpCode} onChange={setOtpCode} />
-              <BaseButton type="primary" loading={confirmPhone.isPending} onClick={() => void handlePhoneConfirm()}>
+              <BaseButton type="primary" loading={firebasePhone.isConfirming || confirmPhoneFirebase.isPending} onClick={() => void handlePhoneConfirm()}>
                 Xác nhận OTP
               </BaseButton>
             </div>

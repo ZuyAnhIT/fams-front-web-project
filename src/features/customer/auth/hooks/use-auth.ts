@@ -24,6 +24,7 @@ import {
   type RequestEmailChangePayload,
   type RequestPhoneChangePayload,
   type ConfirmPhoneChangePayload,
+  type ConfirmPhoneChangeFirebasePayload,
   type AuthSession,
 } from "../types/auth.type";
 
@@ -161,6 +162,10 @@ export const useRequestPhoneChange = () => useMutation<void, Error, RequestPhone
 
 export const useConfirmPhoneChange = () => useMutation<UserProfile, Error, ConfirmPhoneChangePayload>({
   mutationFn: (payload) => authService.confirmPhoneChange(payload),
+});
+
+export const useConfirmPhoneChangeWithFirebase = () => useMutation<UserProfile, Error, ConfirmPhoneChangeFirebasePayload>({
+  mutationFn: (payload) => authService.confirmPhoneChangeWithFirebase(payload),
 });
 
 export const useLinkGoogle = () => useMutation<void, Error, string>({

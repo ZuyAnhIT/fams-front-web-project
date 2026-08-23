@@ -23,6 +23,7 @@ import {
   type RequestEmailChangePayload,
   type RequestPhoneChangePayload,
   type ConfirmPhoneChangePayload,
+  type ConfirmPhoneChangeFirebasePayload,
   type AuthSession,
 } from "../types/auth.type";
 import { type ApiResponse } from "@/types/api";
@@ -195,6 +196,11 @@ export const authService = {
 
   async confirmPhoneChange(payload: ConfirmPhoneChangePayload): Promise<UserProfile> {
     const response = await apiClient.post<ApiResponse<UserProfile>>("/auth/profile/phone/confirm-change", payload);
+    return response.data.data;
+  },
+
+  async confirmPhoneChangeWithFirebase(payload: ConfirmPhoneChangeFirebasePayload): Promise<UserProfile> {
+    const response = await apiClient.post<ApiResponse<UserProfile>>("/auth/profile/phone/confirm-firebase", payload);
     return response.data.data;
   },
 

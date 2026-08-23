@@ -160,6 +160,10 @@ export interface ConfirmPhoneChangePayload extends RequestPhoneChangePayload {
   otpCode: string;
 }
 
+export interface ConfirmPhoneChangeFirebasePayload {
+  firebaseIdToken: string;
+}
+
 export interface AuthSession {
   id: string;
   deviceId: string;

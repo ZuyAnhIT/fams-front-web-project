@@ -12,6 +12,7 @@ const allowedDevOrigins = (process.env.FAMS_DEV_ORIGINS || "192.168.1.14")
   .filter(Boolean);
 
 const nextConfig: NextConfig = {
+  output: "standalone",
   // Next 16 blocks dev-only assets/HMR requested through a hostname other than the
   // hostname used to start the server. Without this, LAN URLs render the SSR fallback
   // but never hydrate, so token pages appear to load forever.
