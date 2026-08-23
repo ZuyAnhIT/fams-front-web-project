@@ -10,6 +10,7 @@ import {
   useCreateTenantDefaultRandomCheckConfig,
   useUpdateRandomCheckConfig,
 } from "../hooks/use-random-check";
+import { useShiftsQuery } from "@/features/customer/shift/hooks/use-shift";
 import type {
   RandomCheckConfigPayload,
   RandomCheckConfigResponse,
@@ -80,6 +81,19 @@ export default function RandomCheckConfigFormModal({
   const createTenantDefault = useCreateTenantDefaultRandomCheckConfig();
   const createSiteOverride = useCreateSiteRandomCheckOverride();
   const update = useUpdateRandomCheckConfig();
+
+  // Found via support case (2026-08-22): a tenant set a site's allowed window to 15:00-17:00 while
+  // the site's only shift ran 14:25-14:35 — zero overlap. Nothing errored anywhere; the backend
+  // deliberately intersects the config window with each assignment's actual shift hours when
+  // generating checks, so the config silently generated nothing, forever, indistinguishable from
+  // the feature being broken. Only relevant for a site-scoped config (a tenant-wide default is
+  // deliberately shift-agnostic — no single shift to validate against).
+  const shiftsQuery = useShiftsQuery(
+    scope === "site_override" ? tenantId : undefined,
+    siteId ?? "",
+    { status: "active", size: 100 },
+  );
+  const comparableShifts = (shiftsQuery.data?.content ?? []).filter((s) => !s.allowOvernight);
 
   const mutation = config
     ? update
@@ -223,11 +237,30 @@ export default function RandomCheckConfigFormModal({
                     return Promise.reject(new Error("Giờ kết thúc phải sau giờ bắt đầu."));
                   }
                   const required = (checks - 1) * interval;
-                  return available >= required
-                    ? Promise.resolve()
-                    : Promise.reject(
+                  if (available < required) {
+                    return Promise.reject(
                         new Error(`Khung giờ cần tối thiểu ${required} phút cho ${checks} lần kiểm tra.`),
                       );
+                  }
+
+                  if (scope === "site_override" && comparableShifts.length > 0) {
+                    const overlapsAny = comparableShifts.some((shift) => {
+                      const shiftStart = dayjs(shift.startTime, "HH:mm");
+                      const shiftEnd = dayjs(shift.endTime, "HH:mm");
+                      return start.isBefore(shiftEnd) && end.isAfter(shiftStart);
+                    });
+                    if (!overlapsAny) {
+                      const summary = comparableShifts
+                        .map((s) => `"${s.name}" (${s.startTime}–${s.endTime})`)
+                        .join(", ");
+                      return Promise.reject(
+                        new Error(
+                          `Khung giờ này không trùng với bất kỳ ca làm nào tại công trình: ${summary}. Kiểm tra ngẫu nhiên sẽ không bao giờ được tạo — hãy chỉnh khung giờ hoặc giờ ca cho trùng nhau.`,
+                        ),
+                      );
+                    }
+                  }
+                  return Promise.resolve();
                 },
               }),
             ]}
@@ -236,6 +269,11 @@ export default function RandomCheckConfigFormModal({
           </Form.Item>
           <div className="sm:col-span-2 -mt-2 mb-4 text-xs text-slate-500">
             Giờ thực tế của từng nhân viên là phần giao giữa khung này và giờ ca làm việc của họ. Ca qua đêm hiện vẫn dùng nguyên khung cấu hình.
+            {scope === "site_override" && comparableShifts.length === 0 && !shiftsQuery.isLoading && (
+              <span className="block mt-1 text-amber-600">
+                Công trình này chưa có ca làm việc nào (hoặc chỉ có ca qua đêm) — chưa thể kiểm tra khung giờ có trùng ca làm không.
+              </span>
+            )}
           </div>
 
           <Form.Item
