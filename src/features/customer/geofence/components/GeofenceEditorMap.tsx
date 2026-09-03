@@ -3,17 +3,13 @@
 import dynamic from "next/dynamic";
 import "leaflet/dist/leaflet.css";
 import BaseButton from "@/components/ui/BaseButton";
-import { mapConfig } from "@/config/map";
 
-// Dynamic import for react-leaflet components to avoid SSR issues
-const MapContainer = dynamic(() => import("react-leaflet").then((mod) => mod.MapContainer), { ssr: false });
-const TileLayer = dynamic(() => import("react-leaflet").then((mod) => mod.TileLayer), { ssr: false });
-const Polygon = dynamic(() => import("react-leaflet").then((mod) => mod.Polygon), { ssr: false });
-const CircleMarker = dynamic(() => import("react-leaflet").then((mod) => mod.CircleMarker), { ssr: false });
-const Polyline = dynamic(() => import("react-leaflet").then((mod) => mod.Polyline), { ssr: false });
-const Tooltip = dynamic(() => import("react-leaflet").then((mod) => mod.Tooltip), { ssr: false });
-
-const MapEvents = dynamic(() => import("./MapEvents"), { ssr: false });
+// Load the complete Leaflet canvas as one client-only unit. This guarantees
+// the click listener is mounted before the visible map can accept input.
+const GeofenceEditorCanvas = dynamic(() => import("./GeofenceEditorCanvas"), {
+  ssr: false,
+  loading: () => <div className="h-full w-full animate-pulse bg-slate-100" />,
+});
 
 interface GeofenceEditorMapProps {
   latitude: number;
@@ -44,10 +40,12 @@ export function GeofenceEditorMap({
     onChange([]);
   };
 
-  const isPolygon = points.length >= 3;
-
   return (
-    <div className="relative h-[400px] w-full rounded-lg overflow-hidden border border-slate-300 z-0 group">
+    <div
+      aria-label="Bản đồ vẽ vùng chấm công"
+      className="relative h-[400px] w-full rounded-lg overflow-hidden border border-slate-300 z-0 group"
+      role="region"
+    >
       {/* Overlay Toolbar */}
       <div className="absolute top-2 right-2 z-[1000] flex flex-col gap-2 bg-white/90 backdrop-blur-sm p-2 rounded-lg shadow-md border border-slate-200">
         <BaseButton
@@ -70,56 +68,12 @@ export function GeofenceEditorMap({
         Cần tối thiểu 3 điểm.
       </div>
 
-      <MapContainer
-        center={[latitude, longitude]}
-        zoom={16}
-        scrollWheelZoom={true}
-        style={{ height: "100%", width: "100%", zIndex: 0, cursor: "crosshair" }}
-      >
-        <TileLayer
-          attribution={mapConfig.attribution}
-          url={mapConfig.tileUrl}
-        />
-        <MapEvents onClick={handleMapClick} />
-
-        <CircleMarker
-          center={[latitude, longitude]}
-          radius={8}
-          pathOptions={{ color: "white", fillColor: "#2563eb", fillOpacity: 1, weight: 3 }}
-        />
-
-        {isPolygon ? (
-          <Polygon
-            positions={points}
-            pathOptions={{ color: "#3b82f6", fillColor: "#3b82f6", fillOpacity: 0.3, weight: 2 }}
-          />
-        ) : points.length > 0 ? (
-          <Polyline
-            positions={points}
-            pathOptions={{ color: "#3b82f6", weight: 2, dashArray: "5, 5" }}
-          />
-        ) : null}
-
-        {/* Draw vertices */}
-        {points.map((p, i) => (
-          <CircleMarker
-            key={i}
-            center={p}
-            radius={6}
-            pathOptions={{ color: i === 0 ? "#10b981" : "#ef4444", fillColor: "white", fillOpacity: 1, weight: 2 }}
-          >
-            <Tooltip
-              direction="top"
-              offset={[0, -10]}
-              opacity={1}
-              permanent
-              className="font-bold text-slate-700 bg-white/90 border border-slate-200 shadow-sm rounded px-1.5 py-0.5 text-[10px]"
-            >
-              Điểm {i + 1}
-            </Tooltip>
-          </CircleMarker>
-        ))}
-      </MapContainer>
+      <GeofenceEditorCanvas
+        latitude={latitude}
+        longitude={longitude}
+        points={points}
+        onMapClick={handleMapClick}
+      />
     </div>
   );
 }

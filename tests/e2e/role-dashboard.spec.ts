@@ -56,6 +56,9 @@ test('Dashboard Supervisor hỗ trợ nhiều site và danh sách người đang
   await expect(page.getByText('1/24 nhân viên đang có mặt')).toBeVisible();
   await expect(page.getByText(/vị trí ghi nhận lúc check-in/i)).toBeVisible();
   await expect(page.getByText(/không phải vị trí hiện tại/i)).toBeVisible();
+  const checkinMap = page.getByRole('region', { name: 'Bản đồ vị trí check-in tại Công trình Riverside' });
+  await expect(checkinMap).toBeVisible();
+  await expect(checkinMap.locator('.maplibregl-canvas')).toBeVisible();
   await expect(page.getByText('Vị trí lúc check-in 07:05 04/08/2026')).toBeAttached();
   await page.screenshot({ path: `${backendFixEvidenceDir}/03-supervisor-checkin-map.png`, fullPage: true });
 });

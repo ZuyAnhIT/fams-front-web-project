@@ -8,7 +8,7 @@ const DynamicLocationPickerMap = dynamic(
     ssr: false,
     loading: () => (
       <div className="h-[400px] w-full rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center">
-        <Spin tip="Đang tải bản đồ..." />
+        <Spin description="Đang tải bản đồ..." />
       </div>
     )
   }
