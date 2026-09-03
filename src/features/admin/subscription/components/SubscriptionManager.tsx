@@ -2,11 +2,15 @@
 
 import { useState } from "react";
 import { format } from "date-fns";
+import dayjs from "dayjs";
 import { CreditCard, Edit, Plus, AlertCircle, Package } from "lucide-react";
 import { App, Modal, Tag, Spin } from "antd";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, useWatch } from "react-hook-form";
 import BaseButton from "@/components/ui/BaseButton";
 import BaseSelect from "@/components/ui/BaseSelect";
+import BaseDatePicker from "@/components/ui/BaseDatePicker";
+
+const currency = new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND", maximumFractionDigits: 0 });
 import { usePlans } from "../hooks/use-subscription";
 import { useTenantSubscription, useAssignSubscription, useUpdateSubscription } from "../hooks/use-tenant-subscription";
 import type { AssignSubscriptionPayload, UpdateSubscriptionPayload } from "../types/subscription.type";
@@ -42,6 +46,16 @@ export default function SubscriptionManager({
       billingCycle: "MONTHLY",
     },
   });
+
+  // Live preview of the plan/price the admin is about to apply.
+  const watchedPlanId = useWatch({ control, name: "planId" });
+  const watchedCycle = useWatch({ control, name: "billingCycle" });
+  const selectedPlan = plans.find((p) => p.id === watchedPlanId);
+  const selectedPrice = selectedPlan
+    ? watchedCycle === "YEARLY"
+      ? selectedPlan.priceYearly
+      : selectedPlan.priceMonthly
+    : undefined;
 
   const openAssignModal = () => {
     setMode("assign");
@@ -201,37 +215,55 @@ export default function SubscriptionManager({
         footer={null}
         destroyOnHidden
         centered
+        width={520}
         classNames={{
-          wrapper: "!bg-white !rounded-3xl !p-0 overflow-hidden shadow-2xl shadow-blue-900/10",
-          header: "!bg-white border-b border-slate-100 px-8 py-6 m-0",
-          body: "!bg-slate-50/50 p-8",
-          close: "mt-4 mr-4 hover:!bg-slate-100 !rounded-full transition-colors",
+          container: "!rounded-2xl !p-0 overflow-hidden",
+          header: "!bg-white !border-b !border-slate-100 !px-6 !py-4 !m-0",
+          body: "!bg-white !px-6 !py-5",
+          close: "!mt-3 !mr-3 hover:!bg-slate-100 !rounded-full transition-colors",
         }}
       >
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-          <div className="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm space-y-4">
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">Chọn gói (Plan)</label>
-              <Controller
-                name="planId"
-                control={control}
-                rules={{ required: "Vui lòng chọn gói" }}
-                render={({ field }) => (
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div>
+            <label className="mb-1.5 block text-sm font-semibold text-slate-700">Gói dịch vụ</label>
+            <Controller
+              name="planId"
+              control={control}
+              rules={{ required: "Vui lòng chọn gói" }}
+              render={({ field, fieldState }) => (
+                <>
                   <BaseSelect
                     {...field}
                     aria-label="Chọn gói dịch vụ"
-                    className="w-full h-11"
-                    options={plans.map(p => ({ label: p.displayName || p.name, value: p.id }))}
+                    status={fieldState.error ? "error" : undefined}
+                    options={plans.map((p) => ({ label: p.displayName || p.name, value: p.id }))}
                     loading={isLoadingPlans}
-                    placeholder="-- Chọn gói dịch vụ --"
+                    placeholder="Chọn gói dịch vụ"
                     notFoundContent="Chưa có gói dịch vụ nào"
                   />
-                )}
-              />
-            </div>
+                  {fieldState.error && (
+                    <p className="mt-1 text-xs font-medium text-red-500">{fieldState.error.message}</p>
+                  )}
+                </>
+              )}
+            />
+            {selectedPlan && (
+              <div className="mt-2 flex items-start gap-2 rounded-lg bg-brand-primary/5 px-3 py-2 text-xs text-slate-600">
+                <Package className="mt-0.5 h-3.5 w-3.5 shrink-0 text-brand-primary" aria-hidden="true" />
+                <span>
+                  <span className="font-semibold text-slate-900">
+                    {selectedPrice != null ? currency.format(selectedPrice) : "—"}
+                  </span>{" "}
+                  / {watchedCycle === "YEARLY" ? "năm" : "tháng"}
+                  {selectedPlan.description ? ` · ${selectedPlan.description}` : ""}
+                </span>
+              </div>
+            )}
+          </div>
 
+          <div className={mode === "update" ? "grid gap-4 sm:grid-cols-2" : ""}>
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">Chu kỳ thanh toán</label>
+              <label className="mb-1.5 block text-sm font-semibold text-slate-700">Chu kỳ thanh toán</label>
               <Controller
                 name="billingCycle"
                 control={control}
@@ -239,10 +271,9 @@ export default function SubscriptionManager({
                   <BaseSelect
                     {...field}
                     aria-label="Chọn chu kỳ thanh toán"
-                    className="w-full h-11"
                     options={[
-                      { label: "Hàng tháng (Monthly)", value: "MONTHLY" },
-                      { label: "Hàng năm (Yearly)", value: "YEARLY" },
+                      { label: "Hàng tháng", value: "MONTHLY" },
+                      { label: "Hàng năm", value: "YEARLY" },
                     ]}
                   />
                 )}
@@ -250,57 +281,63 @@ export default function SubscriptionManager({
             </div>
 
             {mode === "update" && (
-              <>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Trạng thái</label>
-                  <Controller
-                    name="status"
-                    control={control}
-                    render={({ field }) => (
-                      <BaseSelect
-                        {...field}
-                        aria-label="Chọn trạng thái subscription"
-                        className="w-full h-11"
-                        options={[
-                          { label: "Active (Đang hoạt động)", value: "ACTIVE" },
-                          { label: "Trial (Dùng thử)", value: "TRIAL" },
-                          { label: "Expired (Đã hết hạn)", value: "EXPIRED" },
-                          { label: "Cancelled (Đã hủy)", value: "CANCELLED" },
-                        ]}
-                      />
-                    )}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Ngày hết hạn (Để trống nếu không giới hạn)</label>
-                  <Controller
-                    name="expiresAt"
-                    control={control}
-                    render={({ field }) => (
-                      <input
-                        {...field}
-                        type="datetime-local"
-                        className="w-full h-11 px-3 border border-slate-300 rounded-lg focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary"
-                      />
-                    )}
-                  />
-                </div>
-              </>
+              <div>
+                <label className="mb-1.5 block text-sm font-semibold text-slate-700">Trạng thái</label>
+                <Controller
+                  name="status"
+                  control={control}
+                  render={({ field }) => (
+                    <BaseSelect
+                      {...field}
+                      aria-label="Chọn trạng thái subscription"
+                      options={[
+                        { label: "Đang hoạt động", value: "ACTIVE" },
+                        { label: "Dùng thử", value: "TRIAL" },
+                        { label: "Đã hết hạn", value: "EXPIRED" },
+                        { label: "Đã hủy", value: "CANCELLED" },
+                      ]}
+                    />
+                  )}
+                />
+              </div>
             )}
           </div>
 
-          <div className="flex justify-end gap-3 pt-6 border-t border-slate-200/60 mt-8">
-            <BaseButton 
+          {mode === "update" && (
+            <div>
+              <label className="mb-1.5 block text-sm font-semibold text-slate-700">Ngày hết hạn</label>
+              <Controller
+                name="expiresAt"
+                control={control}
+                render={({ field }) => (
+                  <BaseDatePicker
+                    aria-label="Ngày hết hạn gói dịch vụ"
+                    className="w-full"
+                    showTime={{ format: "HH:mm" }}
+                    format="DD/MM/YYYY HH:mm"
+                    placeholder="Để trống nếu không giới hạn"
+                    value={field.value ? dayjs(field.value) : null}
+                    onChange={(d) => field.onChange(d && !Array.isArray(d) ? d.toISOString() : "")}
+                  />
+                )}
+              />
+              <p className="mt-1 text-xs text-slate-400">Để trống = gói không có ngày hết hạn.</p>
+            </div>
+          )}
+
+          <div className="flex justify-end gap-2 border-t border-slate-100 pt-4">
+            <BaseButton
+              type="default"
               onClick={() => setIsModalOpen(false)}
-              className="!bg-white !text-slate-700 !border-slate-300 hover:!bg-slate-50 hover:!text-slate-900 h-11 px-6 rounded-xl font-semibold transition-all"
+              className="!h-10 !border-slate-300 !bg-white !text-slate-700 px-5 font-semibold hover:!border-slate-400 hover:!text-slate-900"
             >
               Hủy
             </BaseButton>
-            <BaseButton 
-              type="primary" 
-              htmlType="submit" 
+            <BaseButton
+              type="primary"
+              htmlType="submit"
               loading={isAssigning || isUpdating}
-              className="!bg-brand-primary !text-white hover:opacity-90 !border-0 shadow-lg shadow-brand-primary/25 h-11 px-8 rounded-xl font-bold hover:-translate-y-0.5 transition-all"
+              className="!h-10 !bg-brand-primary !text-white hover:opacity-90 !border-0 rounded-lg px-6 font-bold shadow-lg shadow-brand-primary/25 transition-all"
             >
               {mode === "assign" ? "Gán gói" : "Lưu thay đổi"}
             </BaseButton>
