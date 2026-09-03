@@ -20,8 +20,48 @@ import JsonDiffViewer from './JsonDiffViewer';
 const { RangePicker } = DatePicker;
 
 const ENTITY_TYPE_LABELS: Record<string, string> = {
-  Tenant: 'Công ty', Role: 'Vai trò', UserRole: 'Gán vai trò', TenantSubscription: 'Subscription', Plan: 'Gói dịch vụ', PlanLimits: 'Giới hạn gói',
+  Tenant: 'Công ty', Role: 'Vai trò', UserRole: 'Gán vai trò', TenantSubscription: 'Gói dịch vụ (đăng ký)',
+  Plan: 'Gói dịch vụ', PlanLimits: 'Giới hạn gói', PlanLimit: 'Giới hạn gói',
+  USER: 'Người dùng', Employee: 'Nhân viên', Site: 'Công trình', Workspace: 'Phòng ban',
+  Department: 'Phòng ban', Shift: 'Ca làm việc', Assignment: 'Phân công', Checkin: 'Lượt chấm công',
+  EmployeeInvitation: 'Lời mời nhân viên', RandomCheckConfig: 'Cấu hình kiểm tra ngẫu nhiên',
+  ScheduledCheck: 'Lịch kiểm tra ngẫu nhiên', Violation: 'Vi phạm', ViolationExport: 'Xuất file vi phạm',
+  AttendanceSummary: 'Bảng công', AttendanceExport: 'Xuất file chấm công', Geofence: 'Vùng chấm công',
+  WorkspaceMember: 'Thành viên phòng ban', TenantSettings: 'Cấu hình công ty', FaceProfile: 'Hồ sơ Face ID',
+  AccessControl: 'Kiểm soát truy cập',
 };
+
+// Vietnamese labels for the audit action strings; anything not listed falls through
+// `formatAction()` which humanises snake_case / SCREAMING_CASE.
+const ACTION_LABELS: Record<string, string> = {
+  CREATE: 'Tạo mới', UPDATE: 'Cập nhật', DELETE: 'Xoá',
+  LOGIN: 'Đăng nhập', LOGOUT: 'Đăng xuất', LOGIN_FAILED: 'Đăng nhập thất bại',
+  ACCESS_DENIED: 'Từ chối truy cập', PLAN_LIMIT_DENIED: 'Chặn do vượt giới hạn gói',
+  SUSPEND: 'Tạm ngưng', REACTIVATE: 'Kích hoạt lại', CANCEL: 'Huỷ',
+  employee_created: 'Tạo nhân viên', employee_updated: 'Cập nhật nhân viên',
+  employee_status_changed: 'Đổi trạng thái nhân viên', employee_deleted: 'Xoá nhân viên',
+  invitation_sent: 'Gửi lời mời', site_created: 'Tạo công trình', site_updated: 'Cập nhật công trình',
+  shift_created: 'Tạo ca làm', shift_updated: 'Cập nhật ca làm', shift_ot_configured: 'Cấu hình OT ca làm',
+  assignment_created: 'Tạo phân công', assignment_updated: 'Cập nhật phân công', assignment_cancelled: 'Huỷ phân công',
+  workspace_created: 'Tạo phòng ban', workspace_updated: 'Cập nhật phòng ban',
+  workspace_member_assigned: 'Thêm thành viên phòng ban', workspace_member_removed: 'Gỡ thành viên phòng ban',
+  role_created: 'Tạo vai trò', role_updated: 'Cập nhật vai trò', role_deleted: 'Xoá vai trò',
+  role_assigned: 'Gán vai trò', role_revoked: 'Thu hồi vai trò',
+  checkin_submitted: 'Chấm công vào', checkout_submitted: 'Chấm công ra', checkin_overridden: 'Ghi đè lượt chấm công',
+  subscription_updated: 'Cập nhật gói dịch vụ', tenant_updated: 'Cập nhật công ty', tenant_settings_updated: 'Cập nhật cấu hình công ty',
+  random_check_config_created: 'Tạo cấu hình kiểm tra ngẫu nhiên', random_check_config_updated: 'Cập nhật cấu hình kiểm tra ngẫu nhiên',
+  random_check_config_deleted: 'Xoá cấu hình kiểm tra ngẫu nhiên', manual_random_check_triggered: 'Kích hoạt kiểm tra ngẫu nhiên thủ công',
+  geofence_created: 'Tạo vùng chấm công', geofence_updated: 'Cập nhật vùng chấm công',
+  plan_created: 'Tạo gói dịch vụ', plan_updated: 'Cập nhật gói dịch vụ',
+  attendance_summary_adjusted: 'Điều chỉnh bảng công',
+  EXPORT_VIOLATIONS: 'Xuất file vi phạm', EXPORT_ATTENDANCE: 'Xuất file chấm công',
+};
+
+function formatAction(action: string): string {
+  if (ACTION_LABELS[action]) return ACTION_LABELS[action];
+  const words = action.replace(/[_-]+/g, ' ').trim().toLowerCase();
+  return words.charAt(0).toUpperCase() + words.slice(1);
+}
 
 function actionColor(action: string) {
   const normalized = action.toLowerCase();
@@ -96,9 +136,22 @@ export default function AuditLogViewerPage({ platformMode }: { platformMode: boo
   const columns: ColumnsType<AuditLogEntry> = [
     { title: 'Thời gian', dataIndex: 'createdAt', width: 170, render: (value) => dayjs(value).format('DD/MM/YYYY HH:mm:ss') },
     ...(platformMode ? [{ title: 'Công ty', dataIndex: 'tenantId', width: 180, render: (value: string) => tenantNames.get(value) || <code className="text-xs">{value}</code> }] : []),
-    { title: 'Người thao tác', key: 'actor', width: 210, render: (_, row) => <div><p className="font-medium">{row.actorEmail || 'Hệ thống tự động'}</p>{row.actorId && <code className="text-[11px] text-slate-400">{row.actorId}</code>}</div> },
-    { title: 'Hành động', dataIndex: 'action', width: 170, render: (value: string) => <Tag color={actionColor(value)}>{value}</Tag> },
-    { title: 'Đối tượng', key: 'entity', width: 220, render: (_, row) => <div><p className="font-semibold">{ENTITY_TYPE_LABELS[row.entityType] || row.entityType}</p><code className="text-[11px] text-slate-500">{row.entityType} · {row.entityId || '—'}</code></div> },
+    { title: 'Người thao tác', key: 'actor', width: 200, render: (_, row) => (
+      <div>
+        <p className="font-medium">{row.actorName || row.actorEmail || 'Hệ thống tự động'}</p>
+        {row.actorName && row.actorEmail && <p className="text-[11px] text-slate-400">{row.actorEmail}</p>}
+      </div>
+    ) },
+    { title: 'Hành động', dataIndex: 'action', width: 190, render: (value: string) => <Tag color={actionColor(value)}>{formatAction(value)}</Tag> },
+    { title: 'Đối tượng', key: 'entity', width: 230, render: (_, row) => (
+      <div>
+        <p className="font-semibold">{row.entityName || ENTITY_TYPE_LABELS[row.entityType] || row.entityType}</p>
+        <p className="text-[11px] text-slate-500">
+          {ENTITY_TYPE_LABELS[row.entityType] || row.entityType}
+          {row.entityId && <Tooltip title={row.entityId}><span className="ml-1 cursor-help">· {row.entityId.length === 36 ? `${row.entityId.slice(0, 8)}…` : row.entityId}</span></Tooltip>}
+        </p>
+      </div>
+    ) },
     { title: 'Request ID', dataIndex: 'requestId', width: 240, render: (value: string | null, row) => value ? <div className="flex items-center gap-1"><Tooltip title={value}><code className="max-w-40 truncate text-xs">{value}</code></Tooltip><BaseButton type="text" size="small" aria-label={`Sao chép request ID ${value}`} icon={<ClipboardCopy className="h-3.5 w-3.5" />} onClick={() => void copyRequestId(value)} /><BaseButton type="text" size="small" aria-label={`Trace request ${value}`} icon={<Route className="h-3.5 w-3.5" />} onClick={() => trace(value, row.tenantId)} /></div> : '—' },
     { title: 'IP', dataIndex: 'ipAddress', width: 130, render: (value) => value || '—' },
     { title: 'Chi tiết', key: 'detail', fixed: 'right', width: 100, render: (_, row) => <BaseButton type="link" disabled={!canReadDetail} icon={<Eye className="h-4 w-4" />} onClick={() => setSelectedId(row.id)}>Xem</BaseButton> },
@@ -135,9 +188,9 @@ export default function AuditLogViewerPage({ platformMode }: { platformMode: boo
               ? [{ value: draft.actorId, label: actorLabel }, ...actorOptions]
               : actorOptions}
           />
-          <Input placeholder="Loại đối tượng, ví dụ Employee" value={draft.entityType} onChange={(event) => setDraft((current) => ({ ...current, entityType: event.target.value || undefined }))} />
-          <Input placeholder="Entity ID" value={draft.entityId} onChange={(event) => setDraft((current) => ({ ...current, entityId: event.target.value || undefined }))} />
-          <BaseSelect allowClear placeholder="Hành động" value={draft.action} onChange={(action) => setDraft((current) => ({ ...current, action }))} options={['CREATE', 'UPDATE', 'DELETE', 'SUSPEND', 'REACTIVATE', 'CANCEL', 'LOGIN', 'LOGOUT'].map((value) => ({ value, label: value }))} />
+          <BaseSelect allowClear showSearch optionFilterProp="label" placeholder="Loại đối tượng" value={draft.entityType} onChange={(entityType) => setDraft((current) => ({ ...current, entityType }))} options={Object.entries(ENTITY_TYPE_LABELS).map(([value, label]) => ({ value, label }))} />
+          <Input placeholder="ID đối tượng (nếu biết)" value={draft.entityId} onChange={(event) => setDraft((current) => ({ ...current, entityId: event.target.value || undefined }))} />
+          <BaseSelect allowClear showSearch optionFilterProp="label" placeholder="Hành động" value={draft.action} onChange={(action) => setDraft((current) => ({ ...current, action }))} options={['CREATE', 'UPDATE', 'DELETE', 'SUSPEND', 'REACTIVATE', 'CANCEL', 'LOGIN', 'LOGOUT', 'LOGIN_FAILED', 'ACCESS_DENIED', 'employee_status_changed', 'role_assigned', 'role_revoked', 'assignment_created', 'assignment_cancelled', 'checkin_submitted', 'checkout_submitted', 'subscription_updated'].map((value) => ({ value, label: formatAction(value) }))} />
           <Input placeholder="Request ID để trace" value={draft.requestId} onChange={(event) => setDraft((current) => ({ ...current, requestId: event.target.value || undefined }))} />
           <RangePicker className="w-full xl:col-span-2" showTime onChange={(dates) => setDraft((current) => ({ ...current, from: dates?.[0]?.toISOString(), to: dates?.[1]?.toISOString() }))} />
         </div>
@@ -163,10 +216,22 @@ export default function AuditLogViewerPage({ platformMode }: { platformMode: boo
       <Modal title="Chi tiết thay đổi" open={Boolean(selectedId)} width={1100} footer={null} onCancel={() => setSelectedId(null)} destroyOnHidden>
         {detailQuery.isLoading ? <div className="flex min-h-64 items-center justify-center"><Spin /></div> : detailQuery.isError || !detailQuery.data ? <Alert showIcon type="error" title="Không thể tải chi tiết" description={errorMessage(detailQuery.error)} /> : <div className="space-y-5 pt-3">
           <Descriptions bordered size="small" column={{ xs: 1, md: 2 }}>
-            <Descriptions.Item label="Người thao tác">{detailQuery.data.actorEmail || 'Hệ thống tự động'}</Descriptions.Item>
-            <Descriptions.Item label="Hành động"><Tag color={actionColor(detailQuery.data.action)}>{detailQuery.data.action}</Tag></Descriptions.Item>
-            <Descriptions.Item label="Đối tượng">{detailQuery.data.entityType} · {detailQuery.data.entityId || '—'}</Descriptions.Item>
+            <Descriptions.Item label="Người thao tác">
+              {detailQuery.data.actorName || detailQuery.data.actorEmail || 'Hệ thống tự động'}
+              {detailQuery.data.actorName && detailQuery.data.actorEmail && (
+                <span className="ml-1 text-xs text-slate-400">({detailQuery.data.actorEmail})</span>
+              )}
+            </Descriptions.Item>
+            <Descriptions.Item label="Hành động"><Tag color={actionColor(detailQuery.data.action)}>{formatAction(detailQuery.data.action)}</Tag></Descriptions.Item>
+            <Descriptions.Item label="Đối tượng">
+              <span className="font-semibold">{detailQuery.data.entityName || ENTITY_TYPE_LABELS[detailQuery.data.entityType] || detailQuery.data.entityType}</span>
+              <span className="ml-1 text-xs text-slate-500">
+                ({ENTITY_TYPE_LABELS[detailQuery.data.entityType] || detailQuery.data.entityType}
+                {detailQuery.data.entityId ? ` · ${detailQuery.data.entityId}` : ''})
+              </span>
+            </Descriptions.Item>
             <Descriptions.Item label="Thời gian">{dayjs(detailQuery.data.createdAt).format('DD/MM/YYYY HH:mm:ss')}</Descriptions.Item>
+            {detailQuery.data.endpoint && <Descriptions.Item label="Endpoint" span={2}><code className="text-xs">{detailQuery.data.endpoint}</code>{detailQuery.data.httpStatus ? ` · HTTP ${detailQuery.data.httpStatus}` : ''}</Descriptions.Item>}
             <Descriptions.Item label="Request ID" span={2}><code>{detailQuery.data.requestId || '—'}</code></Descriptions.Item>
             <Descriptions.Item label="IP">{detailQuery.data.ipAddress || '—'}</Descriptions.Item>
             <Descriptions.Item label="User agent">{detailQuery.data.userAgent || '—'}</Descriptions.Item>
