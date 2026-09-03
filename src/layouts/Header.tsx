@@ -2,6 +2,7 @@
 
 import { useAuthStore } from "@/stores/auth.store";
 import {
+  Building2,
   ChevronDown,
   LogOut,
   Menu,
@@ -111,6 +112,19 @@ export default function Header({ onOpenMenu }: HeaderProps) {
       label: "Thông tin cá nhân",
       onClick: () => router.push(CUSTOMER_ROUTES.SETTINGS),
     },
+    // Always-visible path to the company picker / "create another company" flow. Without
+    // this a user who owns exactly one company has no way to reach it: the header's
+    // TenantSwitcher only appears once there are 2+ companies. (issue #04)
+    ...(user?.tenantId
+      ? [
+          {
+            key: "companies",
+            icon: <Building2 className="h-4 w-4" aria-hidden="true" />,
+            label: "Công ty của tôi",
+            onClick: () => router.push(CUSTOMER_ROUTES.SELECT_COMPANY),
+          },
+        ]
+      : []),
     {
       key: "security",
       icon: <ShieldCheck className="h-4 w-4" aria-hidden="true" />,
