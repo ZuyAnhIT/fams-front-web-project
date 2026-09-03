@@ -54,7 +54,16 @@ export default function DataTable<T extends object>({
 
   return (
     <div
-      className="w-full overflow-hidden rounded-xl border border-slate-200 bg-white"
+      className={
+        "w-full overflow-hidden rounded-xl border border-slate-200 bg-white " +
+        // Keep the pinned (fixed) cells fully opaque, hover included — otherwise the
+        // horizontally-scrolled columns underneath show through the sticky action column
+        // (#10, attendance "Chi tiết"). antd v6 class names are `-fix-start` / `-fix-end`
+        // (they were `-fix-left` / `-fix-right` in v5).
+        "[&_.ant-table-cell-fix-start]:!bg-white [&_.ant-table-cell-fix-end]:!bg-white " +
+        "[&_.ant-table-row:hover_.ant-table-cell-fix-start]:!bg-slate-50 " +
+        "[&_.ant-table-row:hover_.ant-table-cell-fix-end]:!bg-slate-50"
+      }
       role="region"
       aria-label={ariaLabel}
       tabIndex={0}

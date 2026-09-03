@@ -9,6 +9,7 @@ import { CheckCircleFilled, CloseCircleFilled } from "@ant-design/icons";
 import { BaseModal, BaseSelect } from "@/components/ui";
 import { useRolesQuery, useBulkAssignRoleMutation } from "../hooks/use-role-permission";
 import { useEmployees } from "@/features/customer/employee/hooks/use-employee";
+import { getEmployeeDisplayName } from "@/utils/name.util";
 import { useDebounce } from "@/hooks/useDebounce";
 import type { BulkAssignRoleResponse } from "../types";
 import { getApiErrorMessage } from "@/utils/api-error.util";
@@ -40,7 +41,7 @@ export const BulkAssignRoleModal: React.FC<BulkAssignRoleModalProps> = ({ open, 
     size: 100,
   });
   const { data: employeesData, isFetching: isSearchingEmployees } = useEmployees(
-    { search: debouncedEmployeeSearch, size: 50, sortBy: "fullName", sortDir: "asc" },
+    { search: debouncedEmployeeSearch, size: 50, sortBy: "lastName", sortDir: "asc" },
     { enabled: open },
   );
 
@@ -67,10 +68,16 @@ export const BulkAssignRoleModal: React.FC<BulkAssignRoleModalProps> = ({ open, 
   const roleId = useWatch({ control, name: "roleId" });
   const revokeRoleOptions = roleOptions.filter((option) => option.value !== roleId);
 
-  const employeeOptions = (employeesData?.content || []).map((employee) => ({
-    value: employee.userId,
-    label: `${employee.fullName} — ${employee.email || "không có email"}`,
-  }));
+  // Roles attach to a user ACCOUNT — an employee record with no linked account (userId is
+  // null) cannot be assigned one. Filtering them out is what fixes both the "undefined —
+  // email" labels and the bulk-assign silently doing nothing (an undefined value in the
+  // multi-select fails the zod string check with no visible error). #11
+  const employeeOptions = (employeesData?.content || [])
+    .filter((employee) => Boolean(employee.userId))
+    .map((employee) => ({
+      value: employee.userId as string,
+      label: `${getEmployeeDisplayName(employee) || "(chưa có tên)"} — ${employee.email || "không có email"}`,
+    }));
 
   const onSubmit = async (values: BulkAssignFormValues) => {
     try {
@@ -124,7 +131,7 @@ export const BulkAssignRoleModal: React.FC<BulkAssignRoleModalProps> = ({ open, 
                 return (
                   <List.Item>
                     <div className="flex w-full items-center justify-between gap-2">
-                      <span>{employee?.fullName || item.userId}</span>
+                      <span>{(employee && getEmployeeDisplayName(employee)) || item.userId}</span>
                       {item.success ? (
                         <Tag color="success" icon={<CheckCircleFilled />}>Thành công</Tag>
                       ) : (

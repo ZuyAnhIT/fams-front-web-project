@@ -52,7 +52,7 @@ export default function EmployeeListPage() {
   }, [debouncedSearch, state.search, setPagination]);
 
   const { data: pageData, isLoading } = useEmployees(state);
-  const { mutate: changeStatus } = useChangeEmployeeStatus();
+  const { mutateAsync: changeStatusAsync } = useChangeEmployeeStatus();
   const { mutateAsync: exportEmployees, isPending: isExporting } = useExportEmployees();
   const { data: workspacesData } = useWorkspacesQuery({
     tenantId: user?.tenantId || "",
@@ -103,22 +103,19 @@ export default function EmployeeListPage() {
       okText: "Xác nhận",
       cancelText: "Hủy",
       okButtonProps: { danger: newStatus !== "active" },
-      onOk: () =>
-        new Promise<void>((resolve, reject) => {
-          changeStatus(
-            { id: record.id, payload: { status: newStatus } },
-            {
-              onSuccess: () => {
-                message.success("Cập nhật trạng thái thành công");
-                resolve();
-              },
-              onError: () => {
-                message.error("Lỗi khi cập nhật trạng thái");
-                reject();
-              },
-            },
-          );
-        }),
+      // Await the mutation directly instead of routing success/error through mutate()
+      // callbacks: if the list re-renders (a saved-filter apply, a background refetch) while
+      // the request is in flight, React Query drops those per-call callbacks and the success
+      // toast silently never fires (#11). The async flow always runs to completion.
+      onOk: async () => {
+        try {
+          await changeStatusAsync({ id: record.id, payload: { status: newStatus } });
+          message.success("Cập nhật trạng thái thành công");
+        } catch {
+          message.error("Lỗi khi cập nhật trạng thái");
+          throw new Error("status-change-failed"); // keep the confirm dialog open
+        }
+      },
     });
   };
 

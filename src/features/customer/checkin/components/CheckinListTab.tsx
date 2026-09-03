@@ -2,10 +2,9 @@
 
 import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Alert, DatePicker, Tag, type TableColumnsType } from "antd";
+import { Alert, Button, DatePicker, Tag, type TableColumnsType } from "antd";
 import { EyeOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
-import BaseButton from "@/components/ui/BaseButton";
 import BaseSelect from "@/components/ui/BaseSelect";
 import DataTable from "@/components/tables/DataTable";
 import { useAuthStore } from "@/stores/auth.store";
@@ -306,15 +305,23 @@ export default function CheckinListTab() {
       title: "Thao tác",
       key: "action",
       fixed: "right",
-      width: 110,
+      width: 120,
+      align: "center",
+      // Plain antd Button here (not the app's BaseButton): BaseButton forces `!min-h-10
+      // !px-4` + a `focus-visible` ring with `ring-offset-2` + a hover `-translate-y` — inside
+      // a right-`fixed` table column those overflow the cell and paint over the Face ID column
+      // on hover (#10). `!bg-white` keeps this pinned cell opaque so the horizontally-scrolled
+      // columns underneath never show through it, hover included.
+      onCell: () => ({ className: "!bg-white" }),
       render: (_, record) => (
-        <BaseButton
+        <Button
           type="link"
+          size="small"
           icon={<EyeOutlined />}
           onClick={() => setSelectedCheckinId(record.id)}
         >
           Chi tiết
-        </BaseButton>
+        </Button>
       ),
     },
   ];
