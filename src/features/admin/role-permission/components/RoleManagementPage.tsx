@@ -385,12 +385,11 @@ export const RoleManagementPage: React.FC<RoleManagementPageProps> = ({ scope })
           searchPlaceholder="Tìm kiếm theo tên..."
           searchAriaLabel="Tìm vai trò theo tên"
           filters={
-            <div className="flex w-full flex-col gap-3 sm:flex-row">
+            <>
               <BaseSelect
                 aria-label="Lọc theo loại vai trò"
                 placeholder="Lọc theo loại Role"
                 allowClear
-                className="w-full sm:w-48"
                 onChange={handleFilterChange}
                 options={[
                   { value: "system", label: "Role Hệ thống" },
@@ -401,14 +400,13 @@ export const RoleManagementPage: React.FC<RoleManagementPageProps> = ({ scope })
                 aria-label="Lọc theo trạng thái vai trò"
                 placeholder="Lọc trạng thái"
                 allowClear
-                className="w-full sm:w-48"
                 onChange={handleActiveFilterChange}
                 options={[
                   { value: "active", label: "Đang hoạt động" },
                   { value: "inactive", label: "Đã vô hiệu hóa" },
                 ]}
               />
-            </div>
+            </>
           }
         />
         <div className="p-5">

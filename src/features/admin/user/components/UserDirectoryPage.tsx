@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Alert, Avatar, Space, Switch, Tabs, Tag } from "antd";
+import { Alert, Avatar, Switch, Tabs, Tag } from "antd";
 import { Mail, ShieldPlus, Users } from "lucide-react";
 import { format } from "date-fns";
 import ContentCard from "@/components/shared/layout/ContentCard";
@@ -143,12 +143,11 @@ export function UserDirectoryPage() {
           searchPlaceholder="Tìm theo tên hoặc email..."
           searchAriaLabel="Tìm người dùng toàn hệ thống"
           filters={
-            <Space wrap>
+            <>
               <BaseSelect
                 aria-label="Lọc trạng thái tài khoản"
                 allowClear
                 placeholder="Trạng thái"
-                className="w-44"
                 value={isActive === undefined ? undefined : String(isActive)}
                 onChange={(value) => {
                   setIsActive(value === undefined ? undefined : value === "true");
@@ -159,7 +158,7 @@ export function UserDirectoryPage() {
                   { value: "false", label: "Đã khóa" },
                 ]}
               />
-              <label className="flex items-center gap-2 text-sm text-slate-600">
+              <label className="flex items-center gap-2 text-sm text-slate-600 min-[520px]:col-span-2 lg:col-span-1">
                 <Switch
                   checked={platformAdminsOnly}
                   onChange={(checked) => {
@@ -169,7 +168,7 @@ export function UserDirectoryPage() {
                 />
                 Chỉ tài khoản có cờ Platform Admin
               </label>
-            </Space>
+            </>
           }
         />
         <div className="p-5">

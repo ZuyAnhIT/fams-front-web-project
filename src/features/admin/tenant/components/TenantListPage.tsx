@@ -331,13 +331,13 @@ export default function TenantListPage() {
             searchPlaceholder="Tìm kiếm theo tên công ty, đường dẫn, tên miền,..."
             searchAriaLabel="Tìm công ty theo tên, đường dẫn hoặc tên miền"
             filters={
-              <div className="flex flex-wrap gap-2">
+              <>
                 <input
                   aria-label="Lọc theo lĩnh vực"
                   value={state.industry || ""}
                   onChange={(event) => setPagination({ industry: event.target.value || undefined })}
                   placeholder="Lĩnh vực"
-                  className="h-8 w-36 rounded-md border border-slate-300 px-3 text-sm"
+                  className="h-10 w-full rounded-md border border-slate-300 px-3 text-sm"
                 />
                 <input
                   aria-label="Lọc theo mã quốc gia"
@@ -345,24 +345,23 @@ export default function TenantListPage() {
                   onChange={(event) => setPagination({ countryCode: event.target.value.toUpperCase() || undefined })}
                   placeholder="Quốc gia (VN)"
                   maxLength={2}
-                  className="h-8 w-36 rounded-md border border-slate-300 px-3 text-sm uppercase"
+                  className="h-10 w-full rounded-md border border-slate-300 px-3 text-sm uppercase"
                 />
                 <BaseSelect
-                aria-label="Lọc công ty theo trạng thái"
-                placeholder="Trạng thái"
-                allowClear
-                className="w-40"
-                value={state.status}
-                onChange={(val) => setPagination({ status: val || undefined, page: 0 })}
-                options={[
-                  { label: "Tất cả trạng thái", value: "" },
-                  ...Object.entries(TENANT_STATUS).map(([key, config]) => ({
-                    label: config.label,
-                    value: key,
-                  }))
-                ]}
+                  aria-label="Lọc công ty theo trạng thái"
+                  placeholder="Trạng thái"
+                  allowClear
+                  value={state.status}
+                  onChange={(val) => setPagination({ status: val || undefined, page: 0 })}
+                  options={[
+                    { label: "Tất cả trạng thái", value: "" },
+                    ...Object.entries(TENANT_STATUS).map(([key, config]) => ({
+                      label: config.label,
+                      value: key,
+                    }))
+                  ]}
                 />
-              </div>
+              </>
             }
           />
           <div className="p-5">

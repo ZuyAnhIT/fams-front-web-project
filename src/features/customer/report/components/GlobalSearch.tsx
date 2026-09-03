@@ -43,5 +43,10 @@ export default function GlobalSearch() {
       {Boolean(violations.length) && <section><h3 className="px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-400">Vi phạm chưa xử lý</h3>{violations.map((violation) => <ResultButton key={violation.id} icon={<AlertTriangle className="h-4 w-4" />} title={VIOLATION_LABELS[violation.violationType]} detail={`${dayjs(violation.checkDate).format('DD/MM/YYYY')} · ${violation.description || violation.id}`} onClick={() => navigate(CUSTOMER_ROUTES.VIOLATIONS)} />)}</section>}
     </div>}
   </div>;
-  return <Popover open={focused} onOpenChange={setFocused} trigger="focus" placement="bottom" content={content}><Input value={value} onChange={(event) => setValue(event.target.value)} onFocus={() => setFocused(true)} allowClear prefix={<Search className="h-4 w-4 text-slate-400" />} placeholder="Tên, site hoặc mã check-in UUID..." aria-label="Tìm kiếm nhanh toàn hệ thống" className="hidden w-64 lg:flex xl:w-80" /></Popover>;
+  // Visibility gate lives on a plain wrapper div, not on the antd <Input>: antd's own
+  // `.ant-input-affix-wrapper { display: inline-flex }` is emitted outside Tailwind's
+  // layers and would otherwise win over the `hidden` utility, so the search never hid on
+  // mid-size screens. Only show it once the row is genuinely wide (xl+) so it can't
+  // crowd the account chip (issue #03).
+  return <div className="hidden w-64 xl:block 2xl:w-80"><Popover open={focused} onOpenChange={setFocused} trigger="focus" placement="bottom" content={content}><Input value={value} onChange={(event) => setValue(event.target.value)} onFocus={() => setFocused(true)} allowClear prefix={<Search className="h-4 w-4 text-slate-400" />} placeholder="Tên, site hoặc mã check-in UUID..." aria-label="Tìm kiếm nhanh toàn hệ thống" className="w-full" /></Popover></div>;
 }

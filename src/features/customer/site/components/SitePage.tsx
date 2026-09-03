@@ -233,7 +233,7 @@ export default function SitePage() {
                 setPage(0);
               }}
               aria-label="Lọc công trình theo trạng thái"
-              className="w-full sm:w-48 h-10 [&_.ant-select-selector]:rounded-xl [&_.ant-select-selector]:border-slate-200 hover:[&_.ant-select-selector]:border-blue-300 focus:[&_.ant-select-selector]:border-blue-500 bg-slate-50/50 hover:bg-white"
+              className="h-10 [&_.ant-select-selector]:rounded-xl [&_.ant-select-selector]:border-slate-200 hover:[&_.ant-select-selector]:border-blue-300 focus:[&_.ant-select-selector]:border-blue-500 bg-slate-50/50 hover:bg-white"
               options={[
                 { value: "active", label: "Hoạt động" },
                 { value: "inactive", label: "Ngưng hoạt động" },

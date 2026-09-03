@@ -135,6 +135,7 @@ export default function Header({ onOpenMenu }: HeaderProps) {
 
   const displayName = user?.displayName || user?.email || "Người dùng";
   const avatarFallback = displayName.trim().charAt(0).toUpperCase() || "U";
+  const roleLabel = user?.role ? ROLE_LABELS[user.role] || user.role : "Người dùng";
 
   return (
     <header className="sticky top-0 z-30 flex h-[68px] items-center justify-between border-b border-slate-200 bg-white/95 px-4 shadow-sm backdrop-blur lg:px-6">
@@ -162,20 +163,26 @@ export default function Header({ onOpenMenu }: HeaderProps) {
         <Dropdown menu={{ items: menuItems }} trigger={["click"]} placement="bottomRight">
           <button
             type="button"
-            aria-label="Mở menu tài khoản"
+            aria-label={`Mở menu tài khoản — ${displayName} (${roleLabel})`}
             aria-haspopup="menu"
+            title={`${displayName} · ${roleLabel}`}
             className="flex min-w-0 items-center gap-2 rounded-xl border border-transparent p-1.5 text-left transition-colors hover:border-slate-200 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 sm:pr-2"
           >
             <Avatar src={user?.avatarUrl || undefined} className="shrink-0 bg-blue-600 font-semibold">
               {avatarFallback}
             </Avatar>
-            <span className="hidden min-w-0 flex-col md:flex">
-              <span className="max-w-40 truncate text-sm font-semibold text-slate-800">{displayName}</span>
-              <span className="max-w-40 truncate text-xs text-slate-500">
-                {user?.role ? ROLE_LABELS[user.role] || user.role : "Người dùng"}
+            {/* Only shown from lg, where the row has room; GlobalSearch stays hidden until xl
+                so it can never squeeze this to "Ng..." / "Quả..." (issue #03). Full text is
+                always available via the button's title + aria-label and in the dropdown. */}
+            <span className="hidden min-w-0 shrink flex-col lg:flex">
+              <span className="max-w-[9rem] truncate text-sm font-semibold text-slate-800 xl:max-w-[13rem]">
+                {displayName}
+              </span>
+              <span className="max-w-[9rem] truncate text-xs text-slate-500 xl:max-w-[13rem]">
+                {roleLabel}
               </span>
             </span>
-            <ChevronDown className="hidden h-4 w-4 text-slate-400 sm:block" aria-hidden="true" />
+            <ChevronDown className="hidden h-4 w-4 shrink-0 text-slate-400 sm:block" aria-hidden="true" />
           </button>
         </Dropdown>
       </div>
