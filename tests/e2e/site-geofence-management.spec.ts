@@ -166,6 +166,31 @@ test("HR Manager tìm/lọc/sort/phân trang và tạo công trình đúng contr
   let listParams: Record<string, string> = {};
   let createBody: Record<string, unknown> = {};
 
+  await page.route("**/api/maps/geocode?mode=search*", (route) =>
+    route.fulfill({
+      json: [{
+        display_name: "Landmark 81, Bình Thạnh, Thành phố Hồ Chí Minh",
+        lat: "10.795000",
+        lon: "106.721000",
+      }],
+    }),
+  );
+  await page.route("**/api/maps/geocode?mode=reverse*", async (route) => {
+    // Reverse geocoding is deliberately slow: selecting coordinates must not
+    // be blocked by a best-effort address lookup.
+    await new Promise((resolve) => setTimeout(resolve, 1_500));
+    return route.fulfill({
+      json: {
+        display_name: "Vị trí được chọn trên bản đồ",
+        lat: "10.790000",
+        lon: "106.715000",
+      },
+    });
+  });
+  await page.route("https://tiles.openfreemap.org/styles/positron*", (route) =>
+    route.abort(),
+  );
+
   await page.route(`**/api/v1/tenants/${tenantId}/sites?*`, (route) => {
     listParams = Object.fromEntries(new URL(route.request().url()).searchParams);
     return route.fulfill({ json: api(pageData([site], 25)) });
@@ -210,13 +235,44 @@ test("HR Manager tìm/lọc/sort/phân trang và tạo công trình đúng contr
     .locator(".ant-select-dropdown:visible")
     .getByText("GPS + Face ID", { exact: true })
     .click();
+
+  const locationSearch = dialog.getByLabel("Tìm kiếm địa điểm trên bản đồ");
+  await locationSearch.fill("Landmark 81");
+  await page
+    .locator(".ant-select-dropdown:visible")
+    .getByText(/Landmark 81/)
+    .click();
+  await expect(dialog.getByText("10.795000", { exact: true })).toBeVisible();
+  await expect(dialog.getByText("106.721000", { exact: true })).toBeVisible();
+  await expect(dialog.getByLabel("Địa chỉ thực tế")).toHaveValue(/Landmark 81/);
+
+  const locationMap = dialog.locator(".leaflet-container");
+  await expect(locationMap).toBeVisible();
+  await expect(
+    locationMap.locator('img[src*="basemaps.cartocdn.com"]').first(),
+  ).toBeVisible();
+  await locationMap.click({ position: { x: 260, y: 300 } });
+  await expect(dialog.getByText("10.795000", { exact: true })).toHaveCount(0, {
+    timeout: 800,
+  });
+  await expect(dialog.getByLabel("Địa chỉ thực tế")).toHaveValue(
+    "Vị trí được chọn trên bản đồ",
+  );
+
   await dialog.getByRole("button", { name: "Lưu công trình" }).click();
   await expect.poll(() => createBody).toMatchObject({
     name: "Kho Dự phòng",
     code: "WAREHOUSE-02",
     timezone: "Asia/Ho_Chi_Minh",
     checkinPolicy: "gps_face",
+    address: "Vị trí được chọn trên bản đồ",
   });
+  expect(createBody.latitude).toEqual(expect.any(Number));
+  expect(createBody.longitude).toEqual(expect.any(Number));
+  expect(createBody.latitude as number).toBeGreaterThanOrEqual(-90);
+  expect(createBody.latitude as number).toBeLessThanOrEqual(90);
+  expect(createBody.longitude as number).toBeGreaterThanOrEqual(-180);
+  expect(createBody.longitude as number).toBeLessThanOrEqual(180);
 
   await page.screenshot({
     path: `${evidenceDir}/01-hr-site-list-create.png`,
@@ -276,6 +332,10 @@ test("Admin xem chi tiết liên kết và cập nhật riêng buffer tạo đú
   );
 
   await page.goto(`/customer/sites/${siteId}`);
+  const geofenceMap = page.getByRole("region", { name: "Bản đồ vùng chấm công" });
+  await expect(geofenceMap).toBeVisible();
+  await expect(geofenceMap.locator(".maplibregl-canvas")).toBeVisible();
+  await expect(page.getByText("Điểm 1", { exact: true })).toBeVisible();
   await expect(page.getByText("Sai số GPS cho phép: 25 mét")).toBeVisible();
   await expect(page.getByText("Ca làm việc (1)")).toBeVisible();
   await expect(page.getByText("Nhân sự phân công (1)")).toBeVisible();
@@ -300,6 +360,82 @@ test("Admin xem chi tiết liên kết và cập nhật riêng buffer tạo đú
     path: `${evidenceDir}/02-admin-detail-geofence-history.png`,
     fullPage: true,
   });
+});
+
+test("Admin vẽ, hoàn tác và tạo geofence đúng thứ tự tọa độ API", async ({ page }) => {
+  await seedUser(page, "TENANT_ADMIN", managementPermissions);
+  let geofenceCreateBody: Record<string, unknown> = {};
+
+  await page.route(`**/api/v1/tenants/${tenantId}/sites/${emptySiteId}`, (route) =>
+    route.fulfill({
+      json: api({
+        ...emptySite,
+        geofence: null,
+        shifts: [],
+        activeAssignmentCount: 0,
+      }),
+    }),
+  );
+  await page.route(
+    `**/api/v1/tenants/${tenantId}/sites/${emptySiteId}/shifts?*`,
+    (route) => route.fulfill({ json: api(pageData([])) }),
+  );
+  await page.route(
+    `**/api/v1/tenants/${tenantId}/sites/${emptySiteId}/assignments?*`,
+    (route) => route.fulfill({ json: api(pageData([])) }),
+  );
+  await page.route(
+    `**/api/v1/tenants/${tenantId}/sites/${emptySiteId}/geofences?*`,
+    (route) => route.fulfill({ json: api(pageData([])) }),
+  );
+  await page.route(
+    `**/api/v1/tenants/${tenantId}/sites/${emptySiteId}/geofences`,
+    (route) => {
+      geofenceCreateBody = route.request().postDataJSON() as Record<string, unknown>;
+      return route.fulfill({
+        status: 201,
+        json: api({
+          ...geofence,
+          siteId: emptySiteId,
+          coordinates: geofenceCreateBody.coordinates,
+          bufferMeters: geofenceCreateBody.bufferMeters,
+        }),
+      });
+    },
+  );
+
+  await page.goto(`/customer/sites/${emptySiteId}`);
+  await page.getByRole("button", { name: "Tạo geofence" }).click();
+  const dialog = page.getByRole("dialog");
+  const editorMap = dialog.locator(".leaflet-container");
+  await expect(editorMap).toBeVisible();
+
+  await editorMap.click({ position: { x: 100, y: 250 } });
+  await expect(dialog.getByText("Tọa độ chi tiết (1)")).toBeVisible();
+  await editorMap.click({ position: { x: 520, y: 250 } });
+  await expect(dialog.getByText("Tọa độ chi tiết (2)")).toBeVisible();
+  await editorMap.click({ position: { x: 300, y: 100 } });
+  await expect(dialog.getByText("Tọa độ chi tiết (3)")).toBeVisible();
+
+  await dialog.getByRole("button", { name: "HOÀN TÁC ĐIỂM CUỐI" }).click();
+  await expect(dialog.getByText("Tọa độ chi tiết (2)")).toBeVisible();
+  await editorMap.click({ position: { x: 300, y: 100 } });
+  await expect(dialog.getByText("Tọa độ chi tiết (3)")).toBeVisible();
+
+  await dialog.getByRole("button", { name: "Lưu cấu hình" }).click();
+  await expect.poll(() => geofenceCreateBody).toHaveProperty("coordinates");
+
+  const coordinates = geofenceCreateBody.coordinates as number[][];
+  expect(geofenceCreateBody.bufferMeters).toBe(0);
+  expect(coordinates).toHaveLength(4);
+  expect(coordinates.at(-1)).toEqual(coordinates[0]);
+  expect(new Set(coordinates.slice(0, -1).map((point) => point.join(","))).size).toBe(3);
+  for (const [longitude, latitude] of coordinates) {
+    expect(longitude).toBeGreaterThan(106);
+    expect(longitude).toBeLessThan(107);
+    expect(latitude).toBeGreaterThan(10);
+    expect(latitude).toBeLessThan(11);
+  }
 });
 
 test("Site Supervisor chỉ xem site được giao và nhận thông báo 403 rõ ràng", async ({ page }) => {

@@ -2,15 +2,10 @@
 
 import dynamic from "next/dynamic";
 import "leaflet/dist/leaflet.css";
-import { mapConfig } from "@/config/map";
 
 // Dynamic import for react-leaflet components to avoid SSR issues
 const MapContainer = dynamic(
   () => import("react-leaflet").then((mod) => mod.MapContainer),
-  { ssr: false }
-);
-const TileLayer = dynamic(
-  () => import("react-leaflet").then((mod) => mod.TileLayer),
   { ssr: false }
 );
 const Polygon = dynamic(
@@ -24,6 +19,10 @@ const CircleMarker = dynamic(
 const Tooltip = dynamic(
   () => import("react-leaflet").then((mod) => mod.Tooltip),
   { ssr: false }
+);
+const VectorBasemap = dynamic(
+  () => import("@/components/maps/VectorBasemap"),
+  { ssr: false },
 );
 
 interface GeofenceMapProps {
@@ -45,17 +44,18 @@ export function GeofenceMap({
     : [];
 
   return (
-    <div className={`${heightClassName} w-full rounded-lg overflow-hidden border border-slate-700 relative z-0`}>
+    <div
+      aria-label="Bản đồ vùng chấm công"
+      className={`${heightClassName} w-full rounded-lg overflow-hidden border border-slate-700 relative z-0`}
+      role="region"
+    >
       <MapContainer
         center={[latitude, longitude]}
         zoom={16}
         scrollWheelZoom={false}
         style={{ height: "100%", width: "100%", zIndex: 0 }}
       >
-        <TileLayer
-          attribution={mapConfig.attribution}
-          url={mapConfig.tileUrl}
-        />
+        <VectorBasemap />
         <CircleMarker
           center={[latitude, longitude]}
           radius={8}

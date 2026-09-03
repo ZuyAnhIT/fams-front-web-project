@@ -22,8 +22,10 @@ const publicEnvSchema = z.object({
   NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: z.string().optional(),
   NEXT_PUBLIC_FIREBASE_PROJECT_ID: z.string().optional(),
   NEXT_PUBLIC_FIREBASE_APP_ID: z.string().optional(),
-  NEXT_PUBLIC_MAP_TILE_URL: z.string().min(1).default("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"),
-  NEXT_PUBLIC_MAP_ATTRIBUTION: z.string().min(1).default("© OpenStreetMap contributors"),
+  NEXT_PUBLIC_MAP_STYLE_URL: z.string().min(1).default("https://tiles.openfreemap.org/styles/positron"),
+  NEXT_PUBLIC_MAP_WORKER_URL: z.string().min(1).default("https://cdn.jsdelivr.net/npm/maplibre-gl@6.5.0/dist/maplibre-gl-worker.mjs"),
+  NEXT_PUBLIC_MAP_TILE_URL: z.string().min(1).default("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"),
+  NEXT_PUBLIC_MAP_ATTRIBUTION: z.string().min(1).default("© OpenStreetMap contributors © CARTO"),
 });
 
 const parsed = publicEnvSchema.safeParse({
@@ -34,6 +36,8 @@ const parsed = publicEnvSchema.safeParse({
   NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || undefined,
   NEXT_PUBLIC_FIREBASE_PROJECT_ID: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || undefined,
   NEXT_PUBLIC_FIREBASE_APP_ID: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || undefined,
+  NEXT_PUBLIC_MAP_STYLE_URL: process.env.NEXT_PUBLIC_MAP_STYLE_URL || undefined,
+  NEXT_PUBLIC_MAP_WORKER_URL: process.env.NEXT_PUBLIC_MAP_WORKER_URL || undefined,
   NEXT_PUBLIC_MAP_TILE_URL: process.env.NEXT_PUBLIC_MAP_TILE_URL || undefined,
   NEXT_PUBLIC_MAP_ATTRIBUTION: process.env.NEXT_PUBLIC_MAP_ATTRIBUTION || undefined,
 });
