@@ -181,7 +181,6 @@ export function PlatformInvitationPanel() {
             aria-label="Lọc trạng thái lời mời"
             allowClear
             placeholder="Tất cả trạng thái"
-            className="w-48"
             value={status}
             onChange={(value) => {
               setStatus(value);

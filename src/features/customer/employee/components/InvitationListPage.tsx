@@ -124,7 +124,6 @@ export default function InvitationListPage() {
           <BaseSelect
             aria-label="Lọc lời mời theo trạng thái"
             placeholder="Tất cả trạng thái"
-            className="w-full sm:w-44"
             allowClear
             value={state.status}
             onChange={(val) => setPagination({ status: val, page: 0 })}

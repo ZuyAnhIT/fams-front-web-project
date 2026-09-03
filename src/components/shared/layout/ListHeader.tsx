@@ -22,9 +22,19 @@ export default function ListHeader({
   className,
 }: ListHeaderProps) {
   return (
-    <div className={className || "flex flex-col sm:flex-row flex-wrap justify-between items-start sm:items-center gap-4"}>
-      <div className="flex flex-col lg:flex-row flex-1 gap-3 w-full max-w-4xl">
-        <div className="flex-1 relative group">
+    <div className={className || "flex flex-col gap-4"}>
+      {/* The action buttons sit on their own row above the search/filters so a wide button
+          set can never compete for width with the search box — that flex-shrink race is
+          what used to collapse the search field to just its icon on mid-size screens
+          (issue #02). */}
+      {actions && (
+        <div className="flex w-full flex-wrap gap-2 sm:justify-end [&>*]:flex-1 sm:[&>*]:flex-initial">
+          {actions}
+        </div>
+      )}
+
+      <div className="w-full space-y-3">
+        <div className="group relative w-full sm:max-w-md">
           <BaseInput
             aria-label={searchAriaLabel}
             placeholder={searchPlaceholder}
@@ -36,17 +46,15 @@ export default function ListHeader({
           />
         </div>
         {filters && (
-          <div className="flex w-full flex-wrap items-center gap-2 lg:w-auto">
+          /* Uniform responsive grid: 1 column on phones, 2 from ~520px, 3 from lg, 4 from
+             xl. Every filter control a page passes becomes one grid cell and stretches to
+             fill it, so pages only need to pass the controls (as a fragment) — no per-page
+             width classes, no wrapper flexbox. */
+          <div className="grid grid-cols-1 gap-2 min-[520px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 [&>*]:w-full [&>*]:min-w-0">
             {filters}
           </div>
         )}
       </div>
-
-      {actions && (
-        <div className="flex w-full flex-wrap gap-3 sm:w-auto [&>*]:max-sm:flex-1">
-          {actions}
-        </div>
-      )}
     </div>
   );
 }

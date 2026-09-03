@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Mail, FileDown, FileUp, ChevronRight } from "lucide-react";
-import { Tag, Dropdown, MenuProps, App, Alert, Input, Space } from "antd";
+import { Tag, Dropdown, MenuProps, App, Alert, Input } from "antd";
 import BaseSelect from "@/components/ui/BaseSelect";
 import DataTable from "@/components/tables/DataTable";
 import BaseButton from "@/components/ui/BaseButton";
@@ -318,11 +318,10 @@ export default function EmployeeListPage() {
         searchPlaceholder="Tìm kiếm theo tên, mã NV, email..."
         searchAriaLabel="Tìm nhân viên theo tên, mã hoặc email"
         filters={
-          <Space wrap>
+          <>
             <BaseSelect
               aria-label="Lọc nhân viên theo trạng thái"
               placeholder="Tất cả trạng thái"
-              className="w-full sm:w-44"
               allowClear
               value={state.status}
               onChange={(val) => setPagination({ status: val, page: 0 })}
@@ -335,7 +334,6 @@ export default function EmployeeListPage() {
             <Input
               aria-label="Lọc nhân viên theo phòng ban"
               allowClear
-              className="w-full sm:w-48"
               placeholder="Phòng ban"
               value={state.department}
               onChange={(event) =>
@@ -345,7 +343,6 @@ export default function EmployeeListPage() {
             <BaseSelect
               aria-label="Lọc nhân viên theo workspace"
               placeholder="Tất cả workspace"
-              className="w-full sm:w-48"
               allowClear
               value={state.workspaceId}
               onChange={(val) => setPagination({ workspaceId: val, page: 0 })}
@@ -354,7 +351,6 @@ export default function EmployeeListPage() {
             <BaseSelect
               aria-label="Lọc trạng thái đăng ký Face ID"
               placeholder="Tất cả Face ID"
-              className="w-full sm:w-44"
               allowClear
               value={
                 state.faceRegistered === undefined
@@ -374,7 +370,7 @@ export default function EmployeeListPage() {
                 { label: "Chưa đăng ký", value: "not_registered" },
               ]}
             />
-          </Space>
+          </>
         }
         actions={
           <>

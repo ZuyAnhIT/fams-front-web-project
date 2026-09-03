@@ -467,7 +467,6 @@ export default function FaceIdEnrollmentReportPage() {
             <>
               <BaseSelect
                 aria-label="Lọc báo cáo theo phòng ban"
-                className="!w-full sm:!w-56"
                 allowClear
                 placeholder="Tất cả phòng ban"
                 value={state.department}
@@ -476,7 +475,6 @@ export default function FaceIdEnrollmentReportPage() {
               />
               <BaseSelect
                 aria-label="Lọc báo cáo theo công trình"
-                className="!w-full sm:!w-56"
                 allowClear
                 placeholder="Tất cả công trình"
                 value={siteId}
@@ -485,7 +483,6 @@ export default function FaceIdEnrollmentReportPage() {
               />
               <BaseSelect
                 aria-label="Lọc báo cáo theo trạng thái Face ID"
-                className="!w-full sm:!w-56"
                 value={statusFilter}
                 onChange={(val) => {
                   setStatusFilter(val as StatusFilter);
