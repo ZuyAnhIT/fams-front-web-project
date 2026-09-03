@@ -58,6 +58,25 @@ export const tenantService = {
   },
 
   /**
+   * #08: tải một file ảnh từ máy làm logo công ty (thay cho việc dán URL).
+   * Chỉ chủ sở hữu (hoặc Platform Admin) gọi được.
+   */
+  async uploadLogo(id: string, file: File): Promise<Tenant> {
+    const formData = new FormData();
+    formData.append("file", file);
+    const response = await apiClient.post<ApiResponse<Tenant>>(`/tenants/${id}/logo`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return response.data.data;
+  },
+
+  /** #08: xoá logo công ty đã tải lên. */
+  async deleteLogo(id: string): Promise<Tenant> {
+    const response = await apiClient.delete<ApiResponse<Tenant>>(`/tenants/${id}/logo`);
+    return response.data.data;
+  },
+
+  /**
    * Chuyển quyền chủ sở hữu công ty — chỉ chủ sở hữu hiện tại (hoặc Platform Admin) gọi được.
    */
   async transferOwner(payload: TransferOwnerPayload, id?: string): Promise<Tenant> {

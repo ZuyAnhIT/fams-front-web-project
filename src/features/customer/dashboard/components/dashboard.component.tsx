@@ -46,6 +46,47 @@ function LoadingDashboard() {
   return <div className="flex min-h-[320px] items-center justify-center" role="status"><Spin size="large" /></div>;
 }
 
+/**
+ * Surfaces the *actual* reason a dashboard query failed instead of always blaming a missing
+ * permission. The most common real cause on a configured tenant is an IP allow-list the
+ * caller's current network isn't in — which blocks every tenant-scoped endpoint, not just
+ * this one — and the old copy ("chưa có quyền employees:list") pointed people the wrong way.
+ */
+function DashboardLoadError({ error, fallbackTitle }: { error: unknown; fallbackTitle: string }) {
+  const response = (error as {
+    response?: { status?: number; data?: { errorCode?: string; message?: string; userMessage?: string } };
+  }).response;
+  const code = response?.data?.errorCode;
+  const status = response?.status;
+
+  if (code === 'IP_NOT_WHITELISTED') {
+    return (
+      <Alert
+        type="error"
+        showIcon
+        title="Địa chỉ IP hiện tại không được phép truy cập công ty này"
+        description="Công ty này giới hạn truy cập theo địa chỉ IP. IP bạn đang dùng không nằm trong danh sách cho phép — hãy truy cập từ mạng nội bộ / VPN đã được duyệt, hoặc nhờ quản trị công ty thêm IP của bạn vào danh sách. Mọi trang nghiệp vụ của công ty này sẽ bị chặn cho tới khi đó."
+      />
+    );
+  }
+  if (code === 'TENANT_SUSPENDED' || response?.data?.message === 'Tenant account is suspended') {
+    return (
+      <Alert type="error" showIcon title="Công ty đang bị tạm ngưng"
+        description="Truy cập dữ liệu nghiệp vụ của công ty này đang bị tạm ngưng. Liên hệ quản trị nền tảng để biết thêm chi tiết." />
+    );
+  }
+  if (status === 403) {
+    return (
+      <Alert type="error" showIcon title="Không đủ quyền xem tổng quan"
+        description="Vai trò của bạn tại công ty này không có quyền xem dashboard tổng quan (cần quyền employees:list). Nếu bạn vừa đổi công ty, hãy tải lại trang." />
+    );
+  }
+  return (
+    <Alert type="error" showIcon title={fallbackTitle}
+      description={response?.data?.userMessage || response?.data?.message || 'Dữ liệu hiện không khả dụng. Vui lòng thử lại sau.'} />
+  );
+}
+
 function HrDashboardView({ tenantId }: { tenantId: string }) {
   const [siteId, setSiteId] = useState<string>();
   const { data: sitePage } = useSitesQuery({ tenantId, page: 0, size: 100, sortBy: 'name', sortDir: 'asc' });
@@ -53,7 +94,7 @@ function HrDashboardView({ tenantId }: { tenantId: string }) {
   const query = useHrDashboard(tenantId, siteId);
   const data = query.data;
   if (query.isLoading) return <LoadingDashboard />;
-  if (query.isError || !data) return <Alert type="error" showIcon title="Không thể tải Dashboard HR" description="Bạn có thể chưa có quyền employees:list hoặc dữ liệu công ty hiện không khả dụng." />;
+  if (query.isError || !data) return <DashboardLoadError error={query.error} fallbackTitle="Không thể tải Dashboard HR" />;
 
   const types = Object.keys(VIOLATION_LABELS) as Array<keyof typeof VIOLATION_LABELS>;
   const maxViolation = Math.max(1, ...types.map((type) => data.violations.unresolvedByType[type] ?? 0));
@@ -103,8 +144,10 @@ function SupervisorDashboardView({ tenantId }: { tenantId: string }) {
   const query = useSupervisorDashboard(tenantId);
   if (query.isLoading) return <LoadingDashboard />;
   if (query.isError) {
-    const missingEmployee = errorStatus(query.error) === 404;
-    return <Alert type="error" showIcon title={missingEmployee ? 'Tài khoản chưa có hồ sơ nhân viên' : 'Không thể tải hiện trường'} description={missingEmployee ? 'Liên hệ HR để liên kết tài khoản với hồ sơ nhân viên trong công ty này.' : 'Vui lòng thử lại sau.'} />;
+    if (errorStatus(query.error) === 404) {
+      return <Alert type="error" showIcon title="Tài khoản chưa có hồ sơ nhân viên" description="Liên hệ HR để liên kết tài khoản với hồ sơ nhân viên trong công ty này." />;
+    }
+    return <DashboardLoadError error={query.error} fallbackTitle="Không thể tải hiện trường" />;
   }
   const sites = query.data?.supervisedSites ?? [];
   if (!sites.length) return <EmptyState title="Chưa có công trình cần giám sát hôm nay" description="Khi assignment supervisor có hiệu lực, công trình và danh sách người đang có mặt sẽ xuất hiện tại đây." />;
@@ -122,7 +165,12 @@ function SupervisorDashboardView({ tenantId }: { tenantId: string }) {
 function EmployeeDashboardView({ tenantId }: { tenantId: string }) {
   const query = useEmployeeDashboard(tenantId);
   if (query.isLoading) return <LoadingDashboard />;
-  if (query.isError || !query.data) return <Alert type="error" showIcon title="Không thể tải Dashboard nhân viên" description="Tài khoản có thể chưa được liên kết với hồ sơ nhân viên trong công ty này." />;
+  if (query.isError || !query.data) {
+    if (errorStatus(query.error) === 404) {
+      return <Alert type="error" showIcon title="Không thể tải Dashboard nhân viên" description="Tài khoản có thể chưa được liên kết với hồ sơ nhân viên trong công ty này." />;
+    }
+    return <DashboardLoadError error={query.error} fallbackTitle="Không thể tải Dashboard nhân viên" />;
+  }
   const data = query.data;
   return <div className="space-y-6">
     {(data.alerts.pendingExplanations > 0 || data.alerts.unreadNotifications > 0) && <div className="grid gap-3 sm:grid-cols-2"><Link href={CUSTOMER_ROUTES.EXCEPTIONS} className="rounded-xl border border-amber-200 bg-amber-50 p-4"><strong className="text-amber-900">{data.alerts.pendingExplanations} mục cần giải thích</strong><p className="mt-1 text-sm text-amber-700">Bổ sung thông tin cho HR</p></Link><Link href={CUSTOMER_ROUTES.NOTIFICATIONS} className="rounded-xl border border-blue-200 bg-blue-50 p-4"><strong className="text-blue-900">{data.alerts.unreadNotifications} thông báo chưa đọc</strong><p className="mt-1 text-sm text-blue-700">Mở hộp thư thông báo</p></Link></div>}

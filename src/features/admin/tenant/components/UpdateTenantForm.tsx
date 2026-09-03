@@ -12,6 +12,7 @@ import { updateTenantSchema, type UpdateTenantFormData } from "../schemas/tenant
 import type { Tenant, TenantOperationalDetail } from "../types/tenant.type";
 import { useTenantStore } from "@/stores/tenant.store";
 import ContentCard from "@/components/shared/layout/ContentCard";
+import TenantLogoUploader from "./TenantLogoUploader";
 
 export default function UpdateTenantForm({
   tenant,
@@ -100,14 +101,12 @@ export default function UpdateTenantForm({
             className="col-span-1 md:col-span-2"
           />
 
-          <FormInput
-            control={control}
-            name="logoUrl"
-            label="Đường dẫn ảnh Logo (URL)"
-            placeholder="Ví dụ: https://example.com/logo.png"
-            error={errors.logoUrl}
-            labelClassName="!text-slate-700 !font-semibold !text-sm"
-            className="col-span-1 md:col-span-2"
+          <TenantLogoUploader
+            tenantId={tenant?.id || tenantId}
+            logoUrl={tenant?.logoUrl}
+            onChanged={(updated) => {
+              if (tenant) setActiveTenant(updated);
+            }}
           />
 
           <FormInput

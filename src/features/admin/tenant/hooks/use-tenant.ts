@@ -53,6 +53,28 @@ export const useUpdateTenant = () => {
   });
 };
 
+export const useUploadTenantLogo = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, file }: { id: string; file: File }) => tenantService.uploadLogo(id, file),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tenants"] });
+      queryClient.invalidateQueries({ queryKey: ["tenant-detail"] });
+    },
+  });
+};
+
+export const useDeleteTenantLogo = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id }: { id: string }) => tenantService.deleteLogo(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tenants"] });
+      queryClient.invalidateQueries({ queryKey: ["tenant-detail"] });
+    },
+  });
+};
+
 export const useTransferOwner = () => {
   const queryClient = useQueryClient();
   return useMutation({
