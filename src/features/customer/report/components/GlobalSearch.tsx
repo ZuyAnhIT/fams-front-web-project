@@ -15,7 +15,24 @@ import { VIOLATION_LABELS } from './report-utils';
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function ResultButton({ icon, title, detail, onClick }: { icon: React.ReactNode; title: string; detail: string; onClick: () => void }) {
-  return <button type="button" onClick={onClick} className="flex w-full items-start gap-3 rounded-lg px-3 py-2 text-left hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"><span className="mt-0.5 text-slate-400">{icon}</span><span className="min-w-0"><span className="block truncate text-sm font-medium text-slate-800">{title}</span><span className="block truncate text-xs text-slate-500">{detail}</span></span></button>;
+  // The dropdown is an antd Popover with `trigger="focus"`: without this, mousedown blurs the
+  // input → the Popover unmounts this button before the click lands, so nothing happens (#17).
+  // preventDefault on mousedown keeps the input focused so the click actually reaches onClick
+  // (and it still works for keyboard Enter/Space).
+  return (
+    <button
+      type="button"
+      onMouseDown={(event) => event.preventDefault()}
+      onClick={onClick}
+      className="flex w-full items-start gap-3 rounded-lg px-3 py-2 text-left hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+    >
+      <span className="mt-0.5 text-slate-400">{icon}</span>
+      <span className="min-w-0">
+        <span className="block truncate text-sm font-medium text-slate-800">{title}</span>
+        <span className="block truncate text-xs text-slate-500">{detail}</span>
+      </span>
+    </button>
+  );
 }
 
 export default function GlobalSearch() {
