@@ -60,11 +60,16 @@ export default function EmployeeRolesTab({ employee }: EmployeeRolesTabProps) {
     },
     {
       title: "Ngày gán",
-      dataIndex: "assignedAt",
+      // The employee-detail API returns the assignment timestamp as `createdAt`, not
+      // `assignedAt` — reading the wrong field is why this column always showed "—" (#12).
       key: "assignedAt",
       sorter: (a: EmployeeRoleAssignment, b: EmployeeRoleAssignment) =>
-        new Date(a.assignedAt ?? 0).getTime() - new Date(b.assignedAt ?? 0).getTime(),
-      render: (dateStr?: string) => dateStr ? format(new Date(dateStr), "dd/MM/yyyy HH:mm") : "—",
+        new Date(a.createdAt ?? a.assignedAt ?? 0).getTime() -
+        new Date(b.createdAt ?? b.assignedAt ?? 0).getTime(),
+      render: (_: unknown, record: EmployeeRoleAssignment) => {
+        const dateStr = record.createdAt ?? record.assignedAt;
+        return dateStr ? format(new Date(dateStr), "dd/MM/yyyy HH:mm") : "—";
+      },
     },
     {
       title: "Phạm vi",

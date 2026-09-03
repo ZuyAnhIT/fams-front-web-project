@@ -162,12 +162,26 @@ function SupervisorDashboardView({ tenantId }: { tenantId: string }) {
   })}</div>;
 }
 
-function EmployeeDashboardView({ tenantId }: { tenantId: string }) {
+function EmployeeDashboardView({ tenantId, permissions }: { tenantId: string; permissions: string[] }) {
   const query = useEmployeeDashboard(tenantId);
   if (query.isLoading) return <LoadingDashboard />;
   if (query.isError || !query.data) {
+    // 404 = the account holds an EMPLOYEE role in this company but has no employee profile
+    // here (e.g. a role granted directly, or after switching companies). That's a valid
+    // state, not a failure — show an explanation plus whatever the account's permissions
+    // still let it do, instead of a dead-end red error (#14).
     if (errorStatus(query.error) === 404) {
-      return <Alert type="error" showIcon title="Không thể tải Dashboard nhân viên" description="Tài khoản có thể chưa được liên kết với hồ sơ nhân viên trong công ty này." />;
+      return (
+        <div className="space-y-4">
+          <Alert
+            type="info"
+            showIcon
+            title="Tài khoản chưa được gắn với hồ sơ nhân viên tại công ty này"
+            description="Bạn vẫn có thể xem thông báo và dùng các chức năng theo quyền được cấp. Nếu bạn là nhân viên của công ty này, hãy liên hệ HR để được tạo/liên kết hồ sơ."
+          />
+          <CustomRoleDashboardView permissions={permissions} />
+        </div>
+      );
     }
     return <DashboardLoadError error={query.error} fallbackTitle="Không thể tải Dashboard nhân viên" />;
   }
@@ -219,5 +233,5 @@ export default function CustomerDashboard() {
   const isSupervisor = role === SystemRole.SITE_SUPERVISOR;
   const isEmployee = role === SystemRole.EMPLOYEE;
 
-  return <div className="mx-auto w-full max-w-[1600px] space-y-6"><header><p className="text-sm font-medium text-blue-700">Tổng quan theo vai trò</p><h1 className="mt-1 text-2xl font-bold text-slate-900 sm:text-3xl">Xin chào, {user?.displayName || 'bạn'}</h1><p className="mt-2 text-sm text-slate-600">Số liệu hôm nay được backend tính theo múi giờ công ty/công trình.</p></header>{!tenantId ? <Alert type="warning" showIcon title="Chưa chọn công ty làm việc" description={<span>Chọn một công ty trước khi mở dữ liệu nghiệp vụ. <Link className="font-semibold text-blue-700" href={CUSTOMER_ROUTES.SELECT_COMPANY}>Đi đến màn chọn công ty</Link>.</span>} /> : isSupervisor ? <SupervisorDashboardView tenantId={tenantId} /> : isHr ? <HrDashboardView tenantId={tenantId} /> : isEmployee ? <EmployeeDashboardView tenantId={tenantId} /> : <CustomRoleDashboardView permissions={permissions} />}</div>;
+  return <div className="mx-auto w-full max-w-[1600px] space-y-6"><header><p className="text-sm font-medium text-blue-700">Tổng quan theo vai trò</p><h1 className="mt-1 text-2xl font-bold text-slate-900 sm:text-3xl">Xin chào, {user?.displayName || 'bạn'}</h1><p className="mt-2 text-sm text-slate-600">Số liệu hôm nay được backend tính theo múi giờ công ty/công trình.</p></header>{!tenantId ? <Alert type="warning" showIcon title="Chưa chọn công ty làm việc" description={<span>Chọn một công ty trước khi mở dữ liệu nghiệp vụ. <Link className="font-semibold text-blue-700" href={CUSTOMER_ROUTES.SELECT_COMPANY}>Đi đến màn chọn công ty</Link>.</span>} /> : isSupervisor ? <SupervisorDashboardView tenantId={tenantId} /> : isHr ? <HrDashboardView tenantId={tenantId} /> : isEmployee ? <EmployeeDashboardView tenantId={tenantId} permissions={permissions} /> : <CustomRoleDashboardView permissions={permissions} />}</div>;
 }

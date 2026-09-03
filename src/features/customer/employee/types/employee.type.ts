@@ -76,6 +76,9 @@ export interface EmployeeRoleAssignment {
   userId: string;
   roleId: string;
   tenantId: string;
+  /** Assignment timestamp. The employee-detail API sends `createdAt`; other role endpoints
+   *  send `assignedAt` — consumers should read whichever is present. */
+  createdAt?: string;
   assignedAt?: string;
   roleName?: string;
   permissions?: string[];
