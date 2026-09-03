@@ -78,7 +78,7 @@ export default function ResetPasswordForm() {
               type="primary"
               block
               size="large"
-              className="font-bold !bg-brand-600 !text-white hover:opacity-90 !border-0 shadow-lg shadow-brand-600/25 h-12 rounded-xl transition-all"
+              className="font-bold !bg-blue-600 !text-white hover:!bg-blue-700 !border-0 shadow-lg shadow-blue-500/25 h-12 rounded-xl transition-all"
             >
               Yêu cầu cấp lại
             </BaseButton>
@@ -86,7 +86,7 @@ export default function ResetPasswordForm() {
           <div className="mt-6 text-center">
             <Link
               href={ROUTES.LOGIN}
-              className="text-sm font-semibold text-slate-500 hover:text-brand-600 transition-colors"
+              className="text-sm font-semibold text-slate-500 hover:text-blue-600 transition-colors"
             >
               Quay lại Đăng nhập
             </Link>
@@ -94,7 +94,7 @@ export default function ResetPasswordForm() {
           <button
             type="button"
             onClick={() => navigateBackWithinApp(ROUTES.FORGOT_PASSWORD)}
-            className="mt-4 inline-flex w-full items-center justify-center gap-2 text-sm font-semibold text-slate-500 hover:text-brand-600"
+            className="mt-4 inline-flex w-full items-center justify-center gap-2 text-sm font-semibold text-slate-500 hover:text-blue-600"
           >
             <ArrowLeftOutlined /> Quay lại trang trước
           </button>
@@ -137,22 +137,27 @@ export default function ResetPasswordForm() {
             Mật khẩu của bạn đã được cập nhật. Toàn bộ phiên đăng nhập cũ đã được đăng xuất. Vui lòng đăng nhập lại bằng mật khẩu mới.
           </p>
 
-          <a
-            href={`${mobileAppScheme}://login`}
-            className="inline-flex h-12 w-full items-center justify-center rounded-xl bg-brand-600 px-4 font-bold !text-white shadow-lg shadow-brand-600/25 transition-all hover:opacity-90"
-          >
-            Mở ứng dụng FAMS
-          </a>
+          {/* `!bg` / `!text` are required: antd v6 ships an unlayered `a { background:transparent }`
+              reset that otherwise beats Tailwind v4's layered `bg-*` utility, leaving a white
+              box with invisible white text (issue #07). */}
           <Link
             href={ROUTES.LOGIN}
-            className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-slate-300 px-4 text-sm font-semibold text-slate-600 hover:bg-slate-50"
+            className="inline-flex h-12 w-full items-center justify-center rounded-xl !bg-blue-600 px-4 font-bold !text-white shadow-lg shadow-blue-500/25 transition-all hover:!bg-blue-700"
           >
             Đăng nhập trên web
           </Link>
+          {mobileAppScheme && (
+            <a
+              href={`${mobileAppScheme}://login`}
+              className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-slate-300 px-4 text-sm font-semibold text-slate-600 transition-colors hover:border-slate-400 hover:bg-slate-50"
+            >
+              Mở ứng dụng FAMS
+            </a>
+          )}
           <button
             type="button"
             onClick={() => navigateBackWithinApp(ROUTES.LOGIN)}
-            className="mt-4 inline-flex w-full items-center justify-center gap-2 text-sm font-semibold text-slate-500 hover:text-brand-600"
+            className="mt-4 inline-flex w-full items-center justify-center gap-2 text-sm font-semibold text-slate-500 hover:text-blue-600"
           >
             <ArrowLeftOutlined /> Quay lại trang trước
           </button>
@@ -202,7 +207,7 @@ export default function ResetPasswordForm() {
             loading={isSubmitting}
             block
             size="large"
-            className="mt-2 font-bold !bg-brand-600 !text-white hover:opacity-90 !border-0 shadow-lg shadow-brand-600/25 h-12 rounded-xl transition-all"
+            className="mt-2 font-bold !bg-blue-600 !text-white hover:!bg-blue-700 !border-0 shadow-lg shadow-blue-500/25 h-12 rounded-xl transition-all"
           >
             Lưu mật khẩu mới
           </BaseButton>
@@ -210,7 +215,7 @@ export default function ResetPasswordForm() {
         <button
           type="button"
           onClick={() => navigateBackWithinApp(ROUTES.FORGOT_PASSWORD)}
-          className="mt-6 inline-flex w-full items-center justify-center gap-2 text-sm font-semibold text-slate-500 hover:text-brand-600"
+          className="mt-6 inline-flex w-full items-center justify-center gap-2 text-sm font-semibold text-slate-500 hover:text-blue-600"
         >
           <ArrowLeftOutlined /> Quay lại trang trước
         </button>

@@ -56,8 +56,8 @@ export default function ForgotPasswordForm() {
       <div className="w-full">
         <div className="bg-white">
           <div className="mb-6 flex justify-center">
-            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-brand-50 shadow-sm shadow-brand-100">
-              <MailOutlined className="text-3xl text-brand-600" />
+            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-blue-50 shadow-sm shadow-blue-100">
+              <MailOutlined className="text-3xl text-blue-600" />
             </div>
           </div>
           
@@ -76,7 +76,7 @@ export default function ForgotPasswordForm() {
               type="primary"
               block
               size="large"
-              className="font-bold !bg-brand-600 !text-white hover:opacity-90 !border-0 shadow-lg shadow-brand-600/25 h-12 rounded-xl transition-all"
+              className="font-bold !bg-blue-600 !text-white hover:!bg-blue-700 !border-0 shadow-lg shadow-blue-500/25 h-12 rounded-xl transition-all"
             >
               Quay lại trang Đăng nhập
             </BaseButton>
@@ -116,7 +116,7 @@ export default function ForgotPasswordForm() {
             loading={isSubmitting}
             block
             size="large"
-            className="mt-2 font-bold !bg-brand-600 !text-white hover:opacity-90 !border-0 shadow-lg shadow-brand-600/25 h-12 rounded-xl transition-all"
+            className="mt-2 font-bold !bg-blue-600 !text-white hover:!bg-blue-700 !border-0 shadow-lg shadow-blue-500/25 h-12 rounded-xl transition-all"
           >
             Gửi liên kết khôi phục
           </BaseButton>
@@ -126,7 +126,7 @@ export default function ForgotPasswordForm() {
         <div className="mt-8 text-center">
           <Link
             href={ROUTES.LOGIN}
-            className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-brand-600 transition-colors"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-blue-600 transition-colors"
           >
             <ArrowLeftOutlined /> Quay lại trang Đăng nhập
           </Link>

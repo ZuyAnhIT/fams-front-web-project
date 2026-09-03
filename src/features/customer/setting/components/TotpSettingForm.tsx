@@ -4,11 +4,14 @@ import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Alert, App, Checkbox, Input, Modal, QRCode, Radio } from "antd";
+import { useQueryClient } from "@tanstack/react-query";
+import { Alert, App, Checkbox, Input, Modal, QRCode, Radio, Spin, Tag } from "antd";
 import { Copy, Download, KeyRound, ShieldCheck, ShieldOff } from "lucide-react";
 import BaseButton from "@/components/ui/BaseButton";
+import { useAuthStore } from "@/stores/auth.store";
 import {
   useDisableTotp,
+  useProfile,
   useSetupTotp,
   useVerifyTotp,
 } from "@/features/customer/auth/hooks/use-auth";
@@ -51,6 +54,18 @@ export default function TotpSettingForm() {
   const [disableCredential, setDisableCredential] = useState("");
   const [expiresInSeconds, setExpiresInSeconds] = useState<number | null>(null);
 
+  const queryClient = useQueryClient();
+  const { user, updateUser } = useAuthStore();
+  const { data: profile, isLoading: isLoadingStatus } = useProfile();
+  // Authoritative status: the freshly-fetched profile wins; fall back to the stored user
+  // while it loads. This is what drives which button shows (issue #06).
+  const totpEnabled = profile?.totpEnabled ?? user?.totpEnabled ?? false;
+
+  const syncTotpStatus = (enabled: boolean) => {
+    if (user) updateUser({ ...user, totpEnabled: enabled });
+    void queryClient.invalidateQueries({ queryKey: ["auth", "profile"] });
+  };
+
   const { mutateAsync: setupTotp, isPending: isSettingUp } = useSetupTotp();
   const { mutateAsync: verifyTotp, isPending: isVerifying } = useVerifyTotp();
   const { mutateAsync: disableTotp, isPending: isDisabling } = useDisableTotp();
@@ -83,6 +98,7 @@ export default function TotpSettingForm() {
       reset();
     } catch (error: unknown) {
       const status = (error as { response?: { status?: number } }).response?.status;
+      if (status === 409) syncTotpStatus(true); // already enabled — refresh the UI to match
       message[status === 409 ? "warning" : "error"](
         status === 409
           ? "Tài khoản đã bật xác thực hai lớp."
@@ -103,6 +119,7 @@ export default function TotpSettingForm() {
       setSetupData(null);
       setExpiresInSeconds(null);
       reset();
+      syncTotpStatus(true);
       message.success("Đã bật xác thực hai lớp.");
     } catch (error: unknown) {
       message.error(getErrorMessage(error, "Mã không đúng hoặc phiên thiết lập đã hết hạn."));
@@ -147,6 +164,7 @@ export default function TotpSettingForm() {
       await disableTotp(payload);
       setDisableOpen(false);
       setDisableCredential("");
+      syncTotpStatus(false);
       message.success("Đã tắt xác thực hai lớp.");
     } catch (error: unknown) {
       message.error(getErrorMessage(error, "Xác thực lại thất bại hoặc 2FA chưa được bật."));
@@ -169,23 +187,56 @@ export default function TotpSettingForm() {
         description="Sau khi bật, mỗi lần đăng nhập bằng mật khẩu bạn cần mã 6 số hoặc một mã dự phòng. Google Sign-In không đi qua bước TOTP theo chính sách hiện tại."
       />
 
-      <div className="flex flex-wrap gap-3">
-        <BaseButton
-          type="primary"
-          icon={<ShieldCheck className="h-4 w-4" />}
-          loading={isSettingUp}
-          onClick={handleSetup}
-        >
-          Bật xác thực hai lớp
-        </BaseButton>
-        <BaseButton
-          danger
-          icon={<ShieldOff className="h-4 w-4" />}
-          onClick={() => setDisableOpen(true)}
-        >
-          Tắt xác thực hai lớp
-        </BaseButton>
-      </div>
+      {isLoadingStatus && !profile ? (
+        <div className="flex items-center gap-2 text-sm text-slate-500">
+          <Spin size="small" /> Đang kiểm tra trạng thái xác thực hai lớp...
+        </div>
+      ) : setupData ? (
+        // Đang trong luồng thiết lập — nút xác nhận nằm ở khối QR bên dưới
+        <div className="flex flex-wrap items-center gap-3">
+          <Tag color="processing" className="m-0 px-3 py-1 text-sm font-medium">
+            Đang thiết lập — hoàn tất bước quét mã bên dưới
+          </Tag>
+          <BaseButton
+            icon={<ShieldOff className="h-4 w-4" />}
+            onClick={() => {
+              setSetupData(null);
+              setExpiresInSeconds(null);
+            }}
+          >
+            Hủy thiết lập
+          </BaseButton>
+        </div>
+      ) : totpEnabled ? (
+        // 2FA đang bật → chỉ hiện nút Tắt + huy hiệu trạng thái (issue #06)
+        <div className="flex flex-wrap items-center gap-3">
+          <Tag color="success" className="m-0 px-3 py-1 text-sm font-semibold">
+            <ShieldCheck className="mr-1 inline h-4 w-4" /> Đang bảo vệ tài khoản
+          </Tag>
+          <BaseButton
+            danger
+            icon={<ShieldOff className="h-4 w-4" />}
+            onClick={() => setDisableOpen(true)}
+          >
+            Tắt xác thực hai lớp
+          </BaseButton>
+        </div>
+      ) : (
+        // 2FA chưa bật → chỉ hiện nút Bật
+        <div className="flex flex-wrap items-center gap-3">
+          <Tag color="default" className="m-0 px-3 py-1 text-sm font-medium text-slate-500">
+            <ShieldOff className="mr-1 inline h-4 w-4" /> Chưa bật
+          </Tag>
+          <BaseButton
+            type="primary"
+            icon={<ShieldCheck className="h-4 w-4" />}
+            loading={isSettingUp}
+            onClick={handleSetup}
+          >
+            Bật xác thực hai lớp
+          </BaseButton>
+        </div>
+      )}
 
       {setupData && (
         <section className="rounded-2xl border border-blue-200 bg-blue-50/40 p-5" aria-label="Thiết lập ứng dụng Authenticator">

@@ -133,9 +133,11 @@ export default function VerifyEmailResult() {
         <div className="space-y-3">
           {state === "success" ? (
             <>
+              {/* `!bg`/`!text`: antd v6's unlayered `a` reset otherwise wins over the layered
+                  Tailwind `bg-*` utility and blanks the button (issue #07). */}
               <a
                 href={mobileAppUrl}
-                className="inline-flex min-h-12 w-full items-center justify-center rounded-lg bg-blue-600 px-4 font-bold !text-white hover:bg-blue-700"
+                className="inline-flex min-h-12 w-full items-center justify-center rounded-lg !bg-blue-600 px-4 font-bold !text-white hover:!bg-blue-700"
               >
                 Mở ứng dụng FAMS
               </a>

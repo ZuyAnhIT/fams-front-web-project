@@ -79,7 +79,7 @@ export default function AuthLayout({
             {/* Hiển thị logo trên mobile nếu cột trái bị ẩn */}
             <div className="mb-10 lg:hidden flex justify-center">
               <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-600 shadow-xl shadow-brand-600/20">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600 shadow-xl shadow-blue-600/20">
                   <span className="text-2xl font-extrabold text-white">F</span>
                 </div>
                 <span className="text-2xl font-bold text-slate-900 tracking-tight">FAMS</span>

@@ -258,7 +258,7 @@ export default function LoginForm() {
             {lockedAccount.identifier.includes("@") ? (
               <Link
                 href={`${ROUTES.FORGOT_PASSWORD}?email=${encodeURIComponent(lockedAccount.identifier)}`}
-                className="block rounded-xl bg-blue-600 px-4 py-3 font-semibold !text-white hover:bg-blue-700"
+                className="block rounded-xl !bg-blue-600 px-4 py-3 font-semibold !text-white hover:!bg-blue-700"
               >
                 Đặt lại mật khẩu để mở khóa ngay
               </Link>
