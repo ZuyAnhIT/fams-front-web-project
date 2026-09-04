@@ -25,6 +25,11 @@ export default function MyExceptionsPage() {
   const tenantId = useAuthStore((state) => state.user?.tenantId || '');
   const query = useMyExceptions(tenantId);
   const explain = useExplainException();
+  // Belt-and-suspenders (backend now returns an empty 200 for this case, see #19): a 404 means
+  // the account has no employee profile in this company — a tenant_admin/HR with nothing to
+  // explain, not a real failure. Show the normal empty state, not a dead-end red error.
+  const errorStatus = (query.error as { response?: { status?: number } } | null)?.response?.status;
+  const isRealError = query.isError && errorStatus !== 404;
   const [selected, setSelected] = useState<MyExceptionItem | null>(null);
   const [note, setNote] = useState('');
   const [photo, setPhoto] = useState<File | null>(null);
@@ -49,7 +54,7 @@ export default function MyExceptionsPage() {
         <p className="mt-1 text-sm text-slate-500">Một hộp thư chung cho chấm công chờ duyệt và vi phạm chưa được HR xử lý.</p>
       </div>
       <Alert type="info" showIcon title="Giải trình không tự thay đổi kết quả" description="Thông tin bạn gửi là bằng chứng bổ sung để HR đối chiếu. Mục vẫn có thể còn trong danh sách cho tới khi HR xử lý xong." />
-      {query.isError && <Alert type="error" showIcon title="Không thể tải hộp thư" description={getViolationErrorMessage(query.error, 'Kiểm tra công ty đang chọn và thử lại.')} />}
+      {isRealError && <Alert type="error" showIcon title="Không thể tải hộp thư" description={getViolationErrorMessage(query.error, 'Kiểm tra công ty đang chọn và thử lại.')} />}
       <Card loading={query.isLoading}>
         {(query.data?.data || []).length === 0 ? (
           <Empty description="Không có mục cần giải thích" />

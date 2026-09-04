@@ -60,7 +60,17 @@ export function useUpdateViolationAttendanceImpact() {
 }
 
 export function useMyExceptions(tenantId: string, size = 50) {
-  return useQuery({ queryKey: violationKeys.exceptions(tenantId), queryFn: () => violationService.myExceptions(tenantId, size), enabled: Boolean(tenantId) });
+  return useQuery({
+    queryKey: violationKeys.exceptions(tenantId),
+    queryFn: () => violationService.myExceptions(tenantId, size),
+    enabled: Boolean(tenantId),
+    // 403/404 = the account has no employee profile in this company (#19) — a stable state,
+    // not a transient failure, so don't burn retries on it.
+    retry: (failureCount, error) => {
+      const status = (error as { response?: { status?: number } }).response?.status;
+      return status !== 403 && status !== 404 && failureCount < 2;
+    },
+  });
 }
 
 export function useExplainException() {
