@@ -30,6 +30,21 @@ nhãn bằng tiếng Anh** — người dùng không đối chiếu được.
 - Bộ lọc: "Loại đối tượng" và "Hành động" thành dropdown nhãn tiếng Việt; placeholder "Entity ID"
   → "ID đối tượng (nếu biết)".
 
+### #18b (2026-09-03) — Bộ lọc "Người thao tác" hiện "undefined — email"
+Ở chế độ công ty (chủ/quản trị công ty), ô lọc "Người thao tác" tìm trong danh sách nhân viên
+và render `${e.fullName} — ${email}`. **API danh sách nhân viên không trả `fullName`** (chỉ có
+`firstName`/`lastName` — đã xác minh bằng curl, giống lỗi #11) → mọi lựa chọn hiện
+`undefined — email@...`.
+
+**Đã sửa** [AuditLogViewerPage.tsx](../../../src/features/shared/audit/components/AuditLogViewerPage.tsx):
+dùng `getEmployeeDisplayName(e)` (helper dùng chung, fallback "Họ Tên" từ first/last) + lọc bỏ
+nhân viên không có `userId` (không thể là người thao tác). Sửa cùng lỗi ở
+[TransferOwnerModal.tsx](../../../src/features/admin/tenant/components/TransferOwnerModal.tsx)
+(ô chọn người nhận quyền chủ sở hữu — cùng pattern `${e.fullName}`).
+
+Xác minh (ảnh `actor-filter.png`): gõ "Nguy" → dropdown hiện "Nguyễn Bá Duy Anh — anhtrauluoi…",
+"Nguyễn Minh Hạnh — kz.hanhxjnk…" (tên thật, không còn "undefined").
+
 ## 2. Xuất Excel
 
 | File | Trước | Sau |
@@ -46,5 +61,7 @@ nhãn bằng tiếng Anh** — người dùng không đối chiếu được.
   `test_import_employees.sh` **6/6**, `test_export_violations.sh` **10/10**. Compile OK, `fams-api` restart OK.
 - Xác minh trực tiếp API: header xuất Excel (employee + violation) đúng tiếng Việt, giá trị là
   tên; `/audit-logs` trả `actorName`/`entityName` (`role_assigned → "Hạnh Nguyễn Minh"`).
-- Web: `tests/e2e/audit-export-readability.spec.ts` — pass. Ảnh `audit-list.png`, `audit-detail.png`.
+- Web: `tests/e2e/audit-export-readability.spec.ts` — **2/2 pass** (thêm test "actor filter
+  options show a real name, not 'undefined'"). Ảnh `audit-list.png`, `audit-detail.png`,
+  `actor-filter.png`.
 - `tsc` + `eslint` (web) sạch.

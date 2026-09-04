@@ -12,6 +12,7 @@ import { useAuthStore } from '@/stores/auth.store';
 import { useTenants } from '@/features/admin/tenant/hooks/use-tenant';
 import { useSearchUsers } from '@/hooks/use-user';
 import { useEmployees } from '@/features/customer/employee/hooks/use-employee';
+import { getEmployeeDisplayName } from '@/utils/name.util';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useAuditLogDetail, useAuditLogs } from '../hooks/use-audit-logs';
 import type { AuditLogEntry, AuditLogListParams } from '../types/audit-log.type';
@@ -105,7 +106,12 @@ export default function AuditLogViewerPage({ platformMode }: { platformMode: boo
   );
   const actorOptions = platformMode
     ? (platformUserResults?.content || []).map((u) => ({ value: u.id, label: `${u.displayName || 'Chưa đặt tên'} — ${u.email || 'không có email'}` }))
-    : (employeeResults?.content || []).map((e) => ({ value: e.userId, label: `${e.fullName} — ${e.email || 'không có email'}` }));
+    // The employee list/search API returns firstName/lastName but NOT fullName (verified via
+    // curl, same as #11) — `${e.fullName}` rendered a literal "undefined — email". Use the
+    // shared display-name helper which falls back to "Họ Tên" from first/last.
+    : (employeeResults?.content || [])
+        .filter((e) => Boolean(e.userId))
+        .map((e) => ({ value: e.userId as string, label: `${getEmployeeDisplayName(e) || 'Chưa đặt tên'} — ${e.email || 'không có email'}` }));
   const isSearchingActor = platformMode ? isSearchingPlatformUsers : isSearchingEmployees;
   // Auth state hydrates client-side. Overlay the current tenant at request time so
   // a tenant admin can never issue an unscoped query during that hydration window.

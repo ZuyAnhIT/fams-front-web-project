@@ -9,6 +9,7 @@ import { BaseModal, BaseSelect } from "@/components/ui";
 import { useTransferOwner } from "../hooks/use-tenant";
 import { useEmployees } from "@/features/customer/employee/hooks/use-employee";
 import { useDebounce } from "@/hooks/useDebounce";
+import { getEmployeeDisplayName } from "@/utils/name.util";
 import { getApiErrorMessage } from "@/utils/api-error.util";
 import { useTenantStore } from "@/stores/tenant.store";
 import type { Tenant, TenantOperationalDetail } from "../types/tenant.type";
@@ -52,8 +53,10 @@ export const TransferOwnerModal: React.FC<TransferOwnerModalProps> = ({ open, on
   const selectedUserId = useWatch({ control, name: "newOwnerUserId" });
   // Chủ sở hữu hiện tại không thể tự chuyển cho chính mình.
   const employeeOptions = (employeesData?.content || [])
-    .filter((e) => e.userId !== tenant.ownerId)
-    .map((e) => ({ value: e.userId, label: `${e.fullName} — ${e.email || "không có email"}` }));
+    .filter((e) => e.userId && e.userId !== tenant.ownerId)
+    // The employee list API returns firstName/lastName but not fullName — `${e.fullName}` used
+    // to render a literal "undefined — email". Same fix as the audit actor filter / #11.
+    .map((e) => ({ value: e.userId as string, label: `${getEmployeeDisplayName(e) || "Chưa đặt tên"} — ${e.email || "không có email"}` }));
   const selectedLabel = employeeOptions.find((o) => o.value === selectedUserId)?.label;
 
   const onSubmit = async (values: TransferOwnerFormValues) => {

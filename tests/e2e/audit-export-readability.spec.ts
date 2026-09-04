@@ -57,4 +57,44 @@ test.describe("#audit-readability — live backend", () => {
       expect(await modal.first().innerText()).not.toContain("role_assigned");
     }
   });
+
+  // #18b — the "Người thao tác" filter (company mode) searched employees and rendered
+  // `${e.fullName} — ${email}`, but the list API has no fullName → every option showed
+  // "undefined — email@...". Must now show a real "Họ Tên".
+  test("actor filter options show a real name, not 'undefined'", async ({ page, request }) => {
+    const login = (await (await request.post(`${backendUrl}/api/v1/auth/login`, {
+      data: { identifier: "duyanh19102005@gmail.com", password: "Admin@1234" },
+    })).json()).data;
+    await page.addInitScript(({ accessToken, refreshToken, userId, tenantId }) => {
+      const now = new Date().toISOString();
+      localStorage.setItem("fams_access_token", accessToken);
+      localStorage.setItem("fams_refresh_token", refreshToken);
+      localStorage.setItem("fams_user", JSON.stringify({
+        id: userId, email: "e2e@fams.vn", displayName: "QA", emailVerified: true, active: true,
+        createdAt: now, updatedAt: now, role: "TENANT_ADMIN", tenantId,
+        permissions: ["audit:list", "audit:read", "employees:list"],
+        memberships: [{ id: "m", userId, roleId: "ta", tenantId, siteIds: [], roleName: "TENANT_ADMIN" }],
+      }));
+    }, { accessToken: login.accessToken, refreshToken: login.refreshToken, userId: login.userId, tenantId: login.activeTenantId });
+
+    await page.setViewportSize({ width: 1600, height: 900 });
+    await page.goto("/customer/audit-logs");
+    await page.waitForLoadState("networkidle");
+
+    // First combobox in "Bộ lọc điều tra" is the actor filter (company mode has no tenant select).
+    const actorSelect = page.getByRole("combobox").first();
+    await actorSelect.click();
+    await actorSelect.fill("Nguy");
+    await page.waitForTimeout(1600);
+    await page.screenshot({ path: `${evidenceDir}/actor-filter.png` });
+
+    const options = page.locator(".ant-select-dropdown:visible .ant-select-item-option-content");
+    const count = await options.count();
+    expect(count).toBeGreaterThan(0);
+    for (let i = 0; i < count; i++) {
+      const text = (await options.nth(i).innerText()).trim();
+      expect(text.startsWith("undefined")).toBe(false);
+      expect(text).toContain("—"); // "Họ Tên — email"
+    }
+  });
 });
