@@ -89,7 +89,11 @@ export default function RandomCheckConfigManagement() {
     {
       title: "Khung giờ",
       key: "window",
-      render: (_, record) => `${record.allowedStartTime.slice(0, 5)}–${record.allowedEndTime.slice(0, 5)}`,
+      render: (_, record) => record.windowMode === "full_shift"
+        ? "Toàn bộ từng ca"
+        : record.allowedStartTime && record.allowedEndTime
+          ? `${record.allowedStartTime.slice(0, 5)}–${record.allowedEndTime.slice(0, 5)}`
+          : "Chưa cấu hình",
     },
     {
       title: "Trạng thái",

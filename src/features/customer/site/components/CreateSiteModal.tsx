@@ -189,9 +189,9 @@ export default function CreateSiteModal({ isOpen, onClose }: CreateSiteModalProp
               >
                 <BaseSelect 
                   options={[
-                    { value: "Asia/Ho_Chi_Minh", label: "Asia/Ho_Chi_Minh (GMT+7)" },
-                    { value: "UTC", label: "UTC (GMT+0)" }
+                    { value: "Asia/Ho_Chi_Minh", label: "Giờ Việt Nam (GMT+7)" }
                   ]}
+                  disabled
                 />
               </Form.Item>
 

@@ -1,5 +1,7 @@
 import type { CheckinPolicy } from "../../checkin/constants/checkin-policy";
 
+export type RandomCheckPolicy = "inherit" | "enabled" | "disabled";
+
 export interface ShiftResponse {
   id: string;
   siteId: string;
@@ -17,6 +19,8 @@ export interface ShiftResponse {
   status: "active" | "inactive";
   isDefault: boolean;
   checkinPolicyOverride: CheckinPolicy | null;
+  randomCheckPolicy: RandomCheckPolicy;
+  manualCheckPolicy: RandomCheckPolicy;
   createdBy: string;
   createdAt: string;
   updatedAt: string;
@@ -30,6 +34,8 @@ export interface CreateShiftRequest {
   endTime: string;
   allowOvernight: boolean;
   checkinPolicyOverride?: CheckinPolicy | null;
+  randomCheckPolicy?: RandomCheckPolicy;
+  manualCheckPolicy?: RandomCheckPolicy;
   isDefault?: boolean;
 }
 
@@ -41,6 +47,8 @@ export interface UpdateShiftRequest {
   status?: "active" | "inactive";
   checkinPolicyOverride?: CheckinPolicy;
   clearCheckinPolicyOverride?: boolean;
+  randomCheckPolicy?: RandomCheckPolicy;
+  manualCheckPolicy?: RandomCheckPolicy;
   isDefault?: boolean;
 }
 

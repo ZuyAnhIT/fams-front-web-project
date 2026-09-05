@@ -1,8 +1,9 @@
 "use client";
 
-import { Alert, Descriptions, Progress, Tag } from "antd";
-import { CreditCard, Gauge, Mail } from "lucide-react";
+import { Descriptions, Progress, Tag } from "antd";
+import { CreditCard, Gauge } from "lucide-react";
 import type { TenantOperationalDetail } from "../types/tenant.type";
+import BillingCheckoutPanel from "@/features/shared/billing/components/BillingCheckoutPanel";
 
 function UsageMetric({
   label,
@@ -98,24 +99,15 @@ export default function TenantUsagePanel({ tenant }: { tenant: TenantOperational
         </div>
       </div>
 
-      <Alert
-        showIcon
-        type="info"
-        title="Cần nâng cấp hoặc thay đổi gói?"
-        description={
-          <span>
-            Thanh toán tự phục vụ chưa được mở. Chủ sở hữu gửi yêu cầu để đội ngũ FAMS
-            kiểm tra nhu cầu và thực hiện đổi gói; giao diện này không gọi API quản trị subscription.
-          </span>
-        }
-        action={
-          <a
-            href={`mailto:support@fams.vn?subject=${encodeURIComponent(`Yêu cầu nâng cấp gói - ${tenant.name}`)}`}
-            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 font-semibold !text-white"
-          >
-            <Mail className="h-4 w-4" aria-hidden="true" /> Liên hệ nâng cấp
-          </a>
-        }
+      <BillingCheckoutPanel
+        tenantId={tenant.id}
+        currentSubscription={{
+          planId: tenant.planId,
+          planDisplayName: tenant.planDisplayName || tenant.planName,
+          status: tenant.subscriptionStatus,
+          billingCycle: tenant.billingCycle,
+          expiresAt: tenant.subscriptionExpiresAt,
+        }}
       />
 
       <p className="text-xs text-slate-500">

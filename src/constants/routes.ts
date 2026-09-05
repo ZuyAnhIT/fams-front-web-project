@@ -15,6 +15,7 @@ export const ROUTES = {
 export const ADMIN_ROUTES = {
   DASHBOARD: "/admin/dashboard",
   PLANS: "/admin/plans",
+  BILLING: "/admin/billing",
   TENANTS: "/admin/tenants",
   ROLES: "/admin/settings/roles",
   USERS: "/admin/users",
@@ -41,6 +42,7 @@ export const CUSTOMER_ROUTES = {
   WORKSPACES: "/customer/workspaces",
   SELECT_COMPANY: "/customer/select-company",
   NOTIFICATIONS: "/customer/notifications",
+  BILLING: "/customer/billing",
   AUDIT_LOGS: "/customer/audit-logs",
   NOTIFICATION_TEMPLATES: "/customer/settings/notification-templates",
   HELP: "/customer/help",

@@ -152,21 +152,23 @@ export default function PlanFormModal({ open, onClose, initialData }: PlanFormMo
           <FormInput
             control={control}
             name="priceMonthly"
-            label="Giá thuê bao tháng ($)"
-            placeholder="0.00"
+            label="Giá thuê bao tháng (VND)"
+            placeholder="Ví dụ: 20000"
             error={errors.priceMonthly}
             required
             type="number"
+            helpText="Nhập số VND nguyên, không dùng phần thập phân."
             labelClassName="!text-slate-800"
           />
           <FormInput
             control={control}
             name="priceYearly"
-            label="Giá thuê bao năm ($)"
-            placeholder="0.00"
+            label="Giá thuê bao năm (VND)"
+            placeholder="Ví dụ: 200000"
             error={errors.priceYearly}
             required
             type="number"
+            helpText="Có thể đặt bằng giá 10 tháng để ưu đãi 2 tháng."
             labelClassName="!text-slate-800"
           />
         </div>

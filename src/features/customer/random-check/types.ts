@@ -89,6 +89,8 @@ export type RandomCheckMode =
   | "location_face"
   | "location_face_liveness";
 
+export type RandomCheckWindowMode = "full_shift" | "custom_window";
+
 export interface RandomCheckConfigResponse {
   id: string;
   tenantId: string;
@@ -97,11 +99,13 @@ export interface RandomCheckConfigResponse {
   minIntervalMinutes: number;
   allowedStartTime: string;
   allowedEndTime: string;
+  windowMode: RandomCheckWindowMode;
   checkMode: RandomCheckMode;
   applicableRoles: string[];
   responseWindowSeconds: number;
   failureEscalationThreshold: number;
   active: boolean;
+  manualChecksAllowed: boolean;
   createdBy: string;
   createdAt: string;
   updatedAt: string;
@@ -113,10 +117,12 @@ export interface RandomCheckConfigPayload {
   minIntervalMinutes: number;
   allowedStartTime: string;
   allowedEndTime: string;
+  windowMode: RandomCheckWindowMode;
   checkMode: RandomCheckMode;
   applicableRoles: string[];
   responseWindowSeconds: number;
   failureEscalationThreshold?: number;
+  manualChecksAllowed?: boolean;
 }
 
 export interface UpdateRandomCheckConfigPayload
@@ -129,4 +135,14 @@ export interface ManualCheckPayload {
   employeeId: string;
   reason: string;
   checkMode?: RandomCheckMode;
+}
+
+export interface ManualCheckCandidate {
+  employeeId: string;
+  employeeName: string;
+  employeeCode: string | null;
+  checkinId: string;
+  checkInAt: string;
+  shiftId: string;
+  shiftName: string | null;
 }

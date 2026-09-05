@@ -2,6 +2,7 @@ import { apiClient } from "@/services/api-client";
 import type { ApiResponse, PageResponse } from "@/types/api";
 import type {
   ManualCheckPayload,
+  ManualCheckCandidate,
   ScheduledCheckDetailResponse,
   ScheduledCheckListParams,
   ScheduledCheckResponse,
@@ -9,6 +10,14 @@ import type {
 } from "../types";
 
 export const scheduledCheckService = {
+  async manualCandidates(tenantId: string, siteId: string) {
+    const response = await apiClient.get<ApiResponse<ManualCheckCandidate[]>>(
+      `/tenants/${tenantId}/scheduled-checks/manual-candidates`,
+      { params: { siteId } },
+    );
+    return response.data.data;
+  },
+
   async list(params: ScheduledCheckListParams): Promise<ApiResponse<PageResponse<ScheduledCheckResponse>>> {
     const { tenantId, ...query } = params;
     const response = await apiClient.get<ApiResponse<PageResponse<ScheduledCheckResponse>>>(

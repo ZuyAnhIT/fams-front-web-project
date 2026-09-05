@@ -168,7 +168,8 @@ export default function CreateTenantModal({ open, onClose }: CreateTenantModalPr
           <FormInput control={control} name="domain" label="Tên miền" error={errors.domain} />
           <FormInput control={control} name="industry" label="Lĩnh vực" error={errors.industry} />
           <FormInput control={control} name="countryCode" label="Mã quốc gia" error={errors.countryCode} />
-          <FormInput control={control} name="timezone" label="Múi giờ" error={errors.timezone} />
+          <FormInput control={control} name="timezone" label="Múi giờ" error={errors.timezone}
+            disabled helpText="Cố định theo giờ Việt Nam (GMT+7)" />
           <FormInput control={control} name="locale" label="Ngôn ngữ" error={errors.locale} />
           <FormInput control={control} name="currencyCode" label="Tiền tệ" error={errors.currencyCode} />
         </div>

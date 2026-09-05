@@ -209,6 +209,18 @@ export default function ShiftManagementTab({
               <Tag>Kế thừa công trình</Tag>
             )}
           </div>
+          <div>
+            Kiểm tra tự động:{" "}
+            <Tag color={shift.randomCheckPolicy === "disabled" ? "default" : shift.randomCheckPolicy === "enabled" ? "green" : "blue"}>
+              {shift.randomCheckPolicy === "disabled" ? "Tắt" : shift.randomCheckPolicy === "enabled" ? "Bật riêng" : "Kế thừa"}
+            </Tag>
+          </div>
+          <div>
+            Kiểm tra thủ công:{" "}
+            <Tag color={shift.manualCheckPolicy === "disabled" ? "default" : shift.manualCheckPolicy === "enabled" ? "green" : "blue"}>
+              {shift.manualCheckPolicy === "disabled" ? "Tắt" : shift.manualCheckPolicy === "enabled" ? "Cho phép riêng" : "Kế thừa"}
+            </Tag>
+          </div>
         </div>
       ),
     },

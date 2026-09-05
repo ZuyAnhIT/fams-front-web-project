@@ -32,8 +32,10 @@ export default function Sidebar({ variant = "desktop", onNavigate }: SidebarProp
   const pathname = usePathname();
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
+  const isPlatformSession = user?.role === SystemRole.PLATFORM_ADMIN
+    || user?.role === SystemRole.PLATFORM_STAFF;
   const shouldCheckOwner = Boolean(
-    user?.tenantId && (
+    !isPlatformSession && user?.tenantId && (
       user.role === SystemRole.TENANT_ADMIN ||
       user.memberships?.some(
         (membership) =>
@@ -139,21 +141,23 @@ export default function Sidebar({ variant = "desktop", onNavigate }: SidebarProp
         !isMobile && isCollapsed ? "px-2" : "px-4"
       )}>
         {SIDEBAR_MENU.filter((item) => {
+          const isPlatformMenu = item.path.startsWith("/admin");
+          // Platform and company workspaces are separate security scopes. Platform
+          // permissions must never make company navigation appear in a platform session.
+          if (isPlatformSession !== isPlatformMenu) return false;
           if (item.requiresTenant && !user?.tenantId) return false;
           if (user?.role && item.excludedRoles?.includes(user.role)) return false;
           const isOwnerMenu = [
             CUSTOMER_ROUTES.TENANT_SETTINGS,
             CUSTOMER_ROUTES.TENANT_MEMBERS,
+            CUSTOMER_ROUTES.BILLING,
           ].includes(item.path);
-          if (item.path === CUSTOMER_ROUTES.TENANT_SETTINGS && !isActiveTenantOwner) {
+          if ([CUSTOMER_ROUTES.TENANT_SETTINGS, CUSTOMER_ROUTES.BILLING].includes(item.path)
+              && !isActiveTenantOwner) {
             return false;
           }
           if (isOwnerMenu && isActiveTenantOwner) return true;
-          // Platform Admin bypasses per-permission gating everywhere except excludedRoles above —
-          // mirrors the backend's callerIsPlatformAdmin bypass and auth.store's hasPermission().
-          // Found via #91-95 UI test (2026-08-18): a Platform Admin acting inside a tenant they
-          // also hold TENANT_ADMIN in couldn't even see nav items gated by allowedPermissions
-          // (e.g. "Kiểm tra ngẫu nhiên"), despite the backend allowing the action.
+          // Platform Admin bypasses permission gating within the platform menu only.
           if (user?.role === "PLATFORM_ADMIN") return true;
           // Nếu item không yêu cầu role cụ thể, ai cũng xem được
           if (
