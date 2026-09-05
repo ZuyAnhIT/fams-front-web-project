@@ -40,7 +40,7 @@ export default function UpdateTenantForm({
       domain: tenant?.domain || "",
       industry: tenant?.industry || "",
       countryCode: tenant?.countryCode || "",
-      timezone: tenant?.timezone || "UTC",
+      timezone: "Asia/Ho_Chi_Minh",
       locale: tenant?.locale || "en",
       currencyCode: tenant && "currencyCode" in tenant ? tenant.currencyCode || "" : "",
     },
@@ -53,7 +53,7 @@ export default function UpdateTenantForm({
       domain: tenant?.domain || "",
       industry: tenant?.industry || "",
       countryCode: tenant?.countryCode || "",
-      timezone: tenant?.timezone || "UTC",
+      timezone: "Asia/Ho_Chi_Minh",
       locale: tenant?.locale || "en",
       currencyCode: tenant && "currencyCode" in tenant ? tenant.currencyCode || "" : "",
     });
@@ -160,6 +160,8 @@ export default function UpdateTenantForm({
             label="Múi giờ"
             placeholder="Ví dụ: Asia/Ho_Chi_Minh"
             error={errors.timezone}
+            disabled
+            helpText="Cố định theo giờ Việt Nam (GMT+7)"
             labelClassName="!text-slate-700 !font-semibold !text-sm"
           />
 

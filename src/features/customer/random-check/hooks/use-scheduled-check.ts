@@ -11,7 +11,18 @@ export const scheduledCheckKeys = {
     ["scheduled-checks", "detail", tenantId, checkId] as const,
   photo: (tenantId: string, checkId: string | null) =>
     ["scheduled-checks", "photo", tenantId, checkId] as const,
+  manualCandidates: (tenantId: string, siteId: string) =>
+    ["scheduled-checks", "manual-candidates", tenantId, siteId] as const,
 };
+
+export function useManualCheckCandidates(tenantId: string, siteId: string, enabled: boolean) {
+  return useQuery({
+    queryKey: scheduledCheckKeys.manualCandidates(tenantId, siteId),
+    queryFn: () => scheduledCheckService.manualCandidates(tenantId, siteId),
+    enabled: Boolean(tenantId && siteId) && enabled,
+    refetchInterval: enabled ? 30_000 : false,
+  });
+}
 
 export function useScheduledChecksQuery(params: ScheduledCheckListParams, enabled: boolean) {
   return useQuery({

@@ -28,7 +28,11 @@ export default function RandomCheckConfigSummary({
         {config.checksPerShift} lần
       </Descriptions.Item>
       <Descriptions.Item label="Khung giờ">
-        {config.allowedStartTime.slice(0, 5)}–{config.allowedEndTime.slice(0, 5)}
+        {config.windowMode === "full_shift"
+          ? "Toàn bộ thời gian từng ca"
+          : config.allowedStartTime && config.allowedEndTime
+            ? `${config.allowedStartTime.slice(0, 5)}–${config.allowedEndTime.slice(0, 5)}`
+            : "Chưa cấu hình khung giờ"}
       </Descriptions.Item>
       <Descriptions.Item label="Khoảng cách tối thiểu">
         {config.minIntervalMinutes} phút
@@ -45,6 +49,11 @@ export default function RandomCheckConfigSummary({
       </Descriptions.Item>
       <Descriptions.Item label="Ngưỡng cảnh báo tháng">
         {config.failureEscalationThreshold} lần fail/không phản hồi
+      </Descriptions.Item>
+      <Descriptions.Item label="Kiểm tra thủ công">
+        <Tag color={config.manualChecksAllowed ? "success" : "default"}>
+          {config.manualChecksAllowed ? "Cho phép" : "Không cho phép"}
+        </Tag>
       </Descriptions.Item>
     </Descriptions>
   );

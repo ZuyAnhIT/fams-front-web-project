@@ -39,9 +39,11 @@ export const authMapper = {
     return {
       ...profile,
       role: isPlatformAdmin ? SystemRole.PLATFORM_ADMIN : tenantRole,
-      tenantId: tenantId,
+      tenantId: isPlatformAdmin ? null : tenantId,
       permissions: permissions,
-      memberships: userRoles,
+      memberships: isPlatformAdmin
+        ? userRoles?.filter((assignment) => assignment.tenantId == null)
+        : userRoles,
     };
   },
 };

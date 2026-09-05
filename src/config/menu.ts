@@ -29,6 +29,13 @@ export const SIDEBAR_MENU: MenuItem[] = [
     allowedRoles: [SystemRole.PLATFORM_ADMIN]
   },
   {
+    title: "Thanh toán",
+    path: ADMIN_ROUTES.BILLING,
+    icon: "ReceiptText",
+    allowedRoles: [SystemRole.PLATFORM_ADMIN, SystemRole.PLATFORM_STAFF],
+    allowedPermissions: ["billing:list", "billing:read"],
+  },
+  {
     title: "Công ty",
     path: ADMIN_ROUTES.TENANTS,
     icon: "Building2",
@@ -157,6 +164,12 @@ export const SIDEBAR_MENU: MenuItem[] = [
     title: "Cấu hình Công ty",
     path: CUSTOMER_ROUTES.TENANT_SETTINGS,
     icon: "Building",
+    requiresTenant: true,
+  },
+  {
+    title: "Gói & thanh toán",
+    path: CUSTOMER_ROUTES.BILLING,
+    icon: "CreditCard",
     requiresTenant: true,
   },
   {

@@ -38,6 +38,7 @@ const PAGE_TITLES: Array<{ match: (path: string) => boolean; title: string; area
   { match: (path) => path.startsWith("/admin/tenants/"), title: "Chi tiết công ty", area: "Công ty" },
   { match: (path) => path === "/admin/tenants", title: "Danh sách công ty", area: "Quản trị nền tảng" },
   { match: (path) => path === "/admin/plans", title: "Gói dịch vụ", area: "Quản trị nền tảng" },
+  { match: (path) => path === "/admin/billing", title: "Thanh toán", area: "Quản trị nền tảng" },
   { match: (path) => path.startsWith("/admin/settings/roles"), title: "Vai trò và phân quyền", area: "Cài đặt" },
   { match: (path) => path === "/admin/users", title: "Nhân sự FAMS", area: "Quản trị nền tảng" },
   { match: (path) => path === "/admin/audit-logs", title: "Audit toàn hệ thống", area: "An toàn & tuân thủ" },
@@ -85,6 +86,8 @@ export default function Header({ onOpenMenu }: HeaderProps) {
   const pathname = usePathname();
   const logoutMutation = useLogout();
   const pageContext = getPageContext(pathname);
+  const isPlatformSession = user?.role === SystemRole.PLATFORM_ADMIN
+    || user?.role === SystemRole.PLATFORM_STAFF;
 
   const handleLogout = async () => {
     if (typeof window !== "undefined") {
@@ -115,7 +118,7 @@ export default function Header({ onOpenMenu }: HeaderProps) {
     // Always-visible path to the company picker / "create another company" flow. Without
     // this a user who owns exactly one company has no way to reach it: the header's
     // TenantSwitcher only appears once there are 2+ companies. (issue #04)
-    ...(user?.tenantId
+    ...(!isPlatformSession && user?.tenantId
       ? [
           {
             key: "companies",
@@ -170,9 +173,9 @@ export default function Header({ onOpenMenu }: HeaderProps) {
       </div>
 
       <div className="flex items-center gap-1 sm:gap-2">
-        <GlobalSearch />
-        {user?.tenantId && <TenantSwitcher />}
-        {user?.tenantId && <NotificationBell />}
+        {!isPlatformSession && <GlobalSearch />}
+        {!isPlatformSession && user?.tenantId && <TenantSwitcher />}
+        {!isPlatformSession && user?.tenantId && <NotificationBell />}
 
         <Dropdown menu={{ items: menuItems }} trigger={["click"]} placement="bottomRight">
           <button

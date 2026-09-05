@@ -49,6 +49,7 @@ export interface TenantOperationalDetail {
   status: TenantStatus;
   ownerId: string;
   createdAt: string;
+  planId?: string | null;
   planName?: string | null;
   planDisplayName?: string | null;
   subscriptionStatus?: "TRIAL" | "ACTIVE" | "EXPIRED" | "CANCELLED" | null;

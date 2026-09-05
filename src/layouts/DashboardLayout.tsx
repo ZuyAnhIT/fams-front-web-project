@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth.store";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 import { ROUTES } from "@/constants/routes";
+import { SystemRole } from "@/features/customer/auth/types/auth.type";
+import { resolvePostLoginRoute } from "@/utils/route.util";
 import NotificationWatcher from "@/features/customer/notification/components/NotificationWatcher";
 import MobileNav from "./MobileNav";
 
@@ -14,9 +16,17 @@ interface DashboardLayoutProps {
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
-  const { isAuthenticated, isInitialized, initialize } = useAuthStore();
+  const { user, isAuthenticated, isInitialized, initialize } = useAuthStore();
   const router = useRouter();
+  const pathname = usePathname();
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+  const isPlatformSession = user?.role === SystemRole.PLATFORM_ADMIN
+    || user?.role === SystemRole.PLATFORM_STAFF;
+  const isPersonalSettingsRoute = /^\/customer\/settings(?:\/(?:password|totp|sessions|notifications|permissions))?$/.test(pathname);
+  const hasWrongWorkspace = Boolean(
+    (isPlatformSession && pathname.startsWith("/customer") && !isPersonalSettingsRoute)
+    || (!isPlatformSession && pathname.startsWith("/admin")),
+  );
 
   // Khởi tạo trạng thái xác thực từ localStorage khi mount
   useEffect(() => {
@@ -47,8 +57,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   }, [isInitialized, isAuthenticated, router]);
 
+  useEffect(() => {
+    if (isInitialized && isAuthenticated && hasWrongWorkspace) {
+      router.replace(resolvePostLoginRoute(user ?? undefined));
+    }
+  }, [hasWrongWorkspace, isAuthenticated, isInitialized, router, user]);
+
   // Loading state khi đang kiểm tra token hoặc đang redirect
-  if (!isInitialized || !isAuthenticated) {
+  if (!isInitialized || !isAuthenticated || hasWrongWorkspace) {
     return (
       <div className="flex min-h-dvh items-center justify-center bg-slate-50 text-slate-900" role="status" aria-live="polite">
         <div className="flex flex-col items-center gap-4">
@@ -84,7 +100,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       </div>
 
       {/* Watcher: poll + show toast on new notifications */}
-      <NotificationWatcher />
+      {!isPlatformSession && <NotificationWatcher />}
     </div>
   );
 }

@@ -14,7 +14,7 @@ import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import { useAuthStore } from "@/stores/auth.store";
 import { useCreateShiftMutation, useUpdateShiftMutation } from "../hooks/use-shift";
-import { ShiftResponse } from "../types/shift.type";
+import { ShiftResponse, type RandomCheckPolicy } from "../types/shift.type";
 import {
   CHECKIN_POLICY_META,
   CHECKIN_POLICY_OPTIONS,
@@ -70,6 +70,8 @@ export default function ShiftFormModal({
           inheritPolicy: !activeShift.checkinPolicyOverride,
           checkinPolicyOverride:
             activeShift.checkinPolicyOverride || "gps_only",
+          randomCheckPolicy: activeShift.randomCheckPolicy || "inherit",
+          manualCheckPolicy: activeShift.manualCheckPolicy || "inherit",
           status: activeShift.status === "active",
           isDefault: activeShift.isDefault,
         });
@@ -79,6 +81,8 @@ export default function ShiftFormModal({
           allowOvernight: false,
           inheritPolicy: true,
           checkinPolicyOverride: "gps_only",
+          randomCheckPolicy: "inherit",
+          manualCheckPolicy: "inherit",
           status: true,
           isDefault: false,
         });
@@ -93,6 +97,8 @@ export default function ShiftFormModal({
     allowOvernight: boolean;
     inheritPolicy: boolean;
     checkinPolicyOverride?: CheckinPolicy;
+    randomCheckPolicy: RandomCheckPolicy;
+    manualCheckPolicy: RandomCheckPolicy;
     status?: boolean;
     isDefault?: boolean;
   }) => {
@@ -127,6 +133,8 @@ export default function ShiftFormModal({
             clearCheckinPolicyOverride:
               values.inheritPolicy &&
               Boolean(activeShift.checkinPolicyOverride),
+            randomCheckPolicy: values.randomCheckPolicy,
+            manualCheckPolicy: values.manualCheckPolicy,
             status: values.status ? "active" : "inactive",
             isDefault: values.isDefault,
           },
@@ -156,6 +164,8 @@ export default function ShiftFormModal({
             checkinPolicyOverride: values.inheritPolicy
               ? undefined
               : values.checkinPolicyOverride,
+            randomCheckPolicy: values.randomCheckPolicy,
+            manualCheckPolicy: values.manualCheckPolicy,
             isDefault: values.isDefault,
           },
         },
@@ -310,6 +320,36 @@ export default function ShiftFormModal({
               />
             </Form.Item>
           )}
+        </div>
+
+        <div className="mb-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <div className="mb-3 font-medium text-slate-700">Kiểm tra ngẫu nhiên của ca</div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Form.Item
+              name="randomCheckPolicy"
+              label="Lịch kiểm tra tự động"
+              className="mb-0"
+              extra="Kế thừa cấu hình công trình/công ty hoặc loại trừ riêng ca này."
+            >
+              <BaseSelect options={[
+                { value: "inherit", label: "Kế thừa" },
+                { value: "enabled", label: "Luôn bật cho ca" },
+                { value: "disabled", label: "Tắt cho ca" },
+              ]} />
+            </Form.Item>
+            <Form.Item
+              name="manualCheckPolicy"
+              label="Kiểm tra thủ công ngay"
+              className="mb-0"
+              extra="Có thể kiểm soát riêng với lịch tự động."
+            >
+              <BaseSelect options={[
+                { value: "inherit", label: "Kế thừa" },
+                { value: "enabled", label: "Cho phép cho ca" },
+                { value: "disabled", label: "Không cho phép cho ca" },
+              ]} />
+            </Form.Item>
+          </div>
         </div>
 
         {isUpdate && (

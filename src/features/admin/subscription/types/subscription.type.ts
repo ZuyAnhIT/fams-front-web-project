@@ -19,6 +19,7 @@ export interface PlanLimitsResponse {
   maxSites?: number;
   maxStorageGb?: number;
   maxRandomChecksPerMonth?: number;
+  maxExportsPerMonth?: number;
 }
 
 export interface CreatePlanPayload {

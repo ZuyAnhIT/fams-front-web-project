@@ -1,11 +1,10 @@
 "use client";
 
-import { useMemo } from "react";
 import { Alert, Form, Input, Select } from "antd";
+import dayjs from "dayjs";
 import BaseModal from "@/components/ui/BaseModal";
-import { useAssignments } from "@/features/customer/assignment/hooks/use-assignments";
 import { useEffectiveRandomCheckConfig } from "../hooks/use-random-check";
-import { useTriggerManualCheck } from "../hooks/use-scheduled-check";
+import { useManualCheckCandidates, useTriggerManualCheck } from "../hooks/use-scheduled-check";
 import type { ManualCheckPayload, RandomCheckMode, ScheduledCheckResponse } from "../types";
 
 interface Props {
@@ -35,27 +34,14 @@ export default function ManualRandomCheckModal({
   const [form] = Form.useForm<ManualCheckPayload>();
   const siteId = Form.useWatch("siteId", form) || "";
   const selectedMode = Form.useWatch("checkMode", form) as RandomCheckMode | undefined;
-  const assignments = useAssignments(tenantId, siteId, {
-    status: "active",
-    page: 0,
-    size: 100,
-    sortBy: "createdAt",
-    sortDir: "desc",
-  });
+  const candidates = useManualCheckCandidates(tenantId, siteId, Boolean(open && siteId));
   const effectiveConfig = useEffectiveRandomCheckConfig(tenantId, siteId, Boolean(open && siteId));
   const trigger = useTriggerManualCheck();
 
-  const employeeOptions = useMemo(() => {
-    const unique = new Map<string, string>();
-    for (const assignment of assignments.data?.data?.content ?? []) {
-      if (assignment.employeeSummary?.status !== "active") continue;
-      unique.set(
-        assignment.employeeId,
-        `${assignment.employeeSummary?.fullName || assignment.employeeId}${assignment.employeeSummary?.employeeCode ? ` (${assignment.employeeSummary.employeeCode})` : ""}`,
-      );
-    }
-    return [...unique].map(([value, label]) => ({ value, label }));
-  }, [assignments.data?.data?.content]);
+  const employeeOptions = (candidates.data ?? []).map((candidate) => ({
+    value: candidate.employeeId,
+    label: `${candidate.employeeName}${candidate.employeeCode ? ` (${candidate.employeeCode})` : ""} · ${candidate.shiftName || "Ca làm"} · vào ${dayjs(candidate.checkInAt).format("HH:mm")}`,
+  }));
 
   const mode = selectedMode || effectiveConfig.data?.checkMode;
 
@@ -96,10 +82,13 @@ export default function ManualRandomCheckModal({
           type="warning"
           showIcon
           title="Đây là kiểm tra nhắm đích danh"
-          description="Thao tác chủ động bỏ qua bộ lọc vai trò của policy. Lý do là bắt buộc và được lưu để audit; nhân viên vẫn phải có phân công active tại site hôm nay."
+          description="Thao tác chủ động bỏ qua bộ lọc vai trò. Lý do được lưu để audit và hệ thống chỉ gửi khi nhân viên đang có phiên chấm công mở tại đúng công trình."
         />
         {trigger.isError && (
           <Alert type="error" showIcon title="Không thể gửi kiểm tra" description={getErrorMessage(trigger.error)} />
+        )}
+        {siteId && candidates.isError && (
+          <Alert type="error" showIcon title="Không thể tải người đang có mặt" description={getErrorMessage(candidates.error)} />
         )}
         <Form
           form={form}
@@ -126,15 +115,15 @@ export default function ManualRandomCheckModal({
               description="Hãy tạo tenant-default hoặc site override trước khi gửi kiểm tra thủ công."
             />
           )}
-          <Form.Item label="Nhân viên đang được phân công" name="employeeId" rules={[{ required: true, message: "Chọn nhân viên." }]}>
+          <Form.Item label="Nhân viên đang có mặt và được phép kiểm tra" name="employeeId" rules={[{ required: true, message: "Chọn nhân viên." }]}>
             <Select
               showSearch
               optionFilterProp="label"
-              loading={assignments.isLoading}
+              loading={candidates.isLoading}
               disabled={!siteId}
               options={employeeOptions}
-              placeholder={siteId ? "Chọn nhân viên active tại site" : "Chọn công trình trước"}
-              notFoundContent="Không có nhân viên active tại site"
+              placeholder={siteId ? "Chọn nhân viên đang check-in" : "Chọn công trình trước"}
+              notFoundContent="Không có nhân viên đang check-in và đủ điều kiện tại công trình"
             />
           </Form.Item>
           <Form.Item label="Mode cho lần kiểm tra này" name="checkMode" extra="Để trống để dùng mode của policy hiệu lực tại site.">
@@ -154,7 +143,9 @@ export default function ManualRandomCheckModal({
               type="info"
               showIcon
               title="Mode yêu cầu Face ID đã enrolled"
-              description="Nếu nhân viên chưa đăng ký hoặc hồ sơ đã bị thu hồi, lượt kiểm tra sẽ fail ngay."
+              description={selectedMode
+                ? "Bạn đang chọn mode Face ID rõ ràng; nhân viên không có hồ sơ hợp lệ có thể phát sinh face_fail."
+                : "Nếu mode được kế thừa từ policy mà nhân viên chưa có Face ID hợp lệ, backend sẽ hạ an toàn về chỉ GPS."}
             />
           )}
           <Form.Item

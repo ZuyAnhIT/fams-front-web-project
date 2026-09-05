@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Plus, Edit2, Settings2, ShieldAlert, Star } from "lucide-react";
-import { Switch, App, Tag, Modal, Alert } from "antd";
+import { Switch, App, Tag, Modal, Alert, Segmented } from "antd";
 import BaseButton from "@/components/ui/BaseButton";
 import BaseSelect from "@/components/ui/BaseSelect";
 import { usePagination } from "@/hooks/usePagination";
@@ -23,6 +23,21 @@ export default function PlanListPage() {
   const [selectedPlan, setSelectedPlan] = useState<PlanResponse | null>(null);
   const [planToDeactivate, setPlanToDeactivate] = useState<PlanResponse | null>(null);
   const [migrateToPlanId, setMigrateToPlanId] = useState<string>();
+  const [planView, setPlanView] = useState<"catalog" | "all">("catalog");
+
+  const isWholeVnd = (value: number) => Number.isSafeInteger(value) && value >= 0;
+  const isCatalogPlan = (plan: PlanResponse) => plan.isActive
+    && isWholeVnd(plan.priceMonthly)
+    && isWholeVnd(plan.priceYearly)
+    && (plan.name === "trial" || (plan.priceMonthly > 0 && plan.priceYearly > 0));
+  const visiblePlans = planView === "catalog" ? plans.filter(isCatalogPlan) : plans;
+  const nonCatalogCount = plans.length - plans.filter(isCatalogPlan).length;
+
+  const money = new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+    maximumFractionDigits: 0,
+  });
 
   const handleEditPlan = (plan: PlanResponse) => {
     setSelectedPlan(plan);
@@ -92,7 +107,7 @@ export default function PlanListPage() {
             Cấu hình Gói dịch vụ
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Thiết lập giá và giới hạn tính năng cho các gói SaaS.
+            Thiết lập giá VND và giới hạn tính năng cho các gói SaaS.
           </p>
         </div>
         <BaseButton
@@ -105,16 +120,43 @@ export default function PlanListPage() {
         </BaseButton>
       </div>
 
+      <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="font-semibold text-slate-800">Phạm vi hiển thị</p>
+          <p className="text-sm text-slate-500">
+            Danh mục thanh toán chỉ gồm các gói đang bán với giá VND hợp lệ.
+          </p>
+        </div>
+        <Segmented
+          value={planView}
+          onChange={(value) => setPlanView(value as "catalog" | "all")}
+          options={[
+            { label: `Đang bán (${plans.filter(isCatalogPlan).length})`, value: "catalog" },
+            { label: `Tất cả dữ liệu (${plans.length})`, value: "all" },
+          ]}
+        />
+      </div>
+
+      {planView === "all" && nonCatalogCount > 0 && (
+        <Alert
+          showIcon
+          type="info"
+          title={`${nonCatalogCount} gói không xuất hiện ở trang thanh toán`}
+          description="Nhóm này gồm gói tạm dừng, gói miễn phí nội bộ hoặc dữ liệu kiểm thử/giá cũ không phải số VND nguyên. Chúng được giữ để quản trị và đối chiếu lịch sử."
+        />
+      )}
+
       {isLoading ? (
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 animate-pulse">
           {[1, 2, 3, 4].map(i => (
             <div key={i} className="h-[420px] bg-slate-100 rounded-[10px] border border-slate-200"></div>
           ))}
         </div>
-      ) : plans && plans.length > 0 ? (
+      ) : visiblePlans.length > 0 ? (
         <div className="relative z-0 grid grid-cols-1 gap-5 pt-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-          {[...plans].sort((a, b) => a.sortOrder - b.sortOrder).map(plan => {
-            const isPro = plan.displayName.toLowerCase().includes("pro");
+          {[...visiblePlans].sort((a, b) => a.sortOrder - b.sortOrder).map(plan => {
+            const isPro = plan.name === "pro";
+            const hasValidVndPrice = isWholeVnd(plan.priceMonthly) && isWholeVnd(plan.priceYearly);
 
             return (
               <div
@@ -136,6 +178,12 @@ export default function PlanListPage() {
                   </div>
                 )}
 
+                {plan.isActive && !isCatalogPlan(plan) && (
+                  <div className="absolute top-5 right-5 z-20">
+                    <Tag color="warning" className="rounded-full px-3 py-0.5 font-semibold">Chưa thể thanh toán</Tag>
+                  </div>
+                )}
+
                 <div className={`p-8 border-b border-slate-100/80 flex-1 rounded-t-[20px] ${isPro ? 'bg-gradient-to-b from-blue-50/40 to-transparent' : ''}`}>
                   <h3 className={`text-2xl font-bold tracking-tight mb-2 ${isPro ? 'text-blue-900' : 'text-slate-900'}`}>
                     {plan.displayName}
@@ -145,12 +193,20 @@ export default function PlanListPage() {
                   </p>
 
                   <div className="flex items-end gap-1 mt-4">
-                    <span className="text-4xl font-bold text-slate-900 tracking-tight">${plan.priceMonthly}</span>
+                    <span className="text-4xl font-bold text-slate-900 tracking-tight">
+                      {plan.priceMonthly === 0 ? "Miễn phí" : money.format(plan.priceMonthly)}
+                    </span>
                     <span className="text-sm font-semibold text-slate-400 mb-1">/tháng</span>
                   </div>
                   <div className="text-xs text-slate-400 mt-2 font-medium">
-                    Thanh toán hàng năm: <span className="text-slate-700 font-bold">${plan.priceYearly}</span>
+                    Thanh toán hàng năm:{" "}
+                    <span className="text-slate-700 font-bold">
+                      {plan.priceYearly === 0 ? "Miễn phí" : money.format(plan.priceYearly)}
+                    </span>
                   </div>
+                  {!hasValidVndPrice && (
+                    <p className="mt-3 text-xs font-semibold text-amber-700">Giá cũ có phần thập phân, cần sửa thành số VND nguyên.</p>
+                  )}
                 </div>
 
                 <div className="p-6 bg-slate-50/50 rounded-b-[20px] flex flex-col gap-5">
@@ -192,7 +248,9 @@ export default function PlanListPage() {
         </div>
       ) : (
         <div className="text-center py-24 bg-white/60 backdrop-blur-sm rounded-[20px] border border-slate-200 border-dashed">
-          <p className="text-slate-500 mb-6 font-medium">Chưa có gói dịch vụ nào được tạo trong hệ thống.</p>
+          <p className="text-slate-500 mb-6 font-medium">
+            {planView === "catalog" ? "Chưa có gói nào đủ điều kiện mở bán." : "Chưa có gói dịch vụ nào trong hệ thống."}
+          </p>
           <BaseButton
             type="primary"
             onClick={handleCreateNew}

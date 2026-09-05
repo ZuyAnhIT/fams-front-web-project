@@ -155,7 +155,7 @@ export default function UpdateSiteModal({ isOpen, onClose, site }: UpdateSiteMod
           address: site.address,
           latitude: site.latitude,
           longitude: site.longitude,
-          timezone: site.timezone,
+          timezone: "Asia/Ho_Chi_Minh",
           checkinPolicy: site.checkinPolicy || "gps_only",
           hidePolygonFromEmployee: site.hidePolygonFromEmployee || false,
           status: site.status === "active",
@@ -196,9 +196,9 @@ export default function UpdateSiteModal({ isOpen, onClose, site }: UpdateSiteMod
             >
               <BaseSelect
                 options={[
-                  { value: "Asia/Ho_Chi_Minh", label: "Asia/Ho_Chi_Minh (GMT+7)" },
-                  { value: "UTC", label: "UTC (GMT+0)" }
+                  { value: "Asia/Ho_Chi_Minh", label: "Giờ Việt Nam (GMT+7)" }
                 ]}
+                disabled
               />
             </Form.Item>
 
