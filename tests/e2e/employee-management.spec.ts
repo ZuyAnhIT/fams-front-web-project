@@ -155,9 +155,14 @@ test("HR phân biệt tạo hồ sơ, mời tài khoản, import và export theo
 
 test("HR được cảnh báo hủy Random Check và rà soát phân công khi cho nghỉ việc", async ({ page }) => {
   await seedUser(page, "TENANT_ADMIN");
+  let changedStatus: Record<string, unknown> | undefined;
   await page.route(`**/api/v1/tenants/${tenantId}/employees?*`, (route) =>
     route.fulfill({ json: api(pageData([employee])) }),
   );
+  await page.route(`**/api/v1/tenants/${tenantId}/employees/${employeeId}/status`, async (route) => {
+    changedStatus = route.request().postDataJSON() as Record<string, unknown>;
+    return route.fulfill({ json: api({ ...employee, status: changedStatus.status }) });
+  });
 
   await page.goto("/customer/employees");
   await page.getByText("Hoạt động", { exact: true }).click();
@@ -166,7 +171,12 @@ test("HR được cảnh báo hủy Random Check và rà soát phân công khi c
   const confirm = page.getByRole("dialog", { name: /Chuyển sang.*Đã nghỉ việc/ });
   await expect(confirm.getByText(/Random Check đang chờ hoặc đã gửi chưa phản hồi sẽ tự động bị hủy/)).toBeVisible();
   await expect(confirm.getByText(/các phân công hiện có không tự kết thúc/)).toBeVisible();
-  await confirm.getByRole("button", { name: "Hủy" }).click();
+  await confirm.getByRole("button", { name: "Xác nhận" }).click();
+  await expect.poll(() => changedStatus).toEqual({ status: "terminated" });
+  await expect(page).toHaveURL(/\/customer\/employees(?:\?|$)/);
+  await expect(page).not.toHaveURL(new RegExp(`/customer/employees/${employeeId}`));
+  await expect(page.getByText("Cập nhật trạng thái thành công")).toBeVisible();
+  await page.screenshot({ path: `${evidenceDir}/06-status-change-stays-on-list.png`, fullPage: true });
 });
 
 test("Chi tiết HR hiển thị workspace, assignment, role và Face ID thật", async ({ page }) => {
@@ -188,6 +198,20 @@ test("Chi tiết HR hiển thị workspace, assignment, role và Face ID thật"
           tenantId,
           siteId: "site-a",
           employeeId,
+          siteSummary: {
+            id: "site-a",
+            name: "Công trình Tây Hồ",
+            code: "AP-TH",
+            address: "Tây Hồ, Hà Nội",
+            timezone: "Asia/Ho_Chi_Minh",
+          },
+          shiftSummary: {
+            id: "shift-afternoon",
+            name: "Ca chiều",
+            startTime: "13:00:00",
+            endTime: "21:00:00",
+            status: "active",
+          },
           startDate: "2026-07-01",
           endDate: null,
           daysOfWeek: ["MONDAY", "FRIDAY"],
@@ -203,11 +227,97 @@ test("Chi tiết HR hiển thị workspace, assignment, role và Face ID thật"
   await page.goto(`/customer/employees/${employeeId}`);
   await page.getByRole("tab", { name: /Workspace & Phân công/ }).click();
   await expect(page.getByText("Đội thi công A")).toBeVisible();
-  await expect(page.getByText(/Site site-a/)).toBeVisible();
+  await expect(page.getByText("Công trình Tây Hồ")).toBeVisible();
+  await expect(page.getByText("Mã công trình: AP-TH")).toBeVisible();
+  await expect(page.getByText("Tây Hồ, Hà Nội")).toBeVisible();
+  await expect(page.getByText("Ca: Ca chiều")).toBeVisible();
+  await expect(page.getByText("13:00 – 21:00")).toBeVisible();
+  await expect(page.getByText("site-a")).toHaveCount(0);
   await expect(page.getByText("Lịch: T2, T6")).toBeVisible();
+  await page.screenshot({ path: `${evidenceDir}/02-employee-detail.png`, fullPage: true });
   await page.getByRole("tab", { name: /Sinh trắc học/ }).click();
   await expect(page.getByText(/Đã đăng ký/).first()).toBeVisible();
-  await page.screenshot({ path: `${evidenceDir}/02-employee-detail.png`, fullPage: true });
+});
+
+test("HR tải mẫu, kiểm tra lỗi theo trường rồi mới được xác nhận import", async ({ page }) => {
+  await seedUser(page, "TENANT_ADMIN");
+  let validationCalls = 0;
+  let importCalls = 0;
+
+  await page.route(`**/api/v1/tenants/${tenantId}/employees?*`, (route) =>
+    route.fulfill({ json: api(pageData([employee])) }),
+  );
+  await page.route(`**/api/v1/tenants/${tenantId}/employees/import/template`, (route) =>
+    route.fulfill({
+      contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      headers: { "Content-Disposition": "attachment; filename=mau-import-nhan-vien.xlsx" },
+      body: "excel-template",
+    }),
+  );
+  await page.route(`**/api/v1/tenants/${tenantId}/employees/import/validate`, (route) => {
+    validationCalls++;
+    return route.fulfill({
+      json: api(validationCalls === 1
+        ? {
+            valid: false,
+            totalRows: 2,
+            validRows: 1,
+            invalidRows: 1,
+            errors: [{ row: 3, field: "email", message: "Email không đúng định dạng" }],
+          }
+        : {
+            valid: true,
+            totalRows: 2,
+            validRows: 2,
+            invalidRows: 0,
+            errors: [],
+          }),
+    });
+  });
+  await page.route(`**/api/v1/tenants/${tenantId}/employees/import`, (route) => {
+    importCalls++;
+    return route.fulfill({
+      json: api({ totalRows: 2, successCount: 2, failedCount: 0, errors: [] }),
+    });
+  });
+
+  await page.goto("/customer/employees");
+  await page.getByRole("button", { name: "Nhập Excel" }).click();
+  const dialog = page.getByRole("dialog", { name: "Import danh sách nhân viên" });
+  await expect(dialog.getByText("Bước 1 — Tải file Excel mẫu tiếng Việt")).toBeVisible();
+  const downloadPromise = page.waitForEvent("download");
+  await dialog.getByRole("button", { name: "Tải file mẫu" }).click();
+  expect((await downloadPromise).suggestedFilename()).toBe("mau-import-nhan-vien.xlsx");
+
+  await dialog.locator('input[type="file"]').setInputFiles({
+    name: "nhan-vien.xlsx",
+    mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    buffer: Buffer.from("mock-xlsx"),
+  });
+  await expect(dialog.getByRole("button", { name: "Xác nhận import" })).toBeDisabled();
+
+  await dialog.getByRole("button", { name: "Kiểm tra dữ liệu" }).click();
+  await expect(dialog.getByText("Email không đúng định dạng")).toBeVisible();
+  await expect(dialog.getByText("Email", { exact: true })).toBeVisible();
+  await expect(dialog.getByText("1/2 dòng cần sửa")).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Xác nhận import" })).toBeDisabled();
+  await dialog.getByText("Email không đúng định dạng").scrollIntoViewIfNeeded();
+  await page.screenshot({ path: `${evidenceDir}/04-import-validation.png`, fullPage: true });
+
+  await dialog.locator('input[type="file"]').setInputFiles({
+    name: "nhan-vien-da-sua.xlsx",
+    mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    buffer: Buffer.from("fixed-mock-xlsx"),
+  });
+  await expect(dialog.getByText("Email không đúng định dạng")).toHaveCount(0);
+  await expect(dialog.getByRole("button", { name: "Xác nhận import" })).toBeDisabled();
+  await dialog.getByRole("button", { name: "Kiểm tra dữ liệu" }).click();
+  await expect(dialog.getByText("2/2 dòng hợp lệ — có thể import")).toBeVisible();
+  await dialog.getByRole("button", { name: "Xác nhận import" }).click();
+  await expect(dialog.getByText("Hoàn tất: đã tạo 2 hồ sơ nhân viên")).toBeVisible();
+  expect(validationCalls).toBe(2);
+  expect(importCalls).toBe(1);
+  await page.screenshot({ path: `${evidenceDir}/05-import-success.png`, fullPage: true });
 });
 
 test("Platform Admin gửi và hủy lời mời nền tảng trên màn riêng", async ({ page }) => {

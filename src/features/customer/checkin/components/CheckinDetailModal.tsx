@@ -103,7 +103,7 @@ export default function CheckinDetailModal({
   const user = useAuthStore((state) => state.user);
   const hasPermission = useAuthStore((state) => state.hasPermission);
   const tenantId = user?.tenantId ?? undefined;
-  const canOverride = hasPermission("checkins:list");
+  const canOverride = hasPermission("checkins:review");
   const { data: detail, isLoading, isError } = useCheckinDetail(
     tenantId,
     checkinId,

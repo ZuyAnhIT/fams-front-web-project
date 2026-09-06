@@ -10,7 +10,7 @@ import { expect, test } from "@playwright/test";
 
 const liveEnabled = process.env.LIVE_BACKEND === "true";
 const backendUrl = process.env.LIVE_BACKEND_URL || "http://localhost:8080";
-const email = process.env.LIVE_ADMIN_EMAIL || "duyanh19102005@gmail.com";
+const email = process.env.LIVE_ADMIN_EMAIL || "admin.anphat@fams.test";
 const password = process.env.LIVE_ADMIN_PASSWORD || "Admin@1234";
 const evidenceDir = "docs/test-evidence/attendance-hover-bulk-role";
 
@@ -85,8 +85,9 @@ test.describe("#10 / #11 — live backend", () => {
     await page.waitForTimeout(1200);
     await page.screenshot({ path: `${evidenceDir}/bulk-role-options.png` });
     const optionText = await page.locator(".ant-select-item-option-content").allInnerTexts();
-    console.log("employee options:", optionText);
     expect(optionText.join(" ")).not.toContain("undefined");
+    await expect(page.getByText("Có thể tìm theo tên, email hoặc mã nhân viên")).toBeVisible();
+    await expect(page.locator(".ant-select-item-option-content").first().locator(".ant-avatar")).toBeVisible();
   });
 
   test("#11 - employee status change shows a success toast", async ({ page }) => {

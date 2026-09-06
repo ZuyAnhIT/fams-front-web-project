@@ -318,7 +318,10 @@ test("Admin quản lý vòng đời ca, OT và không gửi sort ngoài contract
 
   await page.getByRole("button", { name: "Cấu hình OT ca Ca hành chính" }).click();
   const otDialog = page.getByRole("dialog");
+  await expect(otDialog.locator(".ant-input-number-handler-wrap")).toHaveCount(0);
   await otDialog.getByLabel("Cho phép đến sớm").fill("20");
+  await otDialog.getByLabel("Cho phép đến sớm").hover();
+  await expect(otDialog.getByLabel("Cho phép đến sớm")).toHaveValue("20");
   await otDialog.getByLabel("Cho phép về muộn").fill("45");
   await otDialog.getByLabel("Tối đa OT mỗi ngày").fill("180");
   await otDialog.getByLabel("Tối đa OT mỗi tuần").fill("720");
@@ -351,6 +354,37 @@ test("Admin quản lý vòng đời ca, OT và không gửi sort ngoài contract
     path: `${evidenceDir}/01-admin-shift-lifecycle.png`,
     fullPage: true,
   });
+});
+
+test("Bật OT tự điền cửa sổ checkout hợp lệ và hiển thị rõ số phút", async ({ page }) => {
+  await seedUser(page, "TENANT_ADMIN", managementPermissions);
+  const disabledOtShift = { ...activeShift, allowOvertime: false, lateCheckoutMinutes: 0 };
+  await mockSiteDetail(page);
+  let otBody: Record<string, unknown> = {};
+  await page.route(`**/api/v1/tenants/${tenantId}/sites/${siteId}/assignments?*`, (route) =>
+    route.fulfill({ json: api(pageData([assignment])) }),
+  );
+  await page.route(`**/api/v1/tenants/${tenantId}/sites/${siteId}/shifts?*`, (route) =>
+    route.fulfill({ json: api(pageData([disabledOtShift])) }),
+  );
+  await page.route(`**/api/v1/tenants/${tenantId}/sites/${siteId}/shifts/${activeShiftId}/ot-config`, async (route) => {
+    otBody = route.request().postDataJSON() as Record<string, unknown>;
+    return route.fulfill({ json: api({ ...disabledOtShift, ...otBody }) });
+  });
+
+  await page.goto(`/customer/sites/${siteId}`);
+  await page.getByRole("button", { name: "Cấu hình OT ca Ca hành chính" }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("switch").click();
+  await expect(dialog.getByLabel("Cho phép về muộn")).toHaveValue("120");
+  await dialog.getByLabel("Cho phép về muộn").hover();
+  await expect(dialog.getByLabel("Cho phép về muộn")).toHaveValue("120");
+  await expect(dialog.locator(".ant-input-number-handler-wrap")).toHaveCount(0);
+  await page.screenshot({ path: `${evidenceDir}/07-ot-default-window-and-visible-minutes.png`, fullPage: true });
+  await dialog.getByRole("button", { name: "Lưu cấu hình" }).click();
+  await expect.poll(() => otBody).toMatchObject({ allowOvertime: true, lateCheckoutMinutes: 120 });
+  await expect(page.getByText("Cập nhật cấu hình OT thành công!")).toBeVisible();
+  await page.screenshot({ path: `${evidenceDir}/08-ot-save-success.png`, fullPage: true });
 });
 
 test("HR tạo phân công có lịch tuần, lọc terminated/inactive và hiển thị lỗi xung đột", async ({
@@ -565,6 +599,50 @@ test("Site Supervisor xem ca và phân công nhưng không có thao tác ghi", a
 
   await page.screenshot({
     path: `${evidenceDir}/04-supervisor-read-only.png`,
+    fullPage: true,
+  });
+});
+
+test("Phân công hết ca hiển thị Đã kết thúc, không suy diễn là Đang làm việc", async ({
+  page,
+}) => {
+  await seedUser(page, "HR_MANAGER", managementPermissions);
+  await mockSiteDetail(page);
+  await page.route(
+    `**/api/v1/tenants/${tenantId}/sites/${siteId}/shifts?*`,
+    (route) => route.fulfill({ json: api(pageData([activeShift])) }),
+  );
+  await page.route(
+    `**/api/v1/tenants/${tenantId}/sites/${siteId}/assignments?*`,
+    (route) =>
+      route.fulfill({
+        json: api(
+          pageData([
+            {
+              ...assignment,
+              startDate: "2026-09-05",
+              endDate: "2026-09-05",
+              lifecycleStatus: "completed",
+            },
+          ]),
+        ),
+      }),
+  );
+
+  await page.goto(`/customer/sites/${siteId}`);
+  await page.getByRole("tab", { name: /Nhân sự phân công/ }).click();
+  const completedBadge = page.getByText("Đã kết thúc", { exact: true });
+  await expect(completedBadge).toBeVisible();
+  await expect(page.getByText("Đang làm việc", { exact: true })).toHaveCount(0);
+  await completedBadge.screenshot({
+    path: `${evidenceDir}/06-completed-assignment-status-badge.png`,
+  });
+  await page.locator(".ant-table-body, .ant-table-content").first().evaluate((table) => {
+    table.scrollLeft = table.scrollWidth;
+  });
+
+  await page.screenshot({
+    path: `${evidenceDir}/06-completed-assignment-status.png`,
     fullPage: true,
   });
 });

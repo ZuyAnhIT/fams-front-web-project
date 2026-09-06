@@ -14,6 +14,7 @@ import { useSitesQuery } from '@/features/customer/site/hooks/use-site';
 import { useAuthStore } from '@/stores/auth.store';
 import { useEmployeeDashboard, useHrDashboard, useSupervisorDashboard } from '../hooks/use-dashboard';
 import SupervisorCheckinMap from './SupervisorCheckinMap';
+import TenantAnalyticsDashboard from '@/features/shared/analytics/components/TenantAnalyticsDashboard';
 
 const CUSTOM_ROLE_SHORTCUTS = [
   { permissions: ['employees:list', 'employees:read'], title: 'Nhân viên', description: 'Xem hồ sơ nhân sự trong phạm vi được cấp.', href: CUSTOMER_ROUTES.EMPLOYEES, icon: Users, tone: 'blue' as const },
@@ -136,6 +137,7 @@ function HrDashboardView({ tenantId }: { tenantId: string }) {
           })}
         </div>
       </section>
+      <TenantAnalyticsDashboard tenantId={tenantId} siteId={siteId} />
     </div>
   );
 }

@@ -2,10 +2,10 @@
 
 import React, { useEffect } from "react";
 import { App, Form, InputNumber } from "antd";
-import { isAxiosError } from "axios";
 import { BaseSwitch } from "@/components/ui";
 import BaseModal from "@/components/ui/BaseModal";
 import { useAuthStore } from "@/stores/auth.store";
+import { getApiErrorMessage } from "@/utils/api-error.util";
 import { useConfigureOtMutation } from "../hooks/use-shift";
 import { ShiftResponse } from "../types/shift.type";
 import { ClockCircleOutlined, FieldTimeOutlined } from "@ant-design/icons";
@@ -18,11 +18,7 @@ interface ShiftOtConfigModalProps {
 }
 
 function errorMessage(error: unknown): string {
-  if (!isAxiosError(error)) return "Có lỗi xảy ra khi cập nhật cấu hình.";
-  return (
-    (error.response?.data as { message?: string } | undefined)?.message ||
-    "Có lỗi xảy ra khi cập nhật cấu hình."
-  );
+  return getApiErrorMessage(error, "Có lỗi xảy ra khi cập nhật cấu hình.");
 }
 
 export default function ShiftOtConfigModal({
@@ -37,6 +33,17 @@ export default function ShiftOtConfigModal({
   const tenantId = user?.tenantId;
 
   const configureOtMutation = useConfigureOtMutation();
+  const allowOvertime = Form.useWatch("allowOvertime", form);
+
+  useEffect(() => {
+    if (!isOpen || !allowOvertime) return;
+    const checkoutWindow = form.getFieldValue("lateCheckoutMinutes");
+    if (checkoutWindow == null || checkoutWindow <= 0) {
+      // OT must have a finite window. Two hours is a safe operational default and the
+      // administrator can still choose another value before saving.
+      form.setFieldValue("lateCheckoutMinutes", 120);
+    }
+  }, [allowOvertime, form, isOpen]);
 
   useEffect(() => {
     if (isOpen && activeShift) {
@@ -159,6 +166,8 @@ export default function ShiftOtConfigModal({
               className="w-full"
               suffix="phút"
               min={0}
+              precision={0}
+              controls={false}
               placeholder="VD: 15"
             />
           </Form.Item>
@@ -171,12 +180,25 @@ export default function ShiftOtConfigModal({
                 <span className="font-medium text-slate-700">Cho phép về muộn</span>
               </div>
             }
+            dependencies={["allowOvertime"]}
+            rules={[
+              { type: "integer", min: 0, message: "Số phút phải là số nguyên không âm." },
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  if (!getFieldValue("allowOvertime") || Number(value) > 0) return Promise.resolve();
+                  return Promise.reject(new Error("Khi bật tăng ca, thời hạn checkout OT phải lớn hơn 0 phút."));
+                },
+              }),
+            ]}
           >
             <InputNumber
               className="w-full"
               suffix="phút"
               min={0}
-              placeholder="VD: 15"
+              max={1440}
+              precision={0}
+              controls={false}
+              placeholder="VD: 120"
             />
           </Form.Item>
 
@@ -193,6 +215,8 @@ export default function ShiftOtConfigModal({
               className="w-full"
               suffix="phút"
               min={0}
+              precision={0}
+              controls={false}
               placeholder="VD: 5"
             />
           </Form.Item>
@@ -212,7 +236,7 @@ export default function ShiftOtConfigModal({
             extra="Để trống = không giới hạn"
             rules={[{ type: "integer", min: 0, message: "Số phút phải là số nguyên không âm." }]}
           >
-            <InputNumber className="w-full" suffix="phút" min={0} precision={0} placeholder="VD: 120" />
+            <InputNumber className="w-full" suffix="phút" min={0} precision={0} controls={false} placeholder="VD: 120" />
           </Form.Item>
           <Form.Item
             name="maxOtMinutesPerWeek"
@@ -220,7 +244,7 @@ export default function ShiftOtConfigModal({
             extra="Tuần ISO: Thứ 2 đến Chủ Nhật"
             rules={[{ type: "integer", min: 0, message: "Số phút phải là số nguyên không âm." }]}
           >
-            <InputNumber className="w-full" suffix="phút" min={0} precision={0} placeholder="VD: 600" />
+            <InputNumber className="w-full" suffix="phút" min={0} precision={0} controls={false} placeholder="VD: 600" />
           </Form.Item>
         </div>
         <div className="rounded border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-800">

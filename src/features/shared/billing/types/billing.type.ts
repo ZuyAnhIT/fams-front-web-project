@@ -8,11 +8,13 @@ export type BillingOrderStatus =
   | "CANCELLED"
   | "EXPIRED"
   | "FAILED";
+export type BillingInvoiceStatus = "NOT_ELIGIBLE" | "PAYMENT_REVIEW" | "PENDING_ISSUANCE" | "ISSUED" | "FAILED";
 
 export interface BillingOrder {
   id: string;
   orderCode: number;
   tenantId: string;
+  tenantName: string;
   planId: string;
   planName: string;
   planDisplayName: string;
@@ -31,8 +33,26 @@ export interface BillingOrder {
   paidAt?: string;
   cancelledAt?: string;
   subscriptionAppliedAt?: string;
+  paymentReceiptAvailable: boolean;
+  paymentReceiptNumber?: string;
+  paymentReceiptIssuedAt?: string;
+  invoiceStatus: BillingInvoiceStatus;
+  invoiceNumber?: string;
+  invoiceIssuedAt?: string;
+  invoiceLookupUrl?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface PlatformBillingQuery {
+  search?: string;
+  tenantId?: string;
+  status?: BillingOrderStatus;
+  billingCycle?: BillingCycle;
+  sortBy?: "createdAt" | "amount" | "paidAt" | "company" | "status" | "orderCode";
+  sortDir?: "asc" | "desc";
+  page?: number;
+  size?: number;
 }
 
 export interface CreateBillingOrderPayload {

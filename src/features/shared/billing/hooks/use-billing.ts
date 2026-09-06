@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { billingService } from "../services/billing.service";
-import type { BillingOrderStatus, CreateBillingOrderPayload } from "../types/billing.type";
+import type { CreateBillingOrderPayload, PlatformBillingQuery } from "../types/billing.type";
 
 export function useTenantBillingOrders(tenantId?: string, page = 0, size = 20) {
   return useQuery({
@@ -32,12 +32,7 @@ export function useCancelBillingOrder() {
   });
 }
 
-export function usePlatformBillingOrders(params: {
-  tenantId?: string;
-  status?: BillingOrderStatus;
-  page?: number;
-  size?: number;
-}) {
+export function usePlatformBillingOrders(params: PlatformBillingQuery) {
   return useQuery({
     queryKey: ["billing-orders", "platform", params],
     queryFn: () => billingService.listForPlatform(params),

@@ -1,9 +1,10 @@
 "use client";
 
 import { Empty, Tag } from "antd";
-import { BriefcaseBusiness, Building2, CalendarDays } from "lucide-react";
+import { BriefcaseBusiness, Building2, CalendarDays, Clock3, MapPin } from "lucide-react";
 import { format } from "date-fns";
 import type { EmployeeDetailResponse } from "../types/employee.type";
+import { getAssignmentLifecycleMeta } from "@/features/customer/assignment/utils/assignment-lifecycle";
 
 const DAY_LABELS: Record<string, string> = {
   MONDAY: "T2",
@@ -15,6 +16,21 @@ const DAY_LABELS: Record<string, string> = {
   SUNDAY: "CN",
 };
 
+const WORKSPACE_ROLE_LABELS: Record<string, string> = {
+  member: "Thành viên",
+  lead: "Trưởng nhóm",
+  manager: "Quản lý",
+};
+
+const ASSIGNMENT_ROLE_LABELS: Record<string, string> = {
+  worker: "Nhân viên",
+  supervisor: "Giám sát công trường",
+};
+
+function shortTime(value?: string | null) {
+  return value ? value.slice(0, 5) : "";
+}
+
 export default function EmployeeWorkTab({ employee }: { employee: EmployeeDetailResponse }) {
   const workspaces = employee.workspaces ?? [];
   const assignments = employee.assignments ?? [];
@@ -24,7 +40,7 @@ export default function EmployeeWorkTab({ employee }: { employee: EmployeeDetail
       <section className="rounded-xl border border-slate-200 p-5" aria-labelledby="employee-workspaces">
         <h3 id="employee-workspaces" className="mb-4 flex items-center gap-2 font-bold text-slate-800">
           <Building2 className="h-5 w-5 text-blue-600" />
-          Workspace ({workspaces.length})
+          Phòng ban / Workspace ({workspaces.length})
         </h3>
         {workspaces.length === 0 ? (
           <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Chưa tham gia workspace nào" />
@@ -42,7 +58,9 @@ export default function EmployeeWorkTab({ employee }: { employee: EmployeeDetail
                       Tham gia {format(new Date(workspace.assignedAt), "dd/MM/yyyy")}
                     </div>
                   </div>
-                  <Tag color="blue">{workspace.role}</Tag>
+                  <Tag color="blue">
+                    {WORKSPACE_ROLE_LABELS[workspace.role.toLowerCase()] ?? workspace.role}
+                  </Tag>
                 </div>
               </div>
             ))}
@@ -59,13 +77,29 @@ export default function EmployeeWorkTab({ employee }: { employee: EmployeeDetail
           <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Chưa có phân công nào" />
         ) : (
           <div className="space-y-3">
-            {assignments.map((assignment) => (
+            {assignments.map((assignment) => {
+              const lifecycle = getAssignmentLifecycleMeta(
+                assignment.lifecycleStatus,
+                assignment.status,
+              );
+              return (
               <div key={assignment.id} className="rounded-lg border border-slate-100 p-4">
                 <div className="flex flex-wrap items-start justify-between gap-2">
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <div className="font-semibold text-slate-800">
-                      Site <span className="font-mono text-xs">{assignment.siteId}</span>
+                      {assignment.siteSummary?.name ?? "Công trình không còn hoạt động"}
                     </div>
+                    {assignment.siteSummary?.code && (
+                      <div className="mt-1 text-xs text-slate-500">
+                        Mã công trình: {assignment.siteSummary.code}
+                      </div>
+                    )}
+                    {assignment.siteSummary?.address && (
+                      <div className="mt-1 flex items-start gap-1 text-xs text-slate-500">
+                        <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                        <span>{assignment.siteSummary.address}</span>
+                      </div>
+                    )}
                     <div className="mt-1 flex items-center gap-1 text-xs text-slate-500">
                       <CalendarDays className="h-3.5 w-3.5" />
                       {format(new Date(assignment.startDate), "dd/MM/yyyy")} –{" "}
@@ -75,12 +109,23 @@ export default function EmployeeWorkTab({ employee }: { employee: EmployeeDetail
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <Tag color={assignment.status === "active" ? "success" : "default"}>
-                      {assignment.status === "active" ? "Đang hiệu lực" : "Đã hủy"}
+                    <Tag color={lifecycle.tagColor}>
+                      {lifecycle.label}
                     </Tag>
-                    <Tag color="purple">{assignment.role}</Tag>
+                    <Tag color="purple">
+                      {ASSIGNMENT_ROLE_LABELS[assignment.role.toLowerCase()] ?? assignment.role}
+                    </Tag>
                   </div>
                 </div>
+                {assignment.shiftSummary && (
+                  <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg bg-blue-50 px-3 py-2 text-xs text-blue-800">
+                    <span className="font-semibold">Ca: {assignment.shiftSummary.name}</span>
+                    <span className="flex items-center gap-1">
+                      <Clock3 className="h-3.5 w-3.5" />
+                      {shortTime(assignment.shiftSummary.startTime)} – {shortTime(assignment.shiftSummary.endTime)}
+                    </span>
+                  </div>
+                )}
                 {assignment.daysOfWeek?.length ? (
                   <div className="mt-3 text-xs text-slate-600">
                     Lịch: {assignment.daysOfWeek.map((day) => DAY_LABELS[day] ?? day).join(", ")}
@@ -90,7 +135,8 @@ export default function EmployeeWorkTab({ employee }: { employee: EmployeeDetail
                   <p className="mt-2 text-sm text-slate-600">{assignment.notes}</p>
                 ) : null}
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>

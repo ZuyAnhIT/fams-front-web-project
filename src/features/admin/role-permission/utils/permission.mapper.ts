@@ -28,6 +28,8 @@ export const ACTION_MAP: Record<string, string> = {
   list: "Xem danh sách",
   export: "Xuất dữ liệu",
   configure: "Cấu hình",
+  review: "Duyệt",
+  adjust: "Điều chỉnh",
 };
 
 export const formatResource = (resource: string): string => {
@@ -45,6 +47,12 @@ export const formatDescription = (permission: { action: string; resource: string
   // Custom overrides for specific actions
   if (permission.action === "create" && permission.resource === "checkins") {
     return "Thực hiện chấm công";
+  }
+  if (permission.action === "review" && permission.resource === "checkins") {
+    return "Duyệt hoặc từ chối bằng chứng chấm công";
+  }
+  if (permission.action === "adjust" && permission.resource === "attendance") {
+    return "Điều chỉnh và tính lại bảng công";
   }
 
   return `${actionText} ${resourceText}`;

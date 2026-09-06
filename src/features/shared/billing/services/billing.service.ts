@@ -1,6 +1,6 @@
 import { apiClient } from "@/services/api-client";
 import type { ApiResponse, PageResponse } from "@/types/api";
-import type { BillingOrder, BillingOrderStatus, CreateBillingOrderPayload } from "../types/billing.type";
+import type { BillingOrder, CreateBillingOrderPayload, PlatformBillingQuery } from "../types/billing.type";
 
 export const billingService = {
   async create(tenantId: string, payload: CreateBillingOrderPayload): Promise<BillingOrder> {
@@ -38,13 +38,13 @@ export const billingService = {
     return response.data.data;
   },
 
-  async listForPlatform(params: {
-    tenantId?: string;
-    status?: BillingOrderStatus;
-    page?: number;
-    size?: number;
-  }): Promise<PageResponse<BillingOrder>> {
+  async listForPlatform(params: PlatformBillingQuery): Promise<PageResponse<BillingOrder>> {
     const response = await apiClient.get<ApiResponse<PageResponse<BillingOrder>>>("/billing-orders", { params });
+    return response.data.data;
+  },
+
+  async getForPlatform(orderId: string): Promise<BillingOrder> {
+    const response = await apiClient.get<ApiResponse<BillingOrder>>(`/billing-orders/${orderId}`);
     return response.data.data;
   },
 

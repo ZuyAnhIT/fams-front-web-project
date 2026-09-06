@@ -102,6 +102,64 @@ body {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-primary, #2563eb) 18%, transparent) !important;
 }
 
+/* Scrollbars stay discoverable without competing visually with the application content. */
+.app-scrollbar,
+.billing-table .ant-table-content,
+.billing-table .ant-table-body {
+  scrollbar-width: thin;
+  scrollbar-color: #94a3b8 transparent;
+}
+
+.app-scrollbar::-webkit-scrollbar,
+.billing-table .ant-table-content::-webkit-scrollbar,
+.billing-table .ant-table-body::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+.app-scrollbar::-webkit-scrollbar-track,
+.billing-table .ant-table-content::-webkit-scrollbar-track,
+.billing-table .ant-table-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.app-scrollbar::-webkit-scrollbar-thumb,
+.billing-table .ant-table-content::-webkit-scrollbar-thumb,
+.billing-table .ant-table-body::-webkit-scrollbar-thumb {
+  min-height: 36px;
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: #94a3b8;
+  background-clip: padding-box;
+}
+
+.app-scrollbar::-webkit-scrollbar-thumb:hover,
+.billing-table .ant-table-content::-webkit-scrollbar-thumb:hover,
+.billing-table .ant-table-body::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+  background-clip: padding-box;
+}
+
+.app-scrollbar-dark {
+  scrollbar-color: #475569 transparent;
+}
+
+.app-scrollbar-dark::-webkit-scrollbar-thumb {
+  background: #475569;
+  background-clip: padding-box;
+}
+
+.app-scrollbar-dark::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+  background-clip: padding-box;
+}
+
+.app-scrollbar::-webkit-scrollbar-button,
+.billing-table .ant-table-content::-webkit-scrollbar-button,
+.billing-table .ant-table-body::-webkit-scrollbar-button {
+  display: none;
+}
+
 /* ═══ Fade-in animation ═══ */
 @keyframes fadeIn {
   from {

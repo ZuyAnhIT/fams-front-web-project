@@ -137,7 +137,7 @@ export default function Sidebar({ variant = "desktop", onNavigate }: SidebarProp
 
       {/* Nav Menu */}
       <nav className={cn(
-        "flex-1 overflow-y-auto overflow-x-hidden py-4 space-y-1 transition-all duration-300",
+        "app-scrollbar app-scrollbar-dark flex-1 overflow-y-auto overflow-x-hidden py-4 space-y-1 transition-all duration-300",
         !isMobile && isCollapsed ? "px-2" : "px-4"
       )}>
         {SIDEBAR_MENU.filter((item) => {

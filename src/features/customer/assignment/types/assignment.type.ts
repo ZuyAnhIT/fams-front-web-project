@@ -35,6 +35,8 @@ export interface AssignmentResponse {
   daysOfWeek: AssignmentDayOfWeek[] | null;
   role: "worker" | "supervisor";
   status: "active" | "cancelled";
+  /** Derived by API from Vietnam/site time; distinct from the administrative record status. */
+  lifecycleStatus?: "upcoming" | "effective" | "completed" | "cancelled";
   cancelledBy: string | null;
   cancelledAt: string | null;
   notes?: string;

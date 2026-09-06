@@ -9,6 +9,7 @@ import {
   CreditCard,
   Database,
   ExternalLink,
+  FileSearch,
   RefreshCw,
   ShieldCheck,
   Users,
@@ -25,6 +26,7 @@ import type {
   BillingOrderStatus,
   CurrentSubscriptionSummary,
 } from "../types/billing.type";
+import BillingOrderDetailDrawer from "./BillingOrderDetailDrawer";
 
 const money = new Intl.NumberFormat("vi-VN", {
   style: "currency",
@@ -147,6 +149,7 @@ export default function BillingCheckoutPanel({
 }) {
   const { message, modal } = App.useApp();
   const [planId, setPlanId] = useState<string>();
+  const [selectedOrder, setSelectedOrder] = useState<BillingOrder>();
   const [billingCycle, setBillingCycle] = useState<BillingCycle>(
     currentSubscription?.billingCycle || "MONTHLY",
   );
@@ -257,7 +260,14 @@ export default function BillingCheckoutPanel({
       title: "Thao tác",
       key: "actions",
       render: (_, order) => (
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <BaseButton
+            size="small"
+            icon={<FileSearch className="h-3.5 w-3.5" />}
+            onClick={() => setSelectedOrder(order)}
+          >
+            Chi tiết
+          </BaseButton>
           {order.checkoutUrl && ["PENDING", "PROCESSING", "UNDERPAID"].includes(order.status) && (
             <BaseButton size="small" icon={<ExternalLink className="h-3.5 w-3.5" />} onClick={() => window.location.assign(order.checkoutUrl!)}>
               Thanh toán
@@ -403,17 +413,25 @@ export default function BillingCheckoutPanel({
             Làm mới
           </BaseButton>
         </div>
-        <Table<BillingOrder>
-          rowKey="id"
-          size="small"
-          loading={ordersQuery.isLoading}
-          dataSource={ordersQuery.data?.content ?? []}
-          columns={columns}
-          scroll={{ x: 900 }}
-          pagination={false}
-          locale={{ emptyText: "Chưa có giao dịch thanh toán" }}
-        />
+        <div className="billing-table app-scrollbar">
+          <Table<BillingOrder>
+            rowKey="id"
+            size="small"
+            loading={ordersQuery.isLoading}
+            dataSource={ordersQuery.data?.content ?? []}
+            columns={columns}
+            scroll={{ x: 980 }}
+            pagination={false}
+            locale={{ emptyText: "Chưa có giao dịch thanh toán" }}
+            onRow={(order) => ({ onDoubleClick: () => setSelectedOrder(order) })}
+          />
+        </div>
       </section>
+      <BillingOrderDetailDrawer
+        order={selectedOrder}
+        open={Boolean(selectedOrder)}
+        onClose={() => setSelectedOrder(undefined)}
+      />
     </div>
   );
 }

@@ -122,6 +122,8 @@ export interface OverrideCheckinRequest {
 export interface CheckinListParams {
   employeeId?: string;
   siteId?: string;
+  workspaceId?: string;
+  shiftId?: string;
   status?: string;
   from?: string;
   to?: string;
