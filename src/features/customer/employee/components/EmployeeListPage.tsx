@@ -144,13 +144,13 @@ export default function EmployeeListPage() {
     if (!hasPermission("employees:update")) return [];
     const items: MenuProps["items"] = [];
     if (record.status !== "active") {
-      items.push({ key: "active", label: "Đánh dấu Hoạt động", onClick: () => handleStatusChange(record, "active") });
+      items.push({ key: "active", label: "Đánh dấu Hoạt động", onClick: ({ domEvent }) => { domEvent.stopPropagation(); handleStatusChange(record, "active"); } });
     }
     if (record.status !== "inactive") {
-      items.push({ key: "inactive", label: "Đánh dấu Tạm nghỉ", onClick: () => handleStatusChange(record, "inactive") });
+      items.push({ key: "inactive", label: "Đánh dấu Tạm nghỉ", onClick: ({ domEvent }) => { domEvent.stopPropagation(); handleStatusChange(record, "inactive"); } });
     }
     if (record.status !== "terminated") {
-      items.push({ key: "terminated", label: "Đánh dấu Đã nghỉ việc", danger: true, onClick: () => handleStatusChange(record, "terminated") });
+      items.push({ key: "terminated", label: "Đánh dấu Đã nghỉ việc", danger: true, onClick: ({ domEvent }) => { domEvent.stopPropagation(); handleStatusChange(record, "terminated"); } });
     }
     return items;
   };
@@ -441,7 +441,11 @@ export default function EmployeeListPage() {
         }}
         onRow={(record) => ({
           className: "hover:bg-brand-50/50 transition-colors duration-200 group cursor-pointer",
-          onClick: () => router.push(`/customer/employees/${record.id}`),
+          onClick: (event) => {
+            const target = event.target as HTMLElement;
+            if (target.closest("button, a, input, [role='menuitem'], .ant-dropdown-trigger")) return;
+            router.push(`/customer/employees/${record.id}`);
+          },
         })}
       />
 

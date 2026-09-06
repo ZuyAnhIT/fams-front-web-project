@@ -107,11 +107,26 @@ export interface EmployeeAssignment {
   siteId: string;
   employeeId: string;
   shiftId?: string | null;
+  siteSummary?: {
+    id: string;
+    name: string;
+    code?: string | null;
+    address?: string | null;
+    timezone?: string | null;
+  } | null;
+  shiftSummary?: {
+    id: string;
+    name: string;
+    startTime: string;
+    endTime: string;
+    status: string;
+  } | null;
   startDate: string;
   endDate?: string | null;
   daysOfWeek?: string[] | null;
   role: string;
   status: "active" | "cancelled";
+  lifecycleStatus?: "upcoming" | "effective" | "completed" | "cancelled";
   notes?: string | null;
   createdAt: string;
   updatedAt: string;
@@ -212,6 +227,14 @@ export interface EmployeeImportResult {
   totalRows: number;
   successCount: number;
   failedCount: number;
+  errors: EmployeeImportError[];
+}
+
+export interface EmployeeImportValidationResult {
+  valid: boolean;
+  totalRows: number;
+  validRows: number;
+  invalidRows: number;
   errors: EmployeeImportError[];
 }
 

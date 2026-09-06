@@ -61,7 +61,7 @@ export default function BaseModal({
 
   return (
     <Modal
-      title={<span className="text-lg font-bold text-slate-800">{title}</span>}
+      title={<div className="text-lg font-bold text-slate-800">{title}</div>}
       open={isOpen}
       onCancel={onClose}
       footer={footer !== undefined ? footer : defaultFooter}

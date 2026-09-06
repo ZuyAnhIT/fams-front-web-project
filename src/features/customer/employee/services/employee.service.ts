@@ -17,6 +17,7 @@ import type {
   PlatformInvitationResponse,
   SendPlatformInvitationPayload,
   EmployeeImportResult,
+  EmployeeImportValidationResult,
 } from "../types/employee.type";
 import type { LoginResponse } from "@/features/customer/auth/types/auth.type";
 
@@ -182,6 +183,28 @@ export const employeeService = {
       }
     );
     return response.data.data;
+  },
+
+  /** Kiểm tra cấu trúc và từng dòng mà không tạo hồ sơ nhân viên. */
+  async validateEmployeeImport(file: File): Promise<EmployeeImportValidationResult> {
+    const tenantId = getTenantId();
+    const formData = new FormData();
+    formData.append("file", file);
+    const response = await apiClient.post<ApiResponse<EmployeeImportValidationResult>>(
+      `/tenants/${tenantId}/employees/import/validate`,
+      formData,
+    );
+    return response.data.data;
+  },
+
+  /** Tải workbook mẫu tiếng Việt và trang hướng dẫn do Backend phát hành. */
+  async downloadEmployeeImportTemplate(): Promise<Blob> {
+    const tenantId = getTenantId();
+    const response = await apiClient.get(
+      `/tenants/${tenantId}/employees/import/template`,
+      { responseType: "blob" },
+    );
+    return response.data;
   },
 
   /**

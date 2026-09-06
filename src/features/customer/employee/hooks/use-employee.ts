@@ -124,6 +124,16 @@ export const useImportEmployees = () => {
   });
 };
 
+export const useValidateEmployeeImport = () =>
+  useMutation({
+    mutationFn: (file: File) => employeeService.validateEmployeeImport(file),
+  });
+
+export const useDownloadEmployeeImportTemplate = () =>
+  useMutation({
+    mutationFn: () => employeeService.downloadEmployeeImportTemplate(),
+  });
+
 export const useExportImportErrors = () => {
   return useMutation({
     mutationFn: (file: File) => employeeService.exportImportErrors(file),

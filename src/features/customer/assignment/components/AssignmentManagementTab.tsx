@@ -20,6 +20,7 @@ import {
   type AssignmentListParams,
   type AssignmentResponse,
 } from "../types/assignment.type";
+import { getAssignmentLifecycleMeta } from "../utils/assignment-lifecycle";
 import AssignmentFormModal from "./AssignmentFormModal";
 import { ShiftResponse } from "@/features/customer/shift/types/shift.type";
 import { useEmployees } from "@/features/customer/employee/hooks/use-employee";
@@ -240,16 +241,19 @@ export default function AssignmentManagementTab({
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
-      sorter: true,
-      render: (val: string, record) => {
+      render: (_val: string, record) => {
+        const lifecycle = getAssignmentLifecycleMeta(
+          record.lifecycleStatus,
+          record.status,
+        );
         const badge = (
           <Badge
-            status={val === "active" ? "success" : "default"}
-            text={val === "active" ? "Đang làm việc" : "Đã hủy"}
+            status={lifecycle.badgeStatus}
+            text={lifecycle.label}
             className="text-slate-600"
           />
         );
-        if (val === "cancelled" && record.cancelledAt) {
+        if (record.status === "cancelled" && record.cancelledAt) {
           return (
             <Tooltip
               title={`Hủy lúc ${new Date(record.cancelledAt).toLocaleString("vi-VN")}`}
@@ -408,7 +412,7 @@ export default function AssignmentManagementTab({
               setAssignmentPage(0);
             }}
             options={[
-              { label: "Đang làm việc", value: "active" },
+              { label: "Chưa hủy (mọi thời gian)", value: "active" },
               { label: "Đã hủy", value: "cancelled" }
             ]}
           />

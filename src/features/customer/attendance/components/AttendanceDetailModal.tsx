@@ -53,7 +53,7 @@ export default function AttendanceDetailModal({
   const user = useAuthStore((state) => state.user);
   const hasPermission = useAuthStore((state) => state.hasPermission);
   const canAdjust =
-    user?.role === SystemRole.PLATFORM_ADMIN || hasPermission("attendance:list");
+    user?.role === SystemRole.PLATFORM_ADMIN || hasPermission("attendance:adjust");
   const { data, isLoading, isError, error, refetch } = useAttendanceSummaryDetail(
     tenantId,
     summaryId,

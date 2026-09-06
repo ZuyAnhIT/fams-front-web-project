@@ -6,6 +6,7 @@ import RoleGuard from "@/components/guards/RoleGuard";
 import { ADMIN_ROUTES } from "@/constants/routes";
 import { SystemRole } from "@/features/customer/auth/types/auth.type";
 import { useAuthStore } from "@/stores/auth.store";
+import PlatformAnalyticsDashboard from "@/features/shared/analytics/components/PlatformAnalyticsDashboard";
 
 const MANAGEMENT_AREAS = [
   {
@@ -46,9 +47,11 @@ export default function AdminDashboardPage() {
             Xin chào, {user?.displayName || "Quản trị viên"}
           </h1>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600 sm:text-base">
-            Quản lý công ty, gói dịch vụ và quyền truy cập từ một không gian tập trung. Các chỉ số tổng hợp sẽ chỉ hiển thị khi có API thống kê nền tảng chính thức.
+            Quản lý công ty, gói dịch vụ và quyền truy cập từ một không gian tập trung. Báo cáo bên dưới được tổng hợp trực tiếp từ thanh toán, thuê bao và mức sử dụng thực tế.
           </p>
         </section>
+
+        <PlatformAnalyticsDashboard />
 
         <section aria-labelledby="management-heading">
           <div className="mb-4">

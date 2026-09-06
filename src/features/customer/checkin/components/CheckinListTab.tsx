@@ -11,6 +11,8 @@ import { useAuthStore } from "@/stores/auth.store";
 import { SystemRole } from "@/features/customer/auth/types/auth.type";
 import { useSitesQuery } from "@/features/customer/site/hooks/use-site";
 import { useEmployees } from "@/features/customer/employee/hooks/use-employee";
+import { useShiftsQuery } from "@/features/customer/shift/hooks/use-shift";
+import { useWorkspacesQuery } from "@/features/customer/workspace/hooks/use-workspace";
 import { formatVietnameseName } from "@/utils/name.util";
 import { useCheckins } from "../hooks/use-checkin";
 import {
@@ -81,11 +83,21 @@ export default function CheckinListTab() {
   const supervisorMustChooseSite =
     user?.role === SystemRole.SITE_SUPERVISOR;
 
-  const [params, setParams] = useState<CheckinListParams>({
-    page: 0,
-    size: 20,
-    sortBy: "checkInAt",
-    sortDir: "desc",
+  const [params, setParams] = useState<CheckinListParams>(() => {
+    const from = searchParams.get("from");
+    const to = searchParams.get("to");
+    return {
+      page: 0,
+      size: 20,
+      sortBy: "checkInAt",
+      sortDir: "desc",
+      siteId: searchParams.get("siteId") || undefined,
+      workspaceId: searchParams.get("workspaceId") || undefined,
+      shiftId: searchParams.get("shiftId") || undefined,
+      employeeId: searchParams.get("employeeId") || undefined,
+      from: from ? dayjs(from).startOf("day").toISOString() : undefined,
+      to: to ? dayjs(to).endOf("day").toISOString() : undefined,
+    };
   });
   const [selectedCheckinId, setSelectedCheckinId] = useState<string | null>(
     searchParams.get("checkinId"),
@@ -106,6 +118,23 @@ export default function CheckinListTab() {
   const effectiveSiteId =
     params.siteId ||
     (supervisorMustChooseSite && sites.length === 1 ? sites[0].id : undefined);
+  const { data: workspacePage } = useWorkspacesQuery({
+    tenantId,
+    status: "active",
+    size: 100,
+  });
+  const workspaces = useMemo(
+    () => workspacePage?.data?.content ?? [],
+    [workspacePage?.data?.content],
+  );
+  const { data: shiftPage } = useShiftsQuery(tenantId, effectiveSiteId || "", {
+    page: 0,
+    size: 100,
+  });
+  const shifts = useMemo(
+    () => shiftPage?.content ?? [],
+    [shiftPage?.content],
+  );
   const requestParams = useMemo(
     () => ({ ...params, siteId: effectiveSiteId }),
     [effectiveSiteId, params],
@@ -335,7 +364,7 @@ export default function CheckinListTab() {
         description="Chính sách hiệu lực được Backend resolve từ công trình và ca làm. Bản ghi cần xem xét có thể do GPS, Face ID, liveness hoặc đồng bộ offline."
       />
 
-      <div className="grid gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3 sm:grid-cols-2 xl:grid-cols-4 sm:p-4">
+      <div className="grid gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3 sm:grid-cols-2 xl:grid-cols-3 sm:p-4">
         <BaseSelect
           aria-label="Lọc lượt chấm công theo công trình"
           allowClear={!supervisorMustChooseSite}
@@ -346,11 +375,42 @@ export default function CheckinListTab() {
           }
           value={effectiveSiteId}
           onChange={(siteId) =>
-            setParams((current) => ({ ...current, siteId, page: 0 }))
+            setParams((current) => ({ ...current, siteId, shiftId: undefined, page: 0 }))
           }
           options={sites.map((site) => ({
             value: site.id,
             label: site.name,
+          }))}
+        />
+        <BaseSelect
+          aria-label="Lọc lượt chấm công theo workspace"
+          showSearch
+          optionFilterProp="label"
+          allowClear
+          placeholder="Tất cả workspace"
+          value={params.workspaceId}
+          onChange={(workspaceId) =>
+            setParams((current) => ({ ...current, workspaceId, page: 0 }))
+          }
+          options={workspaces.map((workspace) => ({
+            value: workspace.id,
+            label: workspace.name,
+          }))}
+        />
+        <BaseSelect
+          aria-label="Lọc lượt chấm công theo ca"
+          showSearch
+          optionFilterProp="label"
+          allowClear
+          disabled={!effectiveSiteId}
+          placeholder={effectiveSiteId ? "Tất cả ca" : "Chọn công trình để lọc ca"}
+          value={params.shiftId}
+          onChange={(shiftId) =>
+            setParams((current) => ({ ...current, shiftId, page: 0 }))
+          }
+          options={shifts.map((shift) => ({
+            value: shift.id,
+            label: `${shift.name} (${shift.startTime}–${shift.endTime})`,
           }))}
         />
         <BaseSelect
@@ -385,6 +445,10 @@ export default function CheckinListTab() {
         <RangePicker
           aria-label="Lọc lượt chấm công theo khoảng thời gian"
           showTime
+          value={[
+            params.from ? dayjs(params.from) : null,
+            params.to ? dayjs(params.to) : null,
+          ]}
           onChange={(dates) =>
             setParams((current) => ({
               ...current,
