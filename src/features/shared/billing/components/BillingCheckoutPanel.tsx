@@ -150,6 +150,7 @@ export default function BillingCheckoutPanel({
   const { message, modal } = App.useApp();
   const [planId, setPlanId] = useState<string>();
   const [selectedOrder, setSelectedOrder] = useState<BillingOrder>();
+  const [pageLoadedAt] = useState(() => Date.now());
   const [billingCycle, setBillingCycle] = useState<BillingCycle>(
     currentSubscription?.billingCycle || "MONTHLY",
   );
@@ -164,9 +165,12 @@ export default function BillingCheckoutPanel({
     }),
     [plansQuery.data, billingCycle],
   );
-  const selectedPlan = plans.find((plan) => plan.id === planId)
-    || plans.find((plan) => plan.id === currentSubscription?.planId)
-    || plans[0];
+  const activeCurrentPlanId = currentSubscription?.status === "ACTIVE"
+    && (!currentSubscription.expiresAt || new Date(currentSubscription.expiresAt).getTime() > pageLoadedAt)
+    ? currentSubscription.planId
+    : undefined;
+  const selectedPlan = plans.find((plan) => plan.id === planId && plan.id !== activeCurrentPlanId)
+    || plans.find((plan) => plan.id !== activeCurrentPlanId);
   const selectedPrice = selectedPlan
     ? billingCycle === "YEARLY" ? selectedPlan.priceYearly : selectedPlan.priceMonthly
     : undefined;
@@ -179,6 +183,10 @@ export default function BillingCheckoutPanel({
   const createAndRedirect = async () => {
     if (!selectedPlan) {
       message.warning("Vui lòng chọn gói dịch vụ");
+      return;
+    }
+    if (selectedPlan.id === activeCurrentPlanId) {
+      message.warning(`Doanh nghiệp đang sử dụng gói ${selectedPlan.displayName}. Vui lòng chọn gói khác.`);
       return;
     }
     try {
@@ -199,9 +207,12 @@ export default function BillingCheckoutPanel({
       message.warning("Vui lòng chọn gói dịch vụ");
       return;
     }
-    const isRenewal = currentSubscription?.planId === selectedPlan.id;
+    if (selectedPlan.id === activeCurrentPlanId) {
+      message.warning(`Doanh nghiệp đang sử dụng gói ${selectedPlan.displayName}. Vui lòng chọn gói khác.`);
+      return;
+    }
     modal.confirm({
-      title: isRenewal ? `Xác nhận gia hạn gói ${selectedPlan.displayName}` : `Xác nhận mua gói ${selectedPlan.displayName}`,
+      title: `Xác nhận mua gói ${selectedPlan.displayName}`,
       width: 520,
       okText: `Thanh toán ${money.format(selectedPrice)}`,
       cancelText: "Xem lại",
@@ -213,11 +224,9 @@ export default function BillingCheckoutPanel({
             <div className="mt-2 flex justify-between gap-4"><span>Tổng thanh toán</span><strong className="text-lg text-blue-700">{money.format(selectedPrice)}</strong></div>
           </div>
           <p>
-            {isRenewal && currentSubscription?.status === "ACTIVE"
-              ? "Thời hạn mới sẽ được cộng tiếp sau ngày hết hạn hiện tại khi PayOS xác nhận đã thanh toán."
-              : currentSubscription?.planId && currentSubscription.planId !== selectedPlan.id
-                ? "Gói mới có hiệu lực ngay khi PayOS xác nhận thanh toán; thời gian còn lại của gói cũ không được quy đổi hoặc hoàn lại."
-                : "Gói sẽ được kích hoạt ngay khi PayOS xác nhận thanh toán thành công."}
+            {currentSubscription?.planId && currentSubscription.planId !== selectedPlan.id
+              ? "Gói mới có hiệu lực ngay khi PayOS xác nhận thanh toán; thời gian còn lại của gói cũ không được quy đổi hoặc hoàn lại."
+              : "Gói sẽ được kích hoạt ngay khi PayOS xác nhận thanh toán thành công."}
           </p>
           <p>Bạn sẽ được chuyển sang PayOS để quét VietQR hoặc chuyển khoản ngân hàng.</p>
         </div>
@@ -344,6 +353,16 @@ export default function BillingCheckoutPanel({
           />
         )}
 
+        {activeCurrentPlanId && !openOrder && (
+          <Alert
+            className="mb-5"
+            showIcon
+            type="success"
+            title={`Gói ${currentSubscription?.planDisplayName || "hiện tại"} đang còn hiệu lực`}
+            description="Hệ thống không thu tiền hai lần cho cùng một gói. Bạn có thể chọn gói khác; khi gói hiện tại hết hạn, gói này sẽ được phép mua lại."
+          />
+        )}
+
         {plansQuery.isError ? (
           <Alert
             type="error"
@@ -373,7 +392,7 @@ export default function BillingCheckoutPanel({
                   billingCycle={billingCycle}
                   selected={plan.id === selectedPlan?.id}
                   current={plan.id === currentSubscription?.planId}
-                  disabled={Boolean(openOrder)}
+                  disabled={Boolean(openOrder) || plan.id === activeCurrentPlanId}
                   onSelect={() => setPlanId(plan.id)}
                 />
               ))}
@@ -391,7 +410,7 @@ export default function BillingCheckoutPanel({
               <BaseButton
                 type="primary"
                 size="large"
-                disabled={!selectedPlan || Boolean(openOrder)}
+                disabled={!selectedPlan || Boolean(openOrder) || selectedPlan.id === activeCurrentPlanId}
                 loading={createOrder.isPending}
                 icon={<ExternalLink className="h-4 w-4" />}
                 onClick={beginCheckout}
